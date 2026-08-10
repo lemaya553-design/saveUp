@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #0b0b12;
+  --color-surface: #15151f;
+  --color-primary: #4a6cf7;
+  /* White text on --color-primary is ~4:1, short of WCAG AA (4.5:1) for normal-size
+     text. Solid button fills use this slightly deeper shade instead; links, borders,
+     icons and the hero gradient keep the exact requested #4a6cf7. */
+  --color-primary-strong: #3e5fe0;
+  --color-accent: #8b5cf6;
+  --color-success: #22c55e;
+  --color-ink: #f5f5f7;
+  --color-muted: #9ca3af;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+/* Glassmorphism surface: translucent card background, blur, faint white edge. */
+.glass {
+  background-color: rgba(21, 21, 31, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Subtle blue-to-mauve wash for hero sections and page headers. */
+.hero-gradient {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74, 108, 247, 0.22), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 100% 0%, rgba(139, 92, 246, 0.16), transparent 70%);
+}
+
+/* Plays once when a reward badge transitions from locked to unlocked. */
+@keyframes badge-unlock {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+    box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+  }
+  55% {
+    transform: scale(1.06);
+    box-shadow: 0 0 28px rgba(34, 197, 94, 0.45);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+.badge-unlock {
+  animation: badge-unlock 0.7s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-unlock {
+    animation: none;
+  }
+}
+
+/* Mobile touch targets — a floor, not a fixed size: min-height coexists with
+   each component's own Tailwind padding/height classes (higher-specificity
+   utility classes still win on any property they set), it just stops
+   anything from rendering under ~44px on a touch screen. Range inputs and
+   selects are handled on their own below since a blanket rule reads oddly
+   on them. */
+button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+select,
+input:not([type='range']) {
+  min-height: 44px;
+}
+
+/* Custom range slider: thin track, larger thumb, and a tall invisible hit
+   area around it so dragging on a phone doesn't require pixel precision. */
+input[type='range'] {
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -9px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--color-primary);
+}
+
+/* Never let a single element force the whole page to scroll sideways —
+   wide content (tables, long text) should scroll in its own container. */
+html,
+body {
+  overflow-x: hidden;
+}
