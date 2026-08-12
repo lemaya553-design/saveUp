@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../components/PageHeader'
 import { Card } from '../components/Card'
@@ -7,6 +7,8 @@ import { ProgressBar } from '../components/ProgressBar'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
+import { useClaimedBadges } from '../hooks/useClaimedBadges'
+import { useLoginStreak } from '../hooks/useLoginStreak'
 import { formatCurrency } from '../lib/format'
 import { TIER_ICONS, TIER_UNLOCKED_CLASS } from '../components/rewardIcons'
 import {
@@ -15,18 +17,23 @@ import {
   getGoalCompletionRequirement,
   getNextTierProgress,
   getSavingsScoreExplanations,
-  getSeenTierIds,
   getTierRequirement,
   getUnlockedTiers,
-  saveSeenTierIds,
 } from '../lib/rewards'
+
+// How long the grey -> color reveal stays flagged as "just claimed" — a
+// touch longer than the shared .badge-unlock keyframe (0.7s) so the
+// animation always finishes before the class is removed.
+const CLAIM_ANIMATION_MS = 900
 
 export function Recompenses() {
   const goals = useSavingsGoals()
   const contributions = useSavingsContributions()
+  const claimedBadges = useClaimedBadges()
+  const streak = useLoginStreak()
 
-  const loading = goals.loading || contributions.loading
-  const error = goals.error || contributions.error
+  const loading = goals.loading || contributions.loading || claimedBadges.loading
+  const error = goals.error || contributions.error || claimedBadges.error
 
   const totalCurrentAmount = goals.goals.reduce((sum, g) => sum + g.currentAmount, 0)
   const totalTargetAmount = goals.goals.reduce((sum, g) => sum + g.targetAmount, 0)
@@ -56,19 +63,21 @@ export function Recompenses() {
   const selectedGoal =
     goals.goals.length > 1 ? goals.goals.find((g) => g.id === selectedGoalId) : undefined
 
-  const [newlyUnlocked, setNewlyUnlocked] = useState<Set<string>>(new Set())
+  // Tiers the user has earned but hasn't clicked "Réclamer" on yet.
+  const [justClaimed, setJustClaimed] = useState<Set<string>>(new Set())
 
-  useEffect(() => {
-    if (loading) return
-    const seen = getSeenTierIds()
-    const fresh = [...unlockedIds].filter((id) => !seen.has(id))
-    if (fresh.length === 0) return
-
-    setNewlyUnlocked(new Set(fresh))
-    saveSeenTierIds(new Set([...seen, ...unlockedIds]))
-    const timer = setTimeout(() => setNewlyUnlocked(new Set()), 2500)
-    return () => clearTimeout(timer)
-  }, [loading, unlockedIds])
+  async function handleClaim(tierId: string) {
+    const ok = await claimedBadges.claim(tierId)
+    if (!ok) return
+    setJustClaimed((prev) => new Set(prev).add(tierId))
+    setTimeout(() => {
+      setJustClaimed((prev) => {
+        const next = new Set(prev)
+        next.delete(tierId)
+        return next
+      })
+    }, CLAIM_ANIMATION_MS)
+  }
 
   if (loading) {
     return <PageSkeleton cards={3} />
@@ -76,6 +85,8 @@ export function Recompenses() {
 
   const hasGoal = goals.goals.length > 0
   const allUnlocked = unlockedIds.size === REWARD_TIERS.length
+  const claimedCount = [...unlockedIds].filter((id) => claimedBadges.claimedIds.has(id)).length
+  const readyToClaimCount = unlockedIds.size - claimedCount
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10">
@@ -86,6 +97,22 @@ export function Recompenses() {
           {error}
         </div>
       )}
+
+      <div className="mb-6 glass flex items-center gap-4 rounded-2xl p-5 shadow-lg shadow-black/30">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent/15 text-3xl">
+          🔥
+        </div>
+        <div>
+          <p className="text-2xl font-bold text-ink">
+            {streak.streak} jour{streak.streak > 1 ? 's' : ''} de suite
+          </p>
+          <p className="text-sm text-muted">
+            {streak.streak > 0
+              ? 'Reviens demain pour garder ta série !'
+              : "Reviens demain pour commencer une série."}
+          </p>
+        </div>
+      </div>
 
       {!hasGoal && (
         <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm">
@@ -117,17 +144,17 @@ export function Recompenses() {
               </p>
             </div>
 
-            <ul className="w-full flex-1 space-y-3">
+            <ul className="w-full flex-1 space-y-4">
               {savingsExplanations.map((item) => (
                 <li key={item.label} className="text-sm">
-                  <div className="mb-1 flex items-center justify-between">
+                  <div className="mb-1.5 flex items-center justify-between">
                     <span className="font-medium text-ink">{item.label}</span>
-                    <span className="text-xs text-muted">
+                    <span className="rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-semibold text-accent">
                       {item.value}/{item.max}
                     </span>
                   </div>
                   <ProgressBar value={item.value} colorClass="bg-accent" />
-                  <p className="mt-1 text-xs text-muted">{item.detail}</p>
+                  <p className="mt-1.5 text-xs text-muted">{item.detail}</p>
                 </li>
               ))}
             </ul>
@@ -201,37 +228,56 @@ export function Recompenses() {
         </Card>
 
         <div>
-          <h2 className="text-lg font-semibold text-ink">Tes badges</h2>
-          <p className="mb-4 mt-1 text-xs text-muted">
-            {unlockedIds.size}/{REWARD_TIERS.length} débloqués — continue d'épargner pour les débloquer
-            tous.
-          </p>
+          <div className="mb-4 flex items-baseline justify-between">
+            <h2 className="text-lg font-semibold text-ink">Tes badges</h2>
+            <p className="text-xs text-muted">
+              {claimedCount}/{REWARD_TIERS.length} réclamés
+              {readyToClaimCount > 0 && (
+                <span className="ml-1.5 font-semibold text-accent">
+                  · {readyToClaimCount} à réclamer !
+                </span>
+              )}
+            </p>
+          </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {REWARD_TIERS.map((tier) => {
-              const unlocked = unlockedIds.has(tier.id)
-              const isNew = newlyUnlocked.has(tier.id)
+              const earned = unlockedIds.has(tier.id)
+              const claimed = claimedBadges.claimedIds.has(tier.id)
+              const isAnimating = justClaimed.has(tier.id)
+              const revealed = claimed || isAnimating
               const Icon = TIER_ICONS[tier.id]
-              const requirement = unlocked ? null : getTierRequirement(tier, totalCurrentAmount, goals.goals)
+              const requirement = earned ? null : getTierRequirement(tier, totalCurrentAmount, goals.goals)
 
               return (
                 <div
                   key={tier.id}
                   className={`glass flex flex-col items-center gap-2 rounded-2xl p-4 text-center shadow-lg shadow-black/30 ${
-                    isNew ? 'badge-unlock' : ''
+                    isAnimating ? 'badge-unlock' : ''
                   }`}
                 >
                   <div
-                    className={`flex h-16 w-16 items-center justify-center rounded-full ${
-                      unlocked ? TIER_UNLOCKED_CLASS[tier.id] : 'bg-white/5 text-muted'
+                    className={`flex h-16 w-16 items-center justify-center rounded-full transition-colors duration-500 ${
+                      revealed ? TIER_UNLOCKED_CLASS[tier.id] : 'bg-white/5 text-muted'
                     }`}
                   >
                     <Icon className="h-8 w-8" />
                   </div>
-                  <p className={`text-sm font-semibold ${unlocked ? 'text-ink' : 'text-muted'}`}>
+                  <p className={`text-sm font-semibold ${revealed ? 'text-ink' : 'text-muted'}`}>
                     {tier.name}
                   </p>
-                  {unlocked ? (
+                  {revealed ? (
                     <p className="text-xs text-muted">{tier.description}</p>
+                  ) : earned ? (
+                    <>
+                      <p className="text-xs font-semibold text-accent">Badge mérité !</p>
+                      <button
+                        type="button"
+                        onClick={() => handleClaim(tier.id)}
+                        className="mt-1 rounded-full bg-primary-strong px-3 py-1 text-xs font-semibold text-white transition-all hover:brightness-110"
+                      >
+                        Réclamer
+                      </button>
+                    </>
                   ) : requirement ? (
                     <p className="text-xs font-medium text-accent">
                       Il manque {formatCurrency(requirement.missingAmount)}
@@ -239,7 +285,7 @@ export function Recompenses() {
                   ) : (
                     <p className="text-xs text-muted">Complète un objectif actif</p>
                   )}
-                  {!unlocked && <p className="text-xs text-muted">🔒 Verrouillé</p>}
+                  {!earned && <p className="text-xs text-muted">🔒 Verrouillé</p>}
                 </div>
               )
             })}

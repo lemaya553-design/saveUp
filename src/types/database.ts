@@ -54,6 +54,7 @@ export interface Database {
           amount: number
           category: string
           spent_at: string
+          account: string | null
         }
         Insert: {
           id?: string
@@ -62,6 +63,7 @@ export interface Database {
           amount: number
           category?: string
           spent_at?: string
+          account?: string | null
         }
         Update: {
           id?: string
@@ -70,35 +72,94 @@ export interface Database {
           amount?: number
           category?: string
           spent_at?: string
+          account?: string | null
         }
         Relationships: []
       }
-      // Legacy, superseded by savings_goals — left untouched (no user_id,
-      // no longer referenced anywhere in the app).
-      savings_goal: {
+      accounts: {
         Row: {
-          id: number
+          id: string
+          user_id: string
           name: string
-          target_amount: number
-          current_amount: number
-          target_date: string | null
-          updated_at: string
+          created_at: string
         }
         Insert: {
-          id?: number
-          name?: string
-          target_amount?: number
-          current_amount?: number
-          target_date?: string | null
-          updated_at?: string
+          id?: string
+          user_id: string
+          name: string
+          created_at?: string
         }
         Update: {
-          id?: number
+          id?: string
+          user_id?: string
           name?: string
-          target_amount?: number
-          current_amount?: number
-          target_date?: string | null
-          updated_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      custom_category_keywords: {
+        Row: {
+          id: string
+          user_id: string
+          keyword: string
+          category: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          keyword: string
+          category: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          keyword?: string
+          category?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      claimed_badges: {
+        Row: {
+          id: string
+          user_id: string
+          tier_id: string
+          claimed_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          tier_id: string
+          claimed_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          tier_id?: string
+          claimed_at?: string
+        }
+        Relationships: []
+      }
+      login_activity: {
+        Row: {
+          id: string
+          user_id: string
+          activity_date: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          activity_date: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          activity_date?: string
+          created_at?: string
         }
         Relationships: []
       }
@@ -186,18 +247,21 @@ export interface Database {
           user_id: string
           name: string
           created_at: string
+          monthly_budget: number | null
         }
         Insert: {
           id?: string
           user_id: string
           name: string
           created_at?: string
+          monthly_budget?: number | null
         }
         Update: {
           id?: string
           user_id?: string
           name?: string
           created_at?: string
+          monthly_budget?: number | null
         }
         Relationships: []
       }

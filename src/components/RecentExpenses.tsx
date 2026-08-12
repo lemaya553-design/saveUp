@@ -195,6 +195,11 @@ export function RecentExpenses({
                           month: 'short',
                         })}{' '}
                         · {expense.category}
+                        {expense.account && (
+                          <span className="ml-1.5 rounded-full bg-white/5 px-1.5 py-0.5 text-muted">
+                            {expense.account}
+                          </span>
+                        )}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">

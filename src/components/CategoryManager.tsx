@@ -3,15 +3,57 @@ import { Card } from './Card'
 import { useCategories, type Category } from '../hooks/useCategories'
 import { FALLBACK_CATEGORY } from '../lib/categories'
 
+function BudgetInput({
+  category,
+  onSave,
+}: {
+  category: Category
+  onSave: (id: string, value: number | null) => void
+}) {
+  const [draft, setDraft] = useState(category.monthlyBudget !== null ? String(category.monthlyBudget) : '')
+
+  function commit() {
+    const trimmed = draft.trim()
+    if (!trimmed) {
+      onSave(category.id, null)
+      return
+    }
+    const parsed = Math.max(0, Number(trimmed) || 0)
+    onSave(category.id, parsed)
+    setDraft(String(parsed))
+  }
+
+  return (
+    <label className="flex items-center gap-1.5 text-xs text-muted">
+      Budget mensuel
+      <input
+        type="number"
+        inputMode="decimal"
+        min={0}
+        step="0.01"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
+        placeholder="Aucun"
+        className="w-20 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs text-ink focus:border-primary focus:outline-none"
+      />
+      <span>$</span>
+    </label>
+  )
+}
+
 function CategoryRow({
   category,
   onRename,
   onRequestDelete,
+  onSetBudget,
   checking,
 }: {
   category: Category
   onRename: (id: string, newName: string) => void
   onRequestDelete: (id: string) => void
+  onSetBudget: (id: string, value: number | null) => void
   checking: boolean
 }) {
   const [editing, setEditing] = useState(false)
@@ -56,9 +98,10 @@ function CategoryRow({
   }
 
   return (
-    <div className="flex items-center justify-between py-2">
+    <div className="flex flex-wrap items-center justify-between gap-2 py-2">
       <span className="text-ink">{category.name}</span>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <BudgetInput category={category} onSave={onSetBudget} />
         <button
           type="button"
           onClick={() => setEditing(true)}
@@ -82,7 +125,8 @@ function CategoryRow({
 }
 
 export function CategoryManager() {
-  const { categories, error, addCategory, renameCategory, removeCategory, getUsageCount } = useCategories()
+  const { categories, loading, error, addCategory, renameCategory, removeCategory, setCategoryBudget, getUsageCount } =
+    useCategories()
   const [newName, setNewName] = useState('')
   const [addingCategory, setAddingCategory] = useState(false)
   const [checkingId, setCheckingId] = useState<string | null>(null)
@@ -120,21 +164,29 @@ export function CategoryManager() {
   }
 
   return (
-    <Card title="Catégories" hint="Crée, renomme ou supprime tes catégories de dépenses.">
+    <Card
+      title="Catégories"
+      hint="Crée, renomme ou supprime tes catégories de dépenses, et fixe un budget mensuel par catégorie (visible dans Statistiques)."
+    >
       {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
 
-      <ul className="divide-y divide-white/10">
-        {categories.map((category) => (
-          <li key={category.id}>
-            <CategoryRow
-              category={category}
-              onRename={renameCategory}
-              onRequestDelete={requestDelete}
-              checking={checkingId === category.id}
-            />
-          </li>
-        ))}
-      </ul>
+      {loading ? (
+        <p className="py-2 text-sm text-muted">Chargement des catégories...</p>
+      ) : (
+        <ul className="divide-y divide-white/10">
+          {categories.map((category) => (
+            <li key={category.id}>
+              <CategoryRow
+                category={category}
+                onRename={renameCategory}
+                onRequestDelete={requestDelete}
+                onSetBudget={setCategoryBudget}
+                checking={checkingId === category.id}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
 
       {pendingDelete && (
         <div className="mt-3 rounded-lg border border-accent/30 bg-accent/10 px-4 py-3 text-sm">

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 
@@ -78,57 +78,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.subscription.unsubscribe()
   }, [])
 
-  async function signUp(email: string, password: string): Promise<AuthResult> {
+  // useCallback (stable function identities) + useMemo on the context value
+  // below — otherwise AuthProvider hands out a brand-new value object on
+  // every render, and since useAuth() is called inside nearly every data
+  // hook in the app, that would re-render most of the tree on every auth
+  // event (including silent background token refreshes, which fire
+  // periodically even when nothing the user cares about changed).
+  const signUp = useCallback(async (email: string, password: string): Promise<AuthResult> => {
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) return { error: mapAuthError(error.message) }
     // With email confirmation enabled (Supabase's default), signUp succeeds
     // but returns no session until the user clicks the confirmation link.
     const needsEmailConfirmation = !data.session
     return { error: null, needsEmailConfirmation }
-  }
+  }, [])
 
-  async function signIn(email: string, password: string): Promise<AuthResult> {
+  const signIn = useCallback(async (email: string, password: string): Promise<AuthResult> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) return { error: mapAuthError(error.message) }
     return { error: null }
-  }
+  }, [])
 
-  async function signOut() {
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut()
-  }
+  }, [])
 
-  async function resetPasswordForEmail(email: string): Promise<AuthResult> {
+  const resetPasswordForEmail = useCallback(async (email: string): Promise<AuthResult> => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/connexion`,
     })
     if (error) return { error: mapAuthError(error.message) }
     return { error: null }
-  }
+  }, [])
 
-  async function updatePassword(newPassword: string): Promise<AuthResult> {
+  const updatePassword = useCallback(async (newPassword: string): Promise<AuthResult> => {
     const { error } = await supabase.auth.updateUser({ password: newPassword })
     if (error) return { error: mapAuthError(error.message) }
     setPasswordRecovery(false)
     return { error: null }
-  }
+  }, [])
 
-  return (
-    <AuthContext.Provider
-      value={{
-        session,
-        user: session?.user ?? null,
-        loading,
-        passwordRecovery,
-        signUp,
-        signIn,
-        signOut,
-        resetPasswordForEmail,
-        updatePassword,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      session,
+      user: session?.user ?? null,
+      loading,
+      passwordRecovery,
+      signUp,
+      signIn,
+      signOut,
+      resetPasswordForEmail,
+      updatePassword,
+    }),
+    [session, loading, passwordRecovery, signUp, signIn, signOut, resetPasswordForEmail, updatePassword],
   )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth(): AuthContextValue {

@@ -2,91 +2,29 @@ import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Footer } from '../components/Footer'
 import { LandingHeader } from '../components/LandingHeader'
-import { LandingDemoSimulator } from '../components/LandingDemoSimulator'
 import { LandingStepsPreview } from '../components/LandingStepsPreview'
+import { LogoMark } from '../components/Logo'
+import { Reveal } from '../components/Reveal'
+import { AnimatedStats } from '../components/AnimatedStats'
+import { HeroScoreGauge } from '../components/HeroScoreGauge'
+import { SimulatorPreview } from '../components/SimulatorPreview'
+import { ScreenshotCarousel } from '../components/ScreenshotCarousel'
+import {
+  BudgetIllustration,
+  StatsIllustration,
+  BadgesIllustration,
+} from '../components/FeatureIllustrations'
 
-function RefreshIcon({ className }: { className: string }) {
+function SlidersIcon({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 9a8 8 0 0114-4.9M4 4v5h5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M20 15a8 8 0 01-14 4.9M20 20v-5h-5" />
+      <path strokeLinecap="round" d="M4 6h6M14 6h6M4 12h10M18 12h2M4 18h2M10 18h10" />
+      <circle cx="11" cy="6" r="2.2" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="12" r="2.2" fill="currentColor" stroke="none" />
+      <circle cx="7" cy="18" r="2.2" fill="currentColor" stroke="none" />
     </svg>
   )
 }
-
-function BellIcon({ className }: { className: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 9a6 6 0 1112 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10 18a2 2 0 004 0" />
-    </svg>
-  )
-}
-
-function GaugeIcon({ className }: { className: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 15a8 8 0 1116 0" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15l3.5-4.5" />
-      <circle cx="12" cy="15" r="0.8" fill="currentColor" stroke="none" />
-    </svg>
-  )
-}
-
-function BoltIcon({ className }: { className: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />
-    </svg>
-  )
-}
-
-function StarIcon({ className }: { className: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5-4.8-4.6 6.6-.9L12 2.5z" />
-    </svg>
-  )
-}
-
-const DIFFERENTIATORS = [
-  {
-    Icon: RefreshIcon,
-    badge: 'bg-primary/15 text-primary',
-    title: 'Suivi automatique',
-    description: 'Tes chiffres se mettent à jour tout seuls — pas besoin de tout retaper à chaque fois.',
-  },
-  {
-    Icon: BellIcon,
-    badge: 'bg-accent/15 text-accent',
-    title: 'Alertes proactives',
-    description: 'SaveUp te prévient avant que ça dérape, sans que tu aies à demander.',
-  },
-  {
-    Icon: GaugeIcon,
-    badge: 'bg-success/15 text-success',
-    title: 'Score qui évolue',
-    description: 'Un score qui bouge avec toi, semaine après semaine, avec un historique.',
-  },
-]
-
-const PILLARS = [
-  {
-    Icon: BoltIcon,
-    title: 'Rapide',
-    description: 'Ton budget est prêt en 2 minutes, pas en une heure de tableur.',
-  },
-  {
-    Icon: RefreshIcon,
-    title: 'Automatique',
-    description: 'Alertes et calculs se font seuls — tu n\'as qu\'à noter tes dépenses.',
-  },
-  {
-    Icon: StarIcon,
-    title: 'Motivant',
-    description: 'Un score et des badges qui avancent avec toi, pas juste des chiffres froids.',
-  },
-]
 
 const COMPARISON_ROWS = [
   {
@@ -161,239 +99,357 @@ export function Home() {
     <div>
       <LandingHeader />
 
-      {/* Hero */}
-      <section className="hero-gradient px-4 pb-20 pt-14 text-center sm:px-6">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-muted">
-          <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-success" />
-          100% gratuit pour commencer
-        </span>
-
-        <h1 className="mx-auto mt-5 max-w-3xl text-4xl font-bold leading-tight text-ink sm:text-5xl">
-          Reprends le contrôle de ton argent, simplement.
-        </h1>
-        <p className="mx-auto mt-5 max-w-xl text-lg text-muted">
-          Budget, épargne et objectifs financiers dans une seule app — sans tableur compliqué.
-        </p>
-
-        <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <Link
-            to="/dashboard"
-            className="rounded-lg bg-primary-strong px-6 py-3 font-medium text-white shadow-[0_0_30px_rgba(74,108,247,0.35)] transition-all hover:brightness-110 hover:shadow-[0_0_40px_rgba(74,108,247,0.5)]"
-          >
-            Essayer gratuitement
-          </Link>
-          <a
-            href="#comment-ca-marche"
-            className="rounded-lg border border-white/20 px-6 py-3 font-medium text-ink transition-colors hover:bg-white/5"
-          >
-            Voir comment ça marche
-          </a>
+      {/* Hero — asymmetric, full-bleed, ambient gradient mesh + oversized
+          watermark logo behind the content. */}
+      <section className="relative isolate overflow-hidden px-4 pb-24 pt-16 sm:px-6 sm:pt-24">
+        <div className="pointer-events-none absolute inset-0 -z-20 overflow-hidden">
+          <div className="mesh-blob-a absolute left-[-10%] top-[-15%] h-[32rem] w-[32rem] rounded-full bg-primary/25 blur-[100px]" />
+          <div className="mesh-blob-b absolute right-[-15%] top-[5%] h-[28rem] w-[28rem] rounded-full bg-accent/20 blur-[100px]" />
+          <div className="mesh-blob-c absolute bottom-[-20%] left-[20%] h-[26rem] w-[26rem] rounded-full bg-success/10 blur-[110px]" />
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs text-muted">
-          {['Sans carte requise', 'Configuration en 2 min', '100% en français'].map((label) => (
-            <span
-              key={label}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5"
-            >
-              <span aria-hidden="true" className="text-success">
-                ✓
+        <LogoMark className="pointer-events-none absolute -right-16 -top-16 -z-10 h-[26rem] w-[26rem] opacity-[0.05] sm:h-[34rem] sm:w-[34rem]" />
+
+        <div className="mx-auto grid max-w-6xl items-center gap-16 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="text-center lg:text-left">
+            <div className="flex justify-center gap-3 lg:justify-start">
+              <LogoMark className="h-10 w-10" animated />
+              <span className="inline-flex items-center gap-1.5 self-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-muted">
+                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-success" />
+                100% gratuit pour commencer
               </span>
-              {label}
-            </span>
-          ))}
-        </div>
+            </div>
 
-        <div className="relative mx-auto mt-16 max-w-md">
-          <div className="absolute inset-x-8 inset-y-6 -z-10 rounded-3xl bg-accent/30 blur-3xl" />
-          <div className="glass rounded-2xl p-6 text-left shadow-2xl shadow-black/40">
-            <p className="text-xs uppercase tracking-wide text-muted">Budget hebdomadaire</p>
-            <p className="mt-1 text-3xl font-bold text-ink">
-              342,50 $<span className="ml-2 text-sm font-normal text-muted">restants</span>
+            <h1 className="mx-auto mt-7 max-w-xl text-[clamp(2.75rem,6vw,4.75rem)] font-black leading-[1.02] tracking-tight text-ink text-balance lg:mx-0">
+              Ton argent,
+              <br />
+              <span className="bg-gradient-to-r from-primary via-accent to-success bg-clip-text text-transparent">
+                sans le casse-tête.
+              </span>
+            </h1>
+            <p className="mx-auto mt-6 max-w-md text-lg text-muted lg:mx-0">
+              SaveUp calcule, alerte et te montre où tu en es — pas juste un autre tableur à
+              remplir tous les dimanches soirs.
             </p>
 
-            <div className="mt-6 flex items-center justify-between text-sm">
-              <span className="text-muted">Objectif : Vacances</span>
-              <span className="font-medium text-success">68 %</span>
+            <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
+              <Link
+                to="/dashboard"
+                className="btn-sheen rounded-lg bg-primary-strong px-7 py-3.5 font-semibold text-white shadow-[0_0_30px_rgba(74,108,247,0.4)] transition-all hover:brightness-110 hover:shadow-[0_0_45px_rgba(74,108,247,0.55)]"
+              >
+                Essayer gratuitement
+              </Link>
+              <a
+                href="#fonctionnalites"
+                className="rounded-lg border border-white/20 px-7 py-3.5 font-medium text-ink transition-colors hover:bg-white/5"
+              >
+                Voir ce que ça donne
+              </a>
             </div>
-            <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-white/10">
-              <div className="h-full w-[68%] rounded-full bg-success transition-all" />
+
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 text-xs text-muted lg:justify-start">
+              {['Sans carte requise', 'Configuration en 2 min', '100% en français'].map((label) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5"
+                >
+                  <span aria-hidden="true" className="text-success">
+                    ✓
+                  </span>
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="glow-pulse absolute inset-8 -z-10 rounded-full bg-accent/25 blur-3xl" />
+            <div className="float-bob glass rounded-3xl border-t border-t-white/20 p-8 shadow-2xl shadow-black/50">
+              <HeroScoreGauge score={82} />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Différenciation */}
-      <section id="fonctionnalites" className="mx-auto max-w-5xl px-4 py-20 sm:px-6">
-        <h2 className="text-center text-3xl font-bold text-ink">
-          Pourquoi SaveUp, pas juste un chatbot
-        </h2>
-        <p className="mx-auto mt-3 max-w-lg text-center text-muted">
-          Claude ou ChatGPT peuvent répondre à une question sur ton budget. Ils ne le suivent pas
-          pour toi, jour après jour.
-        </p>
+      {/* Stats produit — honnêtes, pas de fausses statistiques d'usage */}
+      <section className="border-y border-white/5 bg-white/[0.02] px-4 py-14 sm:px-6">
+        <Reveal className="mx-auto max-w-4xl">
+          <AnimatedStats />
+        </Reveal>
+      </section>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-3">
-          {DIFFERENTIATORS.map(({ Icon, badge, title, description }) => (
-            <div key={title} className="glass rounded-2xl p-6 text-left shadow-lg shadow-black/30">
-              <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${badge}`}>
-                <Icon className="h-6 w-6" />
+      {/* Fonctionnalités — bento asymétrique plutôt qu'une grille uniforme */}
+      <section id="fonctionnalites" className="mx-auto max-w-5xl px-4 py-24 sm:px-6">
+        <Reveal>
+          <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
+            Un outil, pas cinq onglets Excel.
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-center text-muted">
+            Ce que tu vois dans l'app, dès les premières minutes.
+          </p>
+        </Reveal>
+
+        <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-6">
+          <Reveal className="sm:col-span-4 sm:row-span-2" delayMs={0}>
+            <div
+              className="bento-tile glass flex h-full flex-col rounded-3xl border border-white/10 p-7 shadow-lg shadow-black/30"
+              style={{ '--tile-glow': 'rgba(139, 92, 246, 0.4)' } as React.CSSProperties}
+            >
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                  <SlidersIcon className="h-5 w-5" />
+                </div>
+                <span className="text-xs font-semibold uppercase tracking-wide text-accent">
+                  Simulateur « et si »
+                </span>
               </div>
-              <h3 className="mb-2 mt-4 font-semibold text-ink">{title}</h3>
-              <p className="text-sm text-muted">{description}</p>
+              <h3 className="mb-1 mt-4 text-xl font-bold text-ink">Teste avant de trancher</h3>
+              <p className="mb-6 text-sm text-muted">
+                Coupe une dépense, avance une échéance — vois l'impact avant de le faire pour de
+                vrai.
+              </p>
+              <div className="mt-auto rounded-2xl bg-white/5 p-5">
+                <SimulatorPreview />
+              </div>
             </div>
-          ))}
+          </Reveal>
+
+          <Reveal className="sm:col-span-2 sm:row-span-2" delayMs={80}>
+            <div
+              className="bento-tile glass flex h-full flex-col items-center justify-center rounded-3xl border border-white/10 p-6 text-center shadow-lg shadow-black/30"
+              style={{ '--tile-glow': 'rgba(74, 108, 247, 0.4)' } as React.CSSProperties}
+            >
+              <span className="text-xs font-semibold uppercase tracking-wide text-primary">
+                Score de santé
+              </span>
+              <div className="mt-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/15 text-2xl font-black text-primary">
+                82
+              </div>
+              <p className="mt-3 text-sm text-muted">
+                Un chiffre qui résume tout, et qui bouge avec toi chaque semaine.
+              </p>
+            </div>
+          </Reveal>
+
+          <Reveal className="sm:col-span-2" delayMs={140}>
+            <div
+              className="bento-tile glass h-full rounded-3xl border border-white/10 p-6 shadow-lg shadow-black/30"
+              style={{ '--tile-glow': 'rgba(74, 108, 247, 0.4)' } as React.CSSProperties}
+            >
+              <span className="text-xs font-semibold uppercase tracking-wide text-primary">Budget</span>
+              <h3 className="mb-3 mt-1 font-semibold text-ink">Par catégorie</h3>
+              <BudgetIllustration />
+            </div>
+          </Reveal>
+
+          <Reveal className="sm:col-span-2" delayMs={200}>
+            <div
+              className="bento-tile glass h-full rounded-3xl border border-white/10 p-6 shadow-lg shadow-black/30"
+              style={{ '--tile-glow': 'rgba(139, 92, 246, 0.4)' } as React.CSSProperties}
+            >
+              <span className="text-xs font-semibold uppercase tracking-wide text-accent">Statistiques</span>
+              <h3 className="mb-3 mt-1 font-semibold text-ink">Tes tendances</h3>
+              <StatsIllustration />
+            </div>
+          </Reveal>
+
+          <Reveal className="sm:col-span-2" delayMs={260}>
+            <div
+              className="bento-tile glass h-full rounded-3xl border border-white/10 p-6 shadow-lg shadow-black/30"
+              style={{ '--tile-glow': 'rgba(34, 197, 94, 0.4)' } as React.CSSProperties}
+            >
+              <span className="text-xs font-semibold uppercase tracking-wide text-success">Récompenses</span>
+              <h3 className="mb-3 mt-1 font-semibold text-ink">Des badges mérités</h3>
+              <BadgesIllustration />
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* Démo interactive */}
-      <section id="demo" className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
-        <h2 className="text-center text-3xl font-bold text-ink">Essaie avant de t'inscrire</h2>
-        <p className="mx-auto mt-3 max-w-lg text-center text-muted">
-          Le simulateur « et si » de l'app, directement ici. Ajuste le curseur et regarde l'impact.
-        </p>
-        <div className="mt-10">
-          <LandingDemoSimulator />
-        </div>
+      {/* Captures d'écran — l'app en vrai, pas des illustrations */}
+      <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+        <Reveal>
+          <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
+            L'app, telle quelle.
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-center text-muted">
+            Pas des maquettes — l'interface que tu utilises vraiment, page par page.
+          </p>
+        </Reveal>
+
+        <Reveal delayMs={100} className="mt-12">
+          <ScreenshotCarousel />
+        </Reveal>
+      </section>
+
+      {/* CTA intermédiaire */}
+      <section className="px-4 sm:px-6">
+        <Reveal className="mx-auto max-w-4xl">
+          <div className="glass flex flex-col items-center gap-4 rounded-3xl border border-white/10 p-8 text-center shadow-lg shadow-black/30 sm:flex-row sm:justify-between sm:text-left">
+            <div>
+              <p className="text-lg font-semibold text-ink">Convaincu jusqu'ici ?</p>
+              <p className="text-sm text-muted">Ton premier budget est prêt en 2 minutes.</p>
+            </div>
+            <Link
+              to="/dashboard"
+              className="btn-sheen whitespace-nowrap rounded-lg bg-primary-strong px-6 py-3 font-medium text-white transition-all hover:brightness-110"
+            >
+              Essayer gratuitement
+            </Link>
+          </div>
+        </Reveal>
       </section>
 
       {/* Comment ça marche */}
-      <section id="comment-ca-marche" className="mx-auto max-w-5xl px-4 py-20 sm:px-6">
-        <h2 className="text-center text-3xl font-bold text-ink">En 3 étapes, ton budget est prêt</h2>
-        <p className="mx-auto mt-3 max-w-lg text-center text-muted">
-          Teste la première étape tout de suite — les deux autres t'attendent dans l'app.
-        </p>
-        <div className="mt-10">
+      <section id="comment-ca-marche" className="mx-auto max-w-5xl px-4 py-24 sm:px-6">
+        <Reveal>
+          <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
+            En 3 étapes, ton budget est prêt
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-center text-muted">
+            Teste la première étape tout de suite — les deux autres t'attendent dans l'app.
+          </p>
+        </Reveal>
+        <Reveal delayMs={100} className="mt-10">
           <LandingStepsPreview />
-        </div>
+        </Reveal>
       </section>
 
       {/* Tableau comparatif */}
-      <section id="comparaison" className="mx-auto max-w-5xl px-4 py-20 sm:px-6">
-        <h2 className="text-center text-3xl font-bold text-ink">SaveUp vs les alternatives</h2>
-        <p className="mx-auto mt-3 max-w-lg text-center text-muted">
-          Un chatbot répond bien à une question ponctuelle, et un tableur peut tout calculer —
-          mais aucun des deux ne suit ton argent pour toi, jour après jour.
-        </p>
+      <section id="comparaison" className="mx-auto max-w-5xl px-4 py-24 sm:px-6">
+        <Reveal>
+          <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
+            SaveUp vs les alternatives
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-center text-muted">
+            Un chatbot répond bien à une question ponctuelle, et un tableur peut tout calculer —
+            mais aucun des deux ne suit ton argent pour toi, jour après jour.
+          </p>
+        </Reveal>
 
-        <div className="glass mt-10 overflow-x-auto rounded-2xl shadow-lg shadow-black/30">
-          <table className="w-full min-w-[700px] border-collapse">
-            <thead>
-              <tr className="border-b border-white/10 bg-white/5 text-left text-sm text-muted">
-                <th className="px-4 py-3 font-medium">&nbsp;</th>
-                <th className="px-4 py-3 font-semibold text-ink">SaveUp</th>
-                <th className="px-4 py-3 font-medium">Chatbot gratuit</th>
-                <th className="px-4 py-3 font-medium">Tableur Excel</th>
-              </tr>
-            </thead>
-            <tbody>
-              {COMPARISON_ROWS.map((row) => (
-                <tr key={row.label} className="border-b border-white/10 text-sm last:border-b-0">
-                  <th scope="row" className="px-4 py-4 text-left font-medium text-ink">
-                    {row.label}
+        <Reveal delayMs={100}>
+          <div className="glass mt-10 overflow-x-auto rounded-3xl border border-white/10 shadow-lg shadow-black/30">
+            <table className="w-full min-w-[700px] border-collapse">
+              <thead>
+                <tr className="border-b border-white/10 bg-white/5 text-left text-sm text-muted">
+                  <th className="px-4 py-4 font-medium">&nbsp;</th>
+                  <th className="px-4 py-4 font-black text-ink">
+                    <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                      SaveUp
+                    </span>
                   </th>
-                  <td className="px-4 py-4 text-ink">
-                    <span className="mr-2 text-success" aria-hidden="true">
-                      ✓
-                    </span>
-                    {row.saveup}
-                  </td>
-                  <td className="px-4 py-4 text-muted">
-                    <span className="mr-2 text-red-400" aria-hidden="true">
-                      ✗
-                    </span>
-                    {row.chatbot}
-                  </td>
-                  <td className="px-4 py-4 text-muted">
-                    <span className="mr-2 text-red-400" aria-hidden="true">
-                      ✗
-                    </span>
-                    {row.excel}
-                  </td>
+                  <th className="px-4 py-4 font-medium">Chatbot gratuit</th>
+                  <th className="px-4 py-4 font-medium">Tableur Excel</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {COMPARISON_ROWS.map((row) => (
+                  <tr
+                    key={row.label}
+                    className="border-b border-white/10 text-sm transition-colors last:border-b-0 hover:bg-white/5"
+                  >
+                    <th scope="row" className="px-4 py-4 text-left font-medium text-ink">
+                      {row.label}
+                    </th>
+                    <td className="bg-primary/5 px-4 py-4 text-ink">
+                      <span className="mr-2 text-success" aria-hidden="true">
+                        ✓
+                      </span>
+                      {row.saveup}
+                    </td>
+                    <td className="px-4 py-4 text-muted">
+                      <span className="mr-2 text-red-400" aria-hidden="true">
+                        ✗
+                      </span>
+                      {row.chatbot}
+                    </td>
+                    <td className="px-4 py-4 text-muted">
+                      <span className="mr-2 text-red-400" aria-hidden="true">
+                        ✗
+                      </span>
+                      {row.excel}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Reveal>
       </section>
 
       {/* Résultats — honnête, pas de fausses stats */}
       <section id="resultats" className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6">
-        <h2 className="text-3xl font-bold text-ink">Résultats</h2>
-        <div className="glass mx-auto mt-8 max-w-lg rounded-2xl p-8 shadow-lg shadow-black/30">
-          <span className="inline-block rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
-            À venir
-          </span>
-          <p className="mt-4 text-sm text-muted">
-            SaveUp est tout jeune — on n'a pas encore de résultats concrets d'utilisateurs à
-            partager, et on ne va pas en inventer. Essaie la démo interactive plus haut pour voir
-            l'outil à l'œuvre.
-          </p>
-        </div>
-      </section>
-
-      {/* 3 piliers */}
-      <section id="piliers" className="mx-auto max-w-5xl px-4 py-20 sm:px-6">
-        <div className="grid gap-6 sm:grid-cols-3">
-          {PILLARS.map(({ Icon, title, description }) => (
-            <div key={title} className="glass rounded-2xl p-6 text-center shadow-lg shadow-black/30">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                <Icon className="h-6 w-6" />
-              </div>
-              <h3 className="mb-2 mt-4 font-semibold text-ink">{title}</h3>
-              <p className="text-sm text-muted">{description}</p>
-            </div>
-          ))}
-        </div>
+        <Reveal>
+          <h2 className="text-3xl font-bold text-ink">Résultats</h2>
+          <div className="glass mx-auto mt-8 max-w-lg rounded-2xl p-8 shadow-lg shadow-black/30">
+            <span className="inline-block rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
+              À venir
+            </span>
+            <p className="mt-4 text-sm text-muted">
+              SaveUp est tout jeune — on n'a pas encore de résultats concrets d'utilisateurs à
+              partager, et on ne va pas en inventer. Crée ton compte pour voir l'outil à l'œuvre
+              avec tes propres chiffres.
+            </p>
+          </div>
+        </Reveal>
       </section>
 
       {/* CTA final */}
-      <section id="cta-final" className="hero-gradient px-4 py-24 text-center sm:px-6">
-        <h2 className="mx-auto max-w-2xl text-3xl font-bold text-ink sm:text-4xl">
-          Prêt à voir clair dans tes finances ?
-        </h2>
-        <Link
-          to="/dashboard"
-          className="mt-8 inline-block rounded-lg bg-primary-strong px-8 py-3 font-medium text-white shadow-[0_0_30px_rgba(74,108,247,0.35)] transition-all hover:brightness-110"
-        >
-          Commencer gratuitement
-        </Link>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs text-muted">
-          {['Sans carte requise', 'Configuration en 2 minutes', 'Annule quand tu veux'].map((label) => (
-            <span
-              key={label}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5"
-            >
-              <span aria-hidden="true" className="text-success">
-                ✓
-              </span>
-              {label}
-            </span>
-          ))}
+      <section id="cta-final" className="relative isolate overflow-hidden px-4 py-28 text-center sm:px-6">
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <div className="mesh-blob-b absolute left-1/2 top-1/2 h-[36rem] w-[36rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 blur-[120px]" />
         </div>
+        <Reveal>
+          <LogoMark className="mx-auto h-12 w-12" />
+          <h2 className="mx-auto mt-6 max-w-2xl text-[clamp(2rem,5vw,3.25rem)] font-black tracking-tight text-ink text-balance">
+            Prêt à voir clair dans tes finances ?
+          </h2>
+          <Link
+            to="/dashboard"
+            className="btn-sheen mt-8 inline-block rounded-lg bg-primary-strong px-9 py-4 text-lg font-semibold text-white shadow-[0_0_30px_rgba(74,108,247,0.4)] transition-all hover:brightness-110"
+          >
+            Commencer gratuitement
+          </Link>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs text-muted">
+            {['Sans carte requise', 'Configuration en 2 minutes', 'Annule quand tu veux'].map((label) => (
+              <span
+                key={label}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5"
+              >
+                <span aria-hidden="true" className="text-success">
+                  ✓
+                </span>
+                {label}
+              </span>
+            ))}
+          </div>
+        </Reveal>
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
-        <h2 className="text-center text-3xl font-bold text-ink">Questions fréquentes</h2>
+      <section id="faq" className="mx-auto max-w-3xl px-4 py-24 sm:px-6">
+        <Reveal>
+          <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
+            Questions fréquentes
+          </h2>
+        </Reveal>
 
         <div className="mt-10 grid gap-3">
-          {FAQ_ITEMS.map((item) => (
-            <details
-              key={item.question}
-              className="group glass rounded-2xl p-5 shadow-lg shadow-black/30"
-            >
-              <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-ink">
-                {item.question}
-                <span
-                  aria-hidden="true"
-                  className="ml-4 text-muted transition-transform group-open:rotate-180"
-                >
-                  ⌄
-                </span>
-              </summary>
-              <p className="mt-3 text-sm text-muted">{item.answer}</p>
-            </details>
+          {FAQ_ITEMS.map((item, i) => (
+            <Reveal key={item.question} delayMs={Math.min(i, 3) * 60}>
+              <details className="group glass rounded-2xl border border-white/10 p-5 shadow-lg shadow-black/30 open:border-primary/30">
+                <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-ink">
+                  {item.question}
+                  <span
+                    aria-hidden="true"
+                    className="ml-4 text-muted transition-transform group-open:rotate-180"
+                  >
+                    ⌄
+                  </span>
+                </summary>
+                <p className="mt-3 text-sm text-muted">{item.answer}</p>
+              </details>
+            </Reveal>
           ))}
         </div>
       </section>

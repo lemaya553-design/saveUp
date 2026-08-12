@@ -3,16 +3,20 @@ import { supabase } from '../lib/supabase'
 import { onExpensesChanged } from '../lib/events'
 
 export interface ExpenseRecord {
+  id: string
+  description: string
   amount: number
   category: string
   spent_at: string
 }
 
-// Raw expense rows for the current month and the 2 months before it — used
-// to build the category breakdown, the 3-month trend, and the auto-insight.
-// Kept separate from useExpenses (which only loads the most recent 50 rows)
-// so those stay accurate regardless of how many expenses exist.
-export function useExpenseHistory() {
+// Raw expense rows for the current month and `monthsBack` months before it —
+// used to build the category breakdown, the monthly trend, and the
+// auto-insight. Kept separate from useExpenses (which only loads the most
+// recent 50 rows) so those stay accurate regardless of how many expenses
+// exist. Default (2 → 3 months total) matches Budget's own 3-month views;
+// Statistiques asks for more (5 → 6 months) for its longer trend line.
+export function useExpenseHistory(monthsBack = 2) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [records, setRecords] = useState<ExpenseRecord[]>([])
@@ -25,11 +29,11 @@ export function useExpenseHistory() {
     setError(null)
 
     const now = new Date()
-    const start = new Date(now.getFullYear(), now.getMonth() - 2, 1)
+    const start = new Date(now.getFullYear(), now.getMonth() - monthsBack, 1)
 
     const { data, error: fetchError } = await supabase
       .from('expenses')
-      .select('amount, category, spent_at')
+      .select('id, description, amount, category, spent_at')
       .gte('spent_at', start.toISOString())
 
     if (fetchError) {
@@ -39,7 +43,7 @@ export function useExpenseHistory() {
     }
     setLoading(false)
     hasLoadedOnce.current = true
-  }, [])
+  }, [monthsBack])
 
   useEffect(() => {
     load()

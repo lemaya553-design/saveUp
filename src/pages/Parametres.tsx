@@ -3,6 +3,8 @@ import { PageHeader } from '../components/PageHeader'
 import { Card } from '../components/Card'
 import { IncomeInput } from '../components/IncomeInput'
 import { CategoryManager } from '../components/CategoryManager'
+import { CategorySuggestions } from '../components/CategorySuggestions'
+import { RecategorizeCard } from '../components/RecategorizeCard'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { useIncome } from '../hooks/useIncome'
 import { useCsvExport } from '../hooks/useCsvExport'
@@ -29,6 +31,10 @@ export function Parametres() {
         <IncomeInput monthlyIncome={income.monthlyIncome} onChange={income.setMonthlyIncome} />
 
         <CategoryManager />
+
+        <CategorySuggestions />
+
+        <RecategorizeCard />
 
         <Card title="Exporter tes données" hint="Toutes tes dépenses et contributions d'épargne, en CSV.">
           {csvExport.error && <p className="mb-3 text-sm text-red-400">{csvExport.error}</p>}

@@ -5,11 +5,13 @@ export function Modal({
   onClose,
   title,
   children,
+  maxWidthClassName = 'max-w-md',
 }: {
   open: boolean
   onClose: () => void
   title: string
   children: ReactNode
+  maxWidthClassName?: string
 }) {
   useEffect(() => {
     if (!open) return
@@ -32,7 +34,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby="modal-title"
         onClick={(e) => e.stopPropagation()}
-        className="glass w-full max-w-md rounded-t-2xl p-6 shadow-2xl shadow-black/40 sm:rounded-2xl"
+        className={`glass w-full ${maxWidthClassName} max-h-[90vh] overflow-y-auto rounded-t-2xl p-6 shadow-2xl shadow-black/40 sm:rounded-2xl`}
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 id="modal-title" className="text-lg font-semibold text-ink">

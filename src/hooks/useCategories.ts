@@ -7,6 +7,11 @@ import { useAuth } from './useAuth'
 export interface Category {
   id: string
   name: string
+  monthlyBudget: number | null
+}
+
+function fromRow(row: { id: string; name: string; monthly_budget: number | null }): Category {
+  return { id: row.id, name: row.name, monthlyBudget: row.monthly_budget }
 }
 
 // Alphabetical, but "Autre" (the catch-all fallback) always sorts last —
@@ -38,7 +43,7 @@ export function useCategories() {
     if (fetchError) {
       setError(fetchError.message)
     } else {
-      setCategories(sortCategories(data ?? []))
+      setCategories(sortCategories((data ?? []).map(fromRow)))
     }
     setLoading(false)
     hasLoadedOnce.current = true
@@ -62,11 +67,21 @@ export function useCategories() {
         setError(insertError?.message ?? 'Insert failed')
         return
       }
-      setCategories((prev) => sortCategories([...prev, data]))
+      setCategories((prev) => sortCategories([...prev, fromRow(data)]))
       emitCategoriesChanged()
     },
     [userId],
   )
+
+  const setCategoryBudget = useCallback(async (id: string, monthlyBudget: number | null) => {
+    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, monthlyBudget } : c)))
+    const { error: updateError } = await supabase
+      .from('categories')
+      .update({ monthly_budget: monthlyBudget })
+      .eq('id', id)
+    if (updateError) setError(updateError.message)
+    emitCategoriesChanged()
+  }, [])
 
   // Renaming updates the category row AND every fixed_expenses/expenses
   // row that references the old name by text — there's no foreign key
@@ -145,6 +160,7 @@ export function useCategories() {
     addCategory,
     renameCategory,
     removeCategory,
+    setCategoryBudget,
     getUsageCount,
   }
 }

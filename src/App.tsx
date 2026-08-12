@@ -1,7 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { RequireAuth } from './components/RequireAuth'
 import { ToastProvider } from './components/ToastProvider'
+import { PageSkeleton } from './components/PageSkeleton'
 import { AuthProvider } from './hooks/useAuth'
 import { Home } from './pages/Home'
 import { Tarifs } from './pages/Tarifs'
@@ -12,10 +14,15 @@ import { Dashboard } from './pages/Dashboard'
 import { Budget } from './pages/Budget'
 import { Epargne } from './pages/Epargne'
 import { Investissement } from './pages/Investissement'
-import { Simulateur } from './pages/Simulateur'
 import { Recompenses } from './pages/Recompenses'
 import { Parametres } from './pages/Parametres'
 import { Onboarding } from './pages/Onboarding'
+
+// Recharts is sizeable and used across every chart on this page — loaded on
+// demand so no other route pays for it in the initial bundle.
+const Statistiques = lazy(() =>
+  import('./pages/Statistiques').then((m) => ({ default: m.Statistiques })),
+)
 
 function App() {
   return (
@@ -33,8 +40,17 @@ function App() {
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="budget" element={<Budget />} />
                 <Route path="epargne" element={<Epargne />} />
+                {/* Simulateur merged into Épargne as a tab — keep old links/bookmarks working. */}
+                <Route path="simulateur" element={<Navigate to="/epargne" replace />} />
                 <Route path="investissement" element={<Investissement />} />
-                <Route path="simulateur" element={<Simulateur />} />
+                <Route
+                  path="statistiques"
+                  element={
+                    <Suspense fallback={<PageSkeleton cards={4} />}>
+                      <Statistiques />
+                    </Suspense>
+                  }
+                />
                 <Route path="recompenses" element={<Recompenses />} />
                 <Route path="parametres" element={<Parametres />} />
                 <Route path="onboarding" element={<Onboarding />} />

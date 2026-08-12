@@ -5,7 +5,7 @@ import { useExpenses } from '../hooks/useExpenses'
 import { useMonthlyExpenses } from '../hooks/useMonthlyExpenses'
 import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
-import { getWeekStart, getMonthRange, formatCurrency, WEEKS_PER_MONTH } from '../lib/format'
+import { getMonthRange, formatCurrency } from '../lib/format'
 import {
   computeCategoryBreakdown,
   computeMonthlyTrend,
@@ -20,8 +20,6 @@ import { EmptyState } from '../components/EmptyState'
 import { AlertBanner } from '../components/AlertBanner'
 import { IncomeInput } from '../components/IncomeInput'
 import { FixedExpenses } from '../components/FixedExpenses'
-import { WeeklyBudget } from '../components/WeeklyBudget'
-import { AddExpenseForm } from '../components/AddExpenseForm'
 import { RecentExpenses } from '../components/RecentExpenses'
 import { CategoryBreakdown } from '../components/CategoryBreakdown'
 import { ExpenseTrendChart } from '../components/ExpenseTrendChart'
@@ -62,20 +60,6 @@ export function Budget() {
     [income.monthlyIncome, fixed.totalFixedExpenses, savingsThisMonth],
   )
   const spendableBudget = Math.max(0, rawSpendableBudget)
-
-  const weeklyBudget = useMemo(
-    () => spendableBudget / WEEKS_PER_MONTH,
-    [spendableBudget],
-  )
-
-  const spentThisWeek = useMemo(() => {
-    const weekStart = getWeekStart(new Date())
-    return spending.expenses
-      .filter((e) => new Date(e.spent_at) >= weekStart)
-      .reduce((sum, e) => sum + e.amount, 0)
-  }, [spending.expenses])
-
-  const remainingThisWeek = weeklyBudget - spentThisWeek
 
   const thisMonthRecords = useMemo(() => {
     const { start, end } = getMonthRange(new Date())
@@ -188,12 +172,6 @@ export function Budget() {
           </p>
         </div>
 
-        <WeeklyBudget
-          weeklyBudget={weeklyBudget}
-          spentThisWeek={spentThisWeek}
-          remainingThisWeek={remainingThisWeek}
-        />
-
         {/* 3. Répartition par catégorie */}
         <Card
           title="Répartition par catégorie"
@@ -227,9 +205,6 @@ export function Budget() {
 
         {/* 7. Insight automatique */}
         <BudgetInsight text={insightText} />
-
-        {/* 9. Ajouter une dépense */}
-        <AddExpenseForm onAdd={spending.addExpense} />
       </div>
     </div>
   )

@@ -72,6 +72,203 @@ body {
   }
 }
 
+/* Scroll reveal (landing page) — Reveal.tsx toggles .is-visible via
+   IntersectionObserver once an element enters the viewport, then stops
+   observing it. transform+opacity only, so this never triggers layout. */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Landing page card hover — a lift + soft glow, on top of whatever
+   background/border the card already has. */
+.hover-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 48px -16px rgba(74, 108, 247, 0.28);
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-lift {
+    transition: none;
+  }
+  .hover-lift:hover {
+    transform: none;
+  }
+}
+
+/* Hero mockup card — a slow, gentle bob so the hero doesn't feel static
+   even before the user scrolls. Small amplitude on purpose: this runs
+   continuously, so it needs to read as "alive," not "distracting." */
+@keyframes float-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.float-bob {
+  animation: float-bob 5s ease-in-out infinite;
+}
+
+/* Ambient glow behind the hero mockup — slow scale/opacity pulse, cheap
+   (transform+opacity only, no blur re-render since the blur itself is a
+   static filter on a fixed-size element). */
+@keyframes glow-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+.glow-pulse {
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float-bob,
+  .glow-pulse {
+    animation: none;
+  }
+}
+
+/* Hero logo mark — each bar grows up from the baseline on load, staggered,
+   echoing the app's own "dépenses par catégorie" bar charts. */
+@keyframes bar-grow-in {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+.bar-grow-in rect {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: bar-grow-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+.bar-grow-in rect:nth-of-type(1) { animation-delay: 0.1s; }
+.bar-grow-in rect:nth-of-type(2) { animation-delay: 0.25s; }
+.bar-grow-in rect:nth-of-type(3) { animation-delay: 0.4s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-grow-in rect {
+    animation: none;
+  }
+}
+
+/* Reveal with a slight spring overshoot — used for the bento feature tiles,
+   where a bit more energy than the page-section fade-up feels right without
+   being distracting for body copy. Same IntersectionObserver mechanics as
+   .reveal (Reveal.tsx), a punchier curve. */
+.reveal-spring {
+  opacity: 0;
+  transform: translateY(24px) scale(0.96);
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.reveal-spring.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-spring {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Hero ambient background — 3 large blurred blobs drifting slowly and
+   independently. transform-only (translate), so the blur itself is painted
+   once per layer and the browser can composite the drift on the GPU. */
+@keyframes mesh-drift-a {
+  0%, 100% { transform: translate(-8%, -6%) scale(1); }
+  50% { transform: translate(6%, 8%) scale(1.15); }
+}
+@keyframes mesh-drift-b {
+  0%, 100% { transform: translate(10%, 4%) scale(1); }
+  50% { transform: translate(-6%, -10%) scale(1.1); }
+}
+@keyframes mesh-drift-c {
+  0%, 100% { transform: translate(-4%, 10%) scale(1); }
+  50% { transform: translate(8%, -6%) scale(1.2); }
+}
+
+.mesh-blob-a { animation: mesh-drift-a 18s ease-in-out infinite; }
+.mesh-blob-b { animation: mesh-drift-b 22s ease-in-out infinite; }
+.mesh-blob-c { animation: mesh-drift-c 26s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh-blob-a,
+  .mesh-blob-b,
+  .mesh-blob-c {
+    animation: none;
+  }
+}
+
+/* Primary CTA sheen — a diagonal light streak that sweeps across on hover,
+   the kind of small-but-satisfying detail premium SaaS buttons use. Pure
+   ::after transform, no repaint of the button itself. */
+.btn-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+  transform: translateX(-120%);
+  transition: transform 0.7s ease;
+}
+
+.btn-sheen:hover::after {
+  transform: translateX(120%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-sheen::after {
+    transition: none;
+    display: none;
+  }
+}
+
+/* Bento feature tiles — border/glow tinted per tile via --tile-glow (set
+   inline per tile), on top of .hover-lift's translate. */
+.bento-tile {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.bento-tile:hover {
+  transform: translateY(-4px);
+  border-color: var(--tile-glow, rgba(139, 92, 246, 0.4));
+  box-shadow: 0 20px 45px -20px var(--tile-glow, rgba(139, 92, 246, 0.4));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bento-tile {
+    transition: none;
+  }
+  .bento-tile:hover {
+    transform: none;
+  }
+}
+
 /* Mobile touch targets — a floor, not a fixed size: min-height coexists with
    each component's own Tailwind padding/height classes (higher-specificity
    utility classes still win on any property they set), it just stops
@@ -83,6 +280,33 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+/* App-wide hover feel — a small lift, not a jump. Layers on top of any
+   button's own hover:* Tailwind classes (e.g. hover:brightness-110 on solid
+   buttons) rather than replacing them: this rule's bare-tag selector has
+   lower specificity than those class selectors, so it only ever ADDS the
+   scale, never fights an existing hover color change. :not(:disabled) so a
+   disabled button stays visually inert on hover, matching its non-clickable
+   state. */
+button:not(:disabled):hover {
+  transform: scale(1.03);
+  filter: brightness(1.05);
+}
+
+button:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
+  button:not(:disabled):hover,
+  button:not(:disabled):active {
+    transform: none;
+  }
 }
 
 select,
@@ -130,8 +354,28 @@ input[type='range']::-moz-range-thumb {
 }
 
 /* Never let a single element force the whole page to scroll sideways —
-   wide content (tables, long text) should scroll in its own container. */
+   wide content (tables, long text) should scroll in its own container.
+   `clip`, not `hidden`: setting overflow-x to a non-`visible` value makes
+   the browser auto-promote the other axis to `auto` on the SAME element
+   (CSS Overflow spec), which turns both html and body into their own
+   scroll containers. Any position:sticky descendant (the Nav header) then
+   anchors to that inner body scrollbox instead of the real viewport, and
+   the two can drift out of sync — the page reads as "already scrolled to
+   top" while the nav renders clipped, with no scroll gesture able to fix
+   it. `clip` blocks the overflow without ever creating a scroll container,
+   so it doesn't trigger that pairing. */
 html,
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+/* Screenshot carousel (landing page) — scrollbar hidden since the arrows +
+   snap points + drag/swipe are already the affordance; a visible scrollbar
+   underneath would just be visual noise. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

@@ -356,14 +356,15 @@ alter table investment_balance drop constraint if exists investment_balance_pkey
 alter table investment_balance add primary key (user_id);
 alter table investment_balance drop column if exists id;
 
--- Optional cleanup: `savings_goal` (singular) is the pre-multi-goal legacy
--- table — dead code already stopped querying it, and it was NOT part of the
--- Phase 3/4 rewrite above, so it still has an open "using (true)" policy and
--- an anon grant. Since nothing references it, dropping it removes that
--- leftover exposure entirely rather than just leaving it unused.
--- Uncomment if you're fine losing whatever's in it (it should already be
--- copied into savings_goals per the one-time migration earlier in this file):
--- drop table if exists savings_goal;
+-- Security fix (pre-launch audit): `savings_goal` (singular) is the
+-- pre-multi-goal legacy table — dead code already stopped querying it, and
+-- it was NOT part of the Phase 3/4 auth rewrite above (it never got a
+-- user_id column), so it still has an open "using (true)" RLS policy and an
+-- `anon` grant: anyone holding just the public anon key could read or write
+-- it. Its data was already copied into savings_goals by the one-time
+-- migration earlier in this file, so it's safe to drop outright rather than
+-- leave it around unused with an open policy.
+drop table if exists savings_goal;
 
 -- Hotfix: unique constraints for upsert() onConflict targets ----------------
 -- The app calls .upsert(data, { onConflict: '...' }) on three tables. That
@@ -422,3 +423,116 @@ end $$;
 alter table budget_settings drop constraint if exists budget_settings_pkey;
 alter table investment_balance drop constraint if exists investment_balance_pkey;
 alter table financial_health_snapshots drop constraint if exists financial_health_snapshots_pkey;
+
+-- Accounts (transaction import source labels) --------------------------------
+-- User-named labels like "Carte de crédit 1" or "Débit", picked/created in
+-- the import wizard so a batch of imported transactions can be traced back
+-- to the account it came from. Created fresh (post-auth), so unlike the
+-- older tables this one goes straight to a NOT NULL user_id and an
+-- `authenticated`-only grant — no legacy singleton/anon-key baggage to work
+-- around.
+
+create table if not exists accounts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists accounts_user_id_name_key on accounts(user_id, name);
+
+alter table accounts enable row level security;
+
+drop policy if exists "accounts_all" on accounts;
+create policy "accounts_all" on accounts
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+grant select, insert, update, delete on accounts to authenticated;
+
+-- Which account an expense came from — set by the CSV/Excel import wizard;
+-- null for expenses added manually (quick-add, the regular form), which
+-- have no source account to attribute. Plain text, not a foreign key to
+-- accounts(id), matching how expenses.category already works: renaming is
+-- an app-side "update this row" operation, not something the DB enforces.
+alter table expenses add column if not exists account text;
+
+-- Per-category monthly budget (Statistiques page: budget vs. actual) -------
+-- Optional — null means "no budget set for this category," not "$0 budget",
+-- so an unset category is simply excluded from the budget-vs-actual view
+-- instead of showing as permanently over budget.
+alter table categories add column if not exists monthly_budget numeric(12, 2);
+
+-- User-confirmed merchant-keyword -> category mappings ----------------------
+-- Populated ONLY when the user explicitly confirms a suggestion from the
+-- "Autre" clustering detector (Paramètres > Catégories suggérées) — never
+-- written automatically. Consulted by pickCategory (src/lib/importParsing.ts)
+-- alongside the built-in keyword dictionary, ahead of it in priority, so a
+-- confirmed match keeps applying to future imports and recategorization
+-- runs, not just the transactions it was suggested from. Created fresh
+-- (post-auth), so like `accounts` it goes straight to a NOT NULL user_id and
+-- an `authenticated`-only grant — no legacy singleton/anon-key baggage.
+
+create table if not exists custom_category_keywords (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  keyword text not null,
+  category text not null,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists custom_category_keywords_user_id_keyword_key
+  on custom_category_keywords(user_id, keyword);
+
+alter table custom_category_keywords enable row level security;
+
+drop policy if exists "custom_category_keywords_all" on custom_category_keywords;
+create policy "custom_category_keywords_all" on custom_category_keywords
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+grant select, insert, update, delete on custom_category_keywords to authenticated;
+
+-- Claimed badges (Récompenses page) ------------------------------------------
+-- A badge's underlying achievement (savings amount reached, a goal
+-- completed) is always computed live from real data — never stored. This
+-- table only records the separate, explicit "I clicked reveal on this
+-- already-earned badge" action, so a claimed badge stays revealed on later
+-- visits instead of re-flashing the grey-to-color animation every time.
+
+create table if not exists claimed_badges (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  tier_id text not null,
+  claimed_at timestamptz not null default now()
+);
+
+create unique index if not exists claimed_badges_user_id_tier_id_key on claimed_badges(user_id, tier_id);
+
+alter table claimed_badges enable row level security;
+
+drop policy if exists "claimed_badges_all" on claimed_badges;
+create policy "claimed_badges_all" on claimed_badges
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+grant select, insert, update, delete on claimed_badges to authenticated;
+
+-- Login streak (Récompenses page) ---------------------------------------------
+-- One row per (user, calendar day) they had the app open — recorded from
+-- Layout.tsx on every authenticated page load, not just Récompenses, so the
+-- streak reflects real app usage rather than only visits to this one page.
+
+create table if not exists login_activity (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  activity_date date not null,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists login_activity_user_id_date_key on login_activity(user_id, activity_date);
+
+alter table login_activity enable row level security;
+
+drop policy if exists "login_activity_all" on login_activity;
+create policy "login_activity_all" on login_activity
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+grant select, insert, update, delete on login_activity to authenticated;

@@ -1,57 +1,63 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { PageHeader } from '../components/PageHeader'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
-import { ProgressBar } from '../components/ProgressBar'
 import { ScoreTrendBadge } from '../components/ScoreTrendBadge'
 import { ScoreGauge } from '../components/ScoreGauge'
-import { ScoreHistoryChart } from '../components/ScoreHistoryChart'
 import { AlertBanner } from '../components/AlertBanner'
-import { RewardsPreview } from '../components/RewardsPreview'
 import { DashboardStat } from '../components/DashboardStat'
-import { MonthComparison } from '../components/MonthComparison'
-import { QuickAmountEdit } from '../components/QuickAmountEdit'
 import { PageSkeleton } from '../components/PageSkeleton'
+import {
+  BudgetIllustration,
+  SavingsIllustration,
+  StatsIllustration,
+  BadgesIllustration,
+} from '../components/FeatureIllustrations'
 import { useFinancialHealth } from '../hooks/useFinancialHealth'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
-import { useExpenses } from '../hooks/useExpenses'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useInvestmentBalance } from '../hooks/useInvestmentBalance'
 import { formatCurrency } from '../lib/format'
-import { getScoreExplanations } from '../lib/financialHealth'
 import { getSpendableBudgetCaption, sumThisMonth } from '../lib/budgetInsights'
 import { getBudgetPaceAlert, getSavingsGoalLateAlert } from '../lib/alerts'
 
-function PlusIcon({ className }: { className: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
-    </svg>
-  )
-}
-
-function getLastMonthName(): string {
-  const now = new Date()
-  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-  return lastMonth.toLocaleDateString('fr-CA', { month: 'long' })
-}
+const FEATURE_LINKS = [
+  {
+    to: '/budget',
+    Illustration: BudgetIllustration,
+    title: 'Budget',
+    description: 'Dépenses par catégorie, comparées à ce que tu t\'es fixé.',
+  },
+  {
+    to: '/epargne',
+    Illustration: SavingsIllustration,
+    title: 'Épargne',
+    description: 'Tes objectifs et leur progression.',
+  },
+  {
+    to: '/statistiques',
+    Illustration: StatsIllustration,
+    title: 'Statistiques',
+    description: 'Tendances et comparaisons mensuelles, en détail.',
+  },
+  {
+    to: '/recompenses',
+    Illustration: BadgesIllustration,
+    title: 'Récompenses',
+    description: 'Tes badges et ta série de connexions.',
+  },
+]
 
 export function Dashboard() {
   const navigate = useNavigate()
   const health = useFinancialHealth()
   const goals = useSavingsGoals()
-  const expenses = useExpenses()
   const contributions = useSavingsContributions()
   const investmentBalance = useInvestmentBalance()
 
-  const [quickDescription, setQuickDescription] = useState('')
-  const [quickAmount, setQuickAmount] = useState('')
-
-  const loading =
-    health.loading || goals.loading || expenses.loading || contributions.loading || investmentBalance.loading
-  const error =
-    health.error || goals.error || expenses.error || contributions.error || investmentBalance.error
+  const loading = health.loading || goals.loading || contributions.loading || investmentBalance.loading
+  const error = health.error || goals.error || contributions.error || investmentBalance.error
 
   const savingsThisMonth = useMemo(
     () => sumThisMonth(contributions.contributions),
@@ -88,22 +94,10 @@ export function Dashboard() {
     return <PageSkeleton cards={4} />
   }
 
-  function handleQuickAdd(e: React.FormEvent) {
-    e.preventDefault()
-    const parsed = Number(quickAmount)
-    if (!quickDescription.trim() || !parsed || parsed <= 0) return
-    expenses.addExpense(quickDescription.trim(), parsed)
-    setQuickDescription('')
-    setQuickAmount('')
-  }
-
   if (isFreshUser) {
     return (
       <div className="mx-auto max-w-3xl px-4 pb-10">
-        <PageHeader
-          title="Comment tu t'en sors ce mois-ci"
-          subtitle="Ton portrait financier en un coup d'œil."
-        />
+        <PageHeader title="Comment tu t'en sors" subtitle="Ton portrait financier en un coup d'œil." />
         <EmptyState
           title="Tu n'as pas encore de budget"
           description="Commence par ajouter ton revenu mensuel — tout le reste (budget, alertes, score) se calcule automatiquement à partir de là."
@@ -121,11 +115,6 @@ export function Dashboard() {
   const totalTargetAmount = goals.goals.reduce((sum, g) => sum + g.targetAmount, 0)
   const goalProgress = totalTargetAmount > 0 ? Math.min(100, (totalCurrentAmount / totalTargetAmount) * 100) : 0
 
-  const scoreExplanations = getScoreExplanations(health.breakdown)
-  const weakestExplanation = scoreExplanations.reduce((worst, item) =>
-    item.value / item.max < worst.value / worst.max ? item : worst,
-  )
-
   const budgetPaceAlert = getBudgetPaceAlert({
     spentThisMonth: health.spentThisMonth,
     discretionaryBudget: spendableBudget,
@@ -138,12 +127,7 @@ export function Dashboard() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader
-        title="Comment tu t'en sors ce mois-ci"
-        subtitle="Ton portrait financier en un coup d'œil."
-      />
-
-      <QuickAmountEdit label="Revenu mensuel" amount={health.monthlyIncome} onChange={health.setMonthlyIncome} />
+      <PageHeader title="Comment tu t'en sors" subtitle="Ton portrait financier en un coup d'œil." />
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
@@ -158,94 +142,55 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* The 3 headline numbers — biggest, most contrasted elements on the page. */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <div className="glass rounded-2xl p-5 shadow-lg shadow-black/30">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted">
-            Score de santé
-          </p>
-          <div className="mt-1">
+      {/* Score gets the visual lead — it's the one number meant to answer
+          "how am I doing," everything else here is supporting detail. The
+          featured card takes 3/5 of the row on wider screens, with spent/saved
+          stacked narrower beside it rather than three equal-weight boxes. */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-5">
+        <div className="glass flex flex-col items-center rounded-2xl p-6 text-center shadow-lg shadow-black/30 sm:col-span-3 sm:justify-center">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">Score de santé</p>
+          <div className="mt-2 w-full max-w-[240px]">
             <ScoreGauge score={health.breakdown.score} />
           </div>
-          <div className="-mt-2 flex justify-center">
-            <ScoreTrendBadge trend={health.trend} />
-          </div>
-          <p className="mt-2 text-center text-xs text-muted">
+          <ScoreTrendBadge trend={health.trend} />
+          <p className="mt-3 max-w-[26ch] text-xs text-muted">
             Reflète tes habitudes de dépenses et de budget.{' '}
             <Link to="/recompenses" className="text-accent hover:text-accent/80">
-              Voir ton score d'épargne →
+              Voir tes récompenses →
             </Link>
           </p>
         </div>
 
-        <DashboardStat
-          label="Dépensé ce mois-ci"
-          value={formatCurrency(health.spentThisMonth)}
-          valueColorClass={isOverBudget ? 'text-red-400' : 'text-ink'}
-          progress={budgetPct}
-          progressColorClass={isOverBudget ? 'bg-red-400' : 'bg-primary'}
-          caption={getSpendableBudgetCaption(rawSpendableBudget)}
-        />
+        <div className="grid gap-4 sm:col-span-2">
+          <DashboardStat
+            label="Dépensé ce mois-ci"
+            value={formatCurrency(health.spentThisMonth)}
+            valueColorClass={isOverBudget ? 'text-red-400' : 'text-ink'}
+            progress={budgetPct}
+            progressColorClass={isOverBudget ? 'bg-red-400' : 'bg-primary'}
+            caption={getSpendableBudgetCaption(rawSpendableBudget)}
+          />
 
-        <DashboardStat
-          label="Épargné"
-          value={formatCurrency(totalCurrentAmount)}
-          valueColorClass="text-success"
-          progress={totalTargetAmount > 0 ? goalProgress : undefined}
-          progressColorClass="bg-success"
-          caption={
-            <Link to="/epargne" className="hover:text-accent">
-              {goals.goals.length === 0
-                ? 'Fixe un objectif dans Épargne →'
-                : goals.goals.length === 1
-                  ? `vers ${formatCurrency(totalTargetAmount)} →`
-                  : `${goals.goals.length} objectifs actifs →`}
-            </Link>
-          }
-        />
+          <DashboardStat
+            label="Épargné"
+            value={formatCurrency(totalCurrentAmount)}
+            valueColorClass="text-success"
+            progress={totalTargetAmount > 0 ? goalProgress : undefined}
+            progressColorClass="bg-success"
+            caption={
+              <Link to="/epargne" className="hover:text-accent">
+                {goals.goals.length === 0
+                  ? 'Fixe un objectif dans Épargne →'
+                  : goals.goals.length === 1
+                    ? `vers ${formatCurrency(totalTargetAmount)} →`
+                    : `${goals.goals.length} objectifs actifs →`}
+              </Link>
+            }
+          />
+        </div>
       </div>
 
-      {/* Primary action: visible without scrolling, no navigation needed. */}
-      <section className="glass mb-6 rounded-2xl p-6 shadow-lg shadow-black/30 ring-1 ring-primary/30">
-        <h2 className="text-xl font-bold text-ink">Ajoute une dépense</h2>
-        <p className="mb-4 mt-1 text-xs text-muted">
-          Note-la en 5 secondes pour garder ton score à jour.
-        </p>
-        <form onSubmit={handleQuickAdd} className="flex flex-wrap gap-2">
-          <input
-            type="text"
-            value={quickDescription}
-            onChange={(e) => setQuickDescription(e.target.value)}
-            placeholder="Description (ex: Café)"
-            className="min-w-[140px] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-          />
-          <input
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="0.01"
-            value={quickAmount}
-            onChange={(e) => setQuickAmount(e.target.value)}
-            placeholder="Montant"
-            className="w-28 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-          />
-          <button
-            type="submit"
-            className="flex items-center gap-2 rounded-lg bg-primary-strong px-6 py-3 text-base font-semibold text-white shadow-[0_0_20px_rgba(74,108,247,0.35)] transition-all hover:brightness-110"
-          >
-            <PlusIcon className="h-5 w-5" />
-            Ajouter
-          </button>
-        </form>
-      </section>
-
       <div className="grid gap-6">
-        <MonthComparison
-          currentAmount={health.spentThisMonth}
-          previousAmount={health.spentLastMonth}
-          previousLabel={getLastMonthName()}
-        />
-
         <Card
           title="Ce que tu as accumulé"
           hint="Épargne totale (tous objectifs) et montant réellement investi à ce jour."
@@ -267,28 +212,27 @@ export function Dashboard() {
           </div>
         </Card>
 
-        <RewardsPreview totalCurrentAmount={totalCurrentAmount} goals={goals.goals} />
-
-        <Card title="Détail du score" hint="Ce qui fait bouger ton score.">
-          <div className="space-y-2">
-            {scoreExplanations.map((item) => (
-              <div key={item.label}>
-                <div className="mb-1 flex items-center justify-between text-xs">
-                  <span className="text-ink">{item.label}</span>
-                  <span className="text-muted">
-                    {item.value}/{item.max}
-                  </span>
+        <div>
+          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">
+            Aller plus loin
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {FEATURE_LINKS.map(({ to, Illustration, title, description }) => (
+              <Link
+                key={to}
+                to={to}
+                className="hover-lift glass flex items-center gap-3 rounded-2xl p-4 shadow-lg shadow-black/30"
+              >
+                <Illustration variant="icon" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-ink">{title}</p>
+                  <p className="truncate text-xs text-muted">{description}</p>
                 </div>
-                <ProgressBar value={(item.value / item.max) * 100} colorClass="bg-accent" />
-              </div>
+                <span className="shrink-0 text-accent">→</span>
+              </Link>
             ))}
           </div>
-          <p className="mt-3 text-xs text-muted">{weakestExplanation.detail}</p>
-
-          <div className="mt-5 border-t border-white/10 pt-4">
-            <ScoreHistoryChart history={health.history} />
-          </div>
-        </Card>
+        </div>
       </div>
     </div>
   )

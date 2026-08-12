@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { LogoMark } from './Logo'
 
 const NAV_LINKS = [
   { to: '/#comment-ca-marche', label: 'Comment ça marche' },
@@ -31,11 +32,12 @@ export function LandingHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-canvas/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-        <Link
-          to="/"
-          className="bg-gradient-to-r from-primary to-accent bg-clip-text text-xl font-bold text-transparent"
-        >
-          SaveUp
+        <Link to="/" className="flex items-center gap-2">
+          <LogoMark className="h-7 w-7" />
+          <span className="text-xl font-bold">
+            <span className="text-ink">save</span>
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Up</span>
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-muted lg:flex">

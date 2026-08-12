@@ -200,23 +200,3 @@ export function getGoalCompletionRequirement(goal: {
     goalName: goal.name,
   }
 }
-
-const SEEN_TIERS_KEY = 'saveup:seenRewardTiers'
-
-export function getSeenTierIds(): Set<string> {
-  try {
-    const raw = localStorage.getItem(SEEN_TIERS_KEY)
-    return new Set(raw ? (JSON.parse(raw) as string[]) : [])
-  } catch {
-    return new Set()
-  }
-}
-
-export function saveSeenTierIds(ids: Set<string>): void {
-  try {
-    localStorage.setItem(SEEN_TIERS_KEY, JSON.stringify([...ids]))
-  } catch {
-    // localStorage unavailable (private browsing, etc.) — the unlock
-    // animation just won't be remembered across visits, which is harmless.
-  }
-}

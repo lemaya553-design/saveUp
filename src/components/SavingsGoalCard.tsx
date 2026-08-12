@@ -9,6 +9,33 @@ import {
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
 import type { Contribution } from '../hooks/useSavingsContributions'
 
+function TargetIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="12" cy="12" r="0.75" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+// Blue / mauve / green — cosmetic only (which color a goal's icon gets),
+// deterministic on the name so it doesn't shuffle every render as goals
+// reorder.
+const ICON_STYLES = [
+  { bg: 'bg-primary/15', text: 'text-primary' },
+  { bg: 'bg-accent/15', text: 'text-accent' },
+  { bg: 'bg-success/15', text: 'text-success' },
+]
+
+function iconStyleForGoal(name: string): { bg: string; text: string } {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) | 0
+  }
+  return ICON_STYLES[Math.abs(hash) % ICON_STYLES.length]
+}
+
 export function SavingsGoalCard({
   goal,
   contributionsForGoal,
@@ -34,6 +61,7 @@ export function SavingsGoalCard({
   const requiredPace = goal.targetDate ? computeRequiredPace(remaining, goal.targetDate, now) : null
   const isAhead = requiredPace ? monthlyRate >= requiredPace.perMonth : null
   const weeklyDots = computeWeeklyContributionDots(contributionsForGoal, now)
+  const icon = iconStyleForGoal(goal.name)
 
   function saveGoal(e: React.FormEvent) {
     e.preventDefault()
@@ -96,22 +124,27 @@ export function SavingsGoalCard({
   }
 
   return (
-    <div className="glass rounded-2xl p-5 shadow-lg shadow-black/30">
-      <div className="mb-3 flex items-start justify-between">
-        <div>
-          <p className="font-medium text-ink">{goal.name}</p>
-          {goal.targetDate && (
-            <p className="text-xs text-muted">
-              Échéance :{' '}
-              {new Date(goal.targetDate).toLocaleDateString('fr-CA', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-              })}
-            </p>
-          )}
+    <div className="glass flex flex-col rounded-2xl p-5 shadow-lg shadow-black/30">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${icon.bg}`}>
+            <TargetIcon className={`h-5 w-5 ${icon.text}`} />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-ink">{goal.name}</p>
+            {goal.targetDate && (
+              <p className="text-xs text-muted">
+                Échéance :{' '}
+                {new Date(goal.targetDate).toLocaleDateString('fr-CA', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="flex shrink-0 gap-3">
+        <div className="flex shrink-0 gap-3 pt-1.5">
           <button
             type="button"
             onClick={() => setEditing(true)}
@@ -130,23 +163,17 @@ export function SavingsGoalCard({
         </div>
       </div>
 
-      <div className="mb-1 flex items-center justify-between text-sm">
-        <span className="text-ink">{formatCurrency(goal.currentAmount)}</span>
-        <span className="text-muted">{formatCurrency(goal.targetAmount)}</span>
+      <p className="text-2xl font-bold text-ink">
+        {formatCurrency(goal.currentAmount)}
+        <span className="ml-1.5 text-sm font-normal text-muted">/ {formatCurrency(goal.targetAmount)}</span>
+      </p>
+      <div className="mt-3">
+        <ProgressBar value={progress} colorClass={progress >= 100 ? 'bg-success' : 'bg-primary'} />
       </div>
-      <ProgressBar value={progress} />
-      <p className="mt-1 text-xs text-muted">{progress.toFixed(0)}% atteint</p>
-
-      <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/10 pt-4 text-sm">
-        <div>
-          <p className="text-xs text-muted">Épargné à ce jour</p>
-          <p className="font-semibold text-ink">{formatCurrency(goal.currentAmount)}</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted">Restant</p>
-          <p className="font-semibold text-ink">{formatCurrency(remaining)}</p>
-        </div>
-      </div>
+      <p className="mt-1.5 text-xs text-muted">
+        {progress.toFixed(0)}% atteint
+        {remaining > 0 && <> · {formatCurrency(remaining)} restant</>}
+      </p>
 
       {remaining <= 0 ? (
         <p className="mt-3 text-xs text-success">🎉 Objectif atteint.</p>
@@ -159,8 +186,8 @@ export function SavingsGoalCard({
             nécessaire
           </span>
           <span
-            className={`inline-flex items-center gap-1 font-semibold ${
-              isAhead ? 'text-success' : 'text-red-400'
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold ${
+              isAhead ? 'bg-success/15 text-success' : 'bg-red-400/15 text-red-400'
             }`}
           >
             {isAhead ? '↑ En avance' : '↓ En retard'}
@@ -171,7 +198,9 @@ export function SavingsGoalCard({
       )}
 
       <div className="mt-4 border-t border-white/10 pt-3">
-        <p className="mb-1.5 text-xs text-muted">Régularité (8 dernières semaines)</p>
+        <p className="mb-1.5 text-xs text-muted">
+          Régularité ({weeklyDots.filter(Boolean).length}/{weeklyDots.length} dernières semaines)
+        </p>
         <div className="flex gap-1.5">
           {weeklyDots.map((hasContribution, i) => (
             <span

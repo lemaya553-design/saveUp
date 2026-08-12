@@ -10,7 +10,10 @@ export interface Contribution {
 
 // Read-only: contributions are written from useSavingsGoals.addContribution,
 // which is the single place a contribution is actually made.
-export function useSavingsContributions() {
+// daysBack defaults to 90 (Dashboard/Budget/Épargne only ever need "recent"
+// contributions); Statistiques passes a wider window to match its 6-month
+// category-chart month picker.
+export function useSavingsContributions(daysBack = 90) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [contributions, setContributions] = useState<Contribution[]>([])
@@ -23,7 +26,7 @@ export function useSavingsContributions() {
       setError(null)
 
       const since = new Date()
-      since.setDate(since.getDate() - 90)
+      since.setDate(since.getDate() - daysBack)
 
       const { data, error: fetchError } = await supabase
         .from('savings_contributions')
@@ -44,7 +47,7 @@ export function useSavingsContributions() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [daysBack])
 
   return { loading, error, contributions }
 }

@@ -7,6 +7,7 @@ import { ContributionsVsInterestChart } from '../components/ContributionsVsInter
 import { QuickAmountEdit } from '../components/QuickAmountEdit'
 import { BeforeAfterRow } from '../components/BeforeAfterRow'
 import { BudgetInsight } from '../components/BudgetInsight'
+import { PageSkeleton } from '../components/PageSkeleton'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useInvestmentBalance } from '../hooks/useInvestmentBalance'
 import { formatCurrency } from '../lib/format'
@@ -59,6 +60,12 @@ export function Investissement() {
       ? `La règle du 72 : à ${input.annualRatePercent}% par année, un montant placé double environ tous les ${ruleOf72Years.toFixed(1)} ans, grâce à l'intérêt composé.`
       : "La règle du 72 estime le temps pour doubler un placement (72 ÷ taux). Choisis un taux de rendement positif ci-dessus pour voir l'estimation."
 
+  if (investmentBalance.loading) {
+    return <PageSkeleton cards={4} />
+  }
+
+  const error = investmentBalance.error || goals.error
+
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10">
       <PageHeader
@@ -72,6 +79,12 @@ export function Investissement() {
         onChange={investmentBalance.setCurrentAmount}
         hint="Ton vrai montant investi à ce jour."
       />
+
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+          {error}
+        </div>
+      )}
 
       <div className="grid gap-6">
         <Card

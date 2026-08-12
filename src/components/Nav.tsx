@@ -3,13 +3,13 @@ import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useAuth } from '../hooks/useAuth'
 import { REWARD_TIERS, getUnlockedTiers } from '../lib/rewards'
+import { LogoMark } from './Logo'
 
 const links = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/budget', label: 'Budget' },
   { to: '/epargne', label: 'Épargne' },
-  { to: '/investissement', label: 'Investissement' },
-  { to: '/simulateur', label: 'Simulateur' },
+  { to: '/statistiques', label: 'Statistiques' },
   { to: '/recompenses', label: 'Récompenses' },
   { to: '/parametres', label: 'Paramètres' },
 ]
@@ -56,11 +56,12 @@ export function Nav() {
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-surface/70 backdrop-blur-md">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 lg:justify-center">
-        <Link
-          to="/dashboard"
-          className="bg-gradient-to-r from-primary to-accent bg-clip-text text-lg font-bold text-transparent lg:hidden"
-        >
-          SaveUp
+        <Link to="/dashboard" className="flex items-center gap-1.5 lg:hidden">
+          <LogoMark className="h-6 w-6" />
+          <span className="text-lg font-bold">
+            <span className="text-ink">save</span>
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Up</span>
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">
