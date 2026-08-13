@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Card } from './Card'
+import { UpgradePrompt } from './UpgradePrompt'
 import { useCategories, type Category } from '../hooks/useCategories'
+import { useSubscription } from '../hooks/useSubscription'
 import { FALLBACK_CATEGORY } from '../lib/categories'
 
 function BudgetInput({
@@ -127,6 +129,8 @@ function CategoryRow({
 export function CategoryManager() {
   const { categories, loading, error, addCategory, renameCategory, removeCategory, setCategoryBudget, getUsageCount } =
     useCategories()
+  const { limits } = useSubscription()
+  const atCategoryLimit = limits.maxCategories !== null && categories.length >= limits.maxCategories
   const [newName, setNewName] = useState('')
   const [addingCategory, setAddingCategory] = useState(false)
   const [checkingId, setCheckingId] = useState<string | null>(null)
@@ -156,7 +160,7 @@ export function CategoryManager() {
   async function submitAdd(e: React.FormEvent) {
     e.preventDefault()
     const trimmed = newName.trim()
-    if (!trimmed || addingCategory) return
+    if (!trimmed || addingCategory || atCategoryLimit) return
     setAddingCategory(true)
     await addCategory(trimmed)
     setAddingCategory(false)
@@ -214,22 +218,32 @@ export function CategoryManager() {
         </div>
       )}
 
-      <form onSubmit={submitAdd} className="mt-4 flex gap-2">
-        <input
-          type="text"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          placeholder="Nouvelle catégorie"
-          className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-        />
-        <button
-          type="submit"
-          disabled={addingCategory}
-          className="rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
-        >
-          {addingCategory ? 'Ajout...' : 'Ajouter'}
-        </button>
-      </form>
+      {atCategoryLimit ? (
+        <div className="mt-4">
+          <UpgradePrompt
+            title={`Limite de ${limits.maxCategories} catégories atteinte`}
+            description="Le plan Gratuit est limité à un petit nombre de catégories. Passe à Standard pour en créer autant que tu veux."
+            minPlan="standard"
+          />
+        </div>
+      ) : (
+        <form onSubmit={submitAdd} className="mt-4 flex gap-2">
+          <input
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Nouvelle catégorie"
+            className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={addingCategory}
+            className="rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+          >
+            {addingCategory ? 'Ajout...' : 'Ajouter'}
+          </button>
+        </form>
+      )}
     </Card>
   )
 }

@@ -18,7 +18,10 @@ import { ContributeForm } from '../components/ContributeForm'
 import { ContributionHistory } from '../components/ContributionHistory'
 import { PaceComparisonChart, type PaceComparisonEntry } from '../components/PaceComparisonChart'
 import { SimulateurTab } from '../components/SimulateurTab'
+import { UpgradePrompt } from '../components/UpgradePrompt'
 import { PageSkeleton } from '../components/PageSkeleton'
+import { useSubscription } from '../hooks/useSubscription'
+import { splitByLimit } from '../lib/plans'
 
 type Tab = 'objectifs' | 'simulateur'
 
@@ -30,6 +33,7 @@ export function Epargne() {
   // re-fetches — Objectifs and Simulateur both need goals/contributions,
   // and Simulateur additionally needs income/fixed/health.
   const goals = useSavingsGoals()
+  const subscription = useSubscription()
   const contributions = useSavingsContributions()
   const income = useIncome()
   const fixed = useFixedExpenses()
@@ -55,12 +59,23 @@ export function Epargne() {
     [history.records, income.monthlyIncome],
   )
 
+  // Goals beyond the account's current plan limit stay visible (nothing is
+  // deleted) but are excluded from everything that lets them actually DO
+  // something — contributions, pace comparison — until the account has
+  // room again (upgrade, or an active goal removed). See SavingsGoalCard's
+  // `locked` prop for the matching visual treatment.
+  const { active: activeGoals, over: pausedGoals } = useMemo(
+    () => splitByLimit(goals.goals, subscription.limits.maxGoals),
+    [goals.goals, subscription.limits.maxGoals],
+  )
+  const pausedGoalIds = useMemo(() => new Set(pausedGoals.map((g) => g.id)), [pausedGoals])
+
   // Actuel vs nécessaire, per goal — only goals with a deadline (and still
   // short of it) have a "required pace" to compare against; the rest are
   // simply left out rather than shown with a meaningless comparison.
   const paceComparison = useMemo(() => {
     const now = new Date()
-    return goals.goals.reduce<PaceComparisonEntry[]>((entries, goal) => {
+    return activeGoals.reduce<PaceComparisonEntry[]>((entries, goal) => {
       const remaining = Math.max(0, goal.targetAmount - goal.currentAmount)
       if (!goal.targetDate || remaining <= 0) return entries
       const requiredPace = computeRequiredPace(remaining, goal.targetDate, now)
@@ -76,7 +91,7 @@ export function Epargne() {
       })
       return entries
     }, [])
-  }, [goals.goals, contributions.contributions])
+  }, [activeGoals, contributions.contributions])
 
   if (loading) {
     return <PageSkeleton cards={3} />
@@ -175,9 +190,18 @@ export function Epargne() {
                   contributionsForGoal={contributions.contributions.filter((c) => c.goal_id === goal.id)}
                   onSave={goals.updateGoal}
                   onRemove={goals.removeGoal}
+                  locked={pausedGoalIds.has(goal.id)}
                 />
               ))}
-              <AddGoalCard onAdd={goals.addGoal} defaultOpen={!hasGoals} />
+              {subscription.limits.maxGoals !== null && goals.goals.length >= subscription.limits.maxGoals ? (
+                <UpgradePrompt
+                  title={`Limite de ${subscription.limits.maxGoals} objectif${subscription.limits.maxGoals > 1 ? 's' : ''} atteinte`}
+                  description="Le plan Gratuit est limité à un objectif d'épargne actif. Passe à Standard pour en suivre autant que tu veux."
+                  minPlan="standard"
+                />
+              ) : (
+                <AddGoalCard onAdd={goals.addGoal} defaultOpen={!hasGoals} />
+              )}
             </div>
 
             {hasGoals && (
@@ -190,7 +214,7 @@ export function Epargne() {
                 </Card>
 
                 <ContributeForm
-                  goals={goals.goals}
+                  goals={activeGoals}
                   onContribute={goals.addContribution}
                   discretionaryBudget={discretionaryBudget}
                   savingsThisMonth={savingsThisMonth}
@@ -200,7 +224,7 @@ export function Epargne() {
             )}
           </div>
         )
-      ) : (
+      ) : subscription.limits.advancedSimulator ? (
         <SimulateurTab
           health={health}
           fixed={fixed}
@@ -211,6 +235,12 @@ export function Epargne() {
             setTab('objectifs')
             setShowCreateForm(true)
           }}
+        />
+      ) : (
+        <UpgradePrompt
+          title="Simulateur « et si » — fonctionnalité Premium"
+          description="Teste des scénarios de dépenses/épargne et vois leur impact sur ton budget et ton score avant de les appliquer pour de vrai."
+          minPlan="premium"
         />
       )}
     </div>

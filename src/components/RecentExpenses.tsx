@@ -72,10 +72,12 @@ export function RecentExpenses({
   expenses,
   onUpdate,
   onRemove,
+  compact = false,
 }: {
   expenses: Expense[]
   onUpdate: (id: string, description: string, amount: number, category: string) => void
   onRemove: (id: string) => void
+  compact?: boolean
 }) {
   const { categoryNames } = useCategories()
   const [showAll, setShowAll] = useState(false)
@@ -112,6 +114,7 @@ export function RecentExpenses({
     <Card
       title="Dépenses récentes"
       hint="Tes dernières dépenses (jusqu'à 50), les plus récentes en premier."
+      compact={compact}
     >
       {expenses.length === 0 ? (
         <p className="text-sm text-muted">Aucune dépense enregistrée pour l'instant.</p>

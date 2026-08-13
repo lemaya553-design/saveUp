@@ -10,6 +10,8 @@ import { BudgetVsActualChart } from '../components/BudgetVsActualChart'
 import { CategoryMomList } from '../components/CategoryMomList'
 import { RecategorizeCard } from '../components/RecategorizeCard'
 import { ImportTransactionsModal } from '../components/ImportTransactionsModal'
+import { DataExportCard } from '../components/DataExportCard'
+import { UpgradePrompt } from '../components/UpgradePrompt'
 import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { useExpenses } from '../hooks/useExpenses'
 import { useFixedExpenses } from '../hooks/useFixedExpenses'
@@ -17,6 +19,7 @@ import { useCategories } from '../hooks/useCategories'
 import { useIncome } from '../hooks/useIncome'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
+import { useSubscription } from '../hooks/useSubscription'
 import { computeCategorySpending } from '../lib/categorySpending'
 import { getMonthRange } from '../lib/format'
 import {
@@ -41,6 +44,7 @@ export function Statistiques() {
   const income = useIncome()
   const contributions = useSavingsContributions(CONTRIBUTIONS_DAYS_BACK)
   const goals = useSavingsGoals()
+  const subscription = useSubscription()
 
   // 0 = current month, -1 = last month, etc. — only the category-by-category
   // card is month-scoped; the trend, budget, and MoM cards are deliberately
@@ -120,11 +124,13 @@ export function Statistiques() {
       )}
 
       <div className="grid gap-6">
-        <MonthComparison
-          currentAmount={thisVsLastMonth.thisMonth}
-          previousAmount={thisVsLastMonth.lastMonth}
-          previousLabel={lastMonthLabel}
-        />
+        {subscription.limits.fullStatistics && (
+          <MonthComparison
+            currentAmount={thisVsLastMonth.thisMonth}
+            previousAmount={thisVsLastMonth.lastMonth}
+            previousLabel={lastMonthLabel}
+          />
+        )}
 
         <Card
           title="Dépenses par catégorie"
@@ -171,19 +177,26 @@ export function Statistiques() {
           />
         </Card>
 
-        <Card
-          title="Comparaison avec le mois dernier, par catégorie"
-          hint="La grande colonne est ce que tu as dépensé le mois dernier ; la portion colorée montre combien de ce montant est déjà dépensé ce mois-ci."
-        >
-          <MonthOverlayChart entries={lastMonthOverlay} />
-        </Card>
+        {subscription.limits.fullStatistics ? (
+          <>
+            <Card
+              title="Comparaison avec le mois dernier, par catégorie"
+              hint="La grande colonne est ce que tu as dépensé le mois dernier ; la portion colorée montre combien de ce montant est déjà dépensé ce mois-ci."
+            >
+              <MonthOverlayChart entries={lastMonthOverlay} />
+            </Card>
 
-        <Card
-          title="Tendance sur 6 mois"
-          hint="Total de tes dépenses ponctuelles, mois par mois."
-        >
-          <MonthlyTrendChart points={monthlyTrend} />
-        </Card>
+            <Card title="Tendance sur 6 mois" hint="Total de tes dépenses ponctuelles, mois par mois.">
+              <MonthlyTrendChart points={monthlyTrend} />
+            </Card>
+          </>
+        ) : (
+          <UpgradePrompt
+            title="Tendances et comparaisons mensuelles — fonctionnalité Standard"
+            description="Vois l'évolution de tes dépenses mois après mois et compare chaque catégorie au mois précédent."
+            minPlan="standard"
+          />
+        )}
 
         <Card
           title="Budget vs réel"
@@ -192,35 +205,51 @@ export function Statistiques() {
           <BudgetVsActualChart statuses={budgetVsActual} />
         </Card>
 
-        <Card
-          title="Comparaison au mois dernier"
-          hint="Variation de tes dépenses par catégorie par rapport au mois précédent."
-        >
-          <CategoryMomList changes={momChanges} />
-        </Card>
+        {subscription.limits.fullStatistics && (
+          <Card
+            title="Comparaison au mois dernier"
+            hint="Variation de tes dépenses par catégorie par rapport au mois précédent."
+          >
+            <CategoryMomList changes={momChanges} />
+          </Card>
+        )}
 
         <div>
           <h2 className="mb-4 text-lg font-semibold text-ink">Gérer mes données</h2>
-          <div className="grid gap-6">
-            <Card
-              title="Importer des transactions"
-              hint="Depuis un relevé de carte de crédit ou de compte (.csv, .xlsx)."
-            >
-              <button
-                type="button"
-                onClick={() => setImportOpen(true)}
-                className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-white/5"
+          <div className="grid gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Card
+                title="Importer des transactions"
+                hint="Depuis un relevé de carte de crédit ou de compte (.csv, .xlsx)."
               >
-                Importer un fichier
-              </button>
-            </Card>
+                {subscription.limits.csvImport ? (
+                  <button
+                    type="button"
+                    onClick={() => setImportOpen(true)}
+                    className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-white/5"
+                  >
+                    Importer un fichier
+                  </button>
+                ) : (
+                  <UpgradePrompt
+                    title="Import CSV — fonctionnalité Standard"
+                    description="Importe directement un relevé bancaire au lieu de saisir tes dépenses une par une."
+                    minPlan="standard"
+                  />
+                )}
+              </Card>
+
+              <DataExportCard canExport={subscription.limits.dataExport} />
+            </div>
 
             <RecategorizeCard />
           </div>
         </div>
       </div>
 
-      <ImportTransactionsModal open={importOpen} onClose={() => setImportOpen(false)} />
+      {subscription.limits.csvImport && (
+        <ImportTransactionsModal open={importOpen} onClose={() => setImportOpen(false)} />
+      )}
     </div>
   )
 }

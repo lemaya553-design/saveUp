@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '../components/PageHeader'
 import { Card } from '../components/Card'
 import { IncomeInput } from '../components/IncomeInput'
@@ -8,10 +9,39 @@ import { RecategorizeCard } from '../components/RecategorizeCard'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { useIncome } from '../hooks/useIncome'
 import { useCsvExport } from '../hooks/useCsvExport'
+import { useSubscription } from '../hooks/useSubscription'
+import { useToast } from '../components/ToastProvider'
+import { PLAN_LIMITS } from '../lib/plans'
 
 export function Parametres() {
   const income = useIncome()
   const csvExport = useCsvExport()
+  const subscription = useSubscription()
+  const { showToast } = useToast()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [managingBilling, setManagingBilling] = useState(false)
+
+  // Webhook usually beats the redirect back from Stripe Checkout, but not
+  // always — force a fresh read instead of waiting for the next natural
+  // reload, and clear the query param so this doesn't refire on revisit.
+  useEffect(() => {
+    if (searchParams.get('checkout') !== 'success') return
+    subscription.refresh()
+    showToast('Abonnement activé — merci !')
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.delete('checkout')
+      return next
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  async function handleManageBilling() {
+    setManagingBilling(true)
+    const url = await subscription.openBillingPortal()
+    if (url) window.location.href = url
+    setManagingBilling(false)
+  }
 
   if (income.loading) {
     return <PageSkeleton cards={3} />
@@ -28,6 +58,35 @@ export function Parametres() {
       )}
 
       <div className="grid gap-6">
+        <Card title="Mon abonnement" hint="Ton plan actuel et ce qu'il débloque.">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-primary/15 px-3 py-1 text-sm font-semibold text-primary">
+                {PLAN_LIMITS[subscription.plan].label}
+              </span>
+              {subscription.loading && <span className="text-xs text-muted">Chargement...</span>}
+            </div>
+            {subscription.plan === 'free' ? (
+              <Link
+                to="/tarifs"
+                className="rounded-lg bg-primary-strong px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
+              >
+                Voir les plans
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={handleManageBilling}
+                disabled={managingBilling}
+                className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-white/5 disabled:opacity-60"
+              >
+                {managingBilling ? 'Redirection...' : 'Gérer mon abonnement'}
+              </button>
+            )}
+          </div>
+          {subscription.error && <p className="mt-3 text-sm text-red-400">{subscription.error}</p>}
+        </Card>
+
         <IncomeInput monthlyIncome={income.monthlyIncome} onChange={income.setMonthlyIncome} />
 
         <CategoryManager />

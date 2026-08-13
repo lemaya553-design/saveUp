@@ -11,16 +11,16 @@ export function CategoryBreakdown({ categories }: { categories: CategoryTotal[] 
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {categories.map((cat) => (
         <div key={cat.category}>
-          <div className="mb-1 flex items-center justify-between text-sm">
+          <div className="mb-0.5 flex items-center justify-between text-sm">
             <span className="text-ink">{cat.category}</span>
             <span className="text-muted">
               {formatCurrency(cat.amount)} · {Math.round(cat.pct)}%
             </span>
           </div>
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
             <div
               className={`h-full rounded-full transition-all ${cat.colorClass}`}
               style={{ width: `${cat.pct}%` }}

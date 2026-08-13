@@ -286,6 +286,33 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               {fileError}
             </p>
           )}
+
+          <details className="group rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+            <summary className="cursor-pointer text-sm font-medium text-ink marker:content-none">
+              <span className="mr-1.5 inline-block transition-transform group-open:rotate-90">›</span>
+              Comment obtenir ce fichier de ta banque ?
+            </summary>
+            <div className="mt-3 flex flex-col gap-3 text-sm text-muted">
+              <div>
+                <p className="font-medium text-ink">Format attendu</p>
+                <p className="mt-1">
+                  Un fichier .csv ou .xlsx avec au minimum une colonne <span className="text-ink">Date</span> et une
+                  colonne <span className="text-ink">Montant</span>. Une colonne{' '}
+                  <span className="text-ink">Description</span> aide à deviner la catégorie automatiquement ; une
+                  colonne Catégorie est optionnelle. Tu pourras corriger l'association des colonnes à l'étape
+                  suivante si la détection automatique se trompe.
+                </p>
+              </div>
+              <div>
+                <p className="font-medium text-ink">Comment l'obtenir</p>
+                <p className="mt-1">
+                  Dans le portail en ligne de ta banque, cherche « Historique des transactions », « Relevés » ou «
+                  Exporter » sur le compte ou la carte de crédit visé, choisis une plage de dates, puis sélectionne
+                  le format CSV ou Excel (pas PDF).
+                </p>
+              </div>
+            </div>
+          </details>
         </div>
       )}
 

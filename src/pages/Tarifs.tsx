@@ -1,55 +1,102 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { LandingHeader } from '../components/LandingHeader'
+import { useAuth } from '../hooks/useAuth'
+import { useSubscription } from '../hooks/useSubscription'
+import type { Plan } from '../lib/plans'
 
-const plans = [
+const plans: {
+  id: Plan
+  name: string
+  price: string
+  period: string
+  description: string
+  features: string[]
+  highlight: boolean
+}[] = [
   {
+    id: 'free',
     name: 'Gratuit',
     price: '0 $',
     period: '',
     description: 'Pour commencer à voir clair dans tes finances.',
     features: [
-      'Budget hebdomadaire',
-      'Dépenses illimitées',
-      '1 objectif d’épargne',
-      'Calculateur d’investissement',
+      'Dashboard',
+      'Jusqu’à 5 catégories de budget',
+      '1 objectif d’épargne actif',
+      'Badges de base',
+      'Saisie manuelle des dépenses',
     ],
-    cta: 'available',
     highlight: false,
   },
   {
+    id: 'standard',
     name: 'Standard',
     price: '7,99 $',
     period: '/mois',
     description: 'Pour aller plus loin dans le suivi de tes objectifs.',
     features: [
       'Tout ce qui est dans Gratuit',
+      'Catégories de budget illimitées',
       'Objectifs d’épargne illimités',
-      'Historique complet des dépenses',
-      'Export CSV',
+      'Statistiques complètes (tendances, comparaisons)',
+      'Import CSV de tes relevés bancaires',
+      'Tous les badges',
     ],
-    cta: 'soon',
     highlight: true,
   },
   {
+    id: 'premium',
     name: 'Premium',
     price: '14,99 $',
     period: '/mois',
     description: 'Pour optimiser chaque dollar, jusque dans le détail.',
     features: [
       'Tout ce qui est dans Standard',
-      'Suivi multi-comptes',
-      'Rapports mensuels',
-      'Support prioritaire',
+      'Simulateur financier avancé',
+      'Alertes personnalisées',
+      'Export des données en PDF/Excel',
     ],
-    cta: 'soon',
     highlight: false,
   },
 ]
 
 export function Tarifs() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const subscription = useSubscription()
+  const [pendingPlan, setPendingPlan] = useState<Plan | null>(null)
+
+  async function handleChoose(planId: Exclude<Plan, 'free'>) {
+    if (!user) {
+      navigate('/connexion', { state: { from: '/tarifs' } })
+      return
+    }
+    setPendingPlan(planId)
+    try {
+      const url = await subscription.startCheckout(planId)
+      if (url) window.location.href = url
+    } finally {
+      setPendingPlan(null)
+    }
+  }
+
+  async function handleManage() {
+    setPendingPlan(subscription.plan)
+    try {
+      const url = await subscription.openBillingPortal()
+      if (url) window.location.href = url
+    } finally {
+      setPendingPlan(null)
+    }
+  }
+
   return (
     <div>
-      <LandingHeader />
+      {/* Logged-in visitors get here via the app's own Nav (Layout renders
+          it for /tarifs once a user session exists) — showing this too
+          would stack two header bars. */}
+      {!user && <LandingHeader />}
 
       <section className="hero-gradient px-4 pb-24 pt-10 text-center sm:px-6">
         <h1 className="mx-auto max-w-2xl text-4xl font-bold leading-tight text-ink sm:text-5xl">
@@ -59,55 +106,90 @@ export function Tarifs() {
           Commence gratuitement, débloque plus de suivi quand tu en as besoin.
         </p>
 
+        {subscription.error && (
+          <p className="mx-auto mt-6 max-w-md rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+            {subscription.error}
+          </p>
+        )}
+
         <div className="mx-auto mt-14 grid max-w-5xl gap-6 text-left sm:grid-cols-3">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`glass relative rounded-2xl p-6 shadow-lg shadow-black/30 ${
-                plan.highlight ? 'border-accent/40' : ''
-              }`}
-            >
-              {plan.highlight && (
-                <span className="absolute -top-3 left-6 rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
-                  Populaire
-                </span>
-              )}
+          {plans.map((plan) => {
+            const isCurrent = user && !subscription.loading && subscription.plan === plan.id
+            // Checkout only ever starts a brand-new subscription — a user
+            // who already has ANY paid plan (moving up OR down) manages that
+            // through the Stripe portal instead, so they never end up with
+            // two overlapping subscriptions.
+            const hasOtherPaidPlan =
+              user && !subscription.loading && subscription.plan !== 'free' && subscription.plan !== plan.id
+            const isLoadingThis = pendingPlan === plan.id
 
-              <h2 className="text-lg font-semibold text-ink">{plan.name}</h2>
-              <p className="mt-1 text-sm text-muted">{plan.description}</p>
+            return (
+              <div
+                key={plan.id}
+                className={`glass relative rounded-2xl p-6 shadow-lg shadow-black/30 ${
+                  plan.highlight ? 'border-accent/40' : ''
+                }`}
+              >
+                {plan.highlight && (
+                  <span className="absolute -top-3 left-6 rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
+                    Populaire
+                  </span>
+                )}
 
-              <p className="mt-4 text-3xl font-bold text-ink">
-                {plan.price}
-                <span className="text-base font-normal text-muted">{plan.period}</span>
-              </p>
+                <h2 className="text-lg font-semibold text-ink">{plan.name}</h2>
+                <p className="mt-1 text-sm text-muted">{plan.description}</p>
 
-              <ul className="mt-6 space-y-2">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2 text-sm text-muted">
-                    <span className="mt-0.5 text-success">✓</span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
+                <p className="mt-4 text-3xl font-bold text-ink">
+                  {plan.price}
+                  <span className="text-base font-normal text-muted">{plan.period}</span>
+                </p>
 
-              {plan.cta === 'available' ? (
-                <Link
-                  to="/dashboard"
-                  className="mt-8 block rounded-lg bg-primary-strong px-4 py-2 text-center font-medium text-white transition-all hover:brightness-110"
-                >
-                  Commencer gratuitement
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  disabled
-                  className="mt-8 w-full cursor-not-allowed rounded-lg border border-white/10 px-4 py-2 font-medium text-muted"
-                >
-                  Bientôt disponible
-                </button>
-              )}
-            </div>
-          ))}
+                <ul className="mt-6 space-y-2">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2 text-sm text-muted">
+                      <span className="mt-0.5 text-success">✓</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                {plan.id === 'free' ? (
+                  <Link
+                    to={user ? '/dashboard' : '/connexion'}
+                    className="mt-8 block rounded-lg bg-primary-strong px-4 py-2 text-center font-medium text-white transition-all hover:brightness-110"
+                  >
+                    {user ? 'Aller au Dashboard' : 'Commencer gratuitement'}
+                  </Link>
+                ) : isCurrent ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="mt-8 w-full cursor-not-allowed rounded-lg border border-white/10 px-4 py-2 font-medium text-muted"
+                  >
+                    Ton plan actuel
+                  </button>
+                ) : hasOtherPaidPlan ? (
+                  <button
+                    type="button"
+                    onClick={handleManage}
+                    disabled={isLoadingThis}
+                    className="mt-8 w-full rounded-lg border border-white/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-white/5 disabled:opacity-60"
+                  >
+                    {isLoadingThis ? 'Redirection...' : 'Gérer mon abonnement'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleChoose(plan.id as Exclude<Plan, 'free'>)}
+                    disabled={isLoadingThis}
+                    className="mt-8 w-full rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                  >
+                    {isLoadingThis ? 'Redirection...' : `Choisir ${plan.name}`}
+                  </button>
+                )}
+              </div>
+            )
+          })}
         </div>
       </section>
     </div>

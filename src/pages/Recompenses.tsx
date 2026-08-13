@@ -9,7 +9,9 @@ import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useClaimedBadges } from '../hooks/useClaimedBadges'
 import { useLoginStreak } from '../hooks/useLoginStreak'
+import { useSubscription } from '../hooks/useSubscription'
 import { formatCurrency } from '../lib/format'
+import { isAtLeast, splitByLimit } from '../lib/plans'
 import { TIER_ICONS, TIER_UNLOCKED_CLASS } from '../components/rewardIcons'
 import {
   REWARD_TIERS,
@@ -31,12 +33,23 @@ export function Recompenses() {
   const contributions = useSavingsContributions()
   const claimedBadges = useClaimedBadges()
   const streak = useLoginStreak()
+  const subscription = useSubscription()
 
   const loading = goals.loading || contributions.loading || claimedBadges.loading
   const error = goals.error || contributions.error || claimedBadges.error
 
   const totalCurrentAmount = goals.goals.reduce((sum, g) => sum + g.currentAmount, 0)
   const totalTargetAmount = goals.goals.reduce((sum, g) => sum + g.targetAmount, 0)
+
+  // Paused (over the plan's goal limit) goals don't count toward the
+  // "goal-complete" badge or the goal picker below — same active/paused
+  // split as the Épargne page. The savings SCORE above still reflects every
+  // dollar actually saved (real money, shown honestly) even if it came from
+  // a paused goal; only the goal-tracking features are restricted.
+  const activeGoals = useMemo(
+    () => splitByLimit(goals.goals, subscription.limits.maxGoals).active,
+    [goals.goals, subscription.limits.maxGoals],
+  )
 
   const savingsBreakdown = useMemo(
     () => computeSavingsScoreBreakdown(totalCurrentAmount, totalTargetAmount, contributions.contributions),
@@ -47,21 +60,31 @@ export function Recompenses() {
     [savingsBreakdown],
   )
 
-  const unlockedIds = useMemo(
-    () => new Set(getUnlockedTiers(totalCurrentAmount, goals.goals).map((tier) => tier.id)),
-    [totalCurrentAmount, goals.goals],
-  )
+  // A tier the user has earned by progress but whose minPlan they don't have
+  // yet doesn't count as unlocked — allUnlocked/claimedCount/readyToClaim
+  // and each tile's own "earned" state all read from this same set, so a
+  // Free-plan user who's technically hit the $1000 mark still sees it as
+  // locked (for their plan) rather than claimable.
+  const unlockedIds = useMemo(() => {
+    const earnedIds = getUnlockedTiers(totalCurrentAmount, activeGoals).map((tier) => tier.id)
+    return new Set(
+      earnedIds.filter((id) => {
+        const tier = REWARD_TIERS.find((t) => t.id === id)
+        return !tier?.minPlan || isAtLeast(subscription.plan, tier.minPlan)
+      }),
+    )
+  }, [totalCurrentAmount, activeGoals, subscription.plan])
 
   const nextTierProgress = useMemo(
-    () => getNextTierProgress(totalCurrentAmount, goals.goals),
-    [totalCurrentAmount, goals.goals],
+    () => getNextTierProgress(totalCurrentAmount, activeGoals),
+    [totalCurrentAmount, activeGoals],
   )
 
   // '' means "Tous les objectifs" (total mode) — the default and the only
   // option when there's 0 or 1 goal, since total === that one goal then.
   const [selectedGoalId, setSelectedGoalId] = useState('')
   const selectedGoal =
-    goals.goals.length > 1 ? goals.goals.find((g) => g.id === selectedGoalId) : undefined
+    activeGoals.length > 1 ? activeGoals.find((g) => g.id === selectedGoalId) : undefined
 
   // Tiers the user has earned but hasn't clicked "Réclamer" on yet.
   const [justClaimed, setJustClaimed] = useState<Set<string>>(new Set())
@@ -161,7 +184,7 @@ export function Recompenses() {
           </div>
 
           <div className="mt-6 border-t border-white/10 pt-4">
-            {goals.goals.length > 1 && (
+            {activeGoals.length > 1 && (
               <label className="mb-3 flex items-center justify-end gap-2 text-xs text-muted">
                 Voir :
                 <select
@@ -172,7 +195,7 @@ export function Recompenses() {
                   <option value="" className="bg-surface">
                     Tous les objectifs
                   </option>
-                  {goals.goals.map((g) => (
+                  {activeGoals.map((g) => (
                     <option key={g.id} value={g.id} className="bg-surface">
                       {g.name}
                     </option>
@@ -241,12 +264,13 @@ export function Recompenses() {
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {REWARD_TIERS.map((tier) => {
+              const planLocked = tier.minPlan !== undefined && !isAtLeast(subscription.plan, tier.minPlan)
               const earned = unlockedIds.has(tier.id)
               const claimed = claimedBadges.claimedIds.has(tier.id)
               const isAnimating = justClaimed.has(tier.id)
               const revealed = claimed || isAnimating
               const Icon = TIER_ICONS[tier.id]
-              const requirement = earned ? null : getTierRequirement(tier, totalCurrentAmount, goals.goals)
+              const requirement = earned ? null : getTierRequirement(tier, totalCurrentAmount, activeGoals)
 
               return (
                 <div
@@ -267,6 +291,10 @@ export function Recompenses() {
                   </p>
                   {revealed ? (
                     <p className="text-xs text-muted">{tier.description}</p>
+                  ) : planLocked ? (
+                    <Link to="/tarifs" className="text-xs font-medium text-accent hover:text-accent/80">
+                      Passer à Standard →
+                    </Link>
                   ) : earned ? (
                     <>
                       <p className="text-xs font-semibold text-accent">Badge mérité !</p>
@@ -285,7 +313,7 @@ export function Recompenses() {
                   ) : (
                     <p className="text-xs text-muted">Complète un objectif actif</p>
                   )}
-                  {!earned && <p className="text-xs text-muted">🔒 Verrouillé</p>}
+                  {!earned && <p className="text-xs text-muted">🔒 {planLocked ? 'Standard' : 'Verrouillé'}</p>}
                 </div>
               )
             })}

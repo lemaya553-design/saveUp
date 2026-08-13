@@ -61,8 +61,8 @@ export function useSavingsGoals() {
   }, [load])
 
   const addGoal = useCallback(
-    async (name: string, targetAmount: number, targetDate: string | null) => {
-      if (!userId) return
+    async (name: string, targetAmount: number, targetDate: string | null): Promise<SavingsGoal | null> => {
+      if (!userId) return null
       const { data, error: insertError } = await supabase
         .from('savings_goals')
         .insert({ user_id: userId, name, target_amount: targetAmount, target_date: targetDate })
@@ -70,10 +70,12 @@ export function useSavingsGoals() {
         .single()
       if (insertError || !data) {
         setError(insertError?.message ?? 'Insert failed')
-        return
+        return null
       }
-      setGoals((prev) => [...prev, fromRow(data)])
+      const goal = fromRow(data)
+      setGoals((prev) => [...prev, goal])
       emitGoalsChanged()
+      return goal
     },
     [userId],
   )

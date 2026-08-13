@@ -25,6 +25,7 @@ import { CategoryBreakdown } from '../components/CategoryBreakdown'
 import { ExpenseTrendChart } from '../components/ExpenseTrendChart'
 import { BudgetInsight } from '../components/BudgetInsight'
 import { PageSkeleton } from '../components/PageSkeleton'
+import { useSubscription } from '../hooks/useSubscription'
 
 export function Budget() {
   const income = useIncome()
@@ -33,6 +34,7 @@ export function Budget() {
   const monthly = useMonthlyExpenses()
   const history = useExpenseHistory()
   const contributions = useSavingsContributions()
+  const subscription = useSubscription()
   const [showIncomeForm, setShowIncomeForm] = useState(false)
 
   const loading =
@@ -127,27 +129,27 @@ export function Budget() {
         </div>
       )}
 
-      {categoryShareAlert && (
+      {subscription.limits.alerts && categoryShareAlert && (
         <div className="mb-6">
           <AlertBanner>{categoryShareAlert}</AlertBanner>
         </div>
       )}
 
-      <div className="grid gap-6">
+      <div className="grid gap-4">
         {/* 1. Résumé en haut */}
-        <div className="glass rounded-2xl p-6 shadow-lg shadow-black/30">
+        <div className="glass rounded-xl p-4 shadow-lg shadow-black/30">
           <p className="text-xs font-medium uppercase tracking-wide text-muted">
             Il te reste ce mois-ci
           </p>
           <p
-            className={`mt-1 text-4xl font-bold sm:text-5xl ${
+            className={`mt-1 text-3xl font-bold sm:text-4xl ${
               isOverBudget ? 'text-red-400' : 'text-success'
             }`}
           >
             {formatCurrency(remainingThisMonth)}
           </p>
 
-          <div className="relative mt-5 h-3 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="relative mt-3 h-2 w-full overflow-hidden rounded-full bg-white/10">
             <div
               className={`h-full rounded-full transition-all ${
                 isOverBudget ? 'bg-red-400' : 'bg-primary'
@@ -176,11 +178,12 @@ export function Budget() {
         <Card
           title="Répartition par catégorie"
           hint="Dépenses fixes, dépenses du mois et épargne, regroupées par catégorie."
+          compact
         >
           <CategoryBreakdown categories={categoryBreakdown} />
         </Card>
 
-        <IncomeInput monthlyIncome={income.monthlyIncome} onChange={income.setMonthlyIncome} />
+        <IncomeInput monthlyIncome={income.monthlyIncome} onChange={income.setMonthlyIncome} compact />
 
         {/* 4. Dépenses fixes */}
         <FixedExpenses
@@ -189,6 +192,7 @@ export function Budget() {
           onAdd={fixed.addFixedExpense}
           onUpdate={fixed.updateFixedExpense}
           onRemove={fixed.removeFixedExpense}
+          compact
         />
 
         {/* 5. Dépenses récentes */}
@@ -196,10 +200,15 @@ export function Budget() {
           expenses={spending.expenses}
           onUpdate={spending.updateExpense}
           onRemove={spending.removeExpense}
+          compact
         />
 
         {/* 6. Tendance 3 mois */}
-        <Card title="Tendance sur 3 mois" hint="Total de tes dépenses du jour le jour, mois par mois.">
+        <Card
+          title="Tendance sur 3 mois"
+          hint="Total de tes dépenses du jour le jour, mois par mois."
+          compact
+        >
           <ExpenseTrendChart months={monthlyTrend} />
         </Card>
 

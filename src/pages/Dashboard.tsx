@@ -18,6 +18,7 @@ import { useFinancialHealth } from '../hooks/useFinancialHealth'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useInvestmentBalance } from '../hooks/useInvestmentBalance'
+import { useSubscription } from '../hooks/useSubscription'
 import { formatCurrency } from '../lib/format'
 import { getSpendableBudgetCaption, sumThisMonth } from '../lib/budgetInsights'
 import { getBudgetPaceAlert, getSavingsGoalLateAlert } from '../lib/alerts'
@@ -55,6 +56,7 @@ export function Dashboard() {
   const goals = useSavingsGoals()
   const contributions = useSavingsContributions()
   const investmentBalance = useInvestmentBalance()
+  const subscription = useSubscription()
 
   const loading = health.loading || goals.loading || contributions.loading || investmentBalance.loading
   const error = health.error || goals.error || contributions.error || investmentBalance.error
@@ -135,7 +137,7 @@ export function Dashboard() {
         </div>
       )}
 
-      {(budgetPaceAlert || savingsGoalLateAlert) && (
+      {subscription.limits.alerts && (budgetPaceAlert || savingsGoalLateAlert) && (
         <div className="mb-6">
           {budgetPaceAlert && <AlertBanner>{budgetPaceAlert}</AlertBanner>}
           {savingsGoalLateAlert && <AlertBanner>{savingsGoalLateAlert}</AlertBanner>}

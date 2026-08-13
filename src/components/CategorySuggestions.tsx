@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Card } from './Card'
+import { UpgradePrompt } from './UpgradePrompt'
 import { useExpenses } from '../hooks/useExpenses'
 import { useCategories } from '../hooks/useCategories'
 import { useCustomKeywords } from '../hooks/useCustomKeywords'
+import { useSubscription } from '../hooks/useSubscription'
 import { detectCategorySuggestions, type CategorySuggestion } from '../lib/categorySuggestions'
 
 // 3+ transactions from the same (or same-concept) merchant is enough to be
@@ -14,6 +16,9 @@ export function CategorySuggestions() {
   const expenses = useExpenses()
   const categories = useCategories()
   const customKeywords = useCustomKeywords()
+  const subscription = useSubscription()
+  const atCategoryLimit =
+    subscription.limits.maxCategories !== null && categories.categories.length >= subscription.limits.maxCategories
 
   const [rows, setRows] = useState<{ id: string; description: string }[]>([])
   const [loading, setLoading] = useState(true)
@@ -59,6 +64,13 @@ export function CategorySuggestions() {
     setConfirmError(null)
 
     const existing = categories.categories.find((c) => c.name.trim().toLowerCase() === name.toLowerCase())
+    if (!existing && atCategoryLimit) {
+      setConfirmError(
+        `Limite de ${subscription.limits.maxCategories} catégories atteinte — passe à Standard pour en créer d'autres.`,
+      )
+      setConfirmingId(null)
+      return
+    }
     if (!existing) {
       await categories.addCategory(name)
     }
@@ -88,6 +100,15 @@ export function CategorySuggestions() {
       hint="Des dépenses « Autre » qui reviennent souvent — tu peux créer une catégorie pour elles en un clic, ou ignorer."
     >
       {confirmError && <p className="mb-3 text-sm text-red-400">{confirmError}</p>}
+      {atCategoryLimit && (
+        <div className="mb-3">
+          <UpgradePrompt
+            title={`Limite de ${subscription.limits.maxCategories} catégories atteinte`}
+            description="Tu peux toujours réassigner vers une catégorie existante ci-dessous, mais créer une nouvelle catégorie demande de passer à Standard."
+            minPlan="standard"
+          />
+        </div>
+      )}
       <ul className="flex flex-col gap-4">
         {visible.map((suggestion) => (
           <li key={suggestion.id} className="rounded-lg border border-white/10 bg-white/5 p-3">

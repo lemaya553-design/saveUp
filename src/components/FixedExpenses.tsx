@@ -77,12 +77,14 @@ export function FixedExpenses({
   onAdd,
   onUpdate,
   onRemove,
+  compact = false,
 }: {
   expenses: FixedExpense[]
   total: number
   onAdd: (name: string, amount: number, category: string) => Promise<void>
   onUpdate: (id: string, name: string, amount: number, category: string) => void
   onRemove: (id: string) => void
+  compact?: boolean
 }) {
   const { categoryNames } = useCategories()
   const [name, setName] = useState('')
@@ -103,7 +105,11 @@ export function FixedExpenses({
   }
 
   return (
-    <Card title="Dépenses fixes" hint="Loyer, abonnements, assurances — tout ce qui revient chaque mois.">
+    <Card
+      title="Dépenses fixes"
+      hint="Loyer, abonnements, assurances — tout ce qui revient chaque mois."
+      compact={compact}
+    >
       <ul className="mb-4 divide-y divide-white/10">
         {expenses.length === 0 && (
           <li className="py-2 text-sm text-muted">

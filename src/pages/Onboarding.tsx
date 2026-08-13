@@ -1,20 +1,39 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ProgressBar } from '../components/ProgressBar'
+import { ImportTransactionsModal } from '../components/ImportTransactionsModal'
+import { UpgradePrompt } from '../components/UpgradePrompt'
 import { formatCurrency, getFarFutureDateString, getTodayDateString } from '../lib/format'
 import { useIncome } from '../hooks/useIncome'
 import { useFixedExpenses } from '../hooks/useFixedExpenses'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
+import { useCategories } from '../hooks/useCategories'
+import { useExpenses } from '../hooks/useExpenses'
+import { useSubscription } from '../hooks/useSubscription'
+import {
+  DEMO_CATEGORY_NAMES,
+  DEMO_CONTRIBUTIONS,
+  DEMO_FIXED_EXPENSES,
+  DEMO_GOAL,
+  DEMO_INCOME,
+  buildDemoExpenseRows,
+} from '../lib/demoData'
 
-const STEPS = ['Revenu', 'Dépenses fixes', 'Objectif d’épargne']
+const STEPS = ['Données de départ', 'Revenu', 'Dépenses fixes', 'Objectif d’épargne']
 
 export function Onboarding() {
   const navigate = useNavigate()
   const income = useIncome()
   const fixed = useFixedExpenses()
   const goals = useSavingsGoals()
+  const categories = useCategories()
+  const expenses = useExpenses()
+  const subscription = useSubscription()
 
   const [step, setStep] = useState(0)
+  const [importOpen, setImportOpen] = useState(false)
+  const [seedingDemo, setSeedingDemo] = useState(false)
+  const [demoError, setDemoError] = useState<string | null>(null)
   const [incomeDraft, setIncomeDraft] = useState('')
   const [expenseName, setExpenseName] = useState('')
   const [expenseAmount, setExpenseAmount] = useState('')
@@ -24,6 +43,46 @@ export function Onboarding() {
 
   function finish() {
     navigate('/dashboard')
+  }
+
+  // Fills every part of the account (income, categories, fixed expenses,
+  // 3 months of varied transactions, a goal with contributions already in
+  // progress) so a brand-new account looks like one that's actually been
+  // used, without needing real data. Sequential, not parallel — categories
+  // must exist before fixed expenses/goal reference them by name, and each
+  // step's own hook already updates its local state as it goes.
+  async function handleFillDemo() {
+    setSeedingDemo(true)
+    setDemoError(null)
+    try {
+      await income.setMonthlyIncome(DEMO_INCOME)
+      // The demo data must respect the account's own plan limits too — a
+      // Free account seeding 6 example categories against a 5-category cap
+      // would land it over its own limit before the user ever touched
+      // anything themselves.
+      const categoryNamesToSeed =
+        subscription.limits.maxCategories === null
+          ? DEMO_CATEGORY_NAMES
+          : DEMO_CATEGORY_NAMES.slice(0, subscription.limits.maxCategories)
+      for (const name of categoryNamesToSeed) {
+        await categories.addCategory(name)
+      }
+      for (const fx of DEMO_FIXED_EXPENSES) {
+        await fixed.addFixedExpense(fx.name, fx.amount, fx.category)
+      }
+      const { error: importError } = await expenses.addExpensesBulk(buildDemoExpenseRows())
+      if (importError) throw new Error(importError)
+      const goal = await goals.addGoal(DEMO_GOAL.name, DEMO_GOAL.targetAmount, DEMO_GOAL.targetDate)
+      if (goal) {
+        for (const amount of DEMO_CONTRIBUTIONS) {
+          await goals.addContribution(goal.id, amount)
+        }
+      }
+      finish()
+    } catch (err) {
+      setDemoError(err instanceof Error ? err.message : "Impossible de générer l'exemple — réessaie.")
+      setSeedingDemo(false)
+    }
   }
 
   // Whether "fresh account" is decided by real data now (see Dashboard's
@@ -77,6 +136,69 @@ export function Onboarding() {
         </div>
 
         {step === 0 && (
+          <div>
+            <h1 className="text-2xl font-bold text-ink">Remplis ton compte pour voir l’app en action</h1>
+            <p className="mt-2 text-sm text-muted">
+              Un compte tout neuf est vide, ce qui rend difficile de voir à quoi ça ressemble en
+              usage réel. Importe tes vraies transactions, ou remplis ton compte avec un exemple —
+              les deux sont optionnels.
+            </p>
+
+            <div className="mt-6 grid gap-3">
+              {subscription.limits.csvImport ? (
+                <button
+                  type="button"
+                  onClick={() => setImportOpen(true)}
+                  className="glass rounded-2xl p-4 text-left transition-colors hover:bg-white/5"
+                >
+                  <p className="font-semibold text-ink">📄 Importer mon relevé bancaire</p>
+                  <p className="mt-1 text-sm text-muted">
+                    Depuis un fichier .csv ou .xlsx exporté de ta banque — tes vraies transactions,
+                    catégorisées automatiquement.
+                  </p>
+                </button>
+              ) : (
+                <UpgradePrompt
+                  title="Import CSV — fonctionnalité Standard"
+                  description="Sur le plan Gratuit, ajoute tes dépenses à la main — ou passe à Standard pour importer un relevé bancaire directement."
+                  minPlan="standard"
+                />
+              )}
+
+              <button
+                type="button"
+                onClick={handleFillDemo}
+                disabled={seedingDemo}
+                className="glass rounded-2xl p-4 text-left transition-colors hover:bg-white/5 disabled:opacity-60"
+              >
+                <p className="font-semibold text-ink">✨ Voir un exemple</p>
+                <p className="mt-1 text-sm text-muted">
+                  {seedingDemo
+                    ? 'Génération des données d’exemple...'
+                    : 'Remplis ton compte avec des données fictives réalistes, pour explorer l’app tout de suite.'}
+                </p>
+              </button>
+            </div>
+
+            {demoError && (
+              <p className="mt-3 rounded-lg border border-red-900/50 bg-red-950/50 px-3 py-2 text-sm text-red-300">
+                {demoError}
+              </p>
+            )}
+
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-white/5"
+              >
+                Continuer sans importer →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 1 && (
           <form onSubmit={handleIncomeSubmit}>
             <h1 className="text-2xl font-bold text-ink">C’est quoi ton revenu mensuel ?</h1>
             <p className="mt-2 text-sm text-muted">
@@ -105,7 +227,7 @@ export function Onboarding() {
           </form>
         )}
 
-        {step === 1 && (
+        {step === 2 && (
           <div>
             <h1 className="text-2xl font-bold text-ink">Tes dépenses fixes principales</h1>
             <p className="mt-2 text-sm text-muted">
@@ -153,14 +275,14 @@ export function Onboarding() {
             <div className="mt-6 flex gap-2">
               <button
                 type="button"
-                onClick={() => setStep(0)}
+                onClick={() => setStep(1)}
                 className="rounded-lg border border-white/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-white/5"
               >
                 Retour
               </button>
               <button
                 type="button"
-                onClick={() => setStep(2)}
+                onClick={() => setStep(3)}
                 className="flex-1 rounded-lg bg-primary-strong px-5 py-2 font-medium text-white transition-all hover:brightness-110"
               >
                 Continuer
@@ -169,7 +291,7 @@ export function Onboarding() {
           </div>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <form onSubmit={handleGoalSubmit}>
             <h1 className="text-2xl font-bold text-ink">Fixe un premier objectif d’épargne</h1>
             <p className="mt-2 text-sm text-muted">
@@ -211,7 +333,7 @@ export function Onboarding() {
             <div className="mt-6 flex gap-2">
               <button
                 type="button"
-                onClick={() => setStep(1)}
+                onClick={() => setStep(2)}
                 className="rounded-lg border border-white/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-white/5"
               >
                 Retour
@@ -226,6 +348,14 @@ export function Onboarding() {
           </form>
         )}
       </div>
+
+      <ImportTransactionsModal
+        open={importOpen}
+        onClose={() => {
+          setImportOpen(false)
+          setStep(1)
+        }}
+      />
     </div>
   )
 }

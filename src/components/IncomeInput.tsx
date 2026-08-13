@@ -4,9 +4,11 @@ import { Card } from './Card'
 export function IncomeInput({
   monthlyIncome,
   onChange,
+  compact = false,
 }: {
   monthlyIncome: number
   onChange: (value: number) => void
+  compact?: boolean
 }) {
   const [draft, setDraft] = useState(String(monthlyIncome || ''))
 
@@ -17,7 +19,11 @@ export function IncomeInput({
   }
 
   return (
-    <Card title="Revenu mensuel" hint="On l'utilise pour calculer ton budget hebdomadaire disponible.">
+    <Card
+      title="Revenu mensuel"
+      hint="On l'utilise pour calculer ton budget hebdomadaire disponible."
+      compact={compact}
+    >
       <label className="flex items-center gap-2">
         <span className="text-muted">$</span>
         <input

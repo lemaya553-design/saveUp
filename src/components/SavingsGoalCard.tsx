@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ProgressBar } from './ProgressBar'
 import { formatCurrency, getFarFutureDateString, getTodayDateString } from '../lib/format'
 import {
@@ -41,11 +42,17 @@ export function SavingsGoalCard({
   contributionsForGoal,
   onSave,
   onRemove,
+  locked = false,
 }: {
   goal: SavingsGoal
   contributionsForGoal: Contribution[]
   onSave: (id: string, name: string, targetAmount: number, targetDate: string | null) => void
   onRemove: (id: string) => void
+  // True once this goal is beyond the account's current plan limit — data
+  // stays visible (nothing is deleted), but editing and new contributions
+  // are blocked until either the account upgrades or an active goal is
+  // removed to free up a slot.
+  locked?: boolean
 }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(goal.name)
@@ -124,7 +131,7 @@ export function SavingsGoalCard({
   }
 
   return (
-    <div className="glass flex flex-col rounded-2xl p-5 shadow-lg shadow-black/30">
+    <div className={`glass flex flex-col rounded-2xl p-5 shadow-lg shadow-black/30 ${locked ? 'opacity-60' : ''}`}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${icon.bg}`}>
@@ -145,13 +152,15 @@ export function SavingsGoalCard({
           </div>
         </div>
         <div className="flex shrink-0 gap-3 pt-1.5">
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="text-sm text-accent hover:text-accent/80"
-          >
-            Modifier
-          </button>
+          {!locked && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="text-sm text-accent hover:text-accent/80"
+            >
+              Modifier
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onRemove(goal.id)}
@@ -162,6 +171,15 @@ export function SavingsGoalCard({
           </button>
         </div>
       </div>
+
+      {locked && (
+        <Link
+          to="/tarifs"
+          className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent hover:bg-accent/25"
+        >
+          🔒 En pause — passe à Standard pour la réactiver
+        </Link>
+      )}
 
       <p className="text-2xl font-bold text-ink">
         {formatCurrency(goal.currentAmount)}

@@ -536,3 +536,29 @@ create policy "login_activity_all" on login_activity
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 grant select, insert, update, delete on login_activity to authenticated;
+
+-- Subscriptions (Stripe plans: free / standard / premium) -------------------
+-- No row = free plan, same convention as budget_settings/useIncome
+-- (hasIncomeRecord) — no signup trigger needed. Deliberately NO
+-- insert/update/delete grant to `authenticated`: only the Stripe webhook
+-- (running with the service role key, which bypasses RLS entirely) is ever
+-- allowed to write here, so a user can never grant themselves a paid plan by
+-- writing to this table directly from the client.
+
+create table if not exists subscriptions (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  plan text not null default 'free' check (plan in ('free', 'standard', 'premium')),
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  status text,
+  current_period_end timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+alter table subscriptions enable row level security;
+
+drop policy if exists "subscriptions_select" on subscriptions;
+create policy "subscriptions_select" on subscriptions
+  for select using (auth.uid() = user_id);
+
+grant select on subscriptions to authenticated;

@@ -5,6 +5,9 @@ export interface RewardTier {
   thresholdAmount: number | 'goal-complete'
   name: string
   description: string
+  // Free plan gets the first 2 tiers ("badges de base"); the rest need
+  // Standard — set only on tiers that require more than the free plan.
+  minPlan?: 'standard'
 }
 
 // Exactly 4 tiers on purpose — more dilutes the motivation.
@@ -26,12 +29,14 @@ export const REWARD_TIERS: RewardTier[] = [
     thresholdAmount: 1000,
     name: 'Épargnant sérieux',
     description: '1 000 $ épargnés.',
+    minPlan: 'standard',
   },
   {
     id: 'goal-complete',
     thresholdAmount: 'goal-complete',
     name: 'Objectif atteint',
     description: 'Objectif d’épargne complété.',
+    minPlan: 'standard',
   },
 ]
 

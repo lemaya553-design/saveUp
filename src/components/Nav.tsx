@@ -11,6 +11,7 @@ const links = [
   { to: '/epargne', label: 'Épargne' },
   { to: '/statistiques', label: 'Statistiques' },
   { to: '/recompenses', label: 'Récompenses' },
+  { to: '/tarifs', label: 'Tarifs' },
   { to: '/parametres', label: 'Paramètres' },
 ]
 
