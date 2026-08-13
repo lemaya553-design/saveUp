@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getStripe, getUserFromAuthHeader } from './_stripe'
-import { isPayablePlan, priceIdForPlan } from './_plans'
+import { getStripe, getUserFromAuthHeader } from './_stripe.js'
+import { isPayablePlan, priceIdForPlan } from './_plans.js'
 
 function getOrigin(req: VercelRequest): string {
   if (typeof req.headers.origin === 'string') return req.headers.origin

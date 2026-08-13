@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import type Stripe from 'stripe'
-import { getStripe, getSupabaseAdmin } from './_stripe'
-import { planForPriceId } from './_plans'
+import { getStripe, getSupabaseAdmin } from './_stripe.js'
+import { planForPriceId } from './_plans.js'
 
 // Stripe signature verification needs the exact raw request bytes — Vercel's
 // default body parsing (JSON) would re-serialize the body and break the

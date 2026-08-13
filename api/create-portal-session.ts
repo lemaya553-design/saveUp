@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getStripe, getSupabaseAdmin, getUserFromAuthHeader } from './_stripe'
+import { getStripe, getSupabaseAdmin, getUserFromAuthHeader } from './_stripe.js'
 
 function getOrigin(req: VercelRequest): string {
   if (typeof req.headers.origin === 'string') return req.headers.origin
