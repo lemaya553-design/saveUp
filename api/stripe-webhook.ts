@@ -1,23 +1,16 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
 import type Stripe from 'stripe'
 import { getStripe, getSupabaseAdmin } from './_stripe.js'
 import { planForPriceId } from './_plans.js'
 
-// Stripe signature verification needs the exact raw request bytes — Vercel's
-// default body parsing (JSON) would re-serialize the body and break the
-// signature check, so it's disabled here and the raw buffer is read by hand.
-export const config = {
-  api: { bodyParser: false },
-}
-
-function readRawBody(req: VercelRequest): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = []
-    req.on('data', (chunk) => chunks.push(Buffer.from(chunk)))
-    req.on('end', () => resolve(Buffer.concat(chunks)))
-    req.on('error', reject)
-  })
-}
+// Deliberately NOT the VercelRequest/VercelResponse + `export const config =
+// { api: { bodyParser: false } }` convention used by the other two
+// functions in this folder — that config option only exists for Next.js API
+// routes and is silently ignored for standalone Vercel functions, meaning
+// Vercel had already parsed (and re-serialized) the body before the handler
+// ever ran. Signature verification needs the exact original bytes, so any
+// re-serialization breaks it — this is Vercel's own currently-documented
+// fix: a Web-standard Request/Response handler, reading the body via
+// request.text() before anything else touches it.
 
 async function upsertFromSubscription(customerId: string, subscription: Stripe.Subscription) {
   const priceId = subscription.items.data[0]?.price.id
@@ -35,31 +28,29 @@ async function upsertFromSubscription(customerId: string, subscription: Stripe.S
     .eq('stripe_customer_id', customerId)
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' })
-    return
-  }
-
-  const signature = req.headers['stripe-signature']
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
-  if (!signature || typeof signature !== 'string' || !webhookSecret) {
-    res.status(400).json({ error: 'Missing signature or webhook secret.' })
-    return
-  }
-
-  const rawBody = await readRawBody(req)
-  const stripe = getStripe()
-
-  let event: Stripe.Event
+export async function POST(request: Request): Promise<Response> {
   try {
-    event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret)
-  } catch (err) {
-    res.status(400).json({ error: `Signature invalide: ${err instanceof Error ? err.message : err}` })
-    return
-  }
+    const signature = request.headers.get('stripe-signature')
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+    if (!signature || !webhookSecret) {
+      return Response.json({ error: 'Missing signature or webhook secret.' }, { status: 400 })
+    }
 
-  try {
+    // Must be read before anything else awaits/touches the request — this
+    // is the exact raw byte string Stripe signed.
+    const rawBody = await request.text()
+    const stripe = getStripe()
+
+    let event: Stripe.Event
+    try {
+      event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret)
+    } catch (err) {
+      return Response.json(
+        { error: `Signature invalide: ${err instanceof Error ? err.message : err}` },
+        { status: 400 },
+      )
+    }
+
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
@@ -113,8 +104,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       default:
         break
     }
-    res.status(200).json({ received: true })
+
+    return Response.json({ received: true }, { status: 200 })
   } catch (err) {
-    res.status(500).json({ error: err instanceof Error ? err.message : 'Erreur webhook.' })
+    return Response.json(
+      { error: err instanceof Error ? err.message : 'Erreur webhook.' },
+      { status: 500 },
+    )
   }
 }
