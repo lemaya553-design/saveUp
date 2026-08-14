@@ -41,6 +41,34 @@ export async function POST(request: Request): Promise<Response> {
     const rawBody = await request.text()
     const stripe = getStripe()
 
+    // TEMPORARY diagnostic — Vercel's free-tier logs expire before they can
+    // be read, so this writes the same info to a Supabase table instead
+    // (persists indefinitely, browsable in the Table Editor whenever).
+    // Deliberately no secret values or customer data: lengths and 4-char
+    // edges only (enough to catch a stray quote/newline/whitespace baked
+    // into the env var, or a body that arrived empty/truncated/altered),
+    // plus the signature header's own structure (safe — it's a per-request
+    // signature, not the secret it was signed with). Wrapped so a logging
+    // failure can never break real webhook processing.
+    try {
+      await getSupabaseAdmin()
+        .from('webhook_debug_log')
+        .insert({
+          content_type: request.headers.get('content-type'),
+          content_length: request.headers.get('content-length'),
+          raw_body_length: rawBody.length,
+          raw_body_start: JSON.stringify(rawBody.slice(0, 4)),
+          raw_body_end: JSON.stringify(rawBody.slice(-4)),
+          signature_header_length: signature.length,
+          signature_header_preview: signature.slice(0, 20),
+          secret_length: webhookSecret.length,
+          secret_start: JSON.stringify(webhookSecret.slice(0, 4)),
+          secret_end: JSON.stringify(webhookSecret.slice(-4)),
+        })
+    } catch {
+      // Debug logging is best-effort only.
+    }
+
     let event: Stripe.Event
     try {
       event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret)
