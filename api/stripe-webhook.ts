@@ -41,32 +41,27 @@ export async function POST(request: Request): Promise<Response> {
     const rawBody = await request.text()
     const stripe = getStripe()
 
-    // TEMPORARY diagnostic — Vercel's free-tier logs expire before they can
-    // be read, so this writes the same info to a Supabase table instead
-    // (persists indefinitely, browsable in the Table Editor whenever).
-    // Deliberately no secret values or customer data: lengths and 4-char
-    // edges only (enough to catch a stray quote/newline/whitespace baked
-    // into the env var, or a body that arrived empty/truncated/altered),
-    // plus the signature header's own structure (safe — it's a per-request
-    // signature, not the secret it was signed with). Wrapped so a logging
-    // failure can never break real webhook processing.
-    try {
-      await getSupabaseAdmin()
-        .from('webhook_debug_log')
-        .insert({
-          content_type: request.headers.get('content-type'),
-          content_length: request.headers.get('content-length'),
-          raw_body_length: rawBody.length,
-          raw_body_start: JSON.stringify(rawBody.slice(0, 4)),
-          raw_body_end: JSON.stringify(rawBody.slice(-4)),
-          signature_header_length: signature.length,
-          signature_header_preview: signature.slice(0, 20),
-          secret_length: webhookSecret.length,
-          secret_start: JSON.stringify(webhookSecret.slice(0, 4)),
-          secret_end: JSON.stringify(webhookSecret.slice(-4)),
-        })
-    } catch {
-      // Debug logging is best-effort only.
+    // TEMPORARY diagnostic — a prior attempt wrote this to a Supabase table,
+    // but that write went through its own try/catch and never produced a
+    // row, which is itself suspicious (a freshly-created table can be
+    // invisible to PostgREST's schema cache for a bit, same as the
+    // subscriptions table earlier) — a second silent-failure-prone channel
+    // isn't useful. Attaching it directly to the error response instead
+    // rides a channel already proven reliable all session: Stripe's own
+    // dashboard, which has consistently shown the full response body for
+    // every delivery attempt. No secret values or customer data — lengths
+    // and 4-char edges only.
+    const debugInfo = {
+      contentType: request.headers.get('content-type'),
+      contentLength: request.headers.get('content-length'),
+      rawBodyLength: rawBody.length,
+      rawBodyStart: JSON.stringify(rawBody.slice(0, 4)),
+      rawBodyEnd: JSON.stringify(rawBody.slice(-4)),
+      signatureHeaderLength: signature.length,
+      signatureHeaderPreview: signature.slice(0, 30),
+      secretLength: webhookSecret.length,
+      secretStart: JSON.stringify(webhookSecret.slice(0, 4)),
+      secretEnd: JSON.stringify(webhookSecret.slice(-4)),
     }
 
     let event: Stripe.Event
@@ -74,7 +69,7 @@ export async function POST(request: Request): Promise<Response> {
       event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret)
     } catch (err) {
       return Response.json(
-        { error: `Signature invalide: ${err instanceof Error ? err.message : err}` },
+        { error: `Signature invalide: ${err instanceof Error ? err.message : err}`, debug: debugInfo },
         { status: 400 },
       )
     }
