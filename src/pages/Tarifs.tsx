@@ -26,6 +26,7 @@ const plans: {
       '1 objectif d’épargne actif',
       'Badges de base',
       'Saisie manuelle des dépenses',
+      'Calculateur d’investissement',
     ],
     highlight: false,
   },
