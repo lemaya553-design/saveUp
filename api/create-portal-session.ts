@@ -31,7 +31,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .maybeSingle()
 
     if (error || !data?.stripe_customer_id) {
-      res.status(400).json({ error: "Aucun abonnement actif trouvé pour ce compte." })
+      // TEMPORARY diagnostic, folded directly into the visible error text
+      // (the frontend only ever displays the `error` string, not a
+      // separate debug field) — the exact queried user id and what the
+      // query actually returned, so this can be confirmed against the row
+      // in Supabase's Table Editor without needing DevTools or logs.
+      res.status(400).json({
+        error:
+          `Aucun abonnement actif trouvé pour ce compte. ` +
+          `[debug: queried user_id=${user.id}, supabase_error=${error?.message ?? 'none'}, row_found=${data !== null}, customer_id=${data?.stripe_customer_id ?? 'null'}]`,
+      })
       return
     }
 
