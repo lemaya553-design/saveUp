@@ -21,6 +21,7 @@ export function useSubscription() {
     const { data, error: fetchError } = await supabase
       .from('subscriptions')
       .select('plan, stripe_customer_id')
+      .eq('user_id', userId)
       .maybeSingle()
     if (fetchError) {
       setError(fetchError.message)
