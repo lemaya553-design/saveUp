@@ -100,7 +100,7 @@ export function Onboarding() {
     e.preventDefault()
     const value = Math.max(0, Number(incomeDraft) || 0)
     await income.setMonthlyIncome(value)
-    setStep(1)
+    setStep(2)
   }
 
   async function handleAddExpense(e: React.FormEvent) {

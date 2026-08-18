@@ -226,7 +226,7 @@ export function Statistiques() {
                   <button
                     type="button"
                     onClick={() => setImportOpen(true)}
-                    className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-white/5"
+                    className="rounded-lg bg-primary-strong px-5 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110"
                   >
                     Importer un fichier
                   </button>
