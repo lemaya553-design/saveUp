@@ -19,8 +19,18 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // as "JWT issued at future" on the Dashboard) — confusing and not
 // actionable for a user. A plain 401 with no such wording (e.g. a
 // legitimate "not authorized for this row") is left alone.
-function looksLikeInvalidSessionError(status: number, bodyText: string): boolean {
-  if (status !== 401) return false
+//
+// Deliberately scoped to PostgREST data requests (/rest/v1/) only — NOT
+// Supabase's own /auth/v1/* endpoints. Auth-refresh calls can legitimately
+// 401 with "token" in the body mid-refresh as part of GoTrueClient's own
+// normal retry/refresh cycle, which it already handles correctly on its
+// own; broadening this to auth endpoints (an earlier version of this fix
+// did) meant occasionally force-signing the user out from underneath a
+// benign, self-recovering refresh — session silently cleared while React's
+// `user` state hadn't updated yet, so the UI still looked logged in but
+// the next real request (e.g. Stripe checkout) failed as unauthenticated.
+function looksLikeInvalidSessionError(url: string, status: number, bodyText: string): boolean {
+  if (status !== 401 || !url.includes('/rest/v1/')) return false
   const lower = bodyText.toLowerCase()
   return lower.includes('jwt') || lower.includes('token') || lower.includes('session') || lower.includes('pgrst301')
 }
@@ -33,11 +43,12 @@ async function fetchWithSessionGuard(input: RequestInfo | URL, init?: RequestIni
   const response = await fetch(input, init)
 
   if (!handlingInvalidSession && response.status === 401) {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
     const bodyText = await response
       .clone()
       .text()
       .catch(() => '')
-    if (looksLikeInvalidSessionError(response.status, bodyText)) {
+    if (looksLikeInvalidSessionError(url, response.status, bodyText)) {
       handlingInvalidSession = true
       // Full reload (not client-side navigate) is deliberate — every hook
       // holding stale data/error state needs to be torn down, not just
