@@ -68,21 +68,22 @@ const FAQ_ITEMS = [
   {
     question: 'Combien ça coûte ?',
     answer:
-      'Le plan Gratuit couvre l\'essentiel sans limite de temps. Les plans Standard et Premium arrivent bientôt pour aller plus loin.',
+      'Le plan Gratuit est gratuit pour toujours, sans limite de temps. Standard (7,99 $/mois) et Premium (14,99 $/mois) débloquent les catégories et objectifs illimités, l\'import CSV, les statistiques complètes et plus — voir la page Tarifs pour le détail.',
   },
   {
     question: 'Mes données sont-elles sécurisées ?',
     answer:
-      'Tes données sont hébergées sur une base de données sécurisée (Supabase) avec des règles d\'accès activées. SaveUp fonctionne pour l\'instant sans compte utilisateur — évite donc de partager le lien de ton app publiquement.',
+      'Oui — chaque compte est protégé par un vrai système d\'authentification, et tes données sont isolées : personne d\'autre ne peut y accéder, peu importe qui utilise SaveUp. Elles sont hébergées sur une base de données sécurisée (Supabase).',
   },
   {
     question: 'Dois-je créer un compte ?',
     answer:
-      'Pas pour l\'instant — SaveUp fonctionne sans compte. La gestion multi-utilisateurs arrive dans une prochaine version.',
+      'Oui, un compte gratuit est nécessaire pour que tes données restent privées et liées à toi seul(e) — ça prend moins de 2 minutes, sans carte requise.',
   },
   {
     question: 'Puis-je annuler ?',
-    answer: 'Oui, en tout temps, sans engagement — le plan Gratuit reste gratuit sans limite.',
+    answer:
+      'Oui, en tout temps, sans engagement. Le plan Gratuit reste gratuit sans limite ; pour Standard ou Premium, annule quand tu veux depuis Paramètres → Gérer mon abonnement — tu gardes l\'accès jusqu\'à la fin de la période déjà payée.',
   },
 ]
 
