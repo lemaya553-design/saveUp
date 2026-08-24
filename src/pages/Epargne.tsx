@@ -25,6 +25,27 @@ import { splitByLimit } from '../lib/plans'
 
 type Tab = 'objectifs' | 'simulateur'
 
+const OBJECTIFS_HELP = {
+  title: 'Objectifs',
+  purpose: 'Crée et suis tes objectifs d\'épargne (voyage, fonds d\'urgence...) et leur progression.',
+  actions: [
+    'Crée un nouvel objectif avec un montant cible et, si tu veux, une date.',
+    'Ajoute une contribution à un objectif existant pour le faire avancer.',
+    'Compare ton rythme actuel au rythme nécessaire pour atteindre tes dates cibles.',
+  ],
+}
+
+const SIMULATEUR_HELP = {
+  title: 'Simulateur « et si »',
+  purpose:
+    'Teste l\'effet d\'un changement (revenu, dépenses, rythme d\'épargne) avant de l\'appliquer pour de vrai.',
+  actions: [
+    'Ajuste les curseurs pour simuler un changement de revenu ou de dépenses par catégorie.',
+    'Regarde l\'impact estimé sur ta capacité d\'épargne mensuelle.',
+    'Rien n\'est enregistré ici : c\'est un essai, pas une vraie modification de ton budget.',
+  ],
+}
+
 export function Epargne() {
   const [tab, setTab] = useState<Tab>('objectifs')
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -108,6 +129,7 @@ export function Epargne() {
       <PageHeader
         title="Vers quoi tu épargnes"
         subtitle="Tes objectifs d'épargne, et un simulateur pour tester des changements avant de les appliquer."
+        help={tab === 'objectifs' ? OBJECTIFS_HELP : SIMULATEUR_HELP}
       />
 
       <div className="glass mb-6 inline-flex gap-1 rounded-full p-1">

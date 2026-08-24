@@ -107,7 +107,7 @@ function CategoryRow({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="text-sm text-accent hover:text-accent/80"
+          className="rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
         >
           Renommer
         </button>
@@ -116,7 +116,7 @@ function CategoryRow({
             type="button"
             onClick={() => onRequestDelete(category.id)}
             disabled={checking}
-            className="text-sm text-red-400 hover:text-red-300 disabled:opacity-60"
+            className="rounded-md px-2 py-1.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-60"
           >
             {checking ? 'Vérification...' : 'Supprimer'}
           </button>

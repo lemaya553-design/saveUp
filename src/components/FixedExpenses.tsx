@@ -129,24 +129,24 @@ export function FixedExpenses({
               />
             </li>
           ) : (
-            <li key={expense.id} className="flex items-center justify-between py-2">
+            <li key={expense.id} className="flex flex-wrap items-center justify-between gap-y-1 py-2">
               <div>
                 <span className="text-ink">{expense.name}</span>
                 <span className="ml-2 text-xs text-muted">{expense.category}</span>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="font-medium text-ink">{formatCurrency(expense.amount)}</span>
+              <div className="flex items-center gap-1">
+                <span className="mr-2 font-medium text-ink">{formatCurrency(expense.amount)}</span>
                 <button
                   type="button"
                   onClick={() => setEditingId(expense.id)}
-                  className="text-sm text-accent hover:text-accent/80"
+                  className="rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
                 >
                   Modifier
                 </button>
                 <button
                   type="button"
                   onClick={() => onRemove(expense.id)}
-                  className="text-sm text-red-400 hover:text-red-300"
+                  className="rounded-md px-2 py-1.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300"
                   aria-label={`Supprimer ${expense.name}`}
                 >
                   Supprimer

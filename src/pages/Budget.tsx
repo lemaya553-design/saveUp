@@ -27,6 +27,16 @@ import { BudgetInsight } from '../components/BudgetInsight'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { useSubscription } from '../hooks/useSubscription'
 
+const BUDGET_HELP = {
+  purpose:
+    'Suis tes dépenses par catégorie ce mois-ci, et compare-les à ton revenu et tes dépenses fixes.',
+  actions: [
+    'Ajoute ton revenu mensuel et tes dépenses fixes (loyer, abonnements...).',
+    'Enregistre une dépense et choisis sa catégorie.',
+    'Repère les catégories où tu dépasses ton budget habituel.',
+  ],
+}
+
 export function Budget() {
   const income = useIncome()
   const fixed = useFixedExpenses()
@@ -89,6 +99,7 @@ export function Budget() {
         <PageHeader
           title="Où va ton argent ce mois-ci"
           subtitle="Revenu, dépenses fixes et budget de la semaine."
+          help={BUDGET_HELP}
         />
 
         {error && (
@@ -121,6 +132,7 @@ export function Budget() {
       <PageHeader
         title="Où va ton argent ce mois-ci"
         subtitle="Revenu, dépenses fixes et budget de la semaine."
+        help={BUDGET_HELP}
       />
 
       {error && (

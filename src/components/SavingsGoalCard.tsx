@@ -131,7 +131,12 @@ export function SavingsGoalCard({
   }
 
   return (
-    <div className={`glass flex flex-col rounded-2xl p-5 shadow-lg shadow-black/30 ${locked ? 'opacity-60' : ''}`}>
+    <div
+      // min-w-0: this card is a `grid` item (Epargne.tsx's `grid gap-4
+      // sm:grid-cols-2`) — without it, its default min-content width
+      // forces the whole shared column wider, same bug as Card.tsx.
+      className={`glass flex min-w-0 flex-col rounded-2xl p-5 shadow-lg shadow-black/30 ${locked ? 'opacity-60' : ''}`}
+    >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${icon.bg}`}>
@@ -156,7 +161,7 @@ export function SavingsGoalCard({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="text-sm text-accent hover:text-accent/80"
+              className="rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
             >
               Modifier
             </button>
@@ -164,7 +169,7 @@ export function SavingsGoalCard({
           <button
             type="button"
             onClick={() => onRemove(goal.id)}
-            className="text-sm text-red-400 hover:text-red-300"
+            className="rounded-md px-2 py-1.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300"
             aria-label={`Supprimer ${goal.name}`}
           >
             Supprimer

@@ -13,6 +13,15 @@ import { useSubscription } from '../hooks/useSubscription'
 import { useToast } from '../components/ToastProvider'
 import { PLAN_LIMITS } from '../lib/plans'
 
+const PARAMETRES_HELP = {
+  purpose: 'Gère ton revenu, tes catégories de budget, ton abonnement et tes données.',
+  actions: [
+    'Modifie ton revenu mensuel et tes catégories de dépenses.',
+    'Consulte ton plan actuel et gère ou annule ton abonnement.',
+    'Exporte tes données en CSV, ou relance l\'import d\'un relevé bancaire.',
+  ],
+}
+
 export function Parametres() {
   const income = useIncome()
   const csvExport = useCsvExport()
@@ -49,7 +58,11 @@ export function Parametres() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader title="Paramètres" subtitle="Ton revenu, tes catégories, et tes données." />
+      <PageHeader
+        title="Paramètres"
+        subtitle="Ton revenu, tes catégories, et tes données."
+        help={PARAMETRES_HELP}
+      />
 
       {income.error && (
         <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">

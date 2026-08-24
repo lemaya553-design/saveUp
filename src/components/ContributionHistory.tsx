@@ -49,7 +49,7 @@ export function ContributionHistory({
             <button
               type="button"
               onClick={() => setShowAll((v) => !v)}
-              className="mt-3 text-sm text-accent hover:text-accent/80"
+              className="-mx-2 mt-3 rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
             >
               {showAll ? 'Réduire' : `Voir tout l'historique (${contributions.length})`}
             </button>

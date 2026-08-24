@@ -50,6 +50,16 @@ const FEATURE_LINKS = [
   },
 ]
 
+const DASHBOARD_HELP = {
+  purpose:
+    'Un coup d\'œil sur ta santé financière : ton score, ce qu\'il te reste à dépenser ce mois-ci et la progression de tes objectifs.',
+  actions: [
+    'Consulte ton score de santé financière et son évolution récente.',
+    'Vérifie combien il te reste à dépenser ce mois-ci.',
+    'Clique sur une carte (Budget, Épargne, Statistiques...) pour y aller directement.',
+  ],
+}
+
 export function Dashboard() {
   const navigate = useNavigate()
   const health = useFinancialHealth()
@@ -99,7 +109,11 @@ export function Dashboard() {
   if (isFreshUser) {
     return (
       <div className="mx-auto max-w-3xl px-4 pb-10">
-        <PageHeader title="Comment tu t'en sors" subtitle="Ton portrait financier en un coup d'œil." />
+        <PageHeader
+          title="Comment tu t'en sors"
+          subtitle="Ton portrait financier en un coup d'œil."
+          help={DASHBOARD_HELP}
+        />
         <EmptyState
           title="Tu n'as pas encore de budget"
           description="Commence par ajouter ton revenu mensuel — tout le reste (budget, alertes, score) se calcule automatiquement à partir de là."
@@ -129,7 +143,11 @@ export function Dashboard() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader title="Comment tu t'en sors" subtitle="Ton portrait financier en un coup d'œil." />
+      <PageHeader
+        title="Comment tu t'en sors"
+        subtitle="Ton portrait financier en un coup d'œil."
+        help={DASHBOARD_HELP}
+      />
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
@@ -223,7 +241,7 @@ export function Dashboard() {
               <Link
                 key={to}
                 to={to}
-                className="hover-lift glass flex items-center gap-3 rounded-2xl p-4 shadow-lg shadow-black/30"
+                className="hover-lift glass flex min-w-0 items-center gap-3 rounded-2xl p-4 shadow-lg shadow-black/30"
               >
                 <Illustration variant="icon" />
                 <div className="min-w-0 flex-1">

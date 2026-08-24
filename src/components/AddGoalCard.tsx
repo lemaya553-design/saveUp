@@ -36,7 +36,7 @@ export function AddGoalCard({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="glass flex min-h-[96px] items-center justify-center rounded-2xl border-2 border-dashed border-white/15 p-5 text-sm font-medium text-muted transition-colors hover:border-primary/40 hover:text-ink"
+        className="glass flex min-h-[96px] min-w-0 items-center justify-center rounded-2xl border-2 border-dashed border-white/15 p-5 text-sm font-medium text-muted transition-colors hover:border-primary/40 hover:text-ink"
       >
         + Nouvel objectif
       </button>
@@ -44,7 +44,7 @@ export function AddGoalCard({
   }
 
   return (
-    <div className="glass rounded-2xl p-5 shadow-lg shadow-black/30">
+    <div className="glass min-w-0 rounded-2xl p-5 shadow-lg shadow-black/30">
       <h2 className="text-lg font-semibold text-ink">Nouvel objectif</h2>
       <p className="mb-4 mt-1 text-xs text-muted">Un nom, un montant à atteindre, et une échéance si tu en as une.</p>
       <form onSubmit={submit} className="flex flex-wrap gap-2">

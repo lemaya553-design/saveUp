@@ -29,6 +29,15 @@ import {
   computeThisVsLastMonth,
 } from '../lib/statistics'
 
+const STATISTIQUES_HELP = {
+  purpose: 'Analyse tes tendances de dépenses sur plusieurs mois et compare-les d\'un mois à l\'autre.',
+  actions: [
+    'Consulte tes tendances de dépenses sur les 6 derniers mois.',
+    'Compare ce mois-ci au mois précédent, par catégorie.',
+    'Importe un relevé bancaire (CSV) ou exporte tes données depuis cette page.',
+  ],
+}
+
 // Covers MAX_MONTHS_BACK below with margin (6 months × 31 days + slack).
 const CONTRIBUTIONS_DAYS_BACK = 200
 
@@ -115,7 +124,11 @@ export function Statistiques() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader title="Tes statistiques" subtitle="Où va ton argent, mois après mois." />
+      <PageHeader
+        title="Tes statistiques"
+        subtitle="Où va ton argent, mois après mois."
+        help={STATISTIQUES_HELP}
+      />
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">

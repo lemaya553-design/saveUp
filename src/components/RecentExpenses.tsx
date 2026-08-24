@@ -164,7 +164,7 @@ export function RecentExpenses({
               <button
                 type="button"
                 onClick={clearFilters}
-                className="text-sm text-accent hover:text-accent/80"
+                className="-mx-2 -my-1 rounded-md px-2 py-1 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
               >
                 Effacer les filtres
               </button>
@@ -188,7 +188,7 @@ export function RecentExpenses({
                     />
                   </li>
                 ) : (
-                  <li key={expense.id} className="flex items-center justify-between py-2">
+                  <li key={expense.id} className="flex flex-wrap items-center justify-between gap-y-1 py-2">
                     <div>
                       <p className="text-ink">{expense.description}</p>
                       <p className="text-xs text-muted">
@@ -205,19 +205,19 @@ export function RecentExpenses({
                         )}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-medium text-ink">{formatCurrency(expense.amount)}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="mr-2 font-medium text-ink">{formatCurrency(expense.amount)}</span>
                       <button
                         type="button"
                         onClick={() => setEditingId(expense.id)}
-                        className="text-sm text-accent hover:text-accent/80"
+                        className="rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
                       >
                         Modifier
                       </button>
                       <button
                         type="button"
                         onClick={() => onRemove(expense.id)}
-                        className="text-sm text-red-400 hover:text-red-300"
+                        className="rounded-md px-2 py-1.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300"
                         aria-label={`Supprimer ${expense.description}`}
                       >
                         Supprimer
@@ -233,7 +233,7 @@ export function RecentExpenses({
             <button
               type="button"
               onClick={() => setShowAll((v) => !v)}
-              className="mt-3 text-sm text-accent hover:text-accent/80"
+              className="-mx-2 mt-3 rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
             >
               {showAll ? 'Réduire' : `Voir tout l'historique (${filtered.length})`}
             </button>

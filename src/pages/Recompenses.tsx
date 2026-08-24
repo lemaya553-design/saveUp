@@ -28,6 +28,15 @@ import {
 // animation always finishes before the class is removed.
 const CLAIM_ANIMATION_MS = 900
 
+const RECOMPENSES_HELP = {
+  purpose: 'Débloque des badges au fil de ta progression et de ta constance dans l\'app.',
+  actions: [
+    'Consulte les badges déjà débloqués et ceux qui restent à atteindre.',
+    'Vise le prochain palier (montant épargné, objectif atteint...) pour en débloquer un nouveau.',
+    'Reviens régulièrement pour garder ta série de connexions active.',
+  ],
+}
+
 export function Recompenses() {
   const goals = useSavingsGoals()
   const contributions = useSavingsContributions()
@@ -113,7 +122,11 @@ export function Recompenses() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader title="Regarde le chemin parcouru" subtitle="Chaque palier compte." />
+      <PageHeader
+        title="Regarde le chemin parcouru"
+        subtitle="Chaque palier compte."
+        help={RECOMPENSES_HELP}
+      />
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">

@@ -58,7 +58,7 @@ export function HypotheticalExpenses({
                   <button
                     type="button"
                     onClick={() => onRemove(expense.id)}
-                    className="text-sm text-red-400 hover:text-red-300"
+                    className="rounded-md px-2 py-1.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300"
                     aria-label={`Retirer ${expense.name || 'cette dépense hypothétique'}`}
                   >
                     Retirer

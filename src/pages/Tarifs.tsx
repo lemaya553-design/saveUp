@@ -1,9 +1,20 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LandingHeader } from '../components/LandingHeader'
+import { HelpButton } from '../components/HelpButton'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
 import type { Plan } from '../lib/plans'
+
+const TARIFS_HELP = {
+  title: 'Tarifs',
+  purpose: 'Compare les plans Gratuit, Standard et Premium et choisis celui qui correspond à tes besoins.',
+  actions: [
+    'Compare les fonctionnalités incluses dans chaque plan.',
+    'Choisis un plan payant pour être redirigé vers un paiement sécurisé (Stripe).',
+    'Si tu es déjà abonné, gère ou annule ton abonnement depuis ici.',
+  ],
+}
 
 const plans: {
   id: Plan
@@ -99,7 +110,11 @@ export function Tarifs() {
           would stack two header bars. */}
       {!user && <LandingHeader />}
 
-      <section className="hero-gradient px-4 pb-24 pt-10 text-center sm:px-6">
+      <section className="hero-gradient relative px-4 pb-24 pt-10 text-center sm:px-6">
+        <div className="absolute right-4 top-4 sm:right-6 sm:top-6">
+          <HelpButton title={TARIFS_HELP.title} purpose={TARIFS_HELP.purpose} actions={TARIFS_HELP.actions} />
+        </div>
+
         <h1 className="mx-auto max-w-2xl text-4xl font-bold leading-tight text-ink sm:text-5xl">
           Un plan pour chaque étape de ton budget.
         </h1>

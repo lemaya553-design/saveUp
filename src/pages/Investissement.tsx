@@ -21,6 +21,15 @@ import {
   projectValue,
 } from '../lib/investment'
 
+const INVESTISSEMENT_HELP = {
+  purpose: 'Estime la croissance future d\'un placement grâce à l\'intérêt composé.',
+  actions: [
+    'Indique le montant actuellement investi et un taux de rendement annuel.',
+    'Compare la projection sur différentes durées (1, 5, 10 ans...).',
+    'Consulte l\'estimation du temps pour doubler ton placement (règle du 72).',
+  ],
+}
+
 export function Investissement() {
   const goals = useSavingsGoals()
   const investmentBalance = useInvestmentBalance()
@@ -71,6 +80,7 @@ export function Investissement() {
       <PageHeader
         title="Combien ça pourrait rapporter"
         subtitle="Projette la croissance d'un placement avec intérêt composé."
+        help={INVESTISSEMENT_HELP}
       />
 
       <QuickAmountEdit
