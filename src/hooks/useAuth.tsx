@@ -19,6 +19,7 @@ interface AuthContextValue {
   passwordRecovery: boolean
   signUp: (email: string, password: string) => Promise<AuthResult>
   signIn: (email: string, password: string) => Promise<AuthResult>
+  signInWithGoogle: (redirectPath?: string) => Promise<AuthResult>
   signOut: () => Promise<void>
   resetPasswordForEmail: (email: string) => Promise<AuthResult>
   updatePassword: (newPassword: string) => Promise<AuthResult>
@@ -53,6 +54,9 @@ function mapAuthError(message: string): string {
   }
   if (lower.includes('same as the old password') || lower.includes('should be different')) {
     return "Choisis un mot de passe différent de l'ancien."
+  }
+  if (lower.includes('provider is not enabled') || lower.includes('unsupported provider')) {
+    return "La connexion Google n'est pas encore activée sur ce compte."
   }
   return 'Une erreur est survenue. Réessaie.'
 }
@@ -99,6 +103,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null }
   }, [])
 
+  // signInWithOAuth navigates the whole page to Google's consent screen on
+  // success — it never resolves in that case. The returned error only
+  // covers failures BEFORE that redirect (e.g. the provider isn't enabled
+  // in the Supabase dashboard yet); anything after (user cancels, callback
+  // fails) comes back as a `?error=...` query param on the redirect landing
+  // page instead, not through this promise.
+  const signInWithGoogle = useCallback(async (redirectPath = '/dashboard'): Promise<AuthResult> => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}${redirectPath}` },
+    })
+    if (error) return { error: mapAuthError(error.message) }
+    return { error: null }
+  }, [])
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
   }, [])
@@ -126,11 +145,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       passwordRecovery,
       signUp,
       signIn,
+      signInWithGoogle,
       signOut,
       resetPasswordForEmail,
       updatePassword,
     }),
-    [session, loading, passwordRecovery, signUp, signIn, signOut, resetPasswordForEmail, updatePassword],
+    [
+      session,
+      loading,
+      passwordRecovery,
+      signUp,
+      signIn,
+      signInWithGoogle,
+      signOut,
+      resetPasswordForEmail,
+      updatePassword,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
