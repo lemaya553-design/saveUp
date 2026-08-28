@@ -23,7 +23,7 @@ export function ContributionHistory({
         <p className="text-sm text-muted">Aucune contribution enregistrée pour l'instant.</p>
       ) : (
         <>
-          <ul className="divide-y divide-white/10">
+          <ul className="divide-y divide-overlay/10">
             {visible.map((contribution) => (
               <li key={contribution.id} className="flex items-center justify-between py-2 text-sm">
                 <div>

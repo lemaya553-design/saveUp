@@ -24,7 +24,7 @@ export function ScoreGauge({
           stroke="currentColor"
           strokeWidth={14}
           strokeLinecap="round"
-          className="text-white/10"
+          className="text-overlay/10"
         />
         <path
           d={ARC_PATH}

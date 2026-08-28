@@ -193,7 +193,7 @@ export function Epargne() {
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/10">
+                <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-overlay/10">
                   <div
                     className={`h-full rounded-full transition-all ${
                       overallProgress >= 100 ? 'bg-success' : 'bg-primary'

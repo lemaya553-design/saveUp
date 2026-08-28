@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '../components/PageHeader'
 import { Card } from '../components/Card'
+import { PersonalizationSettings } from '../components/PersonalizationSettings'
 import { IncomeInput } from '../components/IncomeInput'
 import { CategoryManager } from '../components/CategoryManager'
 import { CategorySuggestions } from '../components/CategorySuggestions'
@@ -17,6 +18,7 @@ const PARAMETRES_HELP = {
   purpose: 'Gère ton revenu, tes catégories de budget, ton abonnement et tes données.',
   actions: [
     'Modifie ton revenu mensuel et tes catégories de dépenses.',
+    'Personnalise la couleur d\'accent, le thème et ton avatar.',
     'Consulte ton plan actuel et gère ou annule ton abonnement.',
     'Exporte tes données en CSV, ou relance l\'import d\'un relevé bancaire.',
   ],
@@ -91,7 +93,7 @@ export function Parametres() {
                 type="button"
                 onClick={handleManageBilling}
                 disabled={managingBilling}
-                className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-white/5 disabled:opacity-60"
+                className="rounded-lg border border-overlay/10 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
               >
                 {managingBilling ? 'Redirection...' : 'Gérer mon abonnement'}
               </button>
@@ -99,6 +101,8 @@ export function Parametres() {
           </div>
           {subscription.error && <p className="mt-3 text-sm text-red-400">{subscription.error}</p>}
         </Card>
+
+        <PersonalizationSettings />
 
         <IncomeInput monthlyIncome={income.monthlyIncome} onChange={income.setMonthlyIncome} />
 

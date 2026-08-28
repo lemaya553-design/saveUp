@@ -44,7 +44,7 @@ export function MonthComparison({
             <span className="text-muted">Ce mois-ci</span>
             <span className="font-medium text-ink">{formatCurrency(currentAmount)}</span>
           </div>
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-overlay/10">
             <div
               className="h-full rounded-full bg-primary transition-all"
               style={{ width: `${currentPct}%` }}
@@ -59,9 +59,9 @@ export function MonthComparison({
               {hasPreviousData ? formatCurrency(previousAmount) : 'Pas de données'}
             </span>
           </div>
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-overlay/10">
             <div
-              className="h-full rounded-full bg-white/30 transition-all"
+              className="h-full rounded-full bg-overlay/30 transition-all"
               style={{ width: `${previousPct}%` }}
             />
           </div>

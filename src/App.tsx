@@ -5,6 +5,7 @@ import { RequireAuth } from './components/RequireAuth'
 import { ToastProvider } from './components/ToastProvider'
 import { PageSkeleton } from './components/PageSkeleton'
 import { AuthProvider } from './hooks/useAuth'
+import { PreferencesProvider } from './hooks/usePreferences'
 import { Home } from './pages/Home'
 import { Tarifs } from './pages/Tarifs'
 import { Connexion } from './pages/Connexion'
@@ -28,39 +29,41 @@ const Statistiques = lazy(() =>
 function App() {
   return (
     <AuthProvider>
-      <ToastProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route index element={<Home />} />
-              <Route path="tarifs" element={<Tarifs />} />
-              <Route path="connexion" element={<Connexion />} />
-              <Route path="confidentialite" element={<Confidentialite />} />
-              <Route path="conditions" element={<Conditions />} />
-              <Route element={<RequireAuth />}>
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="budget" element={<Budget />} />
-                <Route path="epargne" element={<Epargne />} />
-                {/* Simulateur merged into Épargne as a tab — keep old links/bookmarks working. */}
-                <Route path="simulateur" element={<Navigate to="/epargne" replace />} />
-                <Route path="investissement" element={<Investissement />} />
-                <Route path="souhaits" element={<Souhaits />} />
-                <Route
-                  path="statistiques"
-                  element={
-                    <Suspense fallback={<PageSkeleton cards={4} />}>
-                      <Statistiques />
-                    </Suspense>
-                  }
-                />
-                <Route path="recompenses" element={<Recompenses />} />
-                <Route path="parametres" element={<Parametres />} />
-                <Route path="onboarding" element={<Onboarding />} />
+      <PreferencesProvider>
+        <ToastProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route element={<Layout />}>
+                <Route index element={<Home />} />
+                <Route path="tarifs" element={<Tarifs />} />
+                <Route path="connexion" element={<Connexion />} />
+                <Route path="confidentialite" element={<Confidentialite />} />
+                <Route path="conditions" element={<Conditions />} />
+                <Route element={<RequireAuth />}>
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="budget" element={<Budget />} />
+                  <Route path="epargne" element={<Epargne />} />
+                  {/* Simulateur merged into Épargne as a tab — keep old links/bookmarks working. */}
+                  <Route path="simulateur" element={<Navigate to="/epargne" replace />} />
+                  <Route path="investissement" element={<Investissement />} />
+                  <Route path="souhaits" element={<Souhaits />} />
+                  <Route
+                    path="statistiques"
+                    element={
+                      <Suspense fallback={<PageSkeleton cards={4} />}>
+                        <Statistiques />
+                      </Suspense>
+                    }
+                  />
+                  <Route path="recompenses" element={<Recompenses />} />
+                  <Route path="parametres" element={<Parametres />} />
+                  <Route path="onboarding" element={<Onboarding />} />
+                </Route>
               </Route>
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </ToastProvider>
+            </Routes>
+          </BrowserRouter>
+        </ToastProvider>
+      </PreferencesProvider>
     </AuthProvider>
   )
 }

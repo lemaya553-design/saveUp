@@ -587,3 +587,23 @@ create policy "wishlist_items_all" on wishlist_items
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 grant select, insert, update, delete on wishlist_items to authenticated;
+
+-- User preferences (Paramètres > Personnalisation) ---------------------------
+-- No row = defaults (bleu / dark / no avatar), same convention as
+-- budget_settings/subscriptions — no signup trigger needed.
+
+create table if not exists user_preferences (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  accent_color text not null default 'bleu' check (accent_color in ('bleu', 'vert', 'violet', 'orange')),
+  theme text not null default 'dark' check (theme in ('dark', 'light')),
+  avatar_emoji text,
+  updated_at timestamptz not null default now()
+);
+
+alter table user_preferences enable row level security;
+
+drop policy if exists "user_preferences_all" on user_preferences;
+create policy "user_preferences_all" on user_preferences
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+grant select, insert, update, delete on user_preferences to authenticated;

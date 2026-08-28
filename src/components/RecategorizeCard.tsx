@@ -55,7 +55,7 @@ export function RecategorizeCard() {
           </p>
 
           {recategorizeResult.sample.length > 0 && (
-            <div className="mt-3 rounded-lg border border-white/10 bg-white/5 p-3">
+            <div className="mt-3 rounded-lg border border-overlay/10 bg-overlay/5 p-3">
               <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">
                 Aperçu de ce qui a été vérifié
               </p>

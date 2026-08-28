@@ -10,6 +10,21 @@
   })(window, document, "clarity", "script", "y7egafpusf");
 </script>   
  <meta charset="UTF-8" />
+    <script>
+      // Applies the last-known theme/accent from localStorage before first
+      // paint, so a returning user with light mode or a custom accent never
+      // sees a flash of the dark/blue default while React boots and the
+      // real preference loads from Supabase (usePreferences reconciles
+      // once that resolves — see src/hooks/usePreferences.ts).
+      (function () {
+        try {
+          var theme = localStorage.getItem('saveup-theme');
+          if (theme === 'light') document.documentElement.dataset.theme = 'light';
+          var accent = localStorage.getItem('saveup-accent');
+          if (accent && accent !== 'bleu') document.documentElement.dataset.accent = accent;
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

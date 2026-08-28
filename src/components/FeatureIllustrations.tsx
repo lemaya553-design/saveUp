@@ -34,7 +34,7 @@ export function BudgetIllustration({ variant = 'card' }: { variant?: 'card' | 'i
             <span>{r.label}</span>
             <span>{r.pct}%</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-overlay/10">
             <div className={`h-full rounded-full ${r.color}`} style={{ width: `${r.pct}%` }} />
           </div>
         </div>
@@ -61,7 +61,7 @@ export function SavingsIllustration({ variant = 'card' }: { variant?: 'card' | '
         <span className="text-xs text-muted">Objectif : Fonds d'urgence</span>
         <span className="text-sm font-semibold text-success">54 %</span>
       </div>
-      <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-white/10">
+      <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-overlay/10">
         <div className="h-full rounded-full bg-success" style={{ width: '54%' }} />
       </div>
       <p className="mt-3 text-2xl font-bold text-ink">
@@ -90,8 +90,8 @@ export function BadgesIllustration({ variant = 'card' }: { variant?: 'card' | 'i
   const badges = [
     'bg-primary/15 text-primary',
     'bg-accent/15 text-accent',
-    'bg-white/5 text-muted',
-    'bg-white/5 text-muted',
+    'bg-overlay/5 text-muted',
+    'bg-overlay/5 text-muted',
   ]
   return (
     <div className="flex justify-center gap-3" aria-hidden="true">

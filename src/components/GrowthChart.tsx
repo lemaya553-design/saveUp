@@ -64,7 +64,7 @@ export function GrowthChart({ points }: { points: ProjectionPoint[] }) {
           y2={HEIGHT - PADDING}
           stroke="currentColor"
           strokeWidth={1}
-          className="text-white/10"
+          className="text-overlay/10"
         />
         <path d={areaPath} fill="currentColor" opacity={0.1} stroke="none" />
         <path
@@ -84,7 +84,7 @@ export function GrowthChart({ points }: { points: ProjectionPoint[] }) {
               y2={HEIGHT - PADDING}
               stroke="currentColor"
               strokeWidth={1}
-              className="text-white/20"
+              className="text-overlay/20"
             />
             <circle
               cx={hovered.x}

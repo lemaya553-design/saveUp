@@ -36,7 +36,7 @@ export function AddGoalCard({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="glass flex min-h-[96px] min-w-0 items-center justify-center rounded-2xl border-2 border-dashed border-white/15 p-5 text-sm font-medium text-muted transition-colors hover:border-primary/40 hover:text-ink"
+        className="glass flex min-h-[96px] min-w-0 items-center justify-center rounded-2xl border-2 border-dashed border-overlay/15 p-5 text-sm font-medium text-muted transition-colors hover:border-primary/40 hover:text-ink"
       >
         + Nouvel objectif
       </button>
@@ -54,7 +54,7 @@ export function AddGoalCard({
           onChange={(e) => setName(e.target.value)}
           placeholder="Nom (ex: Voyage)"
           autoFocus
-          className="min-w-[140px] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         <input
           type="number"
@@ -64,7 +64,7 @@ export function AddGoalCard({
           value={target}
           onChange={(e) => setTarget(e.target.value)}
           placeholder="Montant cible"
-          className="w-32 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="w-32 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         <label className="flex flex-col gap-1 text-xs text-muted">
           Échéance (optionnel)
@@ -74,7 +74,7 @@ export function AddGoalCard({
             onChange={(e) => setTargetDate(e.target.value)}
             min={getTodayDateString()}
             max={getFarFutureDateString()}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+            className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
           />
         </label>
         <div className="flex gap-2">
@@ -87,7 +87,7 @@ export function AddGoalCard({
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="rounded-lg border border-white/10 px-4 py-2 text-sm text-muted hover:text-ink"
+            className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
           >
             Annuler
           </button>

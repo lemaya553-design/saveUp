@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useAuth } from '../hooks/useAuth'
+import { usePreferences } from '../hooks/usePreferences'
 import { REWARD_TIERS, getUnlockedTiers } from '../lib/rewards'
 import { LogoMark } from './Logo'
+import { AvatarCircle } from './AvatarCircle'
 
 const links = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -36,6 +38,7 @@ function CloseIcon({ className }: { className: string }) {
 export function Nav() {
   const goals = useSavingsGoals()
   const { signOut } = useAuth()
+  const { avatarEmoji } = usePreferences()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const totalCurrentAmount = goals.goals.reduce((sum, g) => sum + g.currentAmount, 0)
@@ -44,7 +47,7 @@ export function Nav() {
   function renderBadge(to: string) {
     if (to !== '/recompenses' || unlockedCount === null) return null
     return (
-      <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold">
+      <span className="rounded-full bg-overlay/10 px-1.5 py-0.5 text-[10px] font-semibold">
         {unlockedCount}/{REWARD_TIERS.length}
       </span>
     )
@@ -57,7 +60,7 @@ export function Nav() {
   }
 
   return (
-    <header className="sticky top-0 z-20 border-b border-white/10 bg-surface/70 backdrop-blur-md">
+    <header className="sticky top-0 z-20 border-b border-overlay/10 bg-surface/70 backdrop-blur-md">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 lg:justify-center">
         <Link to="/dashboard" className="flex items-center gap-1.5 lg:hidden">
           <LogoMark className="h-6 w-6" />
@@ -76,7 +79,7 @@ export function Nav() {
                 `flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-primary-strong text-white'
-                    : 'text-muted hover:bg-white/5 hover:text-accent'
+                    : 'text-muted hover:bg-overlay/5 hover:text-accent'
                 }`
               }
             >
@@ -87,25 +90,33 @@ export function Nav() {
           <button
             type="button"
             onClick={handleSignOut}
-            className="ml-1 rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:bg-white/5 hover:text-red-400"
+            className="ml-1 rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:bg-overlay/5 hover:text-red-400"
           >
             Déconnexion
           </button>
+          <Link to="/parametres" aria-label="Paramètres et personnalisation" className="ml-1">
+            <AvatarCircle emoji={avatarEmoji} size="sm" />
+          </Link>
         </nav>
 
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="flex h-11 w-11 items-center justify-center rounded-lg text-ink transition-colors hover:bg-white/5 lg:hidden"
-          aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
-          aria-expanded={open}
-        >
-          {open ? <CloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
-        </button>
+        <div className="flex items-center gap-2 lg:hidden">
+          <Link to="/parametres" aria-label="Paramètres et personnalisation">
+            <AvatarCircle emoji={avatarEmoji} size="sm" />
+          </Link>
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5"
+            aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={open}
+          >
+            {open ? <CloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
 
       {open && (
-        <nav className="border-t border-white/10 px-4 pb-3 lg:hidden">
+        <nav className="border-t border-overlay/10 px-4 pb-3 lg:hidden">
           <ul className="flex flex-col gap-1 pt-2">
             {links.map((link) => (
               <li key={link.to}>
@@ -116,7 +127,7 @@ export function Nav() {
                     `flex min-h-[44px] items-center justify-between rounded-lg px-3 text-sm font-medium transition-colors ${
                       isActive
                         ? 'bg-primary-strong text-white'
-                        : 'text-muted hover:bg-white/5 hover:text-accent'
+                        : 'text-muted hover:bg-overlay/5 hover:text-accent'
                     }`
                   }
                 >
@@ -129,7 +140,7 @@ export function Nav() {
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="flex min-h-[44px] w-full items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-white/5 hover:text-red-400"
+                className="flex min-h-[44px] w-full items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-overlay/5 hover:text-red-400"
               >
                 Déconnexion
               </button>

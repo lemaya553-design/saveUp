@@ -56,7 +56,7 @@ export function ScoreHistoryChart({ history }: { history: ScoreSnapshot[] }) {
           y2={HEIGHT - PADDING}
           stroke="currentColor"
           strokeWidth={1}
-          className="text-white/10"
+          className="text-overlay/10"
         />
         <path d={areaPath} fill="currentColor" opacity={0.1} stroke="none" />
         <path
@@ -76,7 +76,7 @@ export function ScoreHistoryChart({ history }: { history: ScoreSnapshot[] }) {
               y2={HEIGHT - PADDING}
               stroke="currentColor"
               strokeWidth={1}
-              className="text-white/20"
+              className="text-overlay/20"
             />
             <circle cx={hovered.x} cy={hovered.y} r={4} fill="currentColor" strokeWidth={2} className="stroke-surface" />
           </>

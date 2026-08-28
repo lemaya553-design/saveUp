@@ -155,7 +155,7 @@ export function Conditions() {
         </Section>
       </div>
 
-      <p className="mt-10 border-t border-white/10 pt-6 text-sm text-muted">
+      <p className="mt-10 border-t border-overlay/10 pt-6 text-sm text-muted">
         Voir aussi notre{' '}
         <Link to="/confidentialite" className="text-accent hover:text-accent/80">
           politique de confidentialité

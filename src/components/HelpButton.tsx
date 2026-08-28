@@ -42,7 +42,7 @@ export function HelpButton({ title, purpose, actions, className = '' }: HelpButt
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={`Aide : ${title}`}
-        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/5 text-sm font-semibold text-muted backdrop-blur-sm transition-colors hover:border-white/25 hover:bg-white/10 hover:text-ink"
+        className="flex h-8 w-8 items-center justify-center rounded-full border border-overlay/15 bg-overlay/5 text-sm font-semibold text-muted backdrop-blur-sm transition-colors hover:border-overlay/25 hover:bg-overlay/10 hover:text-ink"
       >
         ?
       </button>

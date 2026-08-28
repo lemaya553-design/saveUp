@@ -44,7 +44,7 @@ export function PaceComparisonChart({ entries }: { entries: PaceComparisonEntry[
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
                 <span className="w-16 shrink-0 text-[11px] text-muted">Actuel</span>
-                <div className="h-3 flex-1 overflow-hidden rounded-full bg-white/10">
+                <div className="h-3 flex-1 overflow-hidden rounded-full bg-overlay/10">
                   <div
                     className="h-full rounded-full bg-primary transition-all"
                     style={{ width: `${actualPct}%` }}
@@ -56,7 +56,7 @@ export function PaceComparisonChart({ entries }: { entries: PaceComparisonEntry[
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-16 shrink-0 text-[11px] text-muted">Nécessaire</span>
-                <div className="h-3 flex-1 overflow-hidden rounded-full bg-white/10">
+                <div className="h-3 flex-1 overflow-hidden rounded-full bg-overlay/10">
                   <div
                     className="h-full rounded-full bg-accent transition-all"
                     style={{ width: `${requiredPct}%` }}

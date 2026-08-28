@@ -22,7 +22,7 @@ export function ContributionsVsInterestChart({
 
   return (
     <div>
-      <div className="flex h-4 w-full overflow-hidden rounded-full bg-white/10" role="img" aria-label={`${Math.round(contribPct)}% contributions, ${Math.round(interestPct)}% intérêts`}>
+      <div className="flex h-4 w-full overflow-hidden rounded-full bg-overlay/10" role="img" aria-label={`${Math.round(contribPct)}% contributions, ${Math.round(interestPct)}% intérêts`}>
         <div className="h-full bg-primary transition-all" style={{ width: `${contribPct}%` }} />
         <div className="h-full bg-success transition-all" style={{ width: `${interestPct}%` }} />
       </div>

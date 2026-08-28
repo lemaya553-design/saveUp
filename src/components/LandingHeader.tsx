@@ -30,7 +30,7 @@ export function LandingHeader() {
   const [open, setOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-20 border-b border-white/10 bg-canvas/80 backdrop-blur-md">
+    <header className="sticky top-0 z-20 border-b border-overlay/10 bg-canvas/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2">
           <LogoMark className="h-7 w-7" />
@@ -59,7 +59,7 @@ export function LandingHeader() {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="flex h-11 w-11 items-center justify-center rounded-lg text-ink transition-colors hover:bg-white/5 lg:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5 lg:hidden"
             aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
             aria-expanded={open}
           >
@@ -69,14 +69,14 @@ export function LandingHeader() {
       </div>
 
       {open && (
-        <nav className="border-t border-white/10 px-4 pb-3 sm:px-6 lg:hidden">
+        <nav className="border-t border-overlay/10 px-4 pb-3 sm:px-6 lg:hidden">
           <ul className="flex flex-col gap-1 pt-2">
             {NAV_LINKS.map((link) => (
               <li key={link.label}>
                 <Link
                   to={link.to}
                   onClick={() => setOpen(false)}
-                  className="flex min-h-[44px] items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-white/5 hover:text-ink"
+                  className="flex min-h-[44px] items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-overlay/5 hover:text-ink"
                 >
                   {link.label}
                 </Link>

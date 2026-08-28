@@ -105,7 +105,7 @@ export function QuickAddFab() {
                   type="button"
                   onClick={() => logFrequent(item)}
                   disabled={submitting}
-                  className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-ink transition-colors hover:border-primary/40 disabled:opacity-60"
+                  className="rounded-full border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink transition-colors hover:border-primary/40 disabled:opacity-60"
                 >
                   {item.description} · {formatCurrency(item.amount)}
                 </button>
@@ -121,7 +121,7 @@ export function QuickAddFab() {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description (ex: Café)"
             autoFocus
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+            className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
           />
           <div className="flex gap-2">
             <input
@@ -132,12 +132,12 @@ export function QuickAddFab() {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Montant"
-              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+              className="flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
             />
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+              className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
             >
               {categoryNames.map((cat) => (
                 <option key={cat} value={cat} className="bg-surface">

@@ -12,10 +12,65 @@
   --color-success: #22c55e;
   --color-ink: #f5f5f7;
   --color-muted: #9ca3af;
+  /* Every former `white/N` border/hover-overlay in the app now reads
+     `overlay/N` instead (bulk find/replace, see git history) — a single
+     token so light mode can flip every one of those at once instead of
+     touching each usage. Dark mode's default is white, matching the
+     original literal exactly. */
+  --color-overlay: #ffffff;
 }
 
 :root {
   color-scheme: dark;
+  /* Raw (non-Tailwind-utility) values used directly in the plain CSS rules
+     below — kept as real custom properties, not baked-in rgba(), so
+     [data-theme="light"] can override them the same way it overrides the
+     @theme tokens above. */
+  --glass-bg: rgba(21, 21, 31, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --slider-track-bg: rgba(255, 255, 255, 0.1);
+}
+
+/* Accent color presets (Paramètres > Personnalisation). "Bleu" is the
+   original default palette above — no override block needed for it. */
+:root[data-accent='vert'] {
+  --color-primary: #22c55e;
+  --color-primary-strong: #16a34a;
+  --color-accent: #14b8a6;
+}
+:root[data-accent='violet'] {
+  --color-primary: #8b5cf6;
+  --color-primary-strong: #7c3aed;
+  --color-accent: #ec4899;
+}
+:root[data-accent='orange'] {
+  --color-primary: #f97316;
+  --color-primary-strong: #ea580c;
+  --color-accent: #eab308;
+}
+
+/* Light theme (Paramètres > Personnalisation). Semantic colors (success,
+   the red used for over-budget/errors) stay fixed across both themes —
+   only the neutral surface/ink/overlay tokens flip. */
+:root[data-theme='light'] {
+  color-scheme: light;
+  --color-canvas: #f5f5f8;
+  --color-surface: #ffffff;
+  --color-ink: #16161d;
+  --color-muted: #5b5f6d;
+  --color-overlay: #16161d;
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(22, 22, 29, 0.08);
+  --slider-track-bg: rgba(22, 22, 29, 0.1);
+  /* red-200/red-300 are used ONLY as text color inside the app's
+     "border-red-900/N bg-red-950/N text-red-{200,300}" error/warning
+     banner pattern (AlertBanner, PersonalizedTips, every inline form
+     error) — those pale reds are legible on the near-black bg they were
+     designed for, but unreadable on the pale pink that same bg tint
+     becomes once the underlying surface is light. Darkened here instead
+     of touching every banner instance. */
+  --color-red-200: #b91c1c;
+  --color-red-300: #b91c1c;
 }
 
 html {
@@ -29,15 +84,18 @@ body {
   color: var(--color-ink);
 }
 
-/* Glassmorphism surface: translucent card background, blur, faint white edge. */
+/* Glassmorphism surface: translucent card background, blur, faint edge. */
 .glass {
-  background-color: rgba(21, 21, 31, 0.7);
+  background-color: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
 }
 
-/* Subtle blue-to-mauve wash for hero sections and page headers. */
+/* Subtle blue-to-mauve wash for hero sections and page headers. Left as a
+   fixed blue/mauve wash regardless of accent choice — a deliberately
+   decorative constant, like the landing page's own brand identity, rather
+   than something that should chase every accent preset. */
 .hero-gradient {
   background-image:
     radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74, 108, 247, 0.22), transparent 70%),
@@ -326,13 +384,13 @@ input[type='range'] {
 input[type='range']::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--slider-track-bg);
 }
 
 input[type='range']::-moz-range-track {
   height: 4px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--slider-track-bg);
 }
 
 input[type='range']::-webkit-slider-thumb {

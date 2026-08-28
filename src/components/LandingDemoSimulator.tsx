@@ -54,7 +54,7 @@ export function LandingDemoSimulator() {
             setSelectedId(e.target.value)
             setReduction(0)
           }}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+          className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
         >
           {DEMO_EXPENSES.map((expense) => (
             <option key={expense.id} value={expense.id} className="bg-surface">
@@ -82,7 +82,7 @@ export function LandingDemoSimulator() {
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-white/10 p-4">
+        <div className="rounded-xl border border-overlay/10 p-4">
           <p className="text-xs uppercase tracking-wide text-muted">Objectif d'épargne</p>
           <p className="mt-1 text-sm text-ink">
             {reduction > 0
@@ -92,7 +92,7 @@ export function LandingDemoSimulator() {
               : 'Ajuste le curseur pour voir l\'impact'}
           </p>
         </div>
-        <div className="rounded-xl border border-white/10 p-4">
+        <div className="rounded-xl border border-overlay/10 p-4">
           <p className="text-xs uppercase tracking-wide text-muted">Score projeté</p>
           <div className="mt-1 flex items-baseline gap-2">
             <span className={`text-2xl font-bold ${getScoreColorClass(projectedScore)}`}>

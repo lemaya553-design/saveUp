@@ -87,7 +87,7 @@ export function SavingsGoalCard({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Nom de l'objectif"
-            className="min-w-[140px] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+            className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
           />
           <input
             type="number"
@@ -97,7 +97,7 @@ export function SavingsGoalCard({
             value={target}
             onChange={(e) => setTarget(e.target.value)}
             placeholder="Montant cible"
-            className="w-32 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+            className="w-32 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
           />
           <label className="flex flex-col gap-1 text-xs text-muted">
             Échéance (optionnel)
@@ -107,7 +107,7 @@ export function SavingsGoalCard({
               onChange={(e) => setTargetDate(e.target.value)}
               min={getTodayDateString()}
               max={getFarFutureDateString()}
-              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+              className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
             />
           </label>
           <div className="flex gap-2">
@@ -120,7 +120,7 @@ export function SavingsGoalCard({
             <button
               type="button"
               onClick={() => setEditing(false)}
-              className="rounded-lg border border-white/10 px-4 py-2 text-sm text-muted hover:text-ink"
+              className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
             >
               Annuler
             </button>
@@ -203,7 +203,7 @@ export function SavingsGoalCard({
       ) : !goal.targetDate ? (
         <p className="mt-3 text-xs text-muted">Ajoute une échéance pour comparer ton rythme.</p>
       ) : requiredPace ? (
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white/5 px-3 py-2 text-xs">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-overlay/5 px-3 py-2 text-xs">
           <span className="text-muted">
             {formatCurrency(monthlyRate)}/mois actuel · {formatCurrency(requiredPace.perMonth)}/mois
             nécessaire
@@ -220,7 +220,7 @@ export function SavingsGoalCard({
         <p className="mt-3 text-xs text-red-400">Échéance dépassée.</p>
       )}
 
-      <div className="mt-4 border-t border-white/10 pt-3">
+      <div className="mt-4 border-t border-overlay/10 pt-3">
         <p className="mb-1.5 text-xs text-muted">
           Régularité ({weeklyDots.filter(Boolean).length}/{weeklyDots.length} dernières semaines)
         </p>
@@ -228,7 +228,7 @@ export function SavingsGoalCard({
           {weeklyDots.map((hasContribution, i) => (
             <span
               key={i}
-              className={`h-2.5 w-2.5 rounded-full ${hasContribution ? 'bg-success' : 'bg-white/10'}`}
+              className={`h-2.5 w-2.5 rounded-full ${hasContribution ? 'bg-success' : 'bg-overlay/10'}`}
               aria-hidden="true"
             />
           ))}

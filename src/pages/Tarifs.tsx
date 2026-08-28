@@ -180,7 +180,7 @@ export function Tarifs() {
                   <button
                     type="button"
                     disabled
-                    className="mt-8 w-full cursor-not-allowed rounded-lg border border-white/10 px-4 py-2 font-medium text-muted"
+                    className="mt-8 w-full cursor-not-allowed rounded-lg border border-overlay/10 px-4 py-2 font-medium text-muted"
                   >
                     Ton plan actuel
                   </button>
@@ -189,7 +189,7 @@ export function Tarifs() {
                     type="button"
                     onClick={handleManage}
                     disabled={isLoadingThis}
-                    className="mt-8 w-full rounded-lg border border-white/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-white/5 disabled:opacity-60"
+                    className="mt-8 w-full rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
                   >
                     {isLoadingThis ? 'Redirection...' : 'Gérer mon abonnement'}
                   </button>

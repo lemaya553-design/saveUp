@@ -77,7 +77,7 @@ export function SavingsComparisonChart({
             y2={HEIGHT - PADDING}
             stroke="currentColor"
             strokeWidth={1}
-            className="text-white/10"
+            className="text-overlay/10"
           />
           <path
             d={currentPath}
@@ -106,7 +106,7 @@ export function SavingsComparisonChart({
                 y2={HEIGHT - PADDING}
                 stroke="currentColor"
                 strokeWidth={1}
-                className="text-white/20"
+                className="text-overlay/20"
               />
               <circle
                 cx={hoveredCurrent.x}

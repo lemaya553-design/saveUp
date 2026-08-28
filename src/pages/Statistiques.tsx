@@ -155,7 +155,7 @@ export function Statistiques() {
               onClick={() => setMonthOffset((o) => Math.max(-MAX_MONTHS_BACK, o - 1))}
               disabled={monthOffset <= -MAX_MONTHS_BACK}
               aria-label="Mois précédent"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-ink transition-colors hover:bg-white/5 disabled:opacity-30"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5 disabled:opacity-30"
             >
               ‹
             </button>
@@ -167,7 +167,7 @@ export function Statistiques() {
               onClick={() => setMonthOffset((o) => Math.min(0, o + 1))}
               disabled={monthOffset >= 0}
               aria-label="Mois suivant"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-ink transition-colors hover:bg-white/5 disabled:opacity-30"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5 disabled:opacity-30"
             >
               ›
             </button>

@@ -33,10 +33,13 @@ export function MonthlyTrendChart({ points }: { points: MonthlySpendingPoint[] }
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={points} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-        <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-        <XAxis dataKey="label" tick={{ fill: '#9ca3af', fontSize: 12 }} tickLine={false} axisLine={false} />
+        <CartesianGrid stroke="color-mix(in srgb, var(--color-overlay) 8%, transparent)" vertical={false} />
+        <XAxis dataKey="label" tick={{ fill: 'var(--color-muted)', fontSize: 12 }} tickLine={false} axisLine={false} />
         <YAxis hide />
-        <Tooltip content={<TrendTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)' }} />
+        <Tooltip
+          content={<TrendTooltip />}
+          cursor={{ stroke: 'color-mix(in srgb, var(--color-overlay) 15%, transparent)' }}
+        />
         <Line
           type="monotone"
           dataKey="amount"

@@ -43,7 +43,7 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-white/5 hover:text-ink"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-overlay/5 hover:text-ink"
             aria-label="Fermer"
           >
             ✕

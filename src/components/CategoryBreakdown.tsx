@@ -20,7 +20,7 @@ export function CategoryBreakdown({ categories }: { categories: CategoryTotal[] 
               {formatCurrency(cat.amount)} · {Math.round(cat.pct)}%
             </span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-overlay/10">
             <div
               className={`h-full rounded-full transition-all ${cat.colorClass}`}
               style={{ width: `${cat.pct}%` }}

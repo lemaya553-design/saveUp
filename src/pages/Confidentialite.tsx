@@ -143,7 +143,7 @@ export function Confidentialite() {
         </Section>
       </div>
 
-      <p className="mt-10 border-t border-white/10 pt-6 text-sm text-muted">
+      <p className="mt-10 border-t border-overlay/10 pt-6 text-sm text-muted">
         Cette politique peut être mise à jour au fil de l'évolution de SaveUp. Les changements
         importants seront communiqués aux utilisateurs. Voir aussi la{' '}
         <Link to="/tarifs" className="text-accent hover:text-accent/80">

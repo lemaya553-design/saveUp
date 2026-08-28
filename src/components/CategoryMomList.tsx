@@ -9,7 +9,7 @@ export function CategoryMomList({ changes }: { changes: CategoryMomChange[] }) {
   }
 
   return (
-    <ul className="divide-y divide-white/10">
+    <ul className="divide-y divide-overlay/10">
       {relevant.map((change) => (
         <li key={change.category} className="flex items-center justify-between gap-3 py-2.5 text-sm">
           <span className="min-w-0 flex-1 truncate text-ink">{change.category}</span>

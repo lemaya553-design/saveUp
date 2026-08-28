@@ -43,7 +43,7 @@ function ToggleButton({
       type="button"
       onClick={onClick}
       className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-        active ? 'bg-primary-strong text-white' : 'bg-white/5 text-muted hover:text-ink'
+        active ? 'bg-primary-strong text-white' : 'bg-overlay/5 text-muted hover:text-ink'
       }`}
     >
       {children}
@@ -70,7 +70,7 @@ function ColumnSelect({
       <select
         value={value === null ? '' : value}
         onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-        className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+        className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
       >
         {allowNone && (
           <option value="" className="bg-surface">
@@ -263,7 +263,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
             {FALLBACK_CATEGORY} » par défaut) — tu pourras toujours ajuster après l'import.
           </p>
 
-          <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/15 p-6 text-center text-sm text-muted transition-colors hover:border-primary/40 hover:text-ink">
+          <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-overlay/15 p-6 text-center text-sm text-muted transition-colors hover:border-primary/40 hover:text-ink">
             <input
               ref={fileInputRef}
               type="file"
@@ -287,7 +287,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
             </p>
           )}
 
-          <details className="group rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+          <details className="group rounded-xl border border-overlay/10 bg-overlay/[0.03] px-4 py-3">
             <summary className="cursor-pointer text-sm font-medium text-ink marker:content-none">
               <span className="mr-1.5 inline-block transition-transform group-open:rotate-90">›</span>
               Comment obtenir ce fichier de ta banque ?
@@ -354,13 +354,13 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
                 value={newAccountName}
                 onChange={(e) => setNewAccountName(e.target.value)}
                 placeholder="Ex : Carte de crédit"
-                className="min-w-[180px] rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+                className="min-w-[180px] rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
               />
             </label>
             <button
               type="submit"
               disabled={creatingAccount || !newAccountName.trim()}
-              className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-white/5 disabled:opacity-60"
+              className="rounded-lg border border-overlay/10 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
             >
               {creatingAccount ? 'Création...' : 'Créer'}
             </button>
@@ -380,7 +380,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
             <button
               type="button"
               onClick={resetAll}
-              className="rounded-lg border border-white/10 px-4 py-2 text-sm text-muted hover:text-ink"
+              className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
             >
               Recommencer
             </button>
@@ -503,7 +503,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
             </div>
           )}
 
-          <div className="border-t border-white/10 pt-4">
+          <div className="border-t border-overlay/10 pt-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm text-ink">
                 <span className="font-semibold text-success">{selectedCount}</span> sélectionnée
@@ -534,10 +534,10 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               </div>
             </div>
 
-            <div className="max-h-72 overflow-auto rounded-xl border border-white/10">
+            <div className="max-h-72 overflow-auto rounded-xl border border-overlay/10">
               <table className="w-full min-w-[560px] text-left text-sm">
                 <thead className="sticky top-0 bg-surface text-xs text-muted">
-                  <tr className="border-b border-white/10">
+                  <tr className="border-b border-overlay/10">
                     <th className="w-10 px-3 py-2"></th>
                     <th className="px-3 py-2 font-medium">Date</th>
                     <th className="px-3 py-2 font-medium">Description</th>
@@ -548,7 +548,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
                 </thead>
                 <tbody>
                   {importRows.slice(0, PREVIEW_LIMIT).map((row) => (
-                    <tr key={row.index} className="border-b border-white/5 last:border-b-0">
+                    <tr key={row.index} className="border-b border-overlay/5 last:border-b-0">
                       <td className="px-3 py-2">
                         {!row.skipReason && (
                           <input
@@ -604,7 +604,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
             <button
               type="button"
               onClick={resetAll}
-              className="rounded-lg border border-white/10 px-4 py-2 text-sm text-muted hover:text-ink"
+              className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
             >
               Recommencer
             </button>
@@ -651,7 +651,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
             <button
               type="button"
               onClick={resetAll}
-              className="rounded-lg border border-white/10 px-4 py-2 text-sm text-muted hover:text-ink"
+              className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
             >
               Importer un autre fichier
             </button>

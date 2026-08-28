@@ -70,7 +70,14 @@ function BarTopLabel({
   const numWidth = Number(width)
 
   return (
-    <text x={numX + numWidth / 2} y={numY - 8} textAnchor="middle" fill="#f5f5f7" fontSize={12} fontWeight={600}>
+    <text
+      x={numX + numWidth / 2}
+      y={numY - 8}
+      textAnchor="middle"
+      fill="var(--color-ink)"
+      fontSize={12}
+      fontWeight={600}
+    >
       {formatCurrency(entry.total)}
     </text>
   )
@@ -125,7 +132,7 @@ function CategoryTick({
               onCancelEdit()
             }
           }}
-          className="w-full rounded border border-primary bg-[#15151f] px-1 py-0.5 text-center text-xs text-ink focus:outline-none"
+          className="w-full rounded border border-primary bg-surface px-1 py-0.5 text-center text-xs text-ink focus:outline-none"
         />
       </foreignObject>
     )
@@ -137,9 +144,13 @@ function CategoryTick({
       onClick={() => isEditable && onStartEdit(name)}
       style={{ cursor: isEditable ? 'pointer' : 'default' }}
     >
-      <text x={0} y={12} textAnchor="middle" fill="#f5f5f7" fontSize={12}>
+      <text x={0} y={12} textAnchor="middle" fill="var(--color-ink)" fontSize={12}>
         {name}
-        {isEditable ? <tspan fill="#9ca3af" dx={3} fontSize={10}>✎</tspan> : null}
+        {isEditable ? (
+          <tspan fill="var(--color-muted)" dx={3} fontSize={10}>
+            ✎
+          </tspan>
+        ) : null}
       </text>
     </g>
   )
@@ -334,7 +345,7 @@ export function CategorySpendingChart({
                       key={entry.category}
                       fill={barColor(entry)}
                       fillOpacity={expandedCategory && !isActive ? 0.45 : 1}
-                      stroke={isDropTarget ? '#f5f5f7' : isActive ? '#f5f5f7' : undefined}
+                      stroke={isDropTarget || isActive ? 'var(--color-ink)' : undefined}
                       strokeWidth={isDropTarget ? 3 : isActive ? 2 : 0}
                       strokeDasharray={isDropTarget ? '4 3' : undefined}
                     />
@@ -409,7 +420,7 @@ export function CategorySpendingChart({
               {expanded.transactions.length} transaction{expanded.transactions.length > 1 ? 's' : ''}
               {expanded.category !== SAVINGS_CATEGORY && onReclassify && ' — glisse une ligne sur une autre colonne pour la reclasser'}
             </p>
-            <ul className="max-h-48 divide-y divide-white/10 overflow-y-auto">
+            <ul className="max-h-48 divide-y divide-overlay/10 overflow-y-auto">
               {expanded.transactions.map((t) => {
                 const draggableItem = expanded.category !== SAVINGS_CATEGORY && !!onReclassify
                 return (

@@ -161,7 +161,7 @@ export function Budget() {
             {formatCurrency(remainingThisMonth)}
           </p>
 
-          <div className="relative mt-3 h-2 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="relative mt-3 h-2 w-full overflow-hidden rounded-full bg-overlay/10">
             <div
               className={`h-full rounded-full transition-all ${
                 isOverBudget ? 'bg-red-400' : 'bg-primary'
@@ -169,7 +169,7 @@ export function Budget() {
               style={{ width: `${Math.min(100, spentPct)}%` }}
             />
             <div
-              className="absolute top-0 h-full w-0.5 bg-white/70"
+              className="absolute top-0 h-full w-0.5 bg-overlay/70"
               style={{ left: `${Math.min(100, monthProgressPct)}%` }}
               aria-hidden="true"
             />

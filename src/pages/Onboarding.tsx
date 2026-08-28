@@ -149,7 +149,7 @@ export function Onboarding() {
                 <button
                   type="button"
                   onClick={() => setImportOpen(true)}
-                  className="glass rounded-2xl p-4 text-left transition-colors hover:bg-white/5"
+                  className="glass rounded-2xl p-4 text-left transition-colors hover:bg-overlay/5"
                 >
                   <p className="font-semibold text-ink">📄 Importer mon relevé bancaire</p>
                   <p className="mt-1 text-sm text-muted">
@@ -169,7 +169,7 @@ export function Onboarding() {
                 type="button"
                 onClick={handleFillDemo}
                 disabled={seedingDemo}
-                className="glass rounded-2xl p-4 text-left transition-colors hover:bg-white/5 disabled:opacity-60"
+                className="glass rounded-2xl p-4 text-left transition-colors hover:bg-overlay/5 disabled:opacity-60"
               >
                 <p className="font-semibold text-ink">✨ Voir un exemple</p>
                 <p className="mt-1 text-sm text-muted">
@@ -190,7 +190,7 @@ export function Onboarding() {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-white/5"
+                className="rounded-lg border border-overlay/10 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-overlay/5"
               >
                 Continuer sans importer →
               </button>
@@ -215,7 +215,7 @@ export function Onboarding() {
                 value={incomeDraft}
                 onChange={(e) => setIncomeDraft(e.target.value)}
                 placeholder="0.00"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-lg text-ink placeholder-muted focus:border-primary focus:outline-none"
+                className="w-full rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-lg text-ink placeholder-muted focus:border-primary focus:outline-none"
               />
             </label>
             <button
@@ -241,7 +241,7 @@ export function Onboarding() {
                 value={expenseName}
                 onChange={(e) => setExpenseName(e.target.value)}
                 placeholder="Nom (ex: Loyer)"
-                className="min-w-[140px] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+                className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
               />
               <input
                 type="number"
@@ -251,7 +251,7 @@ export function Onboarding() {
                 value={expenseAmount}
                 onChange={(e) => setExpenseAmount(e.target.value)}
                 placeholder="Montant"
-                className="w-28 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+                className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
               />
               <button
                 type="submit"
@@ -262,7 +262,7 @@ export function Onboarding() {
             </form>
 
             {fixed.fixedExpenses.length > 0 && (
-              <ul className="mt-4 divide-y divide-white/10">
+              <ul className="mt-4 divide-y divide-overlay/10">
                 {fixed.fixedExpenses.map((expense) => (
                   <li key={expense.id} className="flex items-center justify-between py-2 text-sm">
                     <span className="text-ink">{expense.name}</span>
@@ -276,7 +276,7 @@ export function Onboarding() {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="rounded-lg border border-white/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-white/5"
+                className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
               >
                 Retour
               </button>
@@ -305,7 +305,7 @@ export function Onboarding() {
                 value={goalName}
                 onChange={(e) => setGoalName(e.target.value)}
                 placeholder="Nom de l’objectif"
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+                className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
               />
               <input
                 type="number"
@@ -315,7 +315,7 @@ export function Onboarding() {
                 value={goalAmount}
                 onChange={(e) => setGoalAmount(e.target.value)}
                 placeholder="Montant cible"
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+                className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
               />
               <label className="flex flex-col gap-1 text-xs text-muted">
                 Échéance (optionnel)
@@ -325,7 +325,7 @@ export function Onboarding() {
                   onChange={(e) => setGoalDate(e.target.value)}
                   min={getTodayDateString()}
                   max={getFarFutureDateString()}
-                  className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                  className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
                 />
               </label>
             </div>
@@ -334,7 +334,7 @@ export function Onboarding() {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="rounded-lg border border-white/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-white/5"
+                className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
               >
                 Retour
               </button>

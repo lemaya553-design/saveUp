@@ -32,7 +32,7 @@ function EditRow({
         type="text"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="min-w-[120px] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="min-w-[120px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
       />
       <input
         type="number"
@@ -41,12 +41,12 @@ function EditRow({
         step="0.01"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        className="w-24 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="w-24 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
       />
       <select
         value={category}
         onChange={(e) => setCategory(e.target.value)}
-        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
       >
         {categoryNames.map((cat) => (
           <option key={cat} value={cat} className="bg-surface">
@@ -110,7 +110,7 @@ export function FixedExpenses({
       hint="Loyer, abonnements, assurances — tout ce qui revient chaque mois."
       compact={compact}
     >
-      <ul className="mb-4 divide-y divide-white/10">
+      <ul className="mb-4 divide-y divide-overlay/10">
         {expenses.length === 0 && (
           <li className="py-2 text-sm text-muted">
             Aucune dépense fixe pour l'instant — ajoute ton loyer ou un abonnement ci-dessous.
@@ -163,7 +163,7 @@ export function FixedExpenses({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nom (ex: Loyer)"
-          className="min-w-[140px] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         <input
           type="number"
@@ -173,12 +173,12 @@ export function FixedExpenses({
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="Montant"
-          className="w-28 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+          className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
         >
           {categoryNames.map((cat) => (
             <option key={cat} value={cat} className="bg-surface">

@@ -196,14 +196,14 @@ export function Recompenses() {
             </ul>
           </div>
 
-          <div className="mt-6 border-t border-white/10 pt-4">
+          <div className="mt-6 border-t border-overlay/10 pt-4">
             {activeGoals.length > 1 && (
               <label className="mb-3 flex items-center justify-end gap-2 text-xs text-muted">
                 Voir :
                 <select
                   value={selectedGoalId}
                   onChange={(e) => setSelectedGoalId(e.target.value)}
-                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs text-ink focus:border-primary focus:outline-none"
+                  className="rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-1 text-xs text-ink focus:border-primary focus:outline-none"
                 >
                   <option value="" className="bg-surface">
                     Tous les objectifs
@@ -294,7 +294,7 @@ export function Recompenses() {
                 >
                   <div
                     className={`flex h-16 w-16 items-center justify-center rounded-full transition-colors duration-500 ${
-                      revealed ? TIER_UNLOCKED_CLASS[tier.id] : 'bg-white/5 text-muted'
+                      revealed ? TIER_UNLOCKED_CLASS[tier.id] : 'bg-overlay/5 text-muted'
                     }`}
                   >
                     <Icon className="h-8 w-8" />
@@ -335,7 +335,7 @@ export function Recompenses() {
 
         <Link
           to="/epargne"
-          className="glass flex items-center justify-between rounded-2xl p-5 shadow-lg shadow-black/30 transition-colors hover:bg-white/5"
+          className="glass flex items-center justify-between rounded-2xl p-5 shadow-lg shadow-black/30 transition-colors hover:bg-overlay/5"
         >
           <div>
             <p className="font-semibold text-ink">Continuer d'épargner</p>

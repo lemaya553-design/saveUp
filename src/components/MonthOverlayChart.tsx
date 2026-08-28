@@ -7,9 +7,9 @@ import type { CategoryMomChange } from '../lib/statistics'
 // translucent) is the reference ceiling — here "last month" instead of a
 // fixed budget — and the fill is the actual/current amount, blue when under
 // the ceiling, red when it exceeds it.
-const TRACK_COLOR = 'rgba(139, 92, 246, 0.3)' // accent/mauve — "last month"
-const FILL_COLOR = '#4a6cf7' // primary blue — "this month", under last month
-const OVER_COLOR = '#f87171' // red-400 — "this month" exceeds last month
+const TRACK_COLOR = 'color-mix(in srgb, var(--color-accent) 30%, transparent)' // "last month"
+const FILL_COLOR = 'var(--color-primary)' // "this month", under last month — follows the chosen accent
+const OVER_COLOR = '#f87171' // red-400 — "this month" exceeds last month (fixed semantic color)
 
 const MIN_COLUMN_WIDTH = 76
 const CHART_HEIGHT = 220
@@ -79,7 +79,14 @@ function TrackTopLabel({
   const numY = Number(y)
   const numWidth = Number(width)
   return (
-    <text x={numX + numWidth / 2} y={numY - 8} textAnchor="middle" fill="#f5f5f7" fontSize={12} fontWeight={600}>
+    <text
+      x={numX + numWidth / 2}
+      y={numY - 8}
+      textAnchor="middle"
+      fill="var(--color-ink)"
+      fontSize={12}
+      fontWeight={600}
+    >
       {formatCurrency(entry.lastMonth)}
     </text>
   )
@@ -129,12 +136,15 @@ export function MonthOverlayChart({ entries }: { entries: CategoryMomChange[] })
               <YAxis hide domain={[0, (dataMax: number) => dataMax * 1.15]} />
               <XAxis
                 dataKey="category"
-                tick={{ fill: '#f5f5f7', fontSize: 12 }}
+                tick={{ fill: 'var(--color-ink)', fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
                 interval={0}
               />
-              <Tooltip content={<OverlayTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+              <Tooltip
+                content={<OverlayTooltip />}
+                cursor={{ fill: 'color-mix(in srgb, var(--color-overlay) 5%, transparent)' }}
+              />
               <Bar
                 dataKey="lastMonth"
                 shape={(props: OverlayBarProps) => <OverlayBar {...props} />}

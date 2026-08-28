@@ -14,7 +14,7 @@ export function RewardsPreview({
   return (
     <Link
       to="/recompenses"
-      className="glass flex items-center justify-between rounded-2xl p-4 shadow-lg shadow-black/30 transition-colors hover:bg-white/5"
+      className="glass flex items-center justify-between rounded-2xl p-4 shadow-lg shadow-black/30 transition-colors hover:bg-overlay/5"
     >
       <div className="flex items-center gap-3">
         <div className="flex -space-x-2">
@@ -31,7 +31,7 @@ export function RewardsPreview({
               )
             })
           ) : (
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-canvas bg-white/5 text-muted">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-canvas bg-overlay/5 text-muted">
               <span aria-hidden="true" className="text-sm">
                 🏅
               </span>

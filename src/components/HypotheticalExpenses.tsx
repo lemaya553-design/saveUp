@@ -30,7 +30,7 @@ export function HypotheticalExpenses({
   return (
     <div>
       {expenses.length > 0 && (
-        <ul className="mb-3 divide-y divide-white/10">
+        <ul className="mb-3 divide-y divide-overlay/10">
           {expenses.map((expense) => {
             const sliderMax = Math.max(expense.amount * 2, DEFAULT_SLIDER_MAX)
             return (
@@ -41,12 +41,12 @@ export function HypotheticalExpenses({
                     value={expense.name}
                     onChange={(e) => onUpdate(expense.id, { name: e.target.value })}
                     placeholder="Nom (ex: Nouvel abonnement)"
-                    className="min-w-[120px] flex-1 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-ink placeholder-muted focus:border-primary focus:outline-none"
+                    className="min-w-[120px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-1.5 text-sm text-ink placeholder-muted focus:border-primary focus:outline-none"
                   />
                   <select
                     value={expense.category}
                     onChange={(e) => onUpdate(expense.id, { category: e.target.value })}
-                    className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+                    className="rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
                   >
                     {categoryNames.map((cat) => (
                       <option key={cat} value={cat} className="bg-surface">
@@ -87,7 +87,7 @@ export function HypotheticalExpenses({
       <button
         type="button"
         onClick={onAdd}
-        className="w-full rounded-xl border-2 border-dashed border-white/15 px-4 py-3 text-sm font-medium text-muted transition-colors hover:border-primary/40 hover:text-ink"
+        className="w-full rounded-xl border-2 border-dashed border-overlay/15 px-4 py-3 text-sm font-medium text-muted transition-colors hover:border-primary/40 hover:text-ink"
       >
         + Ajouter une dépense hypothétique
       </button>

@@ -80,12 +80,12 @@ function ScreenshotFrame({ shot }: { shot: Screenshot }) {
   const [errored, setErrored] = useState(false)
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-surface shadow-2xl shadow-black/50">
-      <div className="flex items-center gap-1.5 border-b border-white/10 bg-white/[0.04] px-3.5 py-2.5">
+    <div className="overflow-hidden rounded-2xl border border-overlay/10 bg-surface shadow-2xl shadow-black/50">
+      <div className="flex items-center gap-1.5 border-b border-overlay/10 bg-overlay/[0.04] px-3.5 py-2.5">
         <span className="h-2.5 w-2.5 rounded-full bg-red-400/60" aria-hidden="true" />
         <span className="h-2.5 w-2.5 rounded-full bg-amber-400/60" aria-hidden="true" />
         <span className="h-2.5 w-2.5 rounded-full bg-success/60" aria-hidden="true" />
-        <span className="ml-2 truncate rounded-md bg-white/5 px-2.5 py-1 text-[11px] text-muted">
+        <span className="ml-2 truncate rounded-md bg-overlay/5 px-2.5 py-1 text-[11px] text-muted">
           {shot.path}
         </span>
       </div>

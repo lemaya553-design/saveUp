@@ -111,7 +111,7 @@ export function Investissement() {
                 step="0.01"
                 value={initialAmount}
                 onChange={(e) => setInitialAmount(e.target.value)}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+                className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
               />
             </label>
 
@@ -123,7 +123,7 @@ export function Investissement() {
                 step="0.1"
                 value={annualRatePercent}
                 onChange={(e) => setAnnualRatePercent(e.target.value)}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+                className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
               />
             </label>
 
@@ -136,7 +136,7 @@ export function Investissement() {
                 step="0.01"
                 value={monthlyContribution}
                 onChange={(e) => setMonthlyContribution(e.target.value)}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+                className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
               />
             </label>
           </div>
@@ -152,7 +152,7 @@ export function Investissement() {
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                   horizonYears === years
                     ? 'bg-primary-strong text-white'
-                    : 'bg-white/5 text-muted hover:text-ink'
+                    : 'bg-overlay/5 text-muted hover:text-ink'
                 }`}
               >
                 {years} an{years > 1 ? 's' : ''}
@@ -216,7 +216,7 @@ export function Investissement() {
               </Link>
             </div>
           ) : (
-            <ul className="divide-y divide-white/10">
+            <ul className="divide-y divide-overlay/10">
               {goals.goals.map((goal) => {
                 const alreadyMet = goal.targetAmount > 0 && goal.currentAmount >= goal.targetAmount
                 const months = alreadyMet ? null : estimateMonthsToReachAmount(input, goal.targetAmount)

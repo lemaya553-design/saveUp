@@ -220,6 +220,30 @@ export interface Database {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          user_id: string
+          accent_color: string
+          theme: string
+          avatar_emoji: string | null
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          accent_color?: string
+          theme?: string
+          avatar_emoji?: string | null
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          accent_color?: string
+          theme?: string
+          avatar_emoji?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       savings_goals: {
         Row: {
           id: string

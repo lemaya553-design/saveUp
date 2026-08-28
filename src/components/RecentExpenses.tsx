@@ -33,7 +33,7 @@ function EditRow({
         type="text"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        className="min-w-[120px] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="min-w-[120px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
       />
       <input
         type="number"
@@ -42,12 +42,12 @@ function EditRow({
         step="0.01"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        className="w-24 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="w-24 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
       />
       <select
         value={category}
         onChange={(e) => setCategory(e.target.value)}
-        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
       >
         {categoryNames.map((cat) => (
           <option key={cat} value={cat} className="bg-surface">
@@ -126,12 +126,12 @@ export function RecentExpenses({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher une description..."
-              className="min-w-[160px] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-ink placeholder-muted focus:border-primary focus:outline-none"
+              className="min-w-[160px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink placeholder-muted focus:border-primary focus:outline-none"
             />
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+              className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
             >
               <option value="" className="bg-surface">
                 Toutes les catégories
@@ -148,7 +148,7 @@ export function RecentExpenses({
                 type="date"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                className="rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-2 text-sm text-ink focus:border-primary focus:outline-none"
               />
             </label>
             <label className="flex items-center gap-1 text-xs text-muted">
@@ -157,7 +157,7 @@ export function RecentExpenses({
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                className="rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-2 text-sm text-ink focus:border-primary focus:outline-none"
               />
             </label>
             {hasActiveFilters && (
@@ -174,7 +174,7 @@ export function RecentExpenses({
           {filtered.length === 0 ? (
             <p className="text-sm text-muted">Aucune dépense ne correspond à ces filtres.</p>
           ) : (
-            <ul className="divide-y divide-white/10">
+            <ul className="divide-y divide-overlay/10">
               {visible.map((expense) =>
                 editingId === expense.id ? (
                   <li key={expense.id}>
@@ -199,7 +199,7 @@ export function RecentExpenses({
                         })}{' '}
                         · {expense.category}
                         {expense.account && (
-                          <span className="ml-1.5 rounded-full bg-white/5 px-1.5 py-0.5 text-muted">
+                          <span className="ml-1.5 rounded-full bg-overlay/5 px-1.5 py-0.5 text-muted">
                             {expense.account}
                           </span>
                         )}

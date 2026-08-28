@@ -21,7 +21,7 @@ export function DataExportCard({ canExport }: { canExport: boolean }) {
               type="button"
               onClick={exportExcel}
               disabled={exporting}
-              className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-white/5 disabled:opacity-60"
+              className="rounded-lg border border-overlay/10 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
             >
               {exporting ? 'Export en cours...' : 'Télécharger en Excel'}
             </button>
@@ -29,7 +29,7 @@ export function DataExportCard({ canExport }: { canExport: boolean }) {
               type="button"
               onClick={exportPdf}
               disabled={exporting}
-              className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-white/5 disabled:opacity-60"
+              className="rounded-lg border border-overlay/10 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
             >
               {exporting ? 'Export en cours...' : 'Télécharger en PDF'}
             </button>

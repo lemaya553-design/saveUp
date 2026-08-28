@@ -41,7 +41,7 @@ export function AddExpenseForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Description (ex: Café)"
-          className="min-w-[140px] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         <input
           type="number"
@@ -51,12 +51,12 @@ export function AddExpenseForm({
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="Montant"
-          className="w-28 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+          className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
         >
           {categoryNames.map((cat) => (
             <option key={cat} value={cat} className="bg-surface">

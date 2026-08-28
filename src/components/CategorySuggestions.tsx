@@ -111,7 +111,7 @@ export function CategorySuggestions() {
       )}
       <ul className="flex flex-col gap-4">
         {visible.map((suggestion) => (
-          <li key={suggestion.id} className="rounded-lg border border-white/10 bg-white/5 p-3">
+          <li key={suggestion.id} className="rounded-lg border border-overlay/10 bg-overlay/5 p-3">
             <p className="text-sm text-ink">
               On a détecté <span className="font-semibold">{suggestion.count} dépenses</span> chez{' '}
               <span className="font-semibold">{suggestion.merchantLabel}</span> — ça ressemble à une
@@ -122,7 +122,7 @@ export function CategorySuggestions() {
                 type="text"
                 value={nameFor(suggestion)}
                 onChange={(e) => setDrafts((prev) => ({ ...prev, [suggestion.id]: e.target.value }))}
-                className="min-w-[10rem] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+                className="min-w-[10rem] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
                 aria-label="Nom de la catégorie suggérée"
               />
               <button

@@ -274,7 +274,7 @@ export function SimulateurTab({
             <button
               type="button"
               onClick={resetSimulation}
-              className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-white/20 hover:text-ink"
+              className="rounded-full border border-overlay/10 px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-overlay/20 hover:text-ink"
             >
               ↺ Réinitialiser
             </button>
@@ -301,7 +301,7 @@ export function SimulateurTab({
                 ou teste-en une hypothétique ci-dessous.
               </p>
             ) : (
-              <div className="mb-3 divide-y divide-white/10">
+              <div className="mb-3 divide-y divide-overlay/10">
                 {fixed.fixedExpenses.map((expense) => (
                   <FixedExpenseSimRow
                     key={expense.id}
@@ -327,7 +327,7 @@ export function SimulateurTab({
                 Aucune dépense ponctuelle enregistrée ce mois-ci pour l'instant.
               </p>
             ) : (
-              <div className="mb-1 divide-y divide-white/10">
+              <div className="mb-1 divide-y divide-overlay/10">
                 {categorySpending.map((entry) => (
                   <CategorySimRow
                     key={entry.category}
@@ -340,7 +340,7 @@ export function SimulateurTab({
               </div>
             )}
 
-            <div className="border-t border-white/10 pt-1">
+            <div className="border-t border-overlay/10 pt-1">
               <CategorySimRow
                 label="Épargne"
                 actualAmount={savingsThisMonth}
@@ -395,7 +395,7 @@ export function SimulateurTab({
               </div>
             ) : (
               <>
-                <div className="divide-y divide-white/10">
+                <div className="divide-y divide-overlay/10">
                   {goalProjections.map(({ goal, remaining, monthsBefore, monthsAfter }) => {
                     if (remaining <= 0) {
                       return (
@@ -439,7 +439,7 @@ export function SimulateurTab({
                   })}
                 </div>
 
-                <div className="mt-5 border-t border-white/10 pt-4">
+                <div className="mt-5 border-t border-overlay/10 pt-4">
                   <p className="mb-2 text-xs uppercase tracking-wide text-muted">
                     Épargne totale — {GRAPH_MONTHS} prochains mois
                   </p>
@@ -472,7 +472,7 @@ export function SimulateurTab({
                 <button
                   type="button"
                   onClick={() => setShowApplyConfirm(false)}
-                  className="rounded-lg border border-white/10 px-4 py-2 text-sm text-muted hover:text-ink"
+                  className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
                 >
                   Annuler
                 </button>

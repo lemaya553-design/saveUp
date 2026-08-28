@@ -44,7 +44,7 @@ export function ContributeForm({
           <select
             value={selectedGoalId}
             onChange={(e) => setGoalId(e.target.value)}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+            className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
           >
             {goals.map((g) => (
               <option key={g.id} value={g.id} className="bg-surface">
@@ -61,7 +61,7 @@ export function ContributeForm({
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="Montant"
-          className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         <button
           type="submit"

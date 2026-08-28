@@ -9,7 +9,7 @@ export function ProgressBar({
 
   return (
     <div
-      className="h-3 w-full overflow-hidden rounded-full bg-white/10"
+      className="h-3 w-full overflow-hidden rounded-full bg-overlay/10"
       role="progressbar"
       aria-valuenow={Math.round(clamped)}
       aria-valuemin={0}

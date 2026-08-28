@@ -115,7 +115,7 @@ export function Home() {
           <div className="text-center lg:text-left">
             <div className="flex justify-center gap-3 lg:justify-start">
               <LogoMark className="h-10 w-10" animated />
-              <span className="inline-flex items-center gap-1.5 self-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-muted">
+              <span className="inline-flex items-center gap-1.5 self-center rounded-full border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-xs font-medium text-muted">
                 <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-success" />
                 100% gratuit pour commencer
               </span>
@@ -142,7 +142,7 @@ export function Home() {
               </Link>
               <a
                 href="#fonctionnalites"
-                className="rounded-lg border border-white/20 px-7 py-3.5 font-medium text-ink transition-colors hover:bg-white/5"
+                className="rounded-lg border border-overlay/20 px-7 py-3.5 font-medium text-ink transition-colors hover:bg-overlay/5"
               >
                 Voir ce que ça donne
               </a>
@@ -152,7 +152,7 @@ export function Home() {
               {['Sans carte requise', 'Configuration en 2 min', '100% en français'].map((label) => (
                 <span
                   key={label}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-overlay/10 bg-overlay/5 px-3 py-1.5"
                 >
                   <span aria-hidden="true" className="text-success">
                     ✓
@@ -165,7 +165,7 @@ export function Home() {
 
           <div className="relative">
             <div className="glow-pulse absolute inset-8 -z-10 rounded-full bg-accent/25 blur-3xl" />
-            <div className="float-bob glass rounded-3xl border-t border-t-white/20 p-8 shadow-2xl shadow-black/50">
+            <div className="float-bob glass rounded-3xl border-t border-t-overlay/20 p-8 shadow-2xl shadow-black/50">
               <HeroScoreGauge score={82} />
             </div>
           </div>
@@ -173,7 +173,7 @@ export function Home() {
       </section>
 
       {/* Stats produit — honnêtes, pas de fausses statistiques d'usage */}
-      <section className="border-y border-white/5 bg-white/[0.02] px-4 py-14 sm:px-6">
+      <section className="border-y border-overlay/5 bg-overlay/[0.02] px-4 py-14 sm:px-6">
         <Reveal className="mx-auto max-w-4xl">
           <AnimatedStats />
         </Reveal>
@@ -193,7 +193,7 @@ export function Home() {
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-6">
           <Reveal className="sm:col-span-4 sm:row-span-2" delayMs={0}>
             <div
-              className="bento-tile glass flex h-full flex-col rounded-3xl border border-white/10 p-7 shadow-lg shadow-black/30"
+              className="bento-tile glass flex h-full flex-col rounded-3xl border border-overlay/10 p-7 shadow-lg shadow-black/30"
               style={{ '--tile-glow': 'rgba(139, 92, 246, 0.4)' } as React.CSSProperties}
             >
               <div className="flex items-center gap-2">
@@ -209,7 +209,7 @@ export function Home() {
                 Coupe une dépense, avance une échéance — vois l'impact avant de le faire pour de
                 vrai.
               </p>
-              <div className="mt-auto rounded-2xl bg-white/5 p-5">
+              <div className="mt-auto rounded-2xl bg-overlay/5 p-5">
                 <SimulatorPreview />
               </div>
             </div>
@@ -217,7 +217,7 @@ export function Home() {
 
           <Reveal className="sm:col-span-2 sm:row-span-2" delayMs={80}>
             <div
-              className="bento-tile glass flex h-full flex-col items-center justify-center rounded-3xl border border-white/10 p-6 text-center shadow-lg shadow-black/30"
+              className="bento-tile glass flex h-full flex-col items-center justify-center rounded-3xl border border-overlay/10 p-6 text-center shadow-lg shadow-black/30"
               style={{ '--tile-glow': 'rgba(74, 108, 247, 0.4)' } as React.CSSProperties}
             >
               <span className="text-xs font-semibold uppercase tracking-wide text-primary">
@@ -234,7 +234,7 @@ export function Home() {
 
           <Reveal className="sm:col-span-2" delayMs={140}>
             <div
-              className="bento-tile glass h-full rounded-3xl border border-white/10 p-6 shadow-lg shadow-black/30"
+              className="bento-tile glass h-full rounded-3xl border border-overlay/10 p-6 shadow-lg shadow-black/30"
               style={{ '--tile-glow': 'rgba(74, 108, 247, 0.4)' } as React.CSSProperties}
             >
               <span className="text-xs font-semibold uppercase tracking-wide text-primary">Budget</span>
@@ -245,7 +245,7 @@ export function Home() {
 
           <Reveal className="sm:col-span-2" delayMs={200}>
             <div
-              className="bento-tile glass h-full rounded-3xl border border-white/10 p-6 shadow-lg shadow-black/30"
+              className="bento-tile glass h-full rounded-3xl border border-overlay/10 p-6 shadow-lg shadow-black/30"
               style={{ '--tile-glow': 'rgba(139, 92, 246, 0.4)' } as React.CSSProperties}
             >
               <span className="text-xs font-semibold uppercase tracking-wide text-accent">Statistiques</span>
@@ -256,7 +256,7 @@ export function Home() {
 
           <Reveal className="sm:col-span-2" delayMs={260}>
             <div
-              className="bento-tile glass h-full rounded-3xl border border-white/10 p-6 shadow-lg shadow-black/30"
+              className="bento-tile glass h-full rounded-3xl border border-overlay/10 p-6 shadow-lg shadow-black/30"
               style={{ '--tile-glow': 'rgba(34, 197, 94, 0.4)' } as React.CSSProperties}
             >
               <span className="text-xs font-semibold uppercase tracking-wide text-success">Récompenses</span>
@@ -286,7 +286,7 @@ export function Home() {
       {/* CTA intermédiaire */}
       <section className="px-4 sm:px-6">
         <Reveal className="mx-auto max-w-4xl">
-          <div className="glass flex flex-col items-center gap-4 rounded-3xl border border-white/10 p-8 text-center shadow-lg shadow-black/30 sm:flex-row sm:justify-between sm:text-left">
+          <div className="glass flex flex-col items-center gap-4 rounded-3xl border border-overlay/10 p-8 text-center shadow-lg shadow-black/30 sm:flex-row sm:justify-between sm:text-left">
             <div>
               <p className="text-lg font-semibold text-ink">Convaincu jusqu'ici ?</p>
               <p className="text-sm text-muted">Ton premier budget est prêt en 2 minutes.</p>
@@ -329,10 +329,10 @@ export function Home() {
         </Reveal>
 
         <Reveal delayMs={100}>
-          <div className="glass mt-10 overflow-x-auto rounded-3xl border border-white/10 shadow-lg shadow-black/30">
+          <div className="glass mt-10 overflow-x-auto rounded-3xl border border-overlay/10 shadow-lg shadow-black/30">
             <table className="w-full min-w-[700px] border-collapse">
               <thead>
-                <tr className="border-b border-white/10 bg-white/5 text-left text-sm text-muted">
+                <tr className="border-b border-overlay/10 bg-overlay/5 text-left text-sm text-muted">
                   <th className="px-4 py-4 font-medium">&nbsp;</th>
                   <th className="px-4 py-4 font-black text-ink">
                     <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -347,7 +347,7 @@ export function Home() {
                 {COMPARISON_ROWS.map((row) => (
                   <tr
                     key={row.label}
-                    className="border-b border-white/10 text-sm transition-colors last:border-b-0 hover:bg-white/5"
+                    className="border-b border-overlay/10 text-sm transition-colors last:border-b-0 hover:bg-overlay/5"
                   >
                     <th scope="row" className="px-4 py-4 text-left font-medium text-ink">
                       {row.label}
@@ -415,7 +415,7 @@ export function Home() {
             {['Sans carte requise', 'Configuration en 2 minutes', 'Annule quand tu veux'].map((label) => (
               <span
                 key={label}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5"
+                className="inline-flex items-center gap-1.5 rounded-full border border-overlay/10 bg-overlay/5 px-3 py-1.5"
               >
                 <span aria-hidden="true" className="text-success">
                   ✓
@@ -438,7 +438,7 @@ export function Home() {
         <div className="mt-10 grid gap-3">
           {FAQ_ITEMS.map((item, i) => (
             <Reveal key={item.question} delayMs={Math.min(i, 3) * 60}>
-              <details className="group glass rounded-2xl border border-white/10 p-5 shadow-lg shadow-black/30 open:border-primary/30">
+              <details className="group glass rounded-2xl border border-overlay/10 p-5 shadow-lg shadow-black/30 open:border-primary/30">
                 <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-ink">
                   {item.question}
                   <span

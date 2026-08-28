@@ -41,7 +41,7 @@ export function QuickAmountEdit({
             autoFocus
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            className="w-28 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-ink focus:border-primary focus:outline-none"
+            className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-1 text-ink focus:border-primary focus:outline-none"
           />
           <button
             type="submit"

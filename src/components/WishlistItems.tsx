@@ -20,7 +20,7 @@ function GoalSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+      className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
     >
       <option value={NO_GOAL} className="bg-surface">
         Aucun objectif lié
@@ -62,7 +62,7 @@ function EditRow({
         type="text"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="min-w-[120px] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="min-w-[120px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
       />
       <input
         type="number"
@@ -71,7 +71,7 @@ function EditRow({
         step="0.01"
         value={price}
         onChange={(e) => setPrice(e.target.value)}
-        className="w-24 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="w-24 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
       />
       <GoalSelect goals={goals} value={goalId} onChange={setGoalId} />
       <button
@@ -126,7 +126,7 @@ export function WishlistItems({
     <Card title="Ta liste" hint="Ce que tu aimerais t'offrir.">
       <p className="mb-4 text-3xl font-bold text-ink sm:text-4xl">{formatCurrency(total)}</p>
 
-      <ul className="mb-4 divide-y divide-white/10">
+      <ul className="mb-4 divide-y divide-overlay/10">
         {items.length === 0 && (
           <li className="py-2 text-sm text-muted">
             Ta liste est vide pour l'instant — ajoute quelque chose que tu aimerais t'offrir ci-dessous.
@@ -197,7 +197,7 @@ export function WishlistItems({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nom (ex: MacBook)"
-          className="min-w-[140px] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         <input
           type="number"
@@ -207,7 +207,7 @@ export function WishlistItems({
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           placeholder="Prix"
-          className="w-28 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         {goals.length > 0 && <GoalSelect goals={goals} value={goalId} onChange={setGoalId} />}
         <button
