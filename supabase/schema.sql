@@ -562,3 +562,28 @@ create policy "subscriptions_select" on subscriptions
   for select using (auth.uid() = user_id);
 
 grant select on subscriptions to authenticated;
+
+-- Wishlist (liste de souhaits) ------------------------------------------------
+-- Items the user wants to buy, each optionally linked to an existing savings
+-- goal — `on delete set null` (not cascade) so deleting the goal just
+-- unlinks the item instead of deleting it too; it still represents
+-- something the user wants regardless of what happens to the goal.
+
+create table if not exists wishlist_items (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  price numeric(12, 2) not null default 0 check (price >= 0),
+  goal_id uuid references savings_goals(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists wishlist_items_user_id_idx on wishlist_items(user_id);
+
+alter table wishlist_items enable row level security;
+
+drop policy if exists "wishlist_items_all" on wishlist_items;
+create policy "wishlist_items_all" on wishlist_items
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+grant select, insert, update, delete on wishlist_items to authenticated;

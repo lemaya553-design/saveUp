@@ -9,6 +9,7 @@ const links = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/budget', label: 'Budget' },
   { to: '/epargne', label: 'Épargne' },
+  { to: '/souhaits', label: 'Souhaits' },
   { to: '/investissement', label: 'Investissement' },
   { to: '/statistiques', label: 'Statistiques' },
   { to: '/recompenses', label: 'Récompenses' },

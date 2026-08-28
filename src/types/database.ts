@@ -193,6 +193,33 @@ export interface Database {
         }
         Relationships: []
       }
+      wishlist_items: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          price: number
+          goal_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          price?: number
+          goal_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          price?: number
+          goal_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       savings_goals: {
         Row: {
           id: string

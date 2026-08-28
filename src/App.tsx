@@ -14,6 +14,7 @@ import { Dashboard } from './pages/Dashboard'
 import { Budget } from './pages/Budget'
 import { Epargne } from './pages/Epargne'
 import { Investissement } from './pages/Investissement'
+import { Souhaits } from './pages/Souhaits'
 import { Recompenses } from './pages/Recompenses'
 import { Parametres } from './pages/Parametres'
 import { Onboarding } from './pages/Onboarding'
@@ -43,6 +44,7 @@ function App() {
                 {/* Simulateur merged into Épargne as a tab — keep old links/bookmarks working. */}
                 <Route path="simulateur" element={<Navigate to="/epargne" replace />} />
                 <Route path="investissement" element={<Investissement />} />
+                <Route path="souhaits" element={<Souhaits />} />
                 <Route
                   path="statistiques"
                   element={
