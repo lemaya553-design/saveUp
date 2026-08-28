@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Footer } from '../components/Footer'
 import { LandingHeader } from '../components/LandingHeader'
+import { StickyCta } from '../components/StickyCta'
 import { LandingStepsPreview } from '../components/LandingStepsPreview'
 import { LogoMark } from '../components/Logo'
 import { Reveal } from '../components/Reveal'
@@ -456,6 +457,7 @@ export function Home() {
       </section>
 
       <Footer />
+      <StickyCta />
     </div>
   )
 }
