@@ -7,6 +7,7 @@ import { ScoreTrendBadge } from '../components/ScoreTrendBadge'
 import { ScoreGauge } from '../components/ScoreGauge'
 import { AlertBanner } from '../components/AlertBanner'
 import { DashboardStat } from '../components/DashboardStat'
+import { PersonalizedTips } from '../components/PersonalizedTips'
 import { PageSkeleton } from '../components/PageSkeleton'
 import {
   BudgetIllustration,
@@ -18,10 +19,12 @@ import { useFinancialHealth } from '../hooks/useFinancialHealth'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useInvestmentBalance } from '../hooks/useInvestmentBalance'
+import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { useSubscription } from '../hooks/useSubscription'
 import { formatCurrency } from '../lib/format'
 import { getSpendableBudgetCaption, sumThisMonth } from '../lib/budgetInsights'
 import { getBudgetPaceAlert, getSavingsGoalLateAlert } from '../lib/alerts'
+import { generatePersonalizedTips } from '../lib/tips'
 
 const FEATURE_LINKS = [
   {
@@ -56,6 +59,7 @@ const DASHBOARD_HELP = {
   actions: [
     'Consulte ton score de santé financière et son évolution récente.',
     'Vérifie combien il te reste à dépenser ce mois-ci.',
+    'Lis tes conseils personnalisés — générés à partir de tes vraies dépenses et objectifs.',
     'Clique sur une carte (Budget, Épargne, Statistiques...) pour y aller directement.',
   ],
 }
@@ -66,10 +70,13 @@ export function Dashboard() {
   const goals = useSavingsGoals()
   const contributions = useSavingsContributions()
   const investmentBalance = useInvestmentBalance()
+  const expenseHistory = useExpenseHistory()
   const subscription = useSubscription()
 
-  const loading = health.loading || goals.loading || contributions.loading || investmentBalance.loading
-  const error = health.error || goals.error || contributions.error || investmentBalance.error
+  const loading =
+    health.loading || goals.loading || contributions.loading || investmentBalance.loading || expenseHistory.loading
+  const error =
+    health.error || goals.error || contributions.error || investmentBalance.error || expenseHistory.error
 
   const savingsThisMonth = useMemo(
     () => sumThisMonth(contributions.contributions),
@@ -140,6 +147,12 @@ export function Dashboard() {
   const savingsGoalLateAlert = goals.goals
     .map((g) => getSavingsGoalLateAlert(g))
     .find((alert) => alert !== null)
+
+  const tips = generatePersonalizedTips({
+    expenseRecords: expenseHistory.records,
+    goals: goals.goals,
+    contributions: contributions.contributions,
+  })
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10">
@@ -231,6 +244,8 @@ export function Dashboard() {
             </div>
           </div>
         </Card>
+
+        <PersonalizedTips tips={tips} />
 
         <div>
           <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">
