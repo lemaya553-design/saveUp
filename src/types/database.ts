@@ -229,6 +229,7 @@ export interface Database {
           onboarding_main_goal: string | null
           onboarding_tried_other_app: boolean | null
           onboarding_frequency: string | null
+          csv_import_count: number
           updated_at: string
         }
         Insert: {
@@ -239,6 +240,7 @@ export interface Database {
           onboarding_main_goal?: string | null
           onboarding_tried_other_app?: boolean | null
           onboarding_frequency?: string | null
+          csv_import_count?: number
           updated_at?: string
         }
         Update: {
@@ -249,6 +251,7 @@ export interface Database {
           onboarding_main_goal?: string | null
           onboarding_tried_other_app?: boolean | null
           onboarding_frequency?: string | null
+          csv_import_count?: number
           updated_at?: string
         }
         Relationships: []

@@ -11,6 +11,7 @@ import { useCategories } from '../hooks/useCategories'
 import { useExpenses } from '../hooks/useExpenses'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
+import { canImportCsv, FREE_CSV_IMPORT_LIMIT } from '../lib/plans'
 import {
   DEMO_CATEGORY_NAMES,
   DEMO_CONTRIBUTIONS,
@@ -55,14 +56,21 @@ export function Onboarding() {
   const [incomeDraft, setIncomeDraft] = useState('')
   const [expenseName, setExpenseName] = useState('')
   const [expenseAmount, setExpenseAmount] = useState('')
-  const [goalName, setGoalName] = useState('Mon premier objectif')
+  const [goalName, setGoalName] = useState('')
   const [goalAmount, setGoalAmount] = useState('')
   const [goalDate, setGoalDate] = useState('')
   const [mainGoal, setMainGoal] = useState<MainGoal | null>(null)
   const [triedOtherApp, setTriedOtherApp] = useState<boolean | null>(null)
   const [frequency, setFrequency] = useState<TrackingFrequency | null>(null)
 
-  function finish() {
+  // Whether "fresh account" is decided by real data now (see Dashboard's
+  // isFreshUser), not a flag. Leaving onboarding via skip means no
+  // budget_settings row exists yet, which would look identical to "never
+  // seen onboarding" and bounce them right back here — so explicitly
+  // persist the (possibly still-0) income value on every path that actually
+  // leaves onboarding, to create that row and mark the account as touched.
+  async function finish() {
+    await income.setMonthlyIncome(income.monthlyIncome)
     navigate('/dashboard')
   }
 
@@ -99,22 +107,22 @@ export function Onboarding() {
           await goals.addContribution(goal.id, amount)
         }
       }
-      finish()
+      await finish()
     } catch (err) {
       setDemoError(err instanceof Error ? err.message : "Impossible de générer l'exemple — réessaie.")
       setSeedingDemo(false)
     }
   }
 
-  // Whether "fresh account" is decided by real data now (see Dashboard's
-  // isFreshUser), not a flag. Skipping before ever submitting the income
-  // step means no budget_settings row exists yet, which would look
-  // identical to "never seen onboarding" and bounce them right back here —
-  // so explicitly persist the (possibly still-0) income value to create
-  // that row and mark the account as touched.
+  // "Passer pour l'instant" only ever advances one step at a time — it must
+  // never jump straight to the dashboard except from the very last step,
+  // where there's nowhere left to advance to.
   async function skip() {
-    await income.setMonthlyIncome(income.monthlyIncome)
-    navigate('/dashboard')
+    if (step < STEPS.length - 1) {
+      setStep(step + 1)
+    } else {
+      await finish()
+    }
   }
 
   async function handleIncomeSubmit(e: React.FormEvent) {
@@ -141,11 +149,11 @@ export function Onboarding() {
     setStep(4)
   }
 
-  function handleFinishProfile() {
+  async function handleFinishProfile() {
     if (mainGoal && frequency && triedOtherApp !== null) {
       preferences.setOnboardingProfile(mainGoal, triedOtherApp, frequency)
     }
-    finish()
+    await finish()
   }
 
   return (
@@ -173,7 +181,7 @@ export function Onboarding() {
             </p>
 
             <div className="mt-6 grid gap-3">
-              {subscription.limits.csvImport ? (
+              {canImportCsv(subscription.plan, preferences.csvImportCount) ? (
                 <button
                   type="button"
                   onClick={() => setImportOpen(true)}
@@ -183,12 +191,25 @@ export function Onboarding() {
                   <p className="mt-1 text-sm text-muted">
                     Depuis un fichier .csv ou .xlsx exporté de ta banque — tes vraies transactions,
                     catégorisées automatiquement.
+                    {subscription.plan === 'free' && (
+                      <>
+                        {' '}
+                        Il te reste {FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount} import
+                        {FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount > 1 ? 's' : ''} gratuit
+                        {FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount > 1 ? 's' : ''} sur le plan
+                        Gratuit.
+                      </>
+                    )}
                   </p>
                 </button>
               ) : (
                 <UpgradePrompt
                   title="Import CSV — fonctionnalité Standard"
-                  description="Sur le plan Gratuit, ajoute tes dépenses à la main — ou passe à Standard pour importer un relevé bancaire directement."
+                  description={
+                    subscription.plan === 'free'
+                      ? `Tu as utilisé tes ${FREE_CSV_IMPORT_LIMIT} imports gratuits — ajoute tes dépenses à la main, ou passe à Standard pour un import illimité.`
+                      : 'Sur le plan Gratuit, ajoute tes dépenses à la main — ou passe à Standard pour importer un relevé bancaire directement.'
+                  }
                   minPlan="standard"
                 />
               )}
@@ -332,7 +353,7 @@ export function Onboarding() {
                 type="text"
                 value={goalName}
                 onChange={(e) => setGoalName(e.target.value)}
-                placeholder="Nom de l’objectif"
+                placeholder="Nom de l’objectif (ex: Mon premier objectif)"
                 className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
               />
               <input

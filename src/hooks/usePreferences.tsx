@@ -13,10 +13,12 @@ interface PreferencesContextValue {
   onboardingMainGoal: MainGoal | null
   onboardingTriedOtherApp: boolean | null
   onboardingFrequency: TrackingFrequency | null
+  csvImportCount: number
   setAccentColor: (value: AccentColor) => void
   setTheme: (value: Theme) => void
   setAvatarEmoji: (value: string | null) => void
   setOnboardingProfile: (mainGoal: MainGoal, triedOtherApp: boolean, frequency: TrackingFrequency) => void
+  incrementCsvImportCount: () => void
 }
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null)
@@ -36,6 +38,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [onboardingMainGoal, setOnboardingMainGoalState] = useState<MainGoal | null>(null)
   const [onboardingTriedOtherApp, setOnboardingTriedOtherAppState] = useState<boolean | null>(null)
   const [onboardingFrequency, setOnboardingFrequencyState] = useState<TrackingFrequency | null>(null)
+  const [csvImportCount, setCsvImportCountState] = useState(0)
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -44,7 +47,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     const { data, error: fetchError } = await supabase
       .from('user_preferences')
       .select(
-        'accent_color, theme, avatar_emoji, onboarding_main_goal, onboarding_tried_other_app, onboarding_frequency',
+        'accent_color, theme, avatar_emoji, onboarding_main_goal, onboarding_tried_other_app, onboarding_frequency, csv_import_count',
       )
       .eq('user_id', userId)
       .maybeSingle()
@@ -59,6 +62,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setOnboardingMainGoalState((data?.onboarding_main_goal as MainGoal | null) ?? null)
       setOnboardingTriedOtherAppState(data?.onboarding_tried_other_app ?? null)
       setOnboardingFrequencyState((data?.onboarding_frequency as TrackingFrequency | null) ?? null)
+      setCsvImportCountState(data?.csv_import_count ?? 0)
       // Reconciles with whatever index.html's bootstrap script guessed from
       // localStorage before this fetch resolved — a no-op on the common
       // path where they already matched.
@@ -80,6 +84,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       onboarding_main_goal?: MainGoal
       onboarding_tried_other_app?: boolean
       onboarding_frequency?: TrackingFrequency
+      csv_import_count?: number
     }) => {
       if (!userId) return
       const { error: upsertError } = await supabase
@@ -133,6 +138,17 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [upsert],
   )
 
+  // Fires once a free-plan user completes a CSV import that used their
+  // 2-import exception — read the current count off state rather than
+  // taking it as a param, so callers don't need their own copy of it.
+  const incrementCsvImportCount = useCallback(() => {
+    setCsvImportCountState((prev) => {
+      const next = prev + 1
+      upsert({ csv_import_count: next })
+      return next
+    })
+  }, [upsert])
+
   const value: PreferencesContextValue = {
     loading,
     error,
@@ -142,10 +158,12 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     onboardingMainGoal,
     onboardingTriedOtherApp,
     onboardingFrequency,
+    csvImportCount,
     setAccentColor,
     setTheme,
     setAvatarEmoji,
     setOnboardingProfile,
+    incrementCsvImportCount,
   }
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>

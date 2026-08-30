@@ -20,8 +20,10 @@ import { useIncome } from '../hooks/useIncome'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSubscription } from '../hooks/useSubscription'
+import { usePreferences } from '../hooks/usePreferences'
 import { computeCategorySpending } from '../lib/categorySpending'
 import { getMonthRange } from '../lib/format'
+import { canImportCsv, FREE_CSV_IMPORT_LIMIT } from '../lib/plans'
 import {
   computeBudgetVsActual,
   computeCategoryMonthOverMonth,
@@ -54,6 +56,7 @@ export function Statistiques() {
   const contributions = useSavingsContributions(CONTRIBUTIONS_DAYS_BACK)
   const goals = useSavingsGoals()
   const subscription = useSubscription()
+  const preferences = usePreferences()
 
   // 0 = current month, -1 = last month, etc. — only the category-by-category
   // card is month-scoped; the trend, budget, and MoM cards are deliberately
@@ -235,18 +238,32 @@ export function Statistiques() {
                 title="Importer des transactions"
                 hint="Depuis un relevé de carte de crédit ou de compte (.csv, .xlsx)."
               >
-                {subscription.limits.csvImport ? (
-                  <button
-                    type="button"
-                    onClick={() => setImportOpen(true)}
-                    className="rounded-lg bg-primary-strong px-5 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110"
-                  >
-                    Importer un fichier
-                  </button>
+                {canImportCsv(subscription.plan, preferences.csvImportCount) ? (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setImportOpen(true)}
+                      className="rounded-lg bg-primary-strong px-5 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110"
+                    >
+                      Importer un fichier
+                    </button>
+                    {subscription.plan === 'free' && (
+                      <p className="mt-2 text-xs text-muted">
+                        Il te reste {FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount} import
+                        {FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount > 1 ? 's' : ''} gratuit
+                        {FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount > 1 ? 's' : ''} sur le plan
+                        Gratuit.
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <UpgradePrompt
                     title="Import CSV — fonctionnalité Standard"
-                    description="Importe directement un relevé bancaire au lieu de saisir tes dépenses une par une."
+                    description={
+                      subscription.plan === 'free'
+                        ? `Tu as utilisé tes ${FREE_CSV_IMPORT_LIMIT} imports gratuits — passe à Standard pour un import illimité.`
+                        : 'Importe directement un relevé bancaire au lieu de saisir tes dépenses une par une.'
+                    }
                     minPlan="standard"
                   />
                 )}
@@ -260,9 +277,7 @@ export function Statistiques() {
         </div>
       </div>
 
-      {subscription.limits.csvImport && (
-        <ImportTransactionsModal open={importOpen} onClose={() => setImportOpen(false)} />
-      )}
+      <ImportTransactionsModal open={importOpen} onClose={() => setImportOpen(false)} />
     </div>
   )
 }

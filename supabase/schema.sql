@@ -620,3 +620,11 @@ alter table user_preferences add column if not exists onboarding_main_goal text
 alter table user_preferences add column if not exists onboarding_tried_other_app boolean;
 alter table user_preferences add column if not exists onboarding_frequency text
   check (onboarding_frequency in ('quotidien', 'hebdomadaire', 'mensuel'));
+
+-- Free plan's 2-import CSV exception (Onboarding.tsx, Statistiques.tsx) ------
+-- Standard/Premium have unlimited CSV import (PLAN_LIMITS) and never touch
+-- this column; Free gets up to FREE_CSV_IMPORT_LIMIT (src/lib/plans.ts)
+-- total imports, tracked here since it's already the "one row per user"
+-- home for everything else in this flow.
+
+alter table user_preferences add column if not exists csv_import_count integer not null default 0;

@@ -7,6 +7,8 @@ import { useExpenses } from '../hooks/useExpenses'
 import { useAccounts } from '../hooks/useAccounts'
 import { useCategories } from '../hooks/useCategories'
 import { useCustomKeywords } from '../hooks/useCustomKeywords'
+import { useSubscription } from '../hooks/useSubscription'
+import { usePreferences } from '../hooks/usePreferences'
 import {
   parseFile,
   detectColumnMapping,
@@ -92,6 +94,8 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
   const { accounts, addAccount } = useAccounts()
   const { categoryNames } = useCategories()
   const { keywords: customKeywords } = useCustomKeywords()
+  const subscription = useSubscription()
+  const preferences = usePreferences()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [step, setStep] = useState<Step>('upload')
@@ -251,6 +255,11 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
     setImporting(false)
     setResult(outcome)
     setStep('result')
+    // Standard/Premium have unlimited import — only Free's 2-import
+    // exception needs tracking.
+    if (subscription.plan === 'free') {
+      preferences.incrementCsvImportCount()
+    }
   }
 
   return (

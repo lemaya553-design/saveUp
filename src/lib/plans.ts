@@ -67,6 +67,17 @@ export function isAtLeast(plan: Plan, minPlan: Plan): boolean {
   return PLAN_ORDER.indexOf(plan) >= PLAN_ORDER.indexOf(minPlan)
 }
 
+// Free doesn't get unlimited CSV import (PLAN_LIMITS.free.csvImport stays
+// false, which is what every other check in the app should keep reading),
+// but gets a taste of it — up to 2 imports total, tracked by
+// usePreferences().csvImportCount. Every CSV-import entry point should call
+// this instead of reading `limits.csvImport` directly.
+export const FREE_CSV_IMPORT_LIMIT = 2
+
+export function canImportCsv(plan: Plan, csvImportCount: number): boolean {
+  return PLAN_LIMITS[plan].csvImport || (plan === 'free' && csvImportCount < FREE_CSV_IMPORT_LIMIT)
+}
+
 // Enforcement for count-limited features (goals, categories): blocking NEW
 // creation past the limit isn't enough on its own — an account that already
 // has more items than its current plan allows (created before the limit
