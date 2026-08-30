@@ -607,3 +607,16 @@ create policy "user_preferences_all" on user_preferences
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 grant select, insert, update, delete on user_preferences to authenticated;
+
+-- Onboarding profile questions (Onboarding.tsx) -------------------------------
+-- Answers to the 3 extra onboarding questions (main goal, prior app
+-- experience, tracking frequency) — stored alongside the rest of
+-- Personnalisation since it's the same "one row per user" shape, and read
+-- back by lib/tips.ts to tilt the tone of the Dashboard's personalized tips
+-- toward whatever the user said they actually care about.
+
+alter table user_preferences add column if not exists onboarding_main_goal text
+  check (onboarding_main_goal in ('epargner', 'dettes', 'comprendre', 'autre'));
+alter table user_preferences add column if not exists onboarding_tried_other_app boolean;
+alter table user_preferences add column if not exists onboarding_frequency text
+  check (onboarding_frequency in ('quotidien', 'hebdomadaire', 'mensuel'));

@@ -43,6 +43,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       customer_email: user.email,
       success_url: `${origin}/parametres?checkout=success`,
       cancel_url: `${origin}/tarifs?checkout=cancelled`,
+      // 7-day free trial on both paid plans, card required up front (this
+      // is Checkout's default — the card is collected and validated at
+      // signup, just not charged until the trial ends). Cancelling before
+      // day 7 never triggers a charge; see stripe-webhook.ts for how
+      // 'trialing' is treated as full plan access, and 'canceled' before
+      // the trial ends resets the account to free without ever billing it.
+      subscription_data: { trial_period_days: 7 },
       // Managed Payments (Stripe acting as merchant of record, with
       // automatic tax) is on by default for new accounts and requires a
       // tax_code on every product — ours don't have one set. Disabling it

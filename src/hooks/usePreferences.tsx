@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 import { applyAccentColor, applyTheme, type AccentColor, type Theme } from '../lib/theme'
+import type { MainGoal, TrackingFrequency } from '../lib/onboardingProfile'
 
 interface PreferencesContextValue {
   loading: boolean
@@ -9,9 +10,13 @@ interface PreferencesContextValue {
   accentColor: AccentColor
   theme: Theme
   avatarEmoji: string | null
+  onboardingMainGoal: MainGoal | null
+  onboardingTriedOtherApp: boolean | null
+  onboardingFrequency: TrackingFrequency | null
   setAccentColor: (value: AccentColor) => void
   setTheme: (value: Theme) => void
   setAvatarEmoji: (value: string | null) => void
+  setOnboardingProfile: (mainGoal: MainGoal, triedOtherApp: boolean, frequency: TrackingFrequency) => void
 }
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null)
@@ -28,6 +33,9 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [accentColor, setAccentColorState] = useState<AccentColor>('bleu')
   const [theme, setThemeState] = useState<Theme>('dark')
   const [avatarEmoji, setAvatarEmojiState] = useState<string | null>(null)
+  const [onboardingMainGoal, setOnboardingMainGoalState] = useState<MainGoal | null>(null)
+  const [onboardingTriedOtherApp, setOnboardingTriedOtherAppState] = useState<boolean | null>(null)
+  const [onboardingFrequency, setOnboardingFrequencyState] = useState<TrackingFrequency | null>(null)
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -35,7 +43,9 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     setError(null)
     const { data, error: fetchError } = await supabase
       .from('user_preferences')
-      .select('accent_color, theme, avatar_emoji')
+      .select(
+        'accent_color, theme, avatar_emoji, onboarding_main_goal, onboarding_tried_other_app, onboarding_frequency',
+      )
       .eq('user_id', userId)
       .maybeSingle()
     if (fetchError) {
@@ -46,6 +56,9 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setAccentColorState(nextAccent)
       setThemeState(nextTheme)
       setAvatarEmojiState(data?.avatar_emoji ?? null)
+      setOnboardingMainGoalState((data?.onboarding_main_goal as MainGoal | null) ?? null)
+      setOnboardingTriedOtherAppState(data?.onboarding_tried_other_app ?? null)
+      setOnboardingFrequencyState((data?.onboarding_frequency as TrackingFrequency | null) ?? null)
       // Reconciles with whatever index.html's bootstrap script guessed from
       // localStorage before this fetch resolved — a no-op on the common
       // path where they already matched.
@@ -60,7 +73,14 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   }, [load])
 
   const upsert = useCallback(
-    async (fields: { accent_color?: AccentColor; theme?: Theme; avatar_emoji?: string | null }) => {
+    async (fields: {
+      accent_color?: AccentColor
+      theme?: Theme
+      avatar_emoji?: string | null
+      onboarding_main_goal?: MainGoal
+      onboarding_tried_other_app?: boolean
+      onboarding_frequency?: TrackingFrequency
+    }) => {
       if (!userId) return
       const { error: upsertError } = await supabase
         .from('user_preferences')
@@ -96,15 +116,36 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [upsert],
   )
 
+  // Written once, at the end of Onboarding — read back by lib/tips.ts (via
+  // Dashboard) to tilt the personalized tips' tone toward the goal the user
+  // actually said they cared about.
+  const setOnboardingProfile = useCallback(
+    (mainGoal: MainGoal, triedOtherApp: boolean, frequency: TrackingFrequency) => {
+      setOnboardingMainGoalState(mainGoal)
+      setOnboardingTriedOtherAppState(triedOtherApp)
+      setOnboardingFrequencyState(frequency)
+      upsert({
+        onboarding_main_goal: mainGoal,
+        onboarding_tried_other_app: triedOtherApp,
+        onboarding_frequency: frequency,
+      })
+    },
+    [upsert],
+  )
+
   const value: PreferencesContextValue = {
     loading,
     error,
     accentColor,
     theme,
     avatarEmoji,
+    onboardingMainGoal,
+    onboardingTriedOtherApp,
+    onboardingFrequency,
     setAccentColor,
     setTheme,
     setAvatarEmoji,
+    setOnboardingProfile,
   }
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>

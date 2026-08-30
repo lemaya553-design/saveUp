@@ -12,6 +12,17 @@ import { planForPriceId } from './_plans.js'
 // fix: a Web-standard Request/Response handler, reading the body via
 // request.text() before anything else touches it.
 
+// 'trialing' counts as full access to the plan — the whole point of the
+// trial is that it isn't gated any differently from a paid, active
+// subscription. Every other status (canceled, past_due, incomplete, etc.)
+// falls back to 'free' rather than leaving the last-known paid plan in
+// place, so a lapsed/failed subscription doesn't silently keep unlocking
+// features. Single source of truth, used by both webhook handlers below so
+// they can never disagree with each other on this.
+function resolvePlan(status: Stripe.Subscription.Status, plan: ReturnType<typeof planForPriceId>) {
+  return status === 'active' || status === 'trialing' ? (plan ?? 'free') : 'free'
+}
+
 async function upsertFromSubscription(customerId: string, subscription: Stripe.Subscription) {
   const priceId = subscription.items.data[0]?.price.id
   const plan = priceId ? planForPriceId(priceId) : null
@@ -19,7 +30,7 @@ async function upsertFromSubscription(customerId: string, subscription: Stripe.S
   const { error } = await getSupabaseAdmin()
     .from('subscriptions')
     .update({
-      plan: subscription.status === 'active' || subscription.status === 'trialing' ? (plan ?? 'free') : 'free',
+      plan: resolvePlan(subscription.status, plan),
       stripe_subscription_id: subscription.id,
       status: subscription.status,
       current_period_end: periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : null,
@@ -88,7 +99,7 @@ export async function POST(request: Request): Promise<Response> {
           .upsert(
             {
               user_id: userId,
-              plan: plan ?? 'free',
+              plan: resolvePlan(subscription.status, plan),
               stripe_customer_id: customerId,
               stripe_subscription_id: subscription.id,
               status: subscription.status,

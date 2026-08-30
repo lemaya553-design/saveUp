@@ -13,6 +13,7 @@ import { useCsvExport } from '../hooks/useCsvExport'
 import { useSubscription } from '../hooks/useSubscription'
 import { useToast } from '../components/ToastProvider'
 import { PLAN_LIMITS } from '../lib/plans'
+import { formatCurrency } from '../lib/format'
 
 const PARAMETRES_HELP = {
   purpose: 'Gère ton revenu, tes catégories de budget, ton abonnement et tes données.',
@@ -79,6 +80,11 @@ export function Parametres() {
               <span className="rounded-full bg-primary/15 px-3 py-1 text-sm font-semibold text-primary">
                 {PLAN_LIMITS[subscription.plan].label}
               </span>
+              {subscription.isTrialing && (
+                <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success">
+                  Essai gratuit
+                </span>
+              )}
               {subscription.loading && <span className="text-xs text-muted">Chargement...</span>}
             </div>
             {subscription.plan === 'free' ? (
@@ -99,6 +105,18 @@ export function Parametres() {
               </button>
             )}
           </div>
+          {subscription.isTrialing && subscription.currentPeriodEnd && (
+            <p className="mt-3 text-sm text-muted">
+              Ton essai se termine le{' '}
+              {new Date(subscription.currentPeriodEnd).toLocaleDateString('fr-CA', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+              . Ensuite, {formatCurrency(PLAN_LIMITS[subscription.plan].monthlyPrice)}/mois — annule avant cette date
+              depuis « Gérer mon abonnement » pour ne rien payer.
+            </p>
+          )}
           {subscription.error && <p className="mt-3 text-sm text-red-400">{subscription.error}</p>}
         </Card>
 

@@ -1,6 +1,7 @@
 import { computeCategoryMonthOverMonth } from './statistics'
 import { computeRequiredPace, estimateMonthlyRate } from './savingsProjection'
 import { formatCurrency } from './format'
+import type { MainGoal } from './onboardingProfile'
 
 export interface Tip {
   id: string
@@ -26,6 +27,11 @@ interface TipInput {
   expenseRecords: { amount: number; category: string; spent_at: string }[]
   goals: Goal[]
   contributions: Contribution[]
+  // What the user said their main goal was during onboarding (optional —
+  // absent for accounts that onboarded before this question existed, or
+  // skipped it). Only ever changes WORDING below, never which tips fire or
+  // their thresholds — the underlying numbers are the same for everyone.
+  mainGoal?: MainGoal | null
 }
 
 // Below this, a category's month-over-month % swing is noise (e.g. $8 ->
@@ -43,6 +49,7 @@ const CLOSE_TO_GOAL_THRESHOLD = 0.6
 function categoryChangeTips(
   records: { amount: number; category: string; spent_at: string }[],
   now: Date,
+  mainGoal?: MainGoal | null,
 ): Tip[] {
   const changes = computeCategoryMonthOverMonth(records, now).filter(
     (c) => c.pctChange !== null && c.lastMonth >= MIN_CATEGORY_AMOUNT && c.thisMonth >= MIN_CATEGORY_AMOUNT,
@@ -54,10 +61,17 @@ function categoryChangeTips(
     .filter((c) => (c.pctChange as number) >= MIN_PCT_CHANGE)
     .sort((a, b) => (b.pctChange as number) - (a.pctChange as number))[0]
   if (biggestIncrease) {
+    // Someone who told us they're trying to get out of debt cares more
+    // about an overspending signal than someone just exploring the app —
+    // same number, more direct framing, still their real spending.
+    const intro =
+      mainGoal === 'dettes'
+        ? `Pour atteindre ton objectif de réduire tes dettes : tes dépenses`
+        : 'Tes dépenses'
     tips.push({
       id: `category-increase-${biggestIncrease.category}`,
       tone: 'warning',
-      message: `Tes dépenses en ${biggestIncrease.category} ont augmenté de ${Math.round(
+      message: `${intro} en ${biggestIncrease.category} ont augmenté de ${Math.round(
         biggestIncrease.pctChange as number,
       )} % ce mois-ci (${formatCurrency(biggestIncrease.thisMonth)} contre ${formatCurrency(
         biggestIncrease.lastMonth,
@@ -69,6 +83,7 @@ function categoryChangeTips(
     .filter((c) => (c.pctChange as number) <= -MIN_PCT_CHANGE)
     .sort((a, b) => (a.pctChange as number) - (b.pctChange as number))[0]
   if (biggestDecrease) {
+    const closing = mainGoal === 'dettes' ? '— chaque dollar économisé peut aller vers tes dettes.' : '— bien joué.'
     tips.push({
       id: `category-decrease-${biggestDecrease.category}`,
       tone: 'positive',
@@ -76,7 +91,7 @@ function categoryChangeTips(
         Math.abs(biggestDecrease.pctChange as number),
       )} % ce mois-ci (${formatCurrency(biggestDecrease.thisMonth)} contre ${formatCurrency(
         biggestDecrease.lastMonth,
-      )} le mois dernier) — bien joué.`,
+      )} le mois dernier) ${closing}`,
     })
   }
 
@@ -86,9 +101,14 @@ function categoryChangeTips(
 // One goal-related tip: prefer a deadline-bound goal that's meaningfully
 // ahead of the pace it needs, and fall back to "closest to done" for goals
 // with no deadline (or not ahead) but real, visible progress.
-function goalTip(goals: Goal[], contributions: Contribution[], now: Date): Tip | null {
+function goalTip(goals: Goal[], contributions: Contribution[], now: Date, mainGoal?: MainGoal | null): Tip | null {
   const activeGoals = goals.filter((g) => g.targetAmount > 0 && g.currentAmount < g.targetAmount)
   if (activeGoals.length === 0) return null
+
+  // Someone who specifically said "épargner pour un projet" gets a more
+  // celebratory framing on the exact tip that matters most to them —
+  // everyone else still sees the same real numbers, just less fanfare.
+  const celebratory = mainGoal === 'epargner'
 
   for (const goal of activeGoals) {
     if (!goal.targetDate) continue
@@ -101,7 +121,7 @@ function goalTip(goals: Goal[], contributions: Contribution[], now: Date): Tip |
       return {
         id: `goal-ahead-${goal.id}`,
         tone: 'positive',
-        message: `Tu épargnes ${formatCurrency(monthlyRate)}/mois pour « ${goal.name} », au-delà des ${formatCurrency(
+        message: `${celebratory ? '🎯 ' : ''}Tu épargnes ${formatCurrency(monthlyRate)}/mois pour « ${goal.name} », au-delà des ${formatCurrency(
           requiredPace.perMonth,
         )}/mois nécessaires pour respecter ton échéance.`,
       }
@@ -117,7 +137,7 @@ function goalTip(goals: Goal[], contributions: Contribution[], now: Date): Tip |
     return {
       id: `goal-progress-${closest.id}`,
       tone: 'positive',
-      message: `Tu es à ${Math.round(progress * 100)} % de ton objectif « ${closest.name} » — encore ${formatCurrency(
+      message: `${celebratory ? '🎯 ' : ''}Tu es à ${Math.round(progress * 100)} % de ton objectif « ${closest.name} » — encore ${formatCurrency(
         remaining,
       )} à épargner.`,
     }
@@ -130,8 +150,8 @@ function goalTip(goals: Goal[], contributions: Contribution[], now: Date): Tip |
 // yet. Every message either fires from a real threshold or doesn't appear;
 // nothing here is a generic filler line except the final no-data fallback.
 export function generatePersonalizedTips(input: TipInput, now = new Date()): Tip[] {
-  const tips: Tip[] = [...categoryChangeTips(input.expenseRecords, now)]
-  const g = goalTip(input.goals, input.contributions, now)
+  const tips: Tip[] = [...categoryChangeTips(input.expenseRecords, now, input.mainGoal)]
+  const g = goalTip(input.goals, input.contributions, now, input.mainGoal)
   if (g) tips.push(g)
 
   if (tips.length === 0) {

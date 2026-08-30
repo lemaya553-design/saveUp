@@ -10,6 +10,7 @@ import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useCategories } from '../hooks/useCategories'
 import { useExpenses } from '../hooks/useExpenses'
 import { useSubscription } from '../hooks/useSubscription'
+import { usePreferences } from '../hooks/usePreferences'
 import {
   DEMO_CATEGORY_NAMES,
   DEMO_CONTRIBUTIONS,
@@ -18,8 +19,24 @@ import {
   DEMO_INCOME,
   buildDemoExpenseRows,
 } from '../lib/demoData'
+import {
+  MAIN_GOAL_OPTIONS,
+  FREQUENCY_OPTIONS,
+  computeOnboardingProfile,
+  type MainGoal,
+  type TrackingFrequency,
+} from '../lib/onboardingProfile'
 
-const STEPS = ['Données de départ', 'Revenu', 'Dépenses fixes', 'Objectif d’épargne']
+const STEPS = [
+  'Données de départ',
+  'Revenu',
+  'Dépenses fixes',
+  'Objectif d’épargne',
+  'Ton objectif principal',
+  'Ton expérience',
+  'Ton rythme de suivi',
+  'Ton profil',
+]
 
 export function Onboarding() {
   const navigate = useNavigate()
@@ -29,6 +46,7 @@ export function Onboarding() {
   const categories = useCategories()
   const expenses = useExpenses()
   const subscription = useSubscription()
+  const preferences = usePreferences()
 
   const [step, setStep] = useState(0)
   const [importOpen, setImportOpen] = useState(false)
@@ -40,6 +58,9 @@ export function Onboarding() {
   const [goalName, setGoalName] = useState('Mon premier objectif')
   const [goalAmount, setGoalAmount] = useState('')
   const [goalDate, setGoalDate] = useState('')
+  const [mainGoal, setMainGoal] = useState<MainGoal | null>(null)
+  const [triedOtherApp, setTriedOtherApp] = useState<boolean | null>(null)
+  const [frequency, setFrequency] = useState<TrackingFrequency | null>(null)
 
   function finish() {
     navigate('/dashboard')
@@ -117,6 +138,13 @@ export function Onboarding() {
     const parsed = Math.max(0, Number(goalAmount) || 0)
     if (!goalName.trim() || parsed <= 0) return
     await goals.addGoal(goalName.trim(), parsed, goalDate || null)
+    setStep(4)
+  }
+
+  function handleFinishProfile() {
+    if (mainGoal && frequency && triedOtherApp !== null) {
+      preferences.setOnboardingProfile(mainGoal, triedOtherApp, frequency)
+    }
     finish()
   }
 
@@ -340,13 +368,172 @@ export function Onboarding() {
               </button>
               <button
                 type="submit"
-                className="flex-1 rounded-lg bg-success px-5 py-2 font-semibold text-canvas transition-all hover:brightness-110"
+                className="flex-1 rounded-lg bg-primary-strong px-5 py-2 font-medium text-white transition-all hover:brightness-110"
               >
-                Terminer
+                Continuer
               </button>
             </div>
           </form>
         )}
+
+        {step === 4 && (
+          <div>
+            <h1 className="text-2xl font-bold text-ink">Quel est ton objectif principal ?</h1>
+            <p className="mt-2 text-sm text-muted">Ça nous aide à mettre en avant ce qui compte le plus pour toi.</p>
+
+            <div className="mt-6 grid gap-3">
+              {MAIN_GOAL_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setMainGoal(option.value)
+                    setStep(5)
+                  }}
+                  className={`glass rounded-2xl p-4 text-left font-medium text-ink transition-colors hover:bg-overlay/5 ${
+                    mainGoal === option.value ? 'border border-primary' : ''
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 flex justify-start">
+              <button
+                type="button"
+                onClick={() => setStep(3)}
+                className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
+              >
+                Retour
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 5 && (
+          <div>
+            <h1 className="text-2xl font-bold text-ink">As-tu déjà essayé une autre app de budget avant ?</h1>
+            <p className="mt-2 text-sm text-muted">
+              Si quelque chose ne t'a pas convaincu ailleurs, on aimerait mieux faire ici.
+            </p>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              {[
+                { value: true, label: 'Oui' },
+                { value: false, label: 'Non' },
+              ].map((option) => (
+                <button
+                  key={String(option.value)}
+                  type="button"
+                  onClick={() => {
+                    setTriedOtherApp(option.value)
+                    setStep(6)
+                  }}
+                  className={`glass rounded-2xl p-4 text-center font-medium text-ink transition-colors hover:bg-overlay/5 ${
+                    triedOtherApp === option.value ? 'border border-primary' : ''
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 flex justify-start">
+              <button
+                type="button"
+                onClick={() => setStep(4)}
+                className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
+              >
+                Retour
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 6 && (
+          <div>
+            <h1 className="text-2xl font-bold text-ink">À quelle fréquence veux-tu suivre tes finances ?</h1>
+            <p className="mt-2 text-sm text-muted">On adapte ce qu'on te montre en premier selon ton rythme.</p>
+
+            <div className="mt-6 grid gap-3">
+              {FREQUENCY_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setFrequency(option.value)
+                    setStep(7)
+                  }}
+                  className={`glass rounded-2xl p-4 text-left font-medium text-ink transition-colors hover:bg-overlay/5 ${
+                    frequency === option.value ? 'border border-primary' : ''
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 flex justify-start">
+              <button
+                type="button"
+                onClick={() => setStep(5)}
+                className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
+              >
+                Retour
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 7 &&
+          (() => {
+            const profile = computeOnboardingProfile(
+              mainGoal ?? 'autre',
+              triedOtherApp ?? false,
+              frequency ?? 'hebdomadaire',
+            )
+            return (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-accent">Ton profil</p>
+                <h1 className="mt-1 text-2xl font-bold text-ink">{profile.name}</h1>
+                <p className="mt-3 text-sm text-muted">{profile.description}</p>
+
+                <div className="mt-6">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted">
+                    Ce que SaveUp va te montrer
+                  </p>
+                  <ul className="mt-2 flex flex-col gap-2">
+                    {profile.previewPoints.map((point) => (
+                      <li key={point} className="flex items-start gap-2 text-sm text-ink">
+                        <span aria-hidden="true" className="mt-0.5 text-success">
+                          ✓
+                        </span>
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="mt-6 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setStep(6)}
+                    className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
+                  >
+                    Retour
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleFinishProfile}
+                    className="flex-1 rounded-lg bg-success px-5 py-2 font-semibold text-canvas transition-all hover:brightness-110"
+                  >
+                    Voir mon Dashboard
+                  </button>
+                </div>
+              </div>
+            )
+          })()}
       </div>
 
       <ImportTransactionsModal

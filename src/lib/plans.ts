@@ -5,8 +5,13 @@
 
 export type Plan = 'free' | 'standard' | 'premium'
 
+// Both paid plans share the same trial length — one constant so
+// Tarifs/Paramètres/the checkout API can never drift out of sync on it.
+export const TRIAL_DAYS = 7
+
 export interface PlanLimits {
   label: string
+  monthlyPrice: number
   maxCategories: number | null
   maxGoals: number | null
   csvImport: boolean
@@ -20,6 +25,7 @@ export interface PlanLimits {
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   free: {
     label: 'Gratuit',
+    monthlyPrice: 0,
     maxCategories: 5,
     maxGoals: 1,
     csvImport: false,
@@ -31,6 +37,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   },
   standard: {
     label: 'Standard',
+    monthlyPrice: 7.99,
     maxCategories: null,
     maxGoals: null,
     csvImport: true,
@@ -42,6 +49,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   },
   premium: {
     label: 'Premium',
+    monthlyPrice: 14.99,
     maxCategories: null,
     maxGoals: null,
     csvImport: true,

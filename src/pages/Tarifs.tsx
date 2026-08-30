@@ -4,14 +4,15 @@ import { LandingHeader } from '../components/LandingHeader'
 import { HelpButton } from '../components/HelpButton'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
-import type { Plan } from '../lib/plans'
+import { PLAN_LIMITS, TRIAL_DAYS, type Plan } from '../lib/plans'
+import { formatCurrency } from '../lib/format'
 
 const TARIFS_HELP = {
   title: 'Tarifs',
   purpose: 'Compare les plans Gratuit, Standard et Premium et choisis celui qui correspond à tes besoins.',
   actions: [
     'Compare les fonctionnalités incluses dans chaque plan.',
-    'Choisis un plan payant pour être redirigé vers un paiement sécurisé (Stripe).',
+    `Standard et Premium incluent ${TRIAL_DAYS} jours d'essai gratuit — une carte est demandée à l'inscription, mais rien n'est prélevé avant la fin de l'essai.`,
     'Si tu es déjà abonné, gère ou annule ton abonnement depuis ici.',
   ],
 }
@@ -19,8 +20,6 @@ const TARIFS_HELP = {
 const plans: {
   id: Plan
   name: string
-  price: string
-  period: string
   description: string
   features: string[]
   highlight: boolean
@@ -28,8 +27,6 @@ const plans: {
   {
     id: 'free',
     name: 'Gratuit',
-    price: '0 $',
-    period: '',
     description: 'Pour commencer à voir clair dans tes finances.',
     features: [
       'Dashboard',
@@ -44,8 +41,6 @@ const plans: {
   {
     id: 'standard',
     name: 'Standard',
-    price: '7,99 $',
-    period: '/mois',
     description: 'Pour aller plus loin dans le suivi de tes objectifs.',
     features: [
       'Tout ce qui est dans Gratuit',
@@ -60,8 +55,6 @@ const plans: {
   {
     id: 'premium',
     name: 'Premium',
-    price: '14,99 $',
-    period: '/mois',
     description: 'Pour optimiser chaque dollar, jusque dans le détail.',
     features: [
       'Tout ce qui est dans Standard',
@@ -155,10 +148,22 @@ export function Tarifs() {
                 <h2 className="text-lg font-semibold text-ink">{plan.name}</h2>
                 <p className="mt-1 text-sm text-muted">{plan.description}</p>
 
-                <p className="mt-4 text-3xl font-bold text-ink">
-                  {plan.price}
-                  <span className="text-base font-normal text-muted">{plan.period}</span>
+                {plan.id !== 'free' && (
+                  <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success">
+                    🎁 {TRIAL_DAYS} jours d'essai gratuit
+                  </span>
+                )}
+
+                <p className="mt-3 text-3xl font-bold text-ink">
+                  {formatCurrency(PLAN_LIMITS[plan.id].monthlyPrice)}
+                  {plan.id !== 'free' && <span className="text-base font-normal text-muted">/mois</span>}
                 </p>
+                {plan.id !== 'free' && (
+                  <p className="mt-1 text-xs text-muted">
+                    Gratuit {TRIAL_DAYS} jours, puis {formatCurrency(PLAN_LIMITS[plan.id].monthlyPrice)}/mois —
+                    annule avant la fin de l'essai pour ne rien payer.
+                  </p>
+                )}
 
                 <ul className="mt-6 space-y-2">
                   {plan.features.map((feature) => (
@@ -194,14 +199,17 @@ export function Tarifs() {
                     {isLoadingThis ? 'Redirection...' : 'Gérer mon abonnement'}
                   </button>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleChoose(plan.id as Exclude<Plan, 'free'>)}
-                    disabled={isLoadingThis}
-                    className="mt-8 w-full rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
-                  >
-                    {isLoadingThis ? 'Redirection...' : `Choisir ${plan.name}`}
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleChoose(plan.id as Exclude<Plan, 'free'>)}
+                      disabled={isLoadingThis}
+                      className="mt-8 w-full rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                    >
+                      {isLoadingThis ? 'Redirection...' : `Essayer ${plan.name} gratuitement`}
+                    </button>
+                    <p className="mt-2 text-center text-xs text-muted">Carte de crédit requise à l'inscription.</p>
+                  </>
                 )}
               </div>
             )

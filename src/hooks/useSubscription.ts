@@ -13,6 +13,8 @@ export function useSubscription() {
   const [error, setError] = useState<string | null>(null)
   const [plan, setPlan] = useState<Plan>('free')
   const [stripeCustomerId, setStripeCustomerId] = useState<string | null>(null)
+  const [status, setStatus] = useState<string | null>(null)
+  const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -20,7 +22,7 @@ export function useSubscription() {
     setError(null)
     const { data, error: fetchError } = await supabase
       .from('subscriptions')
-      .select('plan, stripe_customer_id')
+      .select('plan, stripe_customer_id, status, current_period_end')
       .eq('user_id', userId)
       .maybeSingle()
     if (fetchError) {
@@ -28,6 +30,8 @@ export function useSubscription() {
     } else {
       setPlan((data?.plan as Plan | undefined) ?? 'free')
       setStripeCustomerId(data?.stripe_customer_id ?? null)
+      setStatus(data?.status ?? null)
+      setCurrentPeriodEnd(data?.current_period_end ?? null)
     }
     setLoading(false)
   }, [userId])
@@ -101,6 +105,9 @@ export function useSubscription() {
     error,
     plan,
     stripeCustomerId,
+    status,
+    currentPeriodEnd,
+    isTrialing: status === 'trialing',
     limits: PLAN_LIMITS[plan],
     refresh,
     startCheckout,

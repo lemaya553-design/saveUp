@@ -21,6 +21,7 @@ import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useInvestmentBalance } from '../hooks/useInvestmentBalance'
 import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { useSubscription } from '../hooks/useSubscription'
+import { usePreferences } from '../hooks/usePreferences'
 import { formatCurrency } from '../lib/format'
 import { getSpendableBudgetCaption, sumThisMonth } from '../lib/budgetInsights'
 import { getBudgetPaceAlert, getSavingsGoalLateAlert } from '../lib/alerts'
@@ -72,6 +73,7 @@ export function Dashboard() {
   const investmentBalance = useInvestmentBalance()
   const expenseHistory = useExpenseHistory()
   const subscription = useSubscription()
+  const preferences = usePreferences()
 
   const loading =
     health.loading || goals.loading || contributions.loading || investmentBalance.loading || expenseHistory.loading
@@ -152,6 +154,7 @@ export function Dashboard() {
     expenseRecords: expenseHistory.records,
     goals: goals.goals,
     contributions: contributions.contributions,
+    mainGoal: preferences.onboardingMainGoal,
   })
 
   return (

@@ -226,6 +226,9 @@ export interface Database {
           accent_color: string
           theme: string
           avatar_emoji: string | null
+          onboarding_main_goal: string | null
+          onboarding_tried_other_app: boolean | null
+          onboarding_frequency: string | null
           updated_at: string
         }
         Insert: {
@@ -233,6 +236,9 @@ export interface Database {
           accent_color?: string
           theme?: string
           avatar_emoji?: string | null
+          onboarding_main_goal?: string | null
+          onboarding_tried_other_app?: boolean | null
+          onboarding_frequency?: string | null
           updated_at?: string
         }
         Update: {
@@ -240,6 +246,9 @@ export interface Database {
           accent_color?: string
           theme?: string
           avatar_emoji?: string | null
+          onboarding_main_goal?: string | null
+          onboarding_tried_other_app?: boolean | null
+          onboarding_frequency?: string | null
           updated_at?: string
         }
         Relationships: []
