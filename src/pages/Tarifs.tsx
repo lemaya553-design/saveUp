@@ -149,8 +149,8 @@ export function Tarifs() {
                 <p className="mt-1 text-sm text-muted">{plan.description}</p>
 
                 {plan.id !== 'free' && (
-                  <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success">
-                    🎁 {TRIAL_DAYS} jours d'essai gratuit
+                  <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
+                    Essai gratuit de {TRIAL_DAYS} jours
                   </span>
                 )}
 
@@ -158,12 +158,6 @@ export function Tarifs() {
                   {formatCurrency(PLAN_LIMITS[plan.id].monthlyPrice)}
                   {plan.id !== 'free' && <span className="text-base font-normal text-muted">/mois</span>}
                 </p>
-                {plan.id !== 'free' && (
-                  <p className="mt-1 text-xs text-muted">
-                    Gratuit {TRIAL_DAYS} jours, puis {formatCurrency(PLAN_LIMITS[plan.id].monthlyPrice)}/mois —
-                    annule avant la fin de l'essai pour ne rien payer.
-                  </p>
-                )}
 
                 <ul className="mt-6 space-y-2">
                   {plan.features.map((feature) => (

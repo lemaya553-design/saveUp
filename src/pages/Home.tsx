@@ -27,6 +27,102 @@ function SlidersIcon({ className }: { className: string }) {
   )
 }
 
+function SparkleIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.8 2.8M14.9 14.9l2.8 2.8M17.7 6.3l-2.8 2.8M9.1 14.9l-2.8 2.8"
+      />
+    </svg>
+  )
+}
+
+function ChatIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 5h16v10H8l-4 4V5z" />
+    </svg>
+  )
+}
+
+function TargetIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="12" cy="12" r="0.75" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function ImportIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0 0-4-4m4 4 4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" />
+    </svg>
+  )
+}
+
+function LinkOffIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 15 5.5 18.5a2.5 2.5 0 0 1-3.5-3.5L5.5 11M15 9l3.5-3.5a2.5 2.5 0 0 1 3.5 3.5L18.5 12.5M3 3l18 18"
+      />
+    </svg>
+  )
+}
+
+function EyeIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"
+      />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
+
+// Tailwind's scanner needs whole, literal class names — `bg-${color}/15`
+// would never generate the right CSS, so each entry spells its own classes
+// out in full instead of interpolating a color name at runtime.
+const WHY_SAVEUP = [
+  {
+    Icon: SparkleIcon,
+    iconClass: 'bg-primary/15 text-primary',
+    title: 'Pensé pour rester simple',
+    description:
+      'Une interface pensée pour ne pas te prendre la tête — pas de jargon financier, pas d\'écrans interminables.',
+  },
+  {
+    Icon: ChatIcon,
+    iconClass: 'bg-accent/15 text-accent',
+    title: 'Fait en français, pas traduit',
+    description:
+      'SaveUp est écrit en français dès le départ, pour des francophones — pas une traduction ajoutée après coup.',
+  },
+  {
+    Icon: TargetIcon,
+    iconClass: 'bg-success/15 text-success',
+    title: 'Un vrai plan, pas juste un suivi',
+    description:
+      'Pas juste un suivi de dépenses : un vrai plan pour atteindre tes objectifs d\'épargne, avec un rythme calculé pour toi.',
+  },
+] as const
+
+const PRIVACY_POINTS = [
+  'Seulement les données que tu entres toi-même — tes dépenses, tes objectifs — ou que tu importes depuis un fichier CSV.',
+  'Aucune connexion directe à ton compte bancaire : SaveUp ne se branche sur rien, tu gardes le contrôle de ce qui entre dans l\'app.',
+  'Ces données servent uniquement à te montrer tes propres statistiques. Elles ne sont jamais vendues ni partagées.',
+]
+
 const COMPARISON_ROWS = [
   {
     label: 'Suivi dans le temps',
@@ -123,15 +219,15 @@ export function Home() {
             </div>
 
             <h1 className="mx-auto mt-7 max-w-xl text-[clamp(2.75rem,6vw,4.75rem)] font-black leading-[1.02] tracking-tight text-ink text-balance lg:mx-0">
-              Ton argent,
-              <br />
+              Tu veux économiser{' '}
               <span className="bg-gradient-to-r from-primary via-accent to-success bg-clip-text text-transparent">
-                sans le casse-tête.
-              </span>
+                plus facilement
+              </span>{' '}
+              ?
             </h1>
             <p className="mx-auto mt-6 max-w-md text-lg text-muted lg:mx-0">
-              SaveUp calcule, alerte et te montre où tu en es — pas juste un autre tableur à
-              remplir tous les dimanches soirs.
+              SaveUp t'aide à suivre tes dépenses, ton budget et tes objectifs d'épargne — au même
+              endroit, sans compliqué.
             </p>
 
             <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
@@ -178,6 +274,33 @@ export function Home() {
         <Reveal className="mx-auto max-w-4xl">
           <AnimatedStats />
         </Reveal>
+      </section>
+
+      {/* Pourquoi SaveUp — répond à "il existe déjà plein d'apps de budget"
+          avant d'entrer dans le détail des fonctionnalités. */}
+      <section className="mx-auto max-w-5xl px-4 py-24 sm:px-6">
+        <Reveal>
+          <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
+            Pourquoi SaveUp ?
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-center text-muted">
+            Il existe déjà plein d'apps de budget. Voici ce qui change avec celle-ci.
+          </p>
+        </Reveal>
+
+        <div className="mt-12 grid gap-4 sm:grid-cols-3">
+          {WHY_SAVEUP.map(({ Icon, iconClass, title, description }, i) => (
+            <Reveal key={title} delayMs={i * 80}>
+              <div className="glass h-full rounded-3xl border border-overlay/10 p-6 shadow-lg shadow-black/30">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconClass}`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="mb-2 mt-4 text-lg font-semibold text-ink">{title}</h3>
+                <p className="text-sm text-muted">{description}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
       </section>
 
       {/* Fonctionnalités — bento asymétrique plutôt qu'une grille uniforme */}
@@ -375,6 +498,40 @@ export function Home() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Tes données, ta confidentialité — pas de "100% sécurisé" vague :
+          ce qui est stocké, ce qui n'est jamais connecté, à quoi ça sert. */}
+      <section className="mx-auto max-w-3xl px-4 py-24 sm:px-6">
+        <Reveal>
+          <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
+            Tes données, ta confidentialité
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-center text-muted">
+            Simple à expliquer : voici exactement ce que SaveUp sait sur toi, et ce qu'il en fait.
+          </p>
+        </Reveal>
+
+        <Reveal delayMs={100}>
+          <div className="glass mt-10 rounded-3xl border border-overlay/10 p-6 shadow-lg shadow-black/30 sm:p-8">
+            <ul className="flex flex-col gap-5">
+              {PRIVACY_POINTS.map((point, i) => (
+                <li key={point} className="flex items-start gap-4">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                    {i === 0 ? (
+                      <ImportIcon className="h-5 w-5" />
+                    ) : i === 1 ? (
+                      <LinkOffIcon className="h-5 w-5" />
+                    ) : (
+                      <EyeIcon className="h-5 w-5" />
+                    )}
+                  </span>
+                  <p className="mt-1.5 text-sm text-muted sm:text-base">{point}</p>
+                </li>
+              ))}
+            </ul>
           </div>
         </Reveal>
       </section>
