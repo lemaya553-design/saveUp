@@ -7,19 +7,9 @@ import { formatCurrency, getFarFutureDateString, getTodayDateString } from '../l
 import { useIncome } from '../hooks/useIncome'
 import { useFixedExpenses } from '../hooks/useFixedExpenses'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
-import { useCategories } from '../hooks/useCategories'
-import { useExpenses } from '../hooks/useExpenses'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
 import { canImportCsv, FREE_CSV_IMPORT_LIMIT } from '../lib/plans'
-import {
-  DEMO_CATEGORY_NAMES,
-  DEMO_CONTRIBUTIONS,
-  DEMO_FIXED_EXPENSES,
-  DEMO_GOAL,
-  DEMO_INCOME,
-  buildDemoExpenseRows,
-} from '../lib/demoData'
 import {
   MAIN_GOAL_OPTIONS,
   FREQUENCY_OPTIONS,
@@ -44,15 +34,11 @@ export function Onboarding() {
   const income = useIncome()
   const fixed = useFixedExpenses()
   const goals = useSavingsGoals()
-  const categories = useCategories()
-  const expenses = useExpenses()
   const subscription = useSubscription()
   const preferences = usePreferences()
 
   const [step, setStep] = useState(0)
   const [importOpen, setImportOpen] = useState(false)
-  const [seedingDemo, setSeedingDemo] = useState(false)
-  const [demoError, setDemoError] = useState<string | null>(null)
   const [incomeDraft, setIncomeDraft] = useState('')
   const [expenseName, setExpenseName] = useState('')
   const [expenseAmount, setExpenseAmount] = useState('')
@@ -72,46 +58,6 @@ export function Onboarding() {
   async function finish() {
     await income.setMonthlyIncome(income.monthlyIncome)
     navigate('/dashboard')
-  }
-
-  // Fills every part of the account (income, categories, fixed expenses,
-  // 3 months of varied transactions, a goal with contributions already in
-  // progress) so a brand-new account looks like one that's actually been
-  // used, without needing real data. Sequential, not parallel — categories
-  // must exist before fixed expenses/goal reference them by name, and each
-  // step's own hook already updates its local state as it goes.
-  async function handleFillDemo() {
-    setSeedingDemo(true)
-    setDemoError(null)
-    try {
-      await income.setMonthlyIncome(DEMO_INCOME)
-      // The demo data must respect the account's own plan limits too — a
-      // Free account seeding 6 example categories against a 5-category cap
-      // would land it over its own limit before the user ever touched
-      // anything themselves.
-      const categoryNamesToSeed =
-        subscription.limits.maxCategories === null
-          ? DEMO_CATEGORY_NAMES
-          : DEMO_CATEGORY_NAMES.slice(0, subscription.limits.maxCategories)
-      for (const name of categoryNamesToSeed) {
-        await categories.addCategory(name)
-      }
-      for (const fx of DEMO_FIXED_EXPENSES) {
-        await fixed.addFixedExpense(fx.name, fx.amount, fx.category)
-      }
-      const { error: importError } = await expenses.addExpensesBulk(buildDemoExpenseRows())
-      if (importError) throw new Error(importError)
-      const goal = await goals.addGoal(DEMO_GOAL.name, DEMO_GOAL.targetAmount, DEMO_GOAL.targetDate)
-      if (goal) {
-        for (const amount of DEMO_CONTRIBUTIONS) {
-          await goals.addContribution(goal.id, amount)
-        }
-      }
-      await finish()
-    } catch (err) {
-      setDemoError(err instanceof Error ? err.message : "Impossible de générer l'exemple — réessaie.")
-      setSeedingDemo(false)
-    }
   }
 
   // "Passer pour l'instant" only ever advances one step at a time — it must
@@ -174,11 +120,6 @@ export function Onboarding() {
         {step === 0 && (
           <div>
             <h1 className="text-2xl font-bold text-ink">Remplis ton compte pour voir l’app en action</h1>
-            <p className="mt-2 text-sm text-muted">
-              Un compte tout neuf est vide, ce qui rend difficile de voir à quoi ça ressemble en
-              usage réel. Importe tes vraies transactions, ou remplis ton compte avec un exemple —
-              les deux sont optionnels.
-            </p>
 
             <div className="mt-6 grid gap-3">
               {canImportCsv(subscription.plan, preferences.csvImportCount) ? (
@@ -213,27 +154,7 @@ export function Onboarding() {
                   minPlan="standard"
                 />
               )}
-
-              <button
-                type="button"
-                onClick={handleFillDemo}
-                disabled={seedingDemo}
-                className="glass rounded-2xl p-4 text-left transition-colors hover:bg-overlay/5 disabled:opacity-60"
-              >
-                <p className="font-semibold text-ink">✨ Voir un exemple</p>
-                <p className="mt-1 text-sm text-muted">
-                  {seedingDemo
-                    ? 'Génération des données d’exemple...'
-                    : 'Remplis ton compte avec des données fictives réalistes, pour explorer l’app tout de suite.'}
-                </p>
-              </button>
             </div>
-
-            {demoError && (
-              <p className="mt-3 rounded-lg border border-red-900/50 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-                {demoError}
-              </p>
-            )}
 
             <div className="mt-6 flex justify-end">
               <button
