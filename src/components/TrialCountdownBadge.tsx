@@ -1,35 +1,9 @@
-import { useEffect, useState } from 'react'
 import { useTrialWindow } from '../hooks/useTrialWindow'
+import { formatTrialRemaining } from '../lib/trial'
 
-function pad(n: number): string {
-  return String(n).padStart(2, '0')
-}
-
-function formatRemaining(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
-  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
-}
-
-// Isolated in its own leaf component (rather than ticking state up in Nav)
-// so the 1s interval only re-renders this small pill, not the whole nav
-// tree it's mounted in.
 export function TrialCountdownBadge() {
-  const { loading, expiresAt } = useTrialWindow()
-  const [now, setNow] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (expiresAt === null) return
-    setNow(Date.now())
-    const id = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(id)
-  }, [expiresAt])
-
-  if (loading || expiresAt === null || now === null) return null
-  const remaining = expiresAt - now
-  if (remaining <= 0) return null
+  const { loading, remainingMs } = useTrialWindow()
+  if (loading || remainingMs === null || remainingMs <= 0) return null
 
   return (
     <span
@@ -37,7 +11,7 @@ export function TrialCountdownBadge() {
       title="Temps restant de ton essai gratuit de 24h"
     >
       <span aria-hidden="true">⏳</span>
-      Essai gratuit — {formatRemaining(remaining)}
+      Essai gratuit — {formatTrialRemaining(remainingMs)}
     </span>
   )
 }

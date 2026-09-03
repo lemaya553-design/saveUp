@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Footer } from '../components/Footer'
 import { LandingHeader } from '../components/LandingHeader'
 import { StickyCta } from '../components/StickyCta'
+import { TrialBadge } from '../components/TrialBadge'
 import { LandingStepsPreview } from '../components/LandingStepsPreview'
 import { LogoMark } from '../components/Logo'
 import { Reveal } from '../components/Reveal'
@@ -216,10 +217,7 @@ export function Home() {
                 <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-success" />
                 100% gratuit pour commencer
               </span>
-              <span className="inline-flex items-center gap-1.5 self-center rounded-full bg-accent/15 px-3 py-1.5 text-xs font-semibold text-accent">
-                <span aria-hidden="true">⏳</span>
-                Essai gratuit 24h — inscris-toi maintenant
-              </span>
+              <TrialBadge className="inline-flex items-center gap-1.5 self-center rounded-full bg-accent/15 px-3 py-1.5 text-xs font-semibold text-accent" />
             </div>
 
             <h1 className="mx-auto mt-7 max-w-xl text-[clamp(2.75rem,6vw,4.75rem)] font-black leading-[1.02] tracking-tight text-ink text-balance lg:mx-0">

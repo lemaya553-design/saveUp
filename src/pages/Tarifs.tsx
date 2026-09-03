@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LandingHeader } from '../components/LandingHeader'
 import { HelpButton } from '../components/HelpButton'
+import { TrialBadge } from '../components/TrialBadge'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
 import { PLAN_LIMITS, TRIAL_DAYS, type Plan } from '../lib/plans'
@@ -115,12 +116,7 @@ export function Tarifs() {
           Commence gratuitement, débloque plus de suivi quand tu en as besoin.
         </p>
 
-        {!user && (
-          <span className="mx-auto mt-6 inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-4 py-2 text-sm font-semibold text-accent">
-            <span aria-hidden="true">⏳</span>
-            Essai gratuit 24h — inscris-toi maintenant
-          </span>
-        )}
+        <TrialBadge className="mx-auto mt-6 inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-4 py-2 text-sm font-semibold text-accent" />
 
         {subscription.error && (
           <p className="mx-auto mt-6 max-w-md rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
@@ -159,6 +155,10 @@ export function Tarifs() {
                   <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
                     Essai gratuit de {TRIAL_DAYS} jours
                   </span>
+                )}
+
+                {plan.id !== 'free' && (
+                  <TrialBadge className="mt-2 flex items-center gap-1.5 text-xs text-muted" />
                 )}
 
                 <p className="mt-3 text-3xl font-bold text-ink">
