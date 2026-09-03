@@ -210,11 +210,15 @@ export function Home() {
 
         <div className="mx-auto grid max-w-6xl items-center gap-16 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="text-center lg:text-left">
-            <div className="flex justify-center gap-3 lg:justify-start">
+            <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
               <LogoMark className="h-10 w-10" animated />
               <span className="inline-flex items-center gap-1.5 self-center rounded-full border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-xs font-medium text-muted">
                 <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-success" />
                 100% gratuit pour commencer
+              </span>
+              <span className="inline-flex items-center gap-1.5 self-center rounded-full bg-accent/15 px-3 py-1.5 text-xs font-semibold text-accent">
+                <span aria-hidden="true">⏳</span>
+                Essai gratuit 24h — inscris-toi maintenant
               </span>
             </div>
 

@@ -628,3 +628,48 @@ alter table user_preferences add column if not exists onboarding_frequency text
 -- home for everything else in this flow.
 
 alter table user_preferences add column if not exists csv_import_count integer not null default 0;
+
+-- 24h trial countdown (Home.tsx, Tarifs.tsx, Nav's TrialCountdownBadge) ------
+-- Purely a marketing countdown — no PLAN_LIMITS effect. Every other table in
+-- this schema deliberately avoids a signup trigger (no row = a meaningful
+-- default). This one is the exception: the whole feature is "24h from the
+-- exact moment of signup", and a lazily-created row (on whatever random
+-- later write happens to touch user data first) would silently understate
+-- how much of the window is left — sometimes by hours. A trigger on
+-- auth.users is the only way to capture the real signup instant.
+--
+-- No insert/update/delete grant to `authenticated`: only this
+-- security-definer trigger writes here, so a user can never reset their own
+-- countdown by re-writing the row themselves.
+
+create table if not exists trial_windows (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  trial_started_at timestamptz not null default now()
+);
+
+alter table trial_windows enable row level security;
+
+drop policy if exists "trial_windows_select" on trial_windows;
+create policy "trial_windows_select" on trial_windows
+  for select using (auth.uid() = user_id);
+
+grant select on trial_windows to authenticated;
+
+create or replace function public.handle_new_user_trial()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.trial_windows (user_id, trial_started_at)
+  values (new.id, now())
+  on conflict (user_id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created_trial on auth.users;
+create trigger on_auth_user_created_trial
+  after insert on auth.users
+  for each row execute function public.handle_new_user_trial();

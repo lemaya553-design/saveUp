@@ -376,6 +376,21 @@ export interface Database {
         }
         Relationships: []
       }
+      trial_windows: {
+        Row: {
+          user_id: string
+          trial_started_at: string
+        }
+        Insert: {
+          user_id: string
+          trial_started_at?: string
+        }
+        Update: {
+          user_id?: string
+          trial_started_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>

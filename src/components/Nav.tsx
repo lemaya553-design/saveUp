@@ -6,6 +6,7 @@ import { usePreferences } from '../hooks/usePreferences'
 import { REWARD_TIERS, getUnlockedTiers } from '../lib/rewards'
 import { LogoMark } from './Logo'
 import { AvatarCircle } from './AvatarCircle'
+import { TrialCountdownBadge } from './TrialCountdownBadge'
 
 const links = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -87,6 +88,7 @@ export function Nav() {
               {renderBadge(link.to)}
             </NavLink>
           ))}
+          <TrialCountdownBadge />
           <button
             type="button"
             onClick={handleSignOut}
@@ -100,6 +102,7 @@ export function Nav() {
         </nav>
 
         <div className="flex items-center gap-2 lg:hidden">
+          <TrialCountdownBadge />
           <Link to="/parametres" aria-label="Paramètres et personnalisation">
             <AvatarCircle emoji={avatarEmoji} size="sm" />
           </Link>

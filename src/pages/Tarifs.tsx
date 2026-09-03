@@ -115,6 +115,13 @@ export function Tarifs() {
           Commence gratuitement, débloque plus de suivi quand tu en as besoin.
         </p>
 
+        {!user && (
+          <span className="mx-auto mt-6 inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-4 py-2 text-sm font-semibold text-accent">
+            <span aria-hidden="true">⏳</span>
+            Essai gratuit 24h — inscris-toi maintenant
+          </span>
+        )}
+
         {subscription.error && (
           <p className="mx-auto mt-6 max-w-md rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
             {subscription.error}
