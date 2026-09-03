@@ -264,6 +264,7 @@ export interface Database {
           target_amount: number
           current_amount: number
           target_date: string | null
+          photo_path: string | null
           created_at: string
           updated_at: string
         }
@@ -274,6 +275,7 @@ export interface Database {
           target_amount?: number
           current_amount?: number
           target_date?: string | null
+          photo_path?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -284,6 +286,7 @@ export interface Database {
           target_amount?: number
           current_amount?: number
           target_date?: string | null
+          photo_path?: string | null
           created_at?: string
           updated_at?: string
         }

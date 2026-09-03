@@ -212,6 +212,8 @@ export function Epargne() {
                   contributionsForGoal={contributions.contributions.filter((c) => c.goal_id === goal.id)}
                   onSave={goals.updateGoal}
                   onRemove={goals.removeGoal}
+                  onSetPhoto={goals.setGoalPhoto}
+                  onRemovePhoto={goals.removeGoalPhoto}
                   locked={pausedGoalIds.has(goal.id)}
                 />
               ))}
@@ -222,7 +224,7 @@ export function Epargne() {
                   minPlan="standard"
                 />
               ) : (
-                <AddGoalCard onAdd={goals.addGoal} defaultOpen={!hasGoals} />
+                <AddGoalCard onAdd={goals.addGoal} onSetPhoto={goals.setGoalPhoto} defaultOpen={!hasGoals} />
               )}
             </div>
 

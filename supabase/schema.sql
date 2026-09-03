@@ -629,6 +629,52 @@ alter table user_preferences add column if not exists onboarding_frequency text
 
 alter table user_preferences add column if not exists csv_import_count integer not null default 0;
 
+-- Goal photos (Premium) — SavingsGoalCard, AddGoalCard --------------------------
+-- Column stores the private bucket path, not a URL (the bucket is private —
+-- src/lib/goalPhoto.ts generates short-lived signed URLs on read). Path
+-- convention: {user_id}/{goal_id}.webp — the storage RLS policies below use
+-- the folder segment to scope every operation to "your own objects only".
+-- Uploading (new or replacement) requires Premium, enforced HERE (not just
+-- the UI) via a subscriptions lookup; reading/deleting your own photo is
+-- never plan-gated, same philosophy as the rest of this schema (a downgrade
+-- never destroys or blocks access to your own data, it just stops offering
+-- new uploads).
+
+alter table savings_goals add column if not exists photo_path text;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('goal-photos', 'goal-photos', false, 5242880, array['image/jpeg','image/png','image/webp'])
+on conflict (id) do nothing;
+
+drop policy if exists "goal_photos_select" on storage.objects;
+create policy "goal_photos_select" on storage.objects
+  for select
+  using (bucket_id = 'goal-photos' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "goal_photos_insert" on storage.objects;
+create policy "goal_photos_insert" on storage.objects
+  for insert
+  with check (
+    bucket_id = 'goal-photos'
+    and (storage.foldername(name))[1] = auth.uid()::text
+    and exists (select 1 from public.subscriptions where user_id = auth.uid() and plan = 'premium')
+  );
+
+drop policy if exists "goal_photos_update" on storage.objects;
+create policy "goal_photos_update" on storage.objects
+  for update
+  using (bucket_id = 'goal-photos' and (storage.foldername(name))[1] = auth.uid()::text)
+  with check (
+    bucket_id = 'goal-photos'
+    and (storage.foldername(name))[1] = auth.uid()::text
+    and exists (select 1 from public.subscriptions where user_id = auth.uid() and plan = 'premium')
+  );
+
+drop policy if exists "goal_photos_delete" on storage.objects;
+create policy "goal_photos_delete" on storage.objects
+  for delete
+  using (bucket_id = 'goal-photos' and (storage.foldername(name))[1] = auth.uid()::text);
+
 -- 24h trial countdown (Home.tsx, Tarifs.tsx, Nav's TrialCountdownBadge) ------
 -- Purely a marketing countdown — no PLAN_LIMITS effect. Every other table in
 -- this schema deliberately avoids a signup trigger (no row = a meaningful

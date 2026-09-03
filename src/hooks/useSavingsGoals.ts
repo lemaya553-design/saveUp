@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { emitGoalsChanged, onGoalsChanged } from '../lib/events'
+import { deleteGoalPhoto, signGoalPhotoUrls, uploadGoalPhoto } from '../lib/goalPhoto'
 import { useAuth } from './useAuth'
 
 export interface SavingsGoal {
@@ -9,6 +10,11 @@ export interface SavingsGoal {
   targetAmount: number
   currentAmount: number
   targetDate: string | null
+  photoPath: string | null
+  // Short-lived signed URL for photoPath (null until resolved, even when a
+  // photo exists) — the bucket is private, so there's no stable public URL
+  // to store or derive this from directly.
+  photoUrl: string | null
 }
 
 function fromRow(row: {
@@ -17,6 +23,7 @@ function fromRow(row: {
   target_amount: number
   current_amount: number
   target_date: string | null
+  photo_path: string | null
 }): SavingsGoal {
   return {
     id: row.id,
@@ -24,6 +31,8 @@ function fromRow(row: {
     targetAmount: row.target_amount,
     currentAmount: row.current_amount,
     targetDate: row.target_date,
+    photoPath: row.photo_path,
+    photoUrl: null,
   }
 }
 
@@ -48,9 +57,15 @@ export function useSavingsGoals() {
       .order('created_at', { ascending: true })
     if (fetchError) {
       setError(fetchError.message)
-    } else {
-      setGoals((data ?? []).map(fromRow))
+      setLoading(false)
+      hasLoadedOnce.current = true
+      return
     }
+
+    const loaded = (data ?? []).map(fromRow)
+    const photoPaths = loaded.filter((g) => g.photoPath).map((g) => g.photoPath as string)
+    const signedUrls = await signGoalPhotoUrls(photoPaths)
+    setGoals(loaded.map((g) => (g.photoPath ? { ...g, photoUrl: signedUrls[g.photoPath] ?? null } : g)))
     setLoading(false)
     hasLoadedOnce.current = true
   }, [userId])
@@ -100,12 +115,20 @@ export function useSavingsGoals() {
     [],
   )
 
-  const removeGoal = useCallback(async (id: string) => {
-    setGoals((prev) => prev.filter((g) => g.id !== id))
-    const { error: deleteError } = await supabase.from('savings_goals').delete().eq('id', id)
-    if (deleteError) setError(deleteError.message)
-    emitGoalsChanged()
-  }, [])
+  // Cleans up the storage object first (if any) — a goal row can't be
+  // recovered once deleted, so an upload failure here would just leave an
+  // orphaned file, never a dangling reference.
+  const removeGoal = useCallback(
+    async (id: string) => {
+      const photoPath = goals.find((g) => g.id === id)?.photoPath
+      if (photoPath) await deleteGoalPhoto(photoPath)
+      setGoals((prev) => prev.filter((g) => g.id !== id))
+      const { error: deleteError } = await supabase.from('savings_goals').delete().eq('id', id)
+      if (deleteError) setError(deleteError.message)
+      emitGoalsChanged()
+    },
+    [goals],
+  )
 
   // Reads the current_amount fresh right before writing (rather than trusting
   // this hook instance's possibly-stale local `goals` state) so two rapid
@@ -147,5 +170,57 @@ export function useSavingsGoals() {
     [userId],
   )
 
-  return { loading, error, goals, addGoal, updateGoal, removeGoal, addContribution }
+  // Uploads (Premium-only — enforced by Storage RLS, see
+  // supabase/schema.sql) and attaches in one step. Returns an error instead
+  // of only setting the hook's shared `error`, so the photo picker can show
+  // it inline right next to the file input rather than in the page's
+  // generic error banner.
+  const setGoalPhoto = useCallback(
+    async (goalId: string, file: File): Promise<{ error: string | null }> => {
+      if (!userId) return { error: 'Non connecté.' }
+      const { path, error: uploadError } = await uploadGoalPhoto(userId, goalId, file)
+      if (uploadError || !path) {
+        return { error: uploadError ?? "Impossible d'envoyer la photo — réessaie." }
+      }
+      const { error: updateError } = await supabase
+        .from('savings_goals')
+        .update({ photo_path: path, updated_at: new Date().toISOString() })
+        .eq('id', goalId)
+      if (updateError) {
+        return { error: updateError.message }
+      }
+      const signedUrls = await signGoalPhotoUrls([path])
+      setGoals((prev) =>
+        prev.map((g) => (g.id === goalId ? { ...g, photoPath: path, photoUrl: signedUrls[path] ?? null } : g)),
+      )
+      return { error: null }
+    },
+    [userId],
+  )
+
+  const removeGoalPhoto = useCallback(
+    async (goalId: string) => {
+      const photoPath = goals.find((g) => g.id === goalId)?.photoPath
+      if (photoPath) await deleteGoalPhoto(photoPath)
+      setGoals((prev) => prev.map((g) => (g.id === goalId ? { ...g, photoPath: null, photoUrl: null } : g)))
+      const { error: updateError } = await supabase
+        .from('savings_goals')
+        .update({ photo_path: null, updated_at: new Date().toISOString() })
+        .eq('id', goalId)
+      if (updateError) setError(updateError.message)
+    },
+    [goals],
+  )
+
+  return {
+    loading,
+    error,
+    goals,
+    addGoal,
+    updateGoal,
+    removeGoal,
+    addContribution,
+    setGoalPhoto,
+    removeGoalPhoto,
+  }
 }
