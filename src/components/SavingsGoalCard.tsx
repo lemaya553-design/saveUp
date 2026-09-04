@@ -1,16 +1,31 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ProgressBar } from './ProgressBar'
 import { GoalPhotoPicker } from './GoalPhotoPicker'
+import { useToast } from './ToastProvider'
 import { formatCurrency, getFarFutureDateString, getTodayDateString } from '../lib/format'
 import {
-  computeRequiredPace,
   computeWeeklyContributionDots,
+  countRecentContributions,
+  daysBetween,
+  estimateCompletionDate,
   estimateMonthlyRate,
+  formatMonthsAndDays,
+  monthsAndDaysBetween,
 } from '../lib/savingsProjection'
+import { useAnimatedNumber } from '../hooks/useAnimatedNumber'
 import { useSubscription } from '../hooks/useSubscription'
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
 import type { Contribution } from '../hooks/useSavingsContributions'
+
+const DAY_MS = 24 * 60 * 60 * 1000
+// Below this, a "current pace" is one contribution's worth of noise, not a
+// rhythm — extrapolating a full completion date from it would be exactly
+// the fake precision this feature is meant to avoid.
+const MIN_CONTRIBUTIONS_FOR_ESTIMATE = 2
+// Past this, the projection is technically correct but useless ("dans 47
+// ans" doesn't help anyone) — a clear nudge beats a literal absurd date.
+const MAX_PROJECTION_DAYS = 365 * 10
 
 function TargetIcon({ className }: { className: string }) {
   return (
@@ -61,6 +76,7 @@ export function SavingsGoalCard({
   locked?: boolean
 }) {
   const subscription = useSubscription()
+  const { showToast } = useToast()
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(goal.name)
   const [target, setTarget] = useState(String(goal.targetAmount || ''))
@@ -74,10 +90,70 @@ export function SavingsGoalCard({
   const now = new Date()
   const remaining = Math.max(0, goal.targetAmount - goal.currentAmount)
   const monthlyRate = estimateMonthlyRate(contributionsForGoal, now)
-  const requiredPace = goal.targetDate ? computeRequiredPace(remaining, goal.targetDate, now) : null
-  const isAhead = requiredPace ? monthlyRate >= requiredPace.perMonth : null
   const weeklyDots = computeWeeklyContributionDots(contributionsForGoal, now)
   const icon = iconStyleForGoal(goal.name)
+
+  // Live completion estimate — see savingsProjection.ts for the math. Not
+  // enough history and "technically correct but absurd" both fall back to
+  // an honest message instead of a fake-precise date.
+  const recentContributions = countRecentContributions(contributionsForGoal, now)
+  const hasEstimate = remaining > 0 && monthlyRate > 0 && recentContributions >= MIN_CONTRIBUTIONS_FOR_ESTIMATE
+  const estimatedDate = hasEstimate ? estimateCompletionDate(remaining, monthlyRate, now) : null
+  const projectedDays = estimatedDate ? daysBetween(now, estimatedDate) : 0
+  const exceedsSanityCeiling = hasEstimate && projectedDays > MAX_PROJECTION_DAYS
+
+  // Ticks smoothly from the previously-displayed day count to the new one
+  // whenever a contribution changes the projection — the visible "date
+  // recedes" effect. Always called (rules of hooks), harmless when there's
+  // no estimate to animate (target stays 0).
+  const animatedDays = useAnimatedNumber(hasEstimate && !exceedsSanityCeiling ? projectedDays : 0)
+  const displayDate = new Date(now.getTime() + animatedDays * DAY_MS)
+  const { months: displayMonths, days: displayDays } = monthsAndDaysBetween(now, displayDate)
+
+  // Short toast the moment a contribution visibly pulls the date closer —
+  // skipped on mount (nothing to compare against yet) and on a contribution
+  // too small to move the needle by a full day (a "gagné 0 jours" toast
+  // would read as hollow, not satisfying).
+  const prevProjectedDaysRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (!hasEstimate || exceedsSanityCeiling) {
+      prevProjectedDaysRef.current = null
+      return
+    }
+    const prev = prevProjectedDaysRef.current
+    if (prev !== null && prev !== projectedDays) {
+      const delta = prev - projectedDays
+      if (delta >= 1) {
+        showToast(`Tu viens de gagner ${delta} jour${delta > 1 ? 's' : ''} !`)
+      }
+    }
+    prevProjectedDaysRef.current = projectedDays
+  }, [hasEstimate, exceedsSanityCeiling, projectedDays, showToast])
+
+  // Target-date comparison — only meaningful once there's an estimate to
+  // compare (see the render branch below for the "no estimate" cases).
+  let targetComparisonText: string | null = null
+  let targetAhead = true
+  if (goal.targetDate && hasEstimate && !exceedsSanityCeiling) {
+    const targetDateObj = new Date(goal.targetDate)
+    if (targetDateObj.getTime() < now.getTime()) {
+      targetComparisonText = 'Ta date visée est dépassée.'
+      targetAhead = false
+    } else {
+      const deltaDays = daysBetween(displayDate, targetDateObj)
+      if (Math.abs(deltaDays) < 1) {
+        targetComparisonText = 'Pile sur ta date visée.'
+      } else {
+        const gapDays = Math.abs(deltaDays)
+        const gapDate = new Date(now.getTime() + gapDays * DAY_MS)
+        const gap = monthsAndDaysBetween(now, gapDate)
+        targetAhead = deltaDays > 0
+        targetComparisonText = `≈ ${formatMonthsAndDays(gap.months, gap.days)} ${
+          targetAhead ? "d'avance" : 'de retard'
+        } sur ta date visée`
+      }
+    }
+  }
   // A downgraded account keeps its already-uploaded photo in storage (never
   // deleted), but the card reverts to its plain look — same "data survives,
   // feature access doesn't" treatment as splitByLimit elsewhere.
@@ -263,24 +339,27 @@ export function SavingsGoalCard({
 
         {remaining <= 0 ? (
           <p className="mt-3 text-xs text-success">🎉 Objectif atteint.</p>
-        ) : !goal.targetDate ? (
-          <p className={`mt-3 text-xs ${textSecondary}`}>Ajoute une échéance pour comparer ton rythme.</p>
-        ) : requiredPace ? (
-          <div className={`mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg ${paceBg} px-3 py-2 text-xs`}>
-            <span className={textSecondary}>
-              {formatCurrency(monthlyRate)}/mois actuel · {formatCurrency(requiredPace.perMonth)}/mois
-              nécessaire
-            </span>
-            <span
-              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold ${
-                isAhead ? 'bg-success/15 text-success' : 'bg-red-400/15 text-red-400'
-              }`}
-            >
-              {isAhead ? '↑ En avance' : '↓ En retard'}
-            </span>
-          </div>
+        ) : !hasEstimate ? (
+          <p className={`mt-3 text-xs ${textSecondary}`}>
+            Pas assez d'historique pour estimer — ajoute quelques contributions pour voir une
+            projection.
+          </p>
+        ) : exceedsSanityCeiling ? (
+          <p className={`mt-3 text-xs ${textSecondary}`}>
+            À ce rythme, ça prendrait plus de 10 ans — augmente tes contributions pour une
+            estimation utile.
+          </p>
         ) : (
-          <p className="mt-3 text-xs text-red-400">Échéance dépassée.</p>
+          <div className={`mt-3 rounded-lg ${paceBg} px-3 py-2`}>
+            <p className={`text-sm font-medium ${textPrimary}`}>
+              ≈ dans {formatMonthsAndDays(displayMonths, displayDays)}
+            </p>
+            {targetComparisonText && (
+              <p className={`mt-0.5 text-xs font-medium ${targetAhead ? 'text-success' : 'text-red-400'}`}>
+                {targetComparisonText}
+              </p>
+            )}
+          </div>
         )}
 
         <div className={`mt-4 border-t pt-3 ${dividerBorder}`}>
