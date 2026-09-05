@@ -21,6 +21,7 @@ export interface PlanLimits {
   dataExport: boolean
   allBadges: boolean
   goalPhotos: boolean
+  incomeExpenseTrend: boolean
 }
 
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
@@ -36,6 +37,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     dataExport: false,
     allBadges: false,
     goalPhotos: false,
+    incomeExpenseTrend: false,
   },
   standard: {
     label: 'Standard',
@@ -49,6 +51,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     dataExport: false,
     allBadges: true,
     goalPhotos: false,
+    incomeExpenseTrend: true,
   },
   premium: {
     label: 'Premium',
@@ -62,6 +65,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     dataExport: true,
     allBadges: true,
     goalPhotos: true,
+    incomeExpenseTrend: true,
   },
 }
 

@@ -52,6 +52,47 @@ export function computeMonthlySpendingTrend(
 }
 
 // ---------------------------------------------------------------------------
+// Income vs. expenses trend, with the resulting savings rate — Standard+.
+// Income and fixed expenses have no history of their own (budget_settings/
+// fixed_expenses each hold only their CURRENT value, never past ones), so
+// both are held constant across every month here and applied retroactively
+// — same "current data as the best available proxy for the past" trade-off
+// this page's month picker already makes for pctOfIncome. Only the ad-hoc
+// portion of expenses is real per-month history.
+
+export interface IncomeExpenseTrendPoint {
+  label: string
+  monthStart: string
+  income: number
+  expenses: number
+  // Can go negative (a month spent more than the current income) —
+  // deliberately not clamped, since hiding that is worse than showing it.
+  savingsRatePct: number
+}
+
+export function computeIncomeExpenseTrend(
+  adHocRecords: { amount: number; spent_at: string }[],
+  currentFixedExpensesTotal: number,
+  monthlyIncome: number,
+  now = new Date(),
+  maxMonths = 6,
+): IncomeExpenseTrendPoint[] {
+  const monthlyAdHoc = computeMonthlySpendingTrend(adHocRecords, now, maxMonths)
+
+  return monthlyAdHoc.map((point) => {
+    const expenses = currentFixedExpensesTotal + point.amount
+    const savingsRatePct = monthlyIncome > 0 ? ((monthlyIncome - expenses) / monthlyIncome) * 100 : 0
+    return {
+      label: point.label,
+      monthStart: point.monthStart,
+      income: monthlyIncome,
+      expenses,
+      savingsRatePct,
+    }
+  })
+}
+
+// ---------------------------------------------------------------------------
 // This month vs. last month, total ad-hoc spending — powers the
 // "Ce mois vs le mois passé" card. Always the real current/previous
 // calendar month, independent of any month picker elsewhere on the page.

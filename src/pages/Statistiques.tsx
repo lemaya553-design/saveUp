@@ -4,8 +4,10 @@ import { Card } from '../components/Card'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { MonthComparison } from '../components/MonthComparison'
 import { CategorySpendingChart } from '../components/CategorySpendingChart'
+import { SpendingBreakdownCard } from '../components/SpendingBreakdownCard'
 import { MonthlyTrendChart } from '../components/MonthlyTrendChart'
 import { MonthOverlayChart } from '../components/MonthOverlayChart'
+import { IncomeExpenseTrendChart } from '../components/IncomeExpenseTrendChart'
 import { BudgetVsActualChart } from '../components/BudgetVsActualChart'
 import { CategoryMomList } from '../components/CategoryMomList'
 import { RecategorizeCard } from '../components/RecategorizeCard'
@@ -27,6 +29,7 @@ import { canImportCsv, FREE_CSV_IMPORT_LIMIT } from '../lib/plans'
 import {
   computeBudgetVsActual,
   computeCategoryMonthOverMonth,
+  computeIncomeExpenseTrend,
   computeMonthlySpendingTrend,
   computeThisVsLastMonth,
 } from '../lib/statistics'
@@ -78,6 +81,10 @@ export function Statistiques() {
     [history.records, income.monthlyIncome, selectedMonth],
   )
   const monthlyTrend = useMemo(() => computeMonthlySpendingTrend(history.records), [history.records])
+  const incomeExpenseTrend = useMemo(
+    () => computeIncomeExpenseTrend(history.records, fixed.totalFixedExpenses, income.monthlyIncome),
+    [history.records, fixed.totalFixedExpenses, income.monthlyIncome],
+  )
   const momChanges = useMemo(() => computeCategoryMonthOverMonth(history.records), [history.records])
   // Same data as momChanges, just re-sorted biggest-last-month-first and
   // limited to categories that actually had a last month to compare
@@ -140,6 +147,13 @@ export function Statistiques() {
       )}
 
       <div className="grid gap-6">
+        <SpendingBreakdownCard
+          historyRecords={history.records}
+          fixedExpenses={fixed.fixedExpenses}
+          monthlyIncome={income.monthlyIncome}
+          maxMonthsBack={MAX_MONTHS_BACK}
+        />
+
         {subscription.limits.fullStatistics && (
           <MonthComparison
             currentAmount={thisVsLastMonth.thisMonth}
@@ -221,13 +235,26 @@ export function Statistiques() {
           <BudgetVsActualChart statuses={budgetVsActual} />
         </Card>
 
-        {subscription.limits.fullStatistics && (
+        <Card
+          title="Comparaison au mois dernier"
+          hint="Variation de tes dépenses par catégorie par rapport au mois précédent."
+        >
+          <CategoryMomList changes={momChanges} />
+        </Card>
+
+        {subscription.limits.incomeExpenseTrend ? (
           <Card
-            title="Comparaison au mois dernier"
-            hint="Variation de tes dépenses par catégorie par rapport au mois précédent."
+            title="Revenu vs dépenses"
+            hint="Tendance sur 6 mois, et le taux d'épargne qui en résulte chaque mois."
           >
-            <CategoryMomList changes={momChanges} />
+            <IncomeExpenseTrendChart points={incomeExpenseTrend} />
           </Card>
+        ) : (
+          <UpgradePrompt
+            title="Revenu vs dépenses — fonctionnalité Standard"
+            description="Vois ton revenu et tes dépenses évoluer côte à côte sur 6 mois, avec le taux d'épargne que ça donne chaque mois."
+            minPlan="standard"
+          />
         )}
 
         <div>

@@ -2,45 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { formatCurrency } from '../lib/format'
+import { colorForCategoryLabel, SAVINGS_CATEGORY } from '../lib/categoryColors'
 import type { CategorySpendingEntry, CategoryTransaction } from '../lib/categorySpending'
 
-// Blue / mauve — the app's palette — at three lightnesses each, so there's
-// enough spread for more than 3-4 categories without leaving that family.
-// Green is deliberately excluded here and reserved for the Épargne bar
-// below (SAVINGS_COLOR), so no spending category can ever hash to the same
-// hue as "money saved". Picked by hand rather than run through the
-// categorical-palette validator: this is a small, low-stakes internal list,
-// not a new standalone dataviz surface.
-const CATEGORY_COLORS = [
-  '#4a6cf7', // primary blue
-  '#8b5cf6', // accent mauve
-  '#3e5fe0', // deep blue (primary-strong)
-  '#7c3aed', // deep mauve
-  '#93c5fd', // light blue
-  '#c4b5fd', // light mauve
-]
-
-// Reserved, not drawn from the hash palette above — matches the
-// 'Épargne' → success-green convention already established on the Budget
-// page (lib/budgetInsights.ts computeCategoryBreakdown), so it's always
-// visually distinct from any spending category, never a coincidental hash
-// collision.
-const SAVINGS_COLOR = '#22c55e'
-const SAVINGS_CATEGORY = 'Épargne'
-
-// Deterministic hash of the category NAME string — not its position in the
-// entries array — so a category keeps the same color from one month to the
-// next even though array order shifts as spending amounts change.
-function colorForCategory(category: string): string {
-  let hash = 0
-  for (let i = 0; i < category.length; i++) {
-    hash = (hash * 31 + category.charCodeAt(i)) | 0
-  }
-  return CATEGORY_COLORS[Math.abs(hash) % CATEGORY_COLORS.length]
-}
-
 function barColor(entry: CategorySpendingEntry): string {
-  return entry.category === SAVINGS_CATEGORY ? SAVINGS_COLOR : colorForCategory(entry.category)
+  return colorForCategoryLabel(entry.category)
 }
 
 const MIN_BAR_WIDTH = 76
