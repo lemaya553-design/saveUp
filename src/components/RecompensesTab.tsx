@@ -1,10 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PageHeader } from '../components/PageHeader'
-import { Card } from '../components/Card'
-import { ScoreGauge } from '../components/ScoreGauge'
-import { ProgressBar } from '../components/ProgressBar'
-import { PageSkeleton } from '../components/PageSkeleton'
+import { Card } from './Card'
+import { ScoreGauge } from './ScoreGauge'
+import { ProgressBar } from './ProgressBar'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useClaimedBadges } from '../hooks/useClaimedBadges'
@@ -12,7 +10,7 @@ import { useLoginStreak } from '../hooks/useLoginStreak'
 import { useSubscription } from '../hooks/useSubscription'
 import { formatCurrency } from '../lib/format'
 import { isAtLeast, splitByLimit } from '../lib/plans'
-import { TIER_ICONS, TIER_UNLOCKED_CLASS } from '../components/rewardIcons'
+import { TIER_ICONS, TIER_UNLOCKED_CLASS } from './rewardIcons'
 import {
   REWARD_TIERS,
   computeSavingsScoreBreakdown,
@@ -28,16 +26,9 @@ import {
 // animation always finishes before the class is removed.
 const CLAIM_ANIMATION_MS = 900
 
-const RECOMPENSES_HELP = {
-  purpose: 'Débloque des badges au fil de ta progression et de ta constance dans l\'app.',
-  actions: [
-    'Consulte les badges déjà débloqués et ceux qui restent à atteindre.',
-    'Vise le prochain palier (montant épargné, objectif atteint...) pour en débloquer un nouveau.',
-    'Reviens régulièrement pour garder ta série de connexions active.',
-  ],
-}
-
-export function Recompenses() {
+// Self-contained (own hook instances) — was its own route, now the
+// Récompenses tab on Statistiques.
+export function RecompensesTab() {
   const goals = useSavingsGoals()
   const contributions = useSavingsContributions()
   const claimedBadges = useClaimedBadges()
@@ -112,7 +103,7 @@ export function Recompenses() {
   }
 
   if (loading) {
-    return <PageSkeleton cards={3} />
+    return <p className="text-sm text-muted">Chargement...</p>
   }
 
   const hasGoal = goals.goals.length > 0
@@ -121,13 +112,7 @@ export function Recompenses() {
   const readyToClaimCount = unlockedIds.size - claimedCount
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader
-        title="Regarde le chemin parcouru"
-        subtitle="Chaque palier compte."
-        help={RECOMPENSES_HELP}
-      />
-
+    <div>
       {error && (
         <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
           {error}
@@ -154,7 +139,7 @@ export function Recompenses() {
         <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm">
           <p className="text-ink">Fixe un objectif d'épargne pour commencer à débloquer des badges.</p>
           <Link
-            to="/epargne"
+            to="/epargne/objectifs"
             className="whitespace-nowrap rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
           >
             Fixer un objectif
@@ -334,7 +319,7 @@ export function Recompenses() {
         </div>
 
         <Link
-          to="/epargne"
+          to="/epargne/objectifs"
           className="glass flex items-center justify-between rounded-2xl p-5 shadow-lg shadow-black/30 transition-colors hover:bg-overlay/5"
         >
           <div>

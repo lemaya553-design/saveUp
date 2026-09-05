@@ -35,7 +35,7 @@ export function computeOnboardingProfile(
         'Tu épargnes pour quelque chose de précis — c\'est le moteur le plus efficace pour rester motivé·e sur la durée.',
       previewPoints: [
         'Ta page Épargne, pour suivre ta progression vers ton objectif.',
-        'Relie un article de ta liste de souhaits à un objectif pour voir exactement combien il te reste à économiser.',
+        'Compare ton rythme d\'épargne actuel à ce qu\'il faudrait pour respecter tes échéances.',
         'Des conseils personnalisés qui soulignent chaque étape franchie.',
       ],
     },

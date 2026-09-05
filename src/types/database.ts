@@ -394,8 +394,145 @@ export interface Database {
         }
         Relationships: []
       }
+      savings_duels: {
+        Row: {
+          id: string
+          status: string
+          duration_days: number
+          invite_token: string
+          invite_expires_at: string
+          started_at: string | null
+          ends_at: string | null
+          ended_reason: string | null
+          ended_by: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        // No insert/update grant for `authenticated` — every write goes
+        // through the security-definer functions below, never a direct
+        // `.from('savings_duels')` call. These shapes exist only so the
+        // generic Database type stays well-formed; nothing in this app
+        // should ever construct one.
+        Insert: {
+          id?: string
+          status?: string
+          duration_days: number
+          invite_token?: string
+          invite_expires_at: string
+          started_at?: string | null
+          ends_at?: string | null
+          ended_reason?: string | null
+          ended_by?: string | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          status?: string
+          duration_days?: number
+          invite_token?: string
+          invite_expires_at?: string
+          started_at?: string | null
+          ends_at?: string | null
+          ended_reason?: string | null
+          ended_by?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      savings_duel_participants: {
+        Row: {
+          id: string
+          duel_id: string
+          user_id: string
+          display_name: string
+          share_goal_name: boolean
+          goal_name: string | null
+          progress_pct: number
+          joined_at: string
+        }
+        // Same "no direct write" note as savings_duels above.
+        Insert: {
+          id?: string
+          duel_id: string
+          user_id: string
+          display_name: string
+          share_goal_name?: boolean
+          goal_name?: string | null
+          progress_pct?: number
+          joined_at?: string
+        }
+        Update: {
+          id?: string
+          duel_id?: string
+          user_id?: string
+          display_name?: string
+          share_goal_name?: boolean
+          goal_name?: string | null
+          progress_pct?: number
+          joined_at?: string
+        }
+        Relationships: []
+      }
+      savings_duel_entries: {
+        Row: {
+          duel_id: string
+          user_id: string
+          goal_id: string
+          starting_amount: number
+        }
+        // Same "no direct write" note as savings_duels above.
+        Insert: {
+          duel_id: string
+          user_id: string
+          goal_id: string
+          starting_amount: number
+        }
+        Update: {
+          duel_id?: string
+          user_id?: string
+          goal_id?: string
+          starting_amount?: number
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      create_duel: {
+        Args: { p_goal_id: string; p_duration_days: number; p_display_name: string }
+        Returns: { duel_id: string; invite_token: string }[]
+      }
+      get_duel_invite_preview: {
+        Args: { p_token: string }
+        Returns: {
+          duel_id: string
+          creator_display_name: string
+          duration_days: number
+          invite_expires_at: string
+        }[]
+      }
+      accept_duel_invite: {
+        Args: {
+          p_token: string
+          p_goal_id: string
+          p_display_name: string
+          p_share_goal_name?: boolean
+        }
+        Returns: { duel_id: string }[]
+      }
+      abandon_duel: {
+        Args: { p_duel_id: string }
+        Returns: undefined
+      }
+      finalize_duel_if_ended: {
+        Args: { p_duel_id: string }
+        Returns: undefined
+      }
+    }
   }
 }

@@ -1,13 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PageHeader } from '../components/PageHeader'
-import { Card } from '../components/Card'
-import { GrowthChart } from '../components/GrowthChart'
-import { ContributionsVsInterestChart } from '../components/ContributionsVsInterestChart'
-import { QuickAmountEdit } from '../components/QuickAmountEdit'
-import { BeforeAfterRow } from '../components/BeforeAfterRow'
-import { BudgetInsight } from '../components/BudgetInsight'
-import { PageSkeleton } from '../components/PageSkeleton'
+import { Card } from './Card'
+import { GrowthChart } from './GrowthChart'
+import { ContributionsVsInterestChart } from './ContributionsVsInterestChart'
+import { QuickAmountEdit } from './QuickAmountEdit'
+import { BeforeAfterRow } from './BeforeAfterRow'
+import { BudgetInsight } from './BudgetInsight'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useInvestmentBalance } from '../hooks/useInvestmentBalance'
 import { formatCurrency } from '../lib/format'
@@ -21,16 +19,11 @@ import {
   projectValue,
 } from '../lib/investment'
 
-const INVESTISSEMENT_HELP = {
-  purpose: 'Estime la croissance future d\'un placement grâce à l\'intérêt composé.',
-  actions: [
-    'Indique le montant actuellement investi et un taux de rendement annuel.',
-    'Compare la projection sur différentes durées (1, 5, 10 ans...).',
-    'Consulte l\'estimation du temps pour doubler ton placement (règle du 72).',
-  ],
-}
-
-export function Investissement() {
+// Self-contained (own hook instances) — was its own route, now the
+// Investissement tab on Épargne. Kept independent of the Objectifs tab's
+// already-loaded goals rather than threaded through props, same tradeoff as
+// every other self-contained tab in this app (RecategorizeCard, etc.).
+export function InvestissementTab() {
   const goals = useSavingsGoals()
   const investmentBalance = useInvestmentBalance()
   const [initialAmount, setInitialAmount] = useState('1000')
@@ -70,19 +63,13 @@ export function Investissement() {
       : "La règle du 72 estime le temps pour doubler un placement (72 ÷ taux). Choisis un taux de rendement positif ci-dessus pour voir l'estimation."
 
   if (investmentBalance.loading) {
-    return <PageSkeleton cards={4} />
+    return <p className="text-sm text-muted">Chargement...</p>
   }
 
   const error = investmentBalance.error || goals.error
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader
-        title="Combien ça pourrait rapporter"
-        subtitle="Projette la croissance d'un placement avec intérêt composé."
-        help={INVESTISSEMENT_HELP}
-      />
-
+    <div>
       <QuickAmountEdit
         label="Montant actuellement investi"
         amount={investmentBalance.currentAmount}
@@ -91,12 +78,12 @@ export function Investissement() {
       />
 
       {error && (
-        <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+        <div className="mb-6 mt-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
           {error}
         </div>
       )}
 
-      <div className="grid gap-6">
+      <div className="mt-6 grid gap-6">
         <Card
           title="Paramètres"
           hint="Un scénario hypothétique — n'affecte pas ton montant réellement investi ci-dessus."
@@ -205,11 +192,11 @@ export function Investissement() {
           ) : goals.goals.length === 0 ? (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-muted">
-                Fixe un objectif dans Épargne pour voir combien de temps il te faudrait pour
-                l'atteindre avec ces paramètres.
+                Fixe un objectif dans l'onglet Objectifs pour voir combien de temps il te faudrait
+                pour l'atteindre avec ces paramètres.
               </p>
               <Link
-                to="/epargne"
+                to="/epargne/objectifs"
                 className="whitespace-nowrap rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
               >
                 Fixer un objectif

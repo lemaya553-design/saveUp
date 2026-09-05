@@ -719,3 +719,271 @@ drop trigger if exists on_auth_user_created_trial on auth.users;
 create trigger on_auth_user_created_trial
   after insert on auth.users
   for each row execute function public.handle_new_user_trial();
+
+-- Savings duels ---------------------------------------------------------------
+-- Two users compete on their own separate goals over a fixed period —
+-- motivation by comparison, not shared money. Split across 3 tables
+-- specifically so RLS can enforce "no dollar amount ever visible to the
+-- opponent" at the row level: savings_duel_entries (goal_id,
+-- starting_amount) is strictly own-row-only, no "same duel" exception;
+-- savings_duel_participants (the jointly-visible side) only ever holds a
+-- computed percentage, kept in sync by a trigger — the dollar math never
+-- leaves the database. Every write goes through the security-definer
+-- functions below; the tables themselves get no insert/update/delete
+-- grant for `authenticated`, same "only a trusted writer touches this"
+-- philosophy as `subscriptions`.
+
+create table if not exists savings_duels (
+  id uuid primary key default gen_random_uuid(),
+  status text not null default 'pending'
+    check (status in ('pending', 'active', 'completed', 'abandoned')),
+  duration_days integer not null check (duration_days in (30, 60, 90)),
+  invite_token uuid not null default gen_random_uuid() unique,
+  invite_expires_at timestamptz not null,
+  started_at timestamptz,
+  ends_at timestamptz,
+  ended_reason text check (ended_reason in ('completed', 'abandoned')),
+  ended_by uuid references auth.users(id),
+  created_by uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists savings_duel_participants (
+  id uuid primary key default gen_random_uuid(),
+  duel_id uuid not null references savings_duels(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  display_name text not null,
+  share_goal_name boolean not null default false,
+  goal_name text,
+  progress_pct numeric(5, 2) not null default 0,
+  joined_at timestamptz not null default now(),
+  unique (duel_id, user_id)
+);
+
+create table if not exists savings_duel_entries (
+  duel_id uuid not null references savings_duels(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  goal_id uuid not null references savings_goals(id) on delete cascade,
+  starting_amount numeric(12, 2) not null,
+  primary key (duel_id, user_id)
+);
+
+create index if not exists savings_duel_participants_duel_idx on savings_duel_participants(duel_id);
+create index if not exists savings_duel_entries_goal_idx on savings_duel_entries(goal_id);
+
+create or replace function public.check_goal_not_already_dueling()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if exists (
+    select 1
+    from savings_duel_entries e
+    join savings_duels d on d.id = e.duel_id
+    where e.goal_id = new.goal_id
+      and d.status in ('pending', 'active')
+      and e.duel_id <> new.duel_id
+  ) then
+    raise exception 'Cet objectif est déjà engagé dans un autre duel.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists enforce_one_active_duel_per_goal on savings_duel_entries;
+create trigger enforce_one_active_duel_per_goal
+  before insert on savings_duel_entries
+  for each row execute function public.check_goal_not_already_dueling();
+
+create or replace function public.prevent_delete_dueling_goal()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if exists (
+    select 1 from savings_duel_entries e
+    join savings_duels d on d.id = e.duel_id
+    where e.goal_id = old.id and d.status in ('pending', 'active')
+  ) then
+    raise exception 'Cet objectif est engagé dans un duel actif — abandonne le duel avant de le supprimer.';
+  end if;
+  return old;
+end;
+$$;
+
+drop trigger if exists savings_goals_prevent_delete_while_dueling on savings_goals;
+create trigger savings_goals_prevent_delete_while_dueling
+  before delete on savings_goals
+  for each row execute function public.prevent_delete_dueling_goal();
+
+create or replace function public.sync_duel_progress()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  entry record;
+  pct numeric(5,2);
+begin
+  for entry in
+    select e.duel_id, e.user_id, e.starting_amount
+    from savings_duel_entries e
+    join savings_duels d on d.id = e.duel_id
+    where e.goal_id = new.id and d.status = 'active'
+  loop
+    pct := case
+      when new.target_amount <= entry.starting_amount then 100
+      else greatest(0, least(100,
+        (new.current_amount - entry.starting_amount)
+        / nullif(new.target_amount - entry.starting_amount, 0) * 100
+      ))
+    end;
+    update savings_duel_participants
+    set progress_pct = coalesce(pct, 0)
+    where duel_id = entry.duel_id and user_id = entry.user_id;
+  end loop;
+  return new;
+end;
+$$;
+
+drop trigger if exists savings_goals_sync_duel_progress on savings_goals;
+create trigger savings_goals_sync_duel_progress
+  after update of current_amount on savings_goals
+  for each row execute function public.sync_duel_progress();
+
+alter table savings_duels enable row level security;
+alter table savings_duel_participants enable row level security;
+alter table savings_duel_entries enable row level security;
+
+drop policy if exists "savings_duels_select" on savings_duels;
+create policy "savings_duels_select" on savings_duels
+  for select using (
+    exists (select 1 from savings_duel_participants p where p.duel_id = savings_duels.id and p.user_id = auth.uid())
+  );
+
+drop policy if exists "savings_duel_participants_select" on savings_duel_participants;
+create policy "savings_duel_participants_select" on savings_duel_participants
+  for select using (
+    exists (select 1 from savings_duel_participants me where me.duel_id = savings_duel_participants.duel_id and me.user_id = auth.uid())
+  );
+
+drop policy if exists "savings_duel_entries_select" on savings_duel_entries;
+create policy "savings_duel_entries_select" on savings_duel_entries
+  for select using (auth.uid() = user_id);
+
+grant select on savings_duels, savings_duel_participants, savings_duel_entries to authenticated;
+
+create or replace function public.create_duel(p_goal_id uuid, p_duration_days integer, p_display_name text)
+returns table (duel_id uuid, invite_token uuid)
+language plpgsql security definer set search_path = public as $$
+declare v_duel_id uuid; v_token uuid;
+begin
+  if p_duration_days not in (30, 60, 90) then raise exception 'Durée de duel invalide.'; end if;
+  if trim(coalesce(p_display_name, '')) = '' then raise exception 'Un prénom est requis.'; end if;
+  if not exists (select 1 from savings_goals where id = p_goal_id and user_id = auth.uid()) then
+    raise exception 'Objectif introuvable.';
+  end if;
+
+  insert into savings_duels (status, duration_days, invite_expires_at, created_by)
+  values ('pending', p_duration_days, now() + interval '7 days', auth.uid())
+  returning id, invite_token into v_duel_id, v_token;
+
+  insert into savings_duel_participants (duel_id, user_id, display_name)
+  values (v_duel_id, auth.uid(), trim(p_display_name));
+
+  insert into savings_duel_entries (duel_id, user_id, goal_id, starting_amount)
+  select v_duel_id, auth.uid(), id, current_amount from savings_goals where id = p_goal_id;
+
+  return query select v_duel_id, v_token;
+end;
+$$;
+
+create or replace function public.get_duel_invite_preview(p_token uuid)
+returns table (duel_id uuid, creator_display_name text, duration_days integer, invite_expires_at timestamptz)
+language plpgsql security definer set search_path = public as $$
+begin
+  return query
+  select d.id, p.display_name, d.duration_days, d.invite_expires_at
+  from savings_duels d
+  join savings_duel_participants p on p.duel_id = d.id and p.user_id = d.created_by
+  where d.invite_token = p_token and d.status = 'pending' and d.invite_expires_at > now()
+  limit 1;
+end;
+$$;
+
+create or replace function public.accept_duel_invite(
+  p_token uuid, p_goal_id uuid, p_display_name text, p_share_goal_name boolean default false
+)
+returns table (duel_id uuid)
+language plpgsql security definer set search_path = public as $$
+declare v_duel record;
+begin
+  if trim(coalesce(p_display_name, '')) = '' then raise exception 'Un prénom est requis.'; end if;
+
+  select * into v_duel from savings_duels
+  where invite_token = p_token and status = 'pending' and invite_expires_at > now()
+  for update;
+  if v_duel.id is null then raise exception 'Cette invitation est invalide ou expirée.'; end if;
+  if v_duel.created_by = auth.uid() then raise exception 'Tu ne peux pas accepter ton propre duel.'; end if;
+  if not exists (select 1 from savings_goals where id = p_goal_id and user_id = auth.uid()) then
+    raise exception 'Objectif introuvable.';
+  end if;
+
+  insert into savings_duel_participants (duel_id, user_id, display_name, share_goal_name, goal_name)
+  values (
+    v_duel.id, auth.uid(), trim(p_display_name), coalesce(p_share_goal_name, false),
+    case when p_share_goal_name then (select name from savings_goals where id = p_goal_id) end
+  );
+
+  insert into savings_duel_entries (duel_id, user_id, goal_id, starting_amount)
+  select v_duel.id, auth.uid(), id, current_amount from savings_goals where id = p_goal_id;
+
+  update savings_duel_entries e set starting_amount = g.current_amount
+  from savings_goals g
+  where e.duel_id = v_duel.id and e.user_id = v_duel.created_by and g.id = e.goal_id;
+
+  update savings_duels
+  set status = 'active', started_at = now(), ends_at = now() + make_interval(days => v_duel.duration_days)
+  where id = v_duel.id;
+
+  return query select v_duel.id;
+end;
+$$;
+
+create or replace function public.abandon_duel(p_duel_id uuid)
+returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from savings_duel_participants where duel_id = p_duel_id and user_id = auth.uid()) then
+    raise exception 'Duel introuvable.';
+  end if;
+  update savings_duels
+  set status = 'abandoned', ended_reason = 'abandoned', ended_by = auth.uid(), updated_at = now()
+  where id = p_duel_id and status in ('pending', 'active');
+end;
+$$;
+
+create or replace function public.finalize_duel_if_ended(p_duel_id uuid)
+returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  update savings_duels
+  set status = 'completed', ended_reason = 'completed', updated_at = now()
+  where id = p_duel_id and status = 'active' and ends_at <= now()
+    and exists (select 1 from savings_duel_participants where duel_id = p_duel_id and user_id = auth.uid());
+end;
+$$;
+
+grant execute on function
+  public.create_duel(uuid, integer, text),
+  public.get_duel_invite_preview(uuid),
+  public.accept_duel_invite(uuid, uuid, text, boolean),
+  public.abandon_duel(uuid),
+  public.finalize_duel_if_ended(uuid)
+to authenticated;

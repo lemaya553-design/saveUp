@@ -12,10 +12,7 @@ const links = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/budget', label: 'Budget' },
   { to: '/epargne', label: 'Épargne' },
-  { to: '/souhaits', label: 'Souhaits' },
-  { to: '/investissement', label: 'Investissement' },
   { to: '/statistiques', label: 'Statistiques' },
-  { to: '/recompenses', label: 'Récompenses' },
   { to: '/tarifs', label: 'Tarifs' },
   { to: '/parametres', label: 'Paramètres' },
 ]
@@ -46,7 +43,7 @@ export function Nav() {
   const unlockedCount = goals.loading ? null : getUnlockedTiers(totalCurrentAmount, goals.goals).length
 
   function renderBadge(to: string) {
-    if (to !== '/recompenses' || unlockedCount === null) return null
+    if (to !== '/statistiques' || unlockedCount === null) return null
     return (
       <span className="rounded-full bg-overlay/10 px-1.5 py-0.5 text-[10px] font-semibold">
         {unlockedCount}/{REWARD_TIERS.length}

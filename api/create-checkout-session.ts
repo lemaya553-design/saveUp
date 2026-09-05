@@ -41,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       line_items: [{ price: priceIdForPlan(plan), quantity: 1 }],
       client_reference_id: user.id,
       customer_email: user.email,
-      success_url: `${origin}/parametres?checkout=success`,
+      success_url: `${origin}/parametres/abonnement?checkout=success`,
       cancel_url: `${origin}/tarifs?checkout=cancelled`,
       // 7-day free trial on both paid plans, card required up front (this
       // is Checkout's default — the card is collected and validated at

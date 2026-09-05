@@ -14,11 +14,9 @@ import { Conditions } from './pages/Conditions'
 import { Dashboard } from './pages/Dashboard'
 import { Budget } from './pages/Budget'
 import { Epargne } from './pages/Epargne'
-import { Investissement } from './pages/Investissement'
-import { Souhaits } from './pages/Souhaits'
-import { Recompenses } from './pages/Recompenses'
 import { Parametres } from './pages/Parametres'
 import { Onboarding } from './pages/Onboarding'
+import { DuelAccept } from './pages/DuelAccept'
 
 // Recharts is sizeable and used across every chart on this page — loaded on
 // demand so no other route pays for it in the initial bundle.
@@ -41,22 +39,33 @@ function App() {
                 <Route path="conditions" element={<Conditions />} />
                 <Route element={<RequireAuth />}>
                   <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="budget" element={<Budget />} />
-                  <Route path="epargne" element={<Epargne />} />
-                  {/* Simulateur merged into Épargne as a tab — keep old links/bookmarks working. */}
-                  <Route path="simulateur" element={<Navigate to="/epargne" replace />} />
-                  <Route path="investissement" element={<Investissement />} />
-                  <Route path="souhaits" element={<Souhaits />} />
+
+                  <Route path="budget" element={<Navigate to="/budget/depenses" replace />} />
+                  <Route path="budget/:tab" element={<Budget />} />
+
+                  <Route path="epargne" element={<Navigate to="/epargne/objectifs" replace />} />
+                  <Route path="epargne/:tab" element={<Epargne />} />
+                  {/* Simulateur, Duels and Investissement merged into Épargne as tabs — keep old links/bookmarks working. */}
+                  <Route path="simulateur" element={<Navigate to="/epargne/simulateur" replace />} />
+                  <Route path="investissement" element={<Navigate to="/epargne/investissement" replace />} />
+                  <Route path="duels" element={<Navigate to="/epargne/duels" replace />} />
+                  <Route path="duels/rejoindre/:token" element={<DuelAccept />} />
+
+                  <Route path="statistiques" element={<Navigate to="/statistiques/apercu" replace />} />
                   <Route
-                    path="statistiques"
+                    path="statistiques/:tab"
                     element={
                       <Suspense fallback={<PageSkeleton cards={4} />}>
                         <Statistiques />
                       </Suspense>
                     }
                   />
-                  <Route path="recompenses" element={<Recompenses />} />
-                  <Route path="parametres" element={<Parametres />} />
+                  {/* Récompenses merged into Statistiques as a tab — keep old links/bookmarks working. */}
+                  <Route path="recompenses" element={<Navigate to="/statistiques/recompenses" replace />} />
+
+                  <Route path="parametres" element={<Navigate to="/parametres/compte" replace />} />
+                  <Route path="parametres/:tab" element={<Parametres />} />
+
                   <Route path="onboarding" element={<Onboarding />} />
                 </Route>
               </Route>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useIncome } from '../hooks/useIncome'
@@ -18,12 +19,23 @@ import { ContributeForm } from '../components/ContributeForm'
 import { ContributionHistory } from '../components/ContributionHistory'
 import { PaceComparisonChart, type PaceComparisonEntry } from '../components/PaceComparisonChart'
 import { SimulateurTab } from '../components/SimulateurTab'
+import { DuelsTab } from '../components/DuelsTab'
+import { InvestissementTab } from '../components/InvestissementTab'
 import { UpgradePrompt } from '../components/UpgradePrompt'
 import { PageSkeleton } from '../components/PageSkeleton'
+import { TabBar, type TabDef } from '../components/TabBar'
 import { useSubscription } from '../hooks/useSubscription'
+import { useDuels } from '../hooks/useDuels'
 import { splitByLimit } from '../lib/plans'
 
-type Tab = 'objectifs' | 'simulateur'
+type Tab = 'objectifs' | 'simulateur' | 'duels' | 'investissement'
+const TABS: Tab[] = ['objectifs', 'simulateur', 'duels', 'investissement']
+const TAB_DEFS: TabDef<Tab>[] = [
+  { key: 'objectifs', label: 'Objectifs' },
+  { key: 'simulateur', label: 'Simulateur « et si »' },
+  { key: 'duels', label: 'Duels' },
+  { key: 'investissement', label: 'Investissement' },
+]
 
 const OBJECTIFS_HELP = {
   title: 'Objectifs',
@@ -46,15 +58,45 @@ const SIMULATEUR_HELP = {
   ],
 }
 
+const DUELS_HELP = {
+  title: 'Duels',
+  purpose: "Affronte un ami sur vos objectifs d'épargne respectifs, chacun sur son propre argent.",
+  actions: [
+    'Lance un duel depuis un de tes objectifs (onglet Objectifs), et envoie le lien à un ami.',
+    'Vous voyez chacun le % de progression de l\'autre — jamais les montants en dollars.',
+    'Le duel dure 30, 60 ou 90 jours ; à la fin, celui qui a le plus progressé gagne.',
+  ],
+}
+
+const INVESTISSEMENT_HELP = {
+  title: 'Investissement',
+  purpose: 'Estime la croissance future d\'un placement grâce à l\'intérêt composé.',
+  actions: [
+    'Indique le montant actuellement investi et un taux de rendement annuel.',
+    'Compare la projection sur différentes durées (1, 5, 10 ans...).',
+    'Consulte l\'estimation du temps pour doubler ton placement (règle du 72).',
+  ],
+}
+
+const HELP_BY_TAB: Record<Tab, typeof OBJECTIFS_HELP> = {
+  objectifs: OBJECTIFS_HELP,
+  simulateur: SIMULATEUR_HELP,
+  duels: DUELS_HELP,
+  investissement: INVESTISSEMENT_HELP,
+}
+
 export function Epargne() {
-  const [tab, setTab] = useState<Tab>('objectifs')
+  const { tab: tabParam } = useParams<{ tab: string }>()
+  const navigate = useNavigate()
   const [showCreateForm, setShowCreateForm] = useState(false)
 
-  // Loaded once here and passed down to both tabs, so switching tabs never
-  // re-fetches — Objectifs and Simulateur both need goals/contributions,
-  // and Simulateur additionally needs income/fixed/health.
+  // Loaded once here and passed down to the Objectifs/Simulateur tabs, so
+  // switching between them never re-fetches — Duels and Investissement stay
+  // self-contained (own hook instances), same as every other standalone tab
+  // folded into this page.
   const goals = useSavingsGoals()
   const subscription = useSubscription()
+  const duels = useDuels()
   const contributions = useSavingsContributions()
   const income = useIncome()
   const fixed = useFixedExpenses()
@@ -114,6 +156,11 @@ export function Epargne() {
     }, [])
   }, [activeGoals, contributions.contributions])
 
+  if (!tabParam || !TABS.includes(tabParam as Tab)) {
+    return <Navigate to="/epargne/objectifs" replace />
+  }
+  const tab = tabParam as Tab
+
   if (loading) {
     return <PageSkeleton cards={3} />
   }
@@ -128,30 +175,11 @@ export function Epargne() {
     <div className="mx-auto max-w-3xl px-4 pb-10">
       <PageHeader
         title="Vers quoi tu épargnes"
-        subtitle="Tes objectifs d'épargne, et un simulateur pour tester des changements avant de les appliquer."
-        help={tab === 'objectifs' ? OBJECTIFS_HELP : SIMULATEUR_HELP}
+        subtitle="Tes objectifs d'épargne, un simulateur, tes duels et tes placements."
+        help={HELP_BY_TAB[tab]}
       />
 
-      <div className="glass mb-6 inline-flex gap-1 rounded-full p-1">
-        <button
-          type="button"
-          onClick={() => setTab('objectifs')}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-            tab === 'objectifs' ? 'bg-primary-strong text-white shadow-md shadow-primary/30' : 'text-muted hover:text-ink'
-          }`}
-        >
-          Objectifs
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('simulateur')}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-            tab === 'simulateur' ? 'bg-primary-strong text-white shadow-md shadow-primary/30' : 'text-muted hover:text-ink'
-          }`}
-        >
-          Simulateur « et si »
-        </button>
-      </div>
+      <TabBar tabs={TAB_DEFS} active={tab} onChange={(next) => navigate(`/epargne/${next}`)} />
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
@@ -214,6 +242,8 @@ export function Epargne() {
                   onRemove={goals.removeGoal}
                   onSetPhoto={goals.setGoalPhoto}
                   onRemovePhoto={goals.removeGoalPhoto}
+                  onCreateDuel={duels.createDuel}
+                  isDueling={duels.busyGoalIds.has(goal.id)}
                   locked={pausedGoalIds.has(goal.id)}
                 />
               ))}
@@ -248,24 +278,30 @@ export function Epargne() {
             )}
           </div>
         )
-      ) : subscription.limits.advancedSimulator ? (
-        <SimulateurTab
-          health={health}
-          fixed={fixed}
-          goals={goals}
-          contributions={contributions}
-          categorySpending={categorySpending}
-          onGoToObjectifs={() => {
-            setTab('objectifs')
-            setShowCreateForm(true)
-          }}
-        />
+      ) : tab === 'simulateur' ? (
+        subscription.limits.advancedSimulator ? (
+          <SimulateurTab
+            health={health}
+            fixed={fixed}
+            goals={goals}
+            contributions={contributions}
+            categorySpending={categorySpending}
+            onGoToObjectifs={() => {
+              navigate('/epargne/objectifs')
+              setShowCreateForm(true)
+            }}
+          />
+        ) : (
+          <UpgradePrompt
+            title="Simulateur « et si » — fonctionnalité Premium"
+            description="Teste des scénarios de dépenses/épargne et vois leur impact sur ton budget et ton score avant de les appliquer pour de vrai."
+            minPlan="premium"
+          />
+        )
+      ) : tab === 'duels' ? (
+        <DuelsTab onGoToObjectifs={() => navigate('/epargne/objectifs')} />
       ) : (
-        <UpgradePrompt
-          title="Simulateur « et si » — fonctionnalité Premium"
-          description="Teste des scénarios de dépenses/épargne et vois leur impact sur ton budget et ton score avant de les appliquer pour de vrai."
-          minPlan="premium"
-        />
+        <InvestissementTab />
       )}
     </div>
   )

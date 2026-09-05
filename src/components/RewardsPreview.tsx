@@ -13,7 +13,7 @@ export function RewardsPreview({
 
   return (
     <Link
-      to="/recompenses"
+      to="/statistiques/recompenses"
       className="glass flex items-center justify-between rounded-2xl p-4 shadow-lg shadow-black/30 transition-colors hover:bg-overlay/5"
     >
       <div className="flex items-center gap-3">

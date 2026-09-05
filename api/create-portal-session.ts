@@ -46,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const portalSession = await getStripe().billingPortal.sessions.create({
       customer: data.stripe_customer_id,
-      return_url: `${getOrigin(req)}/parametres`,
+      return_url: `${getOrigin(req)}/parametres/abonnement`,
     })
     res.status(200).json({ url: portalSession.url })
   } catch (err) {

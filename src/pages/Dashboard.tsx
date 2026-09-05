@@ -47,7 +47,7 @@ const FEATURE_LINKS = [
     description: 'Tendances et comparaisons mensuelles, en détail.',
   },
   {
-    to: '/recompenses',
+    to: '/statistiques/recompenses',
     Illustration: BadgesIllustration,
     title: 'Récompenses',
     description: 'Tes badges et ta série de connexions.',
@@ -191,7 +191,7 @@ export function Dashboard() {
           <ScoreTrendBadge trend={health.trend} />
           <p className="mt-3 max-w-[26ch] text-xs text-muted">
             Reflète tes habitudes de dépenses et de budget.{' '}
-            <Link to="/recompenses" className="text-accent hover:text-accent/80">
+            <Link to="/statistiques/recompenses" className="text-accent hover:text-accent/80">
               Voir tes récompenses →
             </Link>
           </p>
@@ -241,7 +241,7 @@ export function Dashboard() {
             </div>
             <div>
               <p className="text-xs text-muted">Investi</p>
-              <Link to="/investissement" className="font-medium text-ink hover:text-accent">
+              <Link to="/epargne/investissement" className="font-medium text-ink hover:text-accent">
                 {formatCurrency(investmentBalance.currentAmount)}
               </Link>
             </div>
