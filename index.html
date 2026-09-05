@@ -29,6 +29,13 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0b0b12" />
+
+    <!-- iOS ignores the manifest's display/name fields for "Add to Home
+         Screen" — these are the meta tags Safari actually reads for
+         standalone mode, the status bar look, and the name under the icon. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SaveUp" />
     <meta name="description" content="Budget, épargne et objectifs financiers, simplement." />
     <title>SaveUp — Reprends le contrôle de ton argent, simplement</title>
 

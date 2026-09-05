@@ -8,6 +8,7 @@ import { IncomeInput } from '../components/IncomeInput'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { useIncome } from '../hooks/useIncome'
 import { useSubscription } from '../hooks/useSubscription'
+import { usePwaInstall } from '../hooks/usePwaInstall'
 import { useToast } from '../components/ToastProvider'
 import { PLAN_LIMITS } from '../lib/plans'
 import { formatCurrency } from '../lib/format'
@@ -58,6 +59,7 @@ export function Parametres() {
   const navigate = useNavigate()
   const income = useIncome()
   const subscription = useSubscription()
+  const pwaInstall = usePwaInstall()
   const { showToast } = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
   const [managingBilling, setManagingBilling] = useState(false)
@@ -131,6 +133,24 @@ export function Parametres() {
                 Voir les conditions d'utilisation →
               </Link>
             </div>
+          </Card>
+
+          <Card title="Application" hint="Ajoute SaveUp à ton écran d'accueil pour un accès plus rapide.">
+            {pwaInstall.standalone ? (
+              <p className="text-sm text-muted">✅ SaveUp est installée sur cet appareil.</p>
+            ) : pwaInstall.platform === 'unsupported' ? (
+              <p className="text-sm text-muted">
+                L'installation n'est pas proposée par ce navigateur.
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={pwaInstall.reopen}
+                className="rounded-lg border border-overlay/10 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-overlay/5"
+              >
+                Revoir l'invite d'installation
+              </button>
+            )}
           </Card>
         </div>
       )}

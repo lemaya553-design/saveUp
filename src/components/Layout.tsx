@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { Nav } from './Nav'
 import { QuickAddFab } from './QuickAddFab'
+import { PwaInstallBanner } from './PwaInstallBanner'
 import { useLoginStreak } from '../hooks/useLoginStreak'
 import { useAuth } from '../hooks/useAuth'
 
@@ -31,6 +32,7 @@ export function Layout() {
       {!isMarketingPage && <Nav />}
       <Outlet />
       {!isMarketingPage && <QuickAddFab />}
+      {!isMarketingPage && <PwaInstallBanner />}
     </div>
   )
 }

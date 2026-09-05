@@ -861,6 +861,26 @@ alter table savings_duels enable row level security;
 alter table savings_duel_participants enable row level security;
 alter table savings_duel_entries enable row level security;
 
+-- A policy on savings_duel_participants can't query savings_duel_participants
+-- itself in its own USING clause — Postgres re-applies the same policy to
+-- that inner query, which re-applies it again, infinitely. Routing the
+-- membership check through a security-definer function breaks the loop:
+-- the function runs as its (table-owning) owner, which bypasses RLS for its
+-- own internal select, so the check itself never re-triggers the policy.
+create or replace function public.is_duel_participant(p_duel_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from savings_duel_participants where duel_id = p_duel_id and user_id = auth.uid()
+  );
+$$;
+
+grant execute on function public.is_duel_participant(uuid) to authenticated;
+
 drop policy if exists "savings_duels_select" on savings_duels;
 create policy "savings_duels_select" on savings_duels
   for select using (
@@ -869,9 +889,7 @@ create policy "savings_duels_select" on savings_duels
 
 drop policy if exists "savings_duel_participants_select" on savings_duel_participants;
 create policy "savings_duel_participants_select" on savings_duel_participants
-  for select using (
-    exists (select 1 from savings_duel_participants me where me.duel_id = savings_duel_participants.duel_id and me.user_id = auth.uid())
-  );
+  for select using (public.is_duel_participant(duel_id));
 
 drop policy if exists "savings_duel_entries_select" on savings_duel_entries;
 create policy "savings_duel_entries_select" on savings_duel_entries
@@ -892,7 +910,10 @@ begin
 
   insert into savings_duels (status, duration_days, invite_expires_at, created_by)
   values ('pending', p_duration_days, now() + interval '7 days', auth.uid())
-  returning id, invite_token into v_duel_id, v_token;
+  -- Table-qualified: RETURNS TABLE(duel_id, invite_token) auto-declares
+  -- those names as plpgsql variables, which collide with this table's own
+  -- identically-named columns ("column reference is ambiguous") otherwise.
+  returning savings_duels.id, savings_duels.invite_token into v_duel_id, v_token;
 
   insert into savings_duel_participants (duel_id, user_id, display_name)
   values (v_duel_id, auth.uid(), trim(p_display_name));
