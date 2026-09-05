@@ -81,7 +81,12 @@ export function useExpenses() {
         account?: string | null
       }[],
     ): Promise<{ imported: number; error: string | null }> => {
-      if (!userId || rows.length === 0) return { imported: 0, error: null }
+      // Distinct from the empty-rows case below: a session that expired
+      // while the user was mid-wizard (picking columns, browsing their bank
+      // portal for the file) used to fail this guard silently — 0 imported,
+      // no error — which looked exactly like nothing happened for no reason.
+      if (!userId) return { imported: 0, error: 'Ta session a expiré — reconnecte-toi et réessaie.' }
+      if (rows.length === 0) return { imported: 0, error: null }
 
       const BATCH_SIZE = 500
       let imported = 0

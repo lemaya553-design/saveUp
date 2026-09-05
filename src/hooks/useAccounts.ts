@@ -47,14 +47,20 @@ export function useAccounts() {
   // Returns the existing account if the name already exists (case/whitespace
   // insensitive), instead of erroring on the unique constraint — lets the
   // caller treat "pick an existing one" and "type a new one that happens to
-  // already exist" the same way.
+  // already exist" the same way. Always returns a real, specific message on
+  // failure (never a silent null) — a stale/expired session (userId gone
+  // after sitting on the CSV import wizard for a few minutes) used to fail
+  // exactly like this with no explanation.
   const addAccount = useCallback(
-    async (name: string): Promise<Account | null> => {
+    async (name: string): Promise<{ account: Account | null; error: string | null }> => {
       const trimmed = name.trim()
-      if (!trimmed || !userId) return null
+      if (!trimmed) return { account: null, error: 'Le nom du compte ne peut pas être vide.' }
+      if (!userId) {
+        return { account: null, error: 'Ta session a expiré — reconnecte-toi et réessaie.' }
+      }
 
       const existing = accounts.find((a) => a.name.toLowerCase() === trimmed.toLowerCase())
-      if (existing) return existing
+      if (existing) return { account: existing, error: null }
 
       const { data, error: insertError } = await supabase
         .from('accounts')
@@ -62,11 +68,15 @@ export function useAccounts() {
         .select()
         .single()
       if (insertError || !data) {
-        setError(insertError?.message ?? 'Insert failed')
-        return null
+        const message =
+          insertError?.code === '23505'
+            ? 'Ce nom de compte existe déjà.'
+            : (insertError?.message ?? 'Impossible de créer ce compte.')
+        setError(message)
+        return { account: null, error: message }
       }
       setAccounts((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name, 'fr')))
-      return data
+      return { account: data, error: null }
     },
     [userId, accounts],
   )

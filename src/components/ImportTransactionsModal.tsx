@@ -162,10 +162,10 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
     if (!trimmed) return
     setAccountError(null)
     setCreatingAccount(true)
-    const account = await addAccount(trimmed)
+    const { account, error } = await addAccount(trimmed)
     setCreatingAccount(false)
     if (!account) {
-      setAccountError("Impossible de créer ce compte — réessaie.")
+      setAccountError(error ?? "Impossible de créer ce compte — réessaie.")
       return
     }
     setSelectedAccountName(account.name)
@@ -649,6 +649,11 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
                 {result.error}
               </p>
             </>
+          ) : result.imported === 0 ? (
+            <p className="rounded-lg border border-red-900/50 bg-red-950/50 px-3 py-2 text-sm text-red-300">
+              Aucune transaction n'a été importée. Réessaie — si ça persiste, reconnecte-toi et
+              recommence l'import.
+            </p>
           ) : (
             <p className="text-sm text-ink">
               <span className="text-success">✓</span> {result.imported} transaction
