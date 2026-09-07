@@ -77,6 +77,7 @@ export function FixedExpenses({
   onAdd,
   onUpdate,
   onRemove,
+  onConvertToRecurring,
   compact = false,
 }: {
   expenses: FixedExpense[]
@@ -84,6 +85,7 @@ export function FixedExpenses({
   onAdd: (name: string, amount: number, category: string) => Promise<void>
   onUpdate: (id: string, name: string, amount: number, category: string) => void
   onRemove: (id: string) => void
+  onConvertToRecurring?: (expense: FixedExpense) => void
   compact?: boolean
 }) {
   const { categoryNames } = useCategories()
@@ -136,6 +138,16 @@ export function FixedExpenses({
               </div>
               <div className="flex items-center gap-1">
                 <span className="mr-2 font-medium text-ink">{formatCurrency(expense.amount)}</span>
+                {onConvertToRecurring && (
+                  <button
+                    type="button"
+                    onClick={() => onConvertToRecurring(expense)}
+                    className="rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
+                    title="Transforme cette dépense fixe en récurrence qui génère de vraies transactions automatiquement"
+                  >
+                    🔁 Récurrence
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setEditingId(expense.id)}

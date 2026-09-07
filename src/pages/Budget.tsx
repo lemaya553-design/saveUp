@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useIncome } from '../hooks/useIncome'
-import { useFixedExpenses } from '../hooks/useFixedExpenses'
+import { useFixedExpenses, type FixedExpense } from '../hooks/useFixedExpenses'
 import { useExpenses } from '../hooks/useExpenses'
 import { useMonthlyExpenses } from '../hooks/useMonthlyExpenses'
 import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
+import { useRecurringExpenses } from '../hooks/useRecurringExpenses'
 import { getMonthRange, formatCurrency } from '../lib/format'
 import {
   computeCategoryBreakdown,
@@ -18,12 +19,15 @@ import {
 } from '../lib/budgetInsights'
 import { getCategoryShareAlert } from '../lib/alerts'
 import { canImportCsv, FREE_CSV_IMPORT_LIMIT } from '../lib/plans'
+import { computeUpcomingRecurringTotal } from '../lib/recurringExpenses'
 import { PageHeader } from '../components/PageHeader'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
 import { AlertBanner } from '../components/AlertBanner'
 import { IncomeInput } from '../components/IncomeInput'
 import { FixedExpenses } from '../components/FixedExpenses'
+import { RecurringExpenses } from '../components/RecurringExpenses'
+import { ConvertToRecurringModal } from '../components/ConvertToRecurringModal'
 import { RecentExpenses } from '../components/RecentExpenses'
 import { CategoryBreakdown } from '../components/CategoryBreakdown'
 import { ExpenseTrendChart } from '../components/ExpenseTrendChart'
@@ -36,12 +40,13 @@ import { RecategorizeCard } from '../components/RecategorizeCard'
 import { ImportTransactionsModal } from '../components/ImportTransactionsModal'
 import { UpgradePrompt } from '../components/UpgradePrompt'
 
-type Tab = 'depenses' | 'categories' | 'import'
-const TABS: Tab[] = ['depenses', 'categories', 'import']
+type Tab = 'depenses' | 'categories' | 'import' | 'recurrences'
+const TABS: Tab[] = ['depenses', 'categories', 'import', 'recurrences']
 const TAB_DEFS: TabDef<Tab>[] = [
   { key: 'depenses', label: 'Dépenses' },
   { key: 'categories', label: 'Catégories' },
   { key: 'import', label: 'Import' },
+  { key: 'recurrences', label: 'Récurrences' },
 ]
 
 const DEPENSES_HELP = {
@@ -75,10 +80,21 @@ const IMPORT_HELP = {
   ],
 }
 
+const RECURRENCES_HELP = {
+  title: 'Récurrences',
+  purpose: "Crée une dépense une fois — loyer, abonnement, facture — et laisse-la se reproduire toute seule.",
+  actions: [
+    'Choisis une fréquence (hebdomadaire, aux deux semaines, mensuelle, annuelle) et une date de fin optionnelle.',
+    'Les transactions se génèrent automatiquement à chaque échéance, même si tu ne rouvres pas l\'app.',
+    'Modifie ou supprime une récurrence à tout moment — tu choisis si ça s\'applique aussi aux transactions déjà générées.',
+  ],
+}
+
 const HELP_BY_TAB: Record<Tab, typeof DEPENSES_HELP> = {
   depenses: DEPENSES_HELP,
   categories: CATEGORIES_HELP,
   import: IMPORT_HELP,
+  recurrences: RECURRENCES_HELP,
 }
 
 export function Budget() {
@@ -92,8 +108,10 @@ export function Budget() {
   const contributions = useSavingsContributions()
   const subscription = useSubscription()
   const preferences = usePreferences()
+  const recurring = useRecurringExpenses()
   const [showIncomeForm, setShowIncomeForm] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [convertingExpense, setConvertingExpense] = useState<FixedExpense | null>(null)
 
   const loading =
     income.loading ||
@@ -101,23 +119,44 @@ export function Budget() {
     spending.loading ||
     monthly.loading ||
     history.loading ||
-    contributions.loading
+    contributions.loading ||
+    recurring.loading
   const error =
-    income.error || fixed.error || spending.error || monthly.error || history.error || contributions.error
+    income.error ||
+    fixed.error ||
+    spending.error ||
+    monthly.error ||
+    history.error ||
+    contributions.error ||
+    recurring.error
 
   const savingsThisMonth = useMemo(
     () => sumThisMonth(contributions.contributions),
     [contributions.contributions],
   )
 
-  // What's left to spend this month, after fixed costs AND savings
-  // contributions already made — not just fixed costs. Kept unclamped for
-  // the "alloué" caption (so an over-committed month is explained rather
-  // than showing an unexplained $0) and clamped for anything doing math
-  // with it (percentages, the weekly split).
+  // Occurrences due later this month but not yet generated — counted here
+  // so they show up in the budget before the actual transaction fires.
+  // Already-generated occurrences are real `expenses` rows by now and are
+  // already counted through monthly.spentThisMonth below, so adding them
+  // here too would double-count — computeUpcomingRecurringTotal excludes
+  // them by construction (see src/lib/recurringExpenses.ts).
+  const upcomingRecurringTotal = useMemo(
+    () => computeUpcomingRecurringTotal(recurring.rules, new Date()),
+    [recurring.rules],
+  )
+  const atRecurringLimit =
+    subscription.limits.maxRecurringExpenses !== null &&
+    recurring.rules.length >= subscription.limits.maxRecurringExpenses
+
+  // What's left to spend this month, after fixed costs, upcoming recurring
+  // charges, and savings contributions already made — not just fixed
+  // costs. Kept unclamped for the "alloué" caption (so an over-committed
+  // month is explained rather than showing an unexplained $0) and clamped
+  // for anything doing math with it (percentages, the weekly split).
   const rawSpendableBudget = useMemo(
-    () => income.monthlyIncome - fixed.totalFixedExpenses - savingsThisMonth,
-    [income.monthlyIncome, fixed.totalFixedExpenses, savingsThisMonth],
+    () => income.monthlyIncome - fixed.totalFixedExpenses - upcomingRecurringTotal - savingsThisMonth,
+    [income.monthlyIncome, fixed.totalFixedExpenses, upcomingRecurringTotal, savingsThisMonth],
   )
   const spendableBudget = Math.max(0, rawSpendableBudget)
 
@@ -242,6 +281,12 @@ export function Budget() {
                   <> — inclut {formatCurrency(savingsThisMonth)} déjà mis de côté ce mois-ci.</>
                 )}
               </p>
+              {upcomingRecurringTotal > 0 && (
+                <p className="mt-1 text-xs text-muted">
+                  Dont {formatCurrency(upcomingRecurringTotal)} de récurrences à venir ce mois-ci — voir
+                  l'onglet Récurrences.
+                </p>
+              )}
             </div>
 
             <Card
@@ -260,6 +305,7 @@ export function Budget() {
               onAdd={fixed.addFixedExpense}
               onUpdate={fixed.updateFixedExpense}
               onRemove={fixed.removeFixedExpense}
+              onConvertToRecurring={setConvertingExpense}
               compact
             />
 
@@ -330,7 +376,31 @@ export function Budget() {
         </div>
       )}
 
+      {tab === 'recurrences' && (
+        <div className="grid gap-6">
+          <RecurringExpenses
+            rules={recurring.rules}
+            atLimit={atRecurringLimit}
+            maxRecurringExpenses={subscription.limits.maxRecurringExpenses}
+            onAdd={recurring.addRecurringExpense}
+            onUpdate={recurring.updateRecurringExpense}
+            onRemove={recurring.removeRecurringExpense}
+          />
+        </div>
+      )}
+
       <ImportTransactionsModal open={importOpen} onClose={() => setImportOpen(false)} />
+      <ConvertToRecurringModal
+        expense={convertingExpense}
+        atLimit={atRecurringLimit}
+        maxRecurringExpenses={subscription.limits.maxRecurringExpenses}
+        onClose={() => setConvertingExpense(null)}
+        onConvert={async (description, amount, category, frequency, startDate, endDate) => {
+          const ok = await recurring.addRecurringExpense(description, amount, category, frequency, startDate, endDate)
+          if (ok && convertingExpense) await fixed.removeFixedExpense(convertingExpense.id)
+          return ok
+        }}
+      />
     </div>
   )
 }

@@ -14,6 +14,7 @@ export interface PlanLimits {
   monthlyPrice: number
   maxCategories: number | null
   maxGoals: number | null
+  maxRecurringExpenses: number | null
   csvImport: boolean
   fullStatistics: boolean
   advancedSimulator: boolean
@@ -30,6 +31,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     monthlyPrice: 0,
     maxCategories: 5,
     maxGoals: 1,
+    maxRecurringExpenses: 2,
     csvImport: false,
     fullStatistics: false,
     advancedSimulator: false,
@@ -44,6 +46,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     monthlyPrice: 7.99,
     maxCategories: null,
     maxGoals: null,
+    maxRecurringExpenses: null,
     csvImport: true,
     fullStatistics: true,
     advancedSimulator: false,
@@ -58,6 +61,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     monthlyPrice: 14.99,
     maxCategories: null,
     maxGoals: null,
+    maxRecurringExpenses: null,
     csvImport: true,
     fullStatistics: true,
     advancedSimulator: true,

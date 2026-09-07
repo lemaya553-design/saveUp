@@ -1008,3 +1008,150 @@ grant execute on function
   public.abandon_duel(uuid),
   public.finalize_duel_if_ended(uuid)
 to authenticated;
+
+-- Recurring expenses -------------------------------------------------------
+-- A rule that auto-generates real, dated `expenses` rows on a schedule —
+-- distinct from fixed_expenses (a flat, timeless "current total" used only
+-- for budget math, never itself a transaction). The two are meant to be
+-- mutually exclusive per real-world cost: once something is automated here,
+-- it should be removed from fixed_expenses (the app offers a one-click
+-- "convert" action for this), so the budget never counts the same cost
+-- twice — once via the fixed-expenses subtraction and again via the
+-- generated transaction actually landing in this month's spending.
+
+create table if not exists recurring_expenses (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  description text not null,
+  amount numeric(12, 2) not null check (amount > 0),
+  category text not null default 'Autre',
+  account text,
+  frequency text not null check (frequency in ('weekly', 'biweekly', 'monthly', 'yearly')),
+  start_date date not null,
+  end_date date,
+  next_occurrence_date date not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists recurring_expenses_user_id_idx on recurring_expenses(user_id);
+
+alter table recurring_expenses enable row level security;
+
+drop policy if exists "recurring_expenses_all" on recurring_expenses;
+create policy "recurring_expenses_all" on recurring_expenses
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+grant select, insert, update, delete on recurring_expenses to authenticated;
+
+-- Links a generated transaction back to the rule that created it.
+-- ON DELETE SET NULL: deleting a rule never deletes real transaction
+-- history — past occurrences just detach and stand on their own, same as
+-- any manually-entered expense.
+alter table expenses add column if not exists recurring_expense_id uuid references recurring_expenses(id) on delete set null;
+create index if not exists expenses_recurring_expense_id_idx on expenses(recurring_expense_id);
+
+-- Clamped month/year stepping: raw `date + interval 'N months'` overflows
+-- past month-end instead of clamping (Jan 31 + 1 month -> Mar 3, not Feb
+-- 28) — this fixes that so "the 31st of every month" degrades predictably
+-- in short months instead of drifting across month boundaries. Reused for
+-- yearly (12 months) so a Feb 29 anchor also clamps correctly on non-leap
+-- years.
+create or replace function public.add_months_clamped(d date, n integer)
+returns date
+language sql
+immutable
+as $$
+  select make_date(
+    extract(year from month_start)::int,
+    extract(month from month_start)::int,
+    least(extract(day from d)::int, extract(day from (month_start + interval '1 month - 1 day'))::int)
+  )
+  from (select date_trunc('month', d) + (n || ' months')::interval as month_start) s
+$$;
+
+-- The real generation logic — walks a rule's cursor forward from
+-- next_occurrence_date, generating EVERY missed occurrence up to today (not
+-- just the next one), so a user who hasn't opened the app in weeks gets a
+-- correct backfill rather than a single catch-up row. security definer so
+-- it can write across whichever user_id is passed in; deliberately NEVER
+-- granted directly to `authenticated` below — only reachable through the
+-- auth.uid()-hardcoded wrapper (safe for any signed-in caller) or via
+-- service_role (the cron sweep, which has no user session to scope to).
+create or replace function public.generate_recurring_expenses_for_user(p_user_id uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rule record;
+  v_count integer := 0;
+  v_next date;
+begin
+  for rule in
+    select * from recurring_expenses
+    where user_id = p_user_id
+      and next_occurrence_date <= current_date
+      and (end_date is null or next_occurrence_date <= end_date)
+    for update
+  loop
+    v_next := rule.next_occurrence_date;
+    while v_next <= current_date and (rule.end_date is null or v_next <= rule.end_date) loop
+      insert into expenses (user_id, description, amount, category, spent_at, account, recurring_expense_id)
+      values (rule.user_id, rule.description, rule.amount, rule.category, v_next, rule.account, rule.id);
+      v_count := v_count + 1;
+      v_next := case rule.frequency
+        when 'weekly' then v_next + 7
+        when 'biweekly' then v_next + 14
+        when 'monthly' then public.add_months_clamped(v_next, 1)
+        when 'yearly' then public.add_months_clamped(v_next, 12)
+      end;
+    end loop;
+    update recurring_expenses set next_occurrence_date = v_next, updated_at = now() where id = rule.id;
+  end loop;
+  return v_count;
+end;
+$$;
+
+-- Client-safe entry point — called once on login as a same-day safety net
+-- on top of the cron sweep below. Hardcodes auth.uid() as the argument, so
+-- even though it calls an elevated function, a caller can never reach
+-- anyone's rules but their own.
+create or replace function public.catch_up_my_recurring_expenses()
+returns integer
+language sql
+security definer
+set search_path = public
+as $$
+  select public.generate_recurring_expenses_for_user(auth.uid())
+$$;
+
+grant execute on function public.catch_up_my_recurring_expenses() to authenticated;
+
+-- Cron-only global sweep — loops every user with at least one due rule.
+-- Not granted to `authenticated`: only the daily Vercel Cron job (via the
+-- service-role key, which already bypasses RLS and isn't subject to this
+-- grant list at all) is meant to call this.
+create or replace function public.generate_all_due_recurring_expenses()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user record;
+  v_total integer := 0;
+begin
+  for v_user in
+    select distinct user_id from recurring_expenses
+    where next_occurrence_date <= current_date
+      and (end_date is null or next_occurrence_date <= end_date)
+  loop
+    v_total := v_total + public.generate_recurring_expenses_for_user(v_user.user_id);
+  end loop;
+  return v_total;
+end;
+$$;
+
+grant execute on function public.generate_all_due_recurring_expenses() to service_role;

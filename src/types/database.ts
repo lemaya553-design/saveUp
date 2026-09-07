@@ -55,6 +55,7 @@ export interface Database {
           category: string
           spent_at: string
           account: string | null
+          recurring_expense_id: string | null
         }
         Insert: {
           id?: string
@@ -64,6 +65,7 @@ export interface Database {
           category?: string
           spent_at?: string
           account?: string | null
+          recurring_expense_id?: string | null
         }
         Update: {
           id?: string
@@ -73,6 +75,52 @@ export interface Database {
           category?: string
           spent_at?: string
           account?: string | null
+          recurring_expense_id?: string | null
+        }
+        Relationships: []
+      }
+      recurring_expenses: {
+        Row: {
+          id: string
+          user_id: string
+          description: string
+          amount: number
+          category: string
+          account: string | null
+          frequency: 'weekly' | 'biweekly' | 'monthly' | 'yearly'
+          start_date: string
+          end_date: string | null
+          next_occurrence_date: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          description: string
+          amount: number
+          category?: string
+          account?: string | null
+          frequency: 'weekly' | 'biweekly' | 'monthly' | 'yearly'
+          start_date: string
+          end_date?: string | null
+          next_occurrence_date: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          description?: string
+          amount?: number
+          category?: string
+          account?: string | null
+          frequency?: 'weekly' | 'biweekly' | 'monthly' | 'yearly'
+          start_date?: string
+          end_date?: string | null
+          next_occurrence_date?: string
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -532,6 +580,10 @@ export interface Database {
       finalize_duel_if_ended: {
         Args: { p_duel_id: string }
         Returns: undefined
+      }
+      catch_up_my_recurring_expenses: {
+        Args: Record<string, never>
+        Returns: number
       }
     }
   }

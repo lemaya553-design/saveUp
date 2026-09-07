@@ -1,5 +1,8 @@
 {
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    { "path": "/api/generate-recurring-expenses", "schedule": "0 9 * * *" }
   ]
 }
