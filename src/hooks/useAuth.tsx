@@ -5,6 +5,14 @@ import { supabase } from '../lib/supabase'
 interface AuthResult {
   error: string | null
   needsEmailConfirmation?: boolean
+  // Supabase's raw error code, only populated where a caller actually needs
+  // to branch on the specific failure (not just show the mapped message) —
+  // e.g. 'invalid_credentials' covers both "wrong password" AND "no such
+  // account" (deliberate anti-enumeration behavior, confirmed against a
+  // real project: both cases return the exact same message/status/code),
+  // so Connexion uses this to offer "create an account?" without ever
+  // claiming to know which of the two actually happened.
+  code?: string
 }
 
 interface AuthContextValue {
@@ -107,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string): Promise<AuthResult> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) return { error: mapAuthError(error.message) }
+    if (error) return { error: mapAuthError(error.message), code: error.code }
     return { error: null }
   }, [])
 

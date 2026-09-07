@@ -57,13 +57,23 @@ export function Connexion() {
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from ?? '/dashboard'
 
-  const [mode, setMode] = useState<Mode>('signin')
+  // Signup is the default parcours — this is where a new visitor coming
+  // from the landing page's "Commencer gratuitement" lands, and most
+  // visitors here don't have an account yet. Existing users get here too
+  // (session expired, direct link) but "Connecte-toi" is one click away at
+  // the bottom, never hidden — just not the loudest thing on the page.
+  const [mode, setMode] = useState<Mode>('signup')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [googleSubmitting, setGoogleSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(() => readLinkError())
+  // Supabase returns the exact same error for "wrong password" and "no
+  // account with this email" (deliberate anti-enumeration behavior,
+  // verified against the real project) — so this never claims certainty,
+  // it offers signup as a likely next step alongside the normal error.
+  const [noAccountHint, setNoAccountHint] = useState(false)
   const [confirmationSent, setConfirmationSent] = useState(false)
   const [resetLinkSent, setResetLinkSent] = useState(false)
   // Google is the recommended path (fewer stuck signups — see the "ou
@@ -95,6 +105,7 @@ export function Connexion() {
   function switchMode(next: Mode) {
     setMode(next)
     setError(null)
+    setNoAccountHint(false)
     setConfirmationSent(false)
     setResetLinkSent(false)
     setResendMessage(null)
@@ -113,6 +124,7 @@ export function Connexion() {
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setNoAccountHint(false)
     if (!email.trim() || !password) {
       setError('Entre ton courriel et ton mot de passe.')
       return
@@ -122,6 +134,7 @@ export function Connexion() {
     setSubmitting(false)
     if (result.error) {
       setError(result.error)
+      setNoAccountHint(result.code === 'invalid_credentials')
       return
     }
     navigate(from, { replace: true })
@@ -395,6 +408,19 @@ export function Connexion() {
               <p className="mt-4 rounded-lg border border-red-900/50 bg-red-950/50 px-3 py-2 text-sm text-red-300">
                 {error}
               </p>
+            )}
+
+            {noAccountHint && (
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2.5 text-sm text-ink">
+                <span>Aucun compte avec ce courriel — tu veux en créer un ?</span>
+                <button
+                  type="button"
+                  onClick={() => switchMode('signup')}
+                  className="whitespace-nowrap rounded-lg bg-primary-strong px-3 py-1.5 text-xs font-medium text-white transition-all hover:brightness-110"
+                >
+                  Créer un compte
+                </button>
+              </div>
             )}
 
             {!showEmailForm ? (
