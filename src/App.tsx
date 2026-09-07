@@ -7,6 +7,7 @@ import { PageSkeleton } from './components/PageSkeleton'
 import { AuthProvider } from './hooks/useAuth'
 import { PreferencesProvider } from './hooks/usePreferences'
 import { PwaInstallProvider } from './hooks/usePwaInstall'
+import { LanguageProvider } from './hooks/useLanguage'
 import { Home } from './pages/Home'
 import { Tarifs } from './pages/Tarifs'
 import { Connexion } from './pages/Connexion'
@@ -29,52 +30,54 @@ function App() {
   return (
     <AuthProvider>
       <PreferencesProvider>
-        <PwaInstallProvider>
-          <ToastProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route element={<Layout />}>
-                  <Route index element={<Home />} />
-                  <Route path="tarifs" element={<Tarifs />} />
-                  <Route path="connexion" element={<Connexion />} />
-                  <Route path="confidentialite" element={<Confidentialite />} />
-                  <Route path="conditions" element={<Conditions />} />
-                  <Route element={<RequireAuth />}>
-                    <Route path="dashboard" element={<Dashboard />} />
+        <LanguageProvider>
+          <PwaInstallProvider>
+            <ToastProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route element={<Layout />}>
+                    <Route index element={<Home />} />
+                    <Route path="tarifs" element={<Tarifs />} />
+                    <Route path="connexion" element={<Connexion />} />
+                    <Route path="confidentialite" element={<Confidentialite />} />
+                    <Route path="conditions" element={<Conditions />} />
+                    <Route element={<RequireAuth />}>
+                      <Route path="dashboard" element={<Dashboard />} />
 
-                    <Route path="budget" element={<Navigate to="/budget/depenses" replace />} />
-                    <Route path="budget/:tab" element={<Budget />} />
+                      <Route path="budget" element={<Navigate to="/budget/depenses" replace />} />
+                      <Route path="budget/:tab" element={<Budget />} />
 
-                    <Route path="epargne" element={<Navigate to="/epargne/objectifs" replace />} />
-                    <Route path="epargne/:tab" element={<Epargne />} />
-                    {/* Simulateur, Duels and Investissement merged into Épargne as tabs — keep old links/bookmarks working. */}
-                    <Route path="simulateur" element={<Navigate to="/epargne/simulateur" replace />} />
-                    <Route path="investissement" element={<Navigate to="/epargne/investissement" replace />} />
-                    <Route path="duels" element={<Navigate to="/epargne/duels" replace />} />
-                    <Route path="duels/rejoindre/:token" element={<DuelAccept />} />
+                      <Route path="epargne" element={<Navigate to="/epargne/objectifs" replace />} />
+                      <Route path="epargne/:tab" element={<Epargne />} />
+                      {/* Simulateur, Duels and Investissement merged into Épargne as tabs — keep old links/bookmarks working. */}
+                      <Route path="simulateur" element={<Navigate to="/epargne/simulateur" replace />} />
+                      <Route path="investissement" element={<Navigate to="/epargne/investissement" replace />} />
+                      <Route path="duels" element={<Navigate to="/epargne/duels" replace />} />
+                      <Route path="duels/rejoindre/:token" element={<DuelAccept />} />
 
-                    <Route path="statistiques" element={<Navigate to="/statistiques/apercu" replace />} />
-                    <Route
-                      path="statistiques/:tab"
-                      element={
-                        <Suspense fallback={<PageSkeleton cards={4} />}>
-                          <Statistiques />
-                        </Suspense>
-                      }
-                    />
-                    {/* Récompenses merged into Statistiques as a tab — keep old links/bookmarks working. */}
-                    <Route path="recompenses" element={<Navigate to="/statistiques/recompenses" replace />} />
+                      <Route path="statistiques" element={<Navigate to="/statistiques/apercu" replace />} />
+                      <Route
+                        path="statistiques/:tab"
+                        element={
+                          <Suspense fallback={<PageSkeleton cards={4} />}>
+                            <Statistiques />
+                          </Suspense>
+                        }
+                      />
+                      {/* Récompenses merged into Statistiques as a tab — keep old links/bookmarks working. */}
+                      <Route path="recompenses" element={<Navigate to="/statistiques/recompenses" replace />} />
 
-                    <Route path="parametres" element={<Navigate to="/parametres/compte" replace />} />
-                    <Route path="parametres/:tab" element={<Parametres />} />
+                      <Route path="parametres" element={<Navigate to="/parametres/compte" replace />} />
+                      <Route path="parametres/:tab" element={<Parametres />} />
 
-                    <Route path="onboarding" element={<Onboarding />} />
+                      <Route path="onboarding" element={<Onboarding />} />
+                    </Route>
                   </Route>
-                </Route>
-              </Routes>
-            </BrowserRouter>
-          </ToastProvider>
-        </PwaInstallProvider>
+                </Routes>
+              </BrowserRouter>
+            </ToastProvider>
+          </PwaInstallProvider>
+        </LanguageProvider>
       </PreferencesProvider>
     </AuthProvider>
   )

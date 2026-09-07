@@ -1,5 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import { useCountUp } from '../hooks/useCountUp'
+import { useLanguage } from '../hooks/useLanguage'
+import { COMMON } from '../lib/i18n/common'
 
 const RADIUS = 130
 const ARC_LENGTH = Math.PI * RADIUS
@@ -21,15 +23,12 @@ export function HeroScoreGauge({ score }: { score: number }) {
 
   const value = useCountUp(score, active, 1600)
   const offset = ARC_LENGTH * (1 - value / 100)
+  const { lang } = useLanguage()
+  const t = COMMON[lang].heroGauge
 
   return (
     <div className="relative mx-auto w-full max-w-[360px]">
-      <svg
-        viewBox="0 0 320 180"
-        className="w-full"
-        role="img"
-        aria-label={`Exemple : score de santé financière de ${score} sur 100`}
-      >
+      <svg viewBox="0 0 320 180" className="w-full" role="img" aria-label={t.ariaLabel(score)}>
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stopColor="#4a6cf7" />
@@ -50,9 +49,7 @@ export function HeroScoreGauge({ score }: { score: number }) {
       </svg>
       <div className="absolute inset-x-0 bottom-3 flex flex-col items-center">
         <span className="text-6xl font-black tracking-tight text-ink">{value}</span>
-        <span className="mt-1 text-xs uppercase tracking-wide text-muted">
-          Score de santé financière · exemple
-        </span>
+        <span className="mt-1 text-xs uppercase tracking-wide text-muted">{t.caption}</span>
       </div>
     </div>
   )

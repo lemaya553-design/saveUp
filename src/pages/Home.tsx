@@ -11,6 +11,8 @@ import { AnimatedStats } from '../components/AnimatedStats'
 import { HeroScoreGauge } from '../components/HeroScoreGauge'
 import { SimulatorPreview } from '../components/SimulatorPreview'
 import { ScreenshotCarousel } from '../components/ScreenshotCarousel'
+import { useLanguage } from '../hooks/useLanguage'
+import { HOME } from '../lib/i18n/home'
 import {
   BudgetIllustration,
   StatsIllustration,
@@ -93,100 +95,21 @@ function EyeIcon({ className }: { className: string }) {
 
 // Tailwind's scanner needs whole, literal class names — `bg-${color}/15`
 // would never generate the right CSS, so each entry spells its own classes
-// out in full instead of interpolating a color name at runtime.
-const WHY_SAVEUP = [
-  {
-    Icon: SparkleIcon,
-    iconClass: 'bg-primary/15 text-primary',
-    title: 'Pensé pour rester simple',
-    description:
-      'Une interface pensée pour ne pas te prendre la tête — pas de jargon financier, pas d\'écrans interminables.',
-  },
-  {
-    Icon: ChatIcon,
-    iconClass: 'bg-accent/15 text-accent',
-    title: 'Fait en français, pas traduit',
-    description:
-      'SaveUp est écrit en français dès le départ, pour des francophones — pas une traduction ajoutée après coup.',
-  },
-  {
-    Icon: TargetIcon,
-    iconClass: 'bg-success/15 text-success',
-    title: 'Un vrai plan, pas juste un suivi',
-    description:
-      'Pas juste un suivi de dépenses : un vrai plan pour atteindre tes objectifs d\'épargne, avec un rythme calculé pour toi.',
-  },
+// out in full instead of interpolating a color name at runtime. Icon/color
+// stay fixed per key regardless of language; title/description come from
+// HOME[lang].whySaveup (same key order).
+const WHY_SAVEUP_VISUALS = [
+  { key: 'simple', Icon: SparkleIcon, iconClass: 'bg-primary/15 text-primary' },
+  { key: 'made-for-you', Icon: ChatIcon, iconClass: 'bg-accent/15 text-accent' },
+  { key: 'real-plan', Icon: TargetIcon, iconClass: 'bg-success/15 text-success' },
 ] as const
 
-const PRIVACY_POINTS = [
-  'Seulement les données que tu entres toi-même — tes dépenses, tes objectifs — ou que tu importes depuis un fichier CSV.',
-  'Aucune connexion directe à ton compte bancaire : SaveUp ne se branche sur rien, tu gardes le contrôle de ce qui entre dans l\'app.',
-  'Ces données servent uniquement à te montrer tes propres statistiques. Elles ne sont jamais vendues ni partagées.',
-]
-
-const COMPARISON_ROWS = [
-  {
-    label: 'Suivi dans le temps',
-    saveup: 'Historique et tendances calculés automatiquement',
-    chatbot: 'Aucune mémoire d\'une conversation à l\'autre',
-    excel: 'Aucun suivi automatique dans le temps',
-  },
-  {
-    label: 'Mise à jour',
-    saveup: 'Automatique, dès que tu ajoutes une dépense',
-    chatbot: 'Il faut tout réexpliquer à chaque fois',
-    excel: 'Calculs manuels à refaire',
-  },
-  {
-    label: 'Alertes',
-    saveup: 'Alertes automatiques avant que ça dérape',
-    chatbot: 'Il faut penser à demander à chaque fois',
-    excel: 'Aucune alerte',
-  },
-  {
-    label: 'Visualisation',
-    saveup: 'Graphiques, jauges et barres de progression',
-    chatbot: 'Pas de visuel, tout est en texte',
-    excel: 'Des chiffres dans des cellules',
-  },
-  {
-    label: 'Motivation',
-    saveup: 'Badges de progression qui évoluent',
-    chatbot: 'Rien qui suit ta progression',
-    excel: 'Rien qui suit ta progression',
-  },
-]
-
-const FAQ_ITEMS = [
-  {
-    question: 'C\'est quoi SaveUp ?',
-    answer:
-      'Un outil de budget simple qui suit ton revenu, tes dépenses fixes et tes objectifs d\'épargne, et qui te donne un score de santé financière qui évolue avec toi.',
-  },
-  {
-    question: 'Combien ça coûte ?',
-    answer:
-      'Le plan Gratuit est gratuit pour toujours, sans limite de temps. Standard (7,99 $/mois) et Premium (14,99 $/mois) débloquent les catégories et objectifs illimités, l\'import CSV, les statistiques complètes et plus — voir la page Tarifs pour le détail.',
-  },
-  {
-    question: 'Mes données sont-elles sécurisées ?',
-    answer:
-      'Oui — chaque compte est protégé par un vrai système d\'authentification, et tes données sont isolées : personne d\'autre ne peut y accéder, peu importe qui utilise SaveUp. Elles sont hébergées sur une base de données sécurisée (Supabase).',
-  },
-  {
-    question: 'Dois-je créer un compte ?',
-    answer:
-      'Oui, un compte gratuit est nécessaire pour que tes données restent privées et liées à toi seul(e) — ça prend moins de 2 minutes, sans carte requise.',
-  },
-  {
-    question: 'Puis-je annuler ?',
-    answer:
-      'Oui, en tout temps, sans engagement. Le plan Gratuit reste gratuit sans limite ; pour Standard ou Premium, annule quand tu veux depuis Paramètres → Gérer mon abonnement — tu gardes l\'accès jusqu\'à la fin de la période déjà payée.',
-  },
-]
+const PRIVACY_ICONS = [ImportIcon, LinkOffIcon, EyeIcon] as const
 
 export function Home() {
   const location = useLocation()
+  const { lang } = useLanguage()
+  const t = HOME[lang]
 
   useEffect(() => {
     if (!location.hash) return
@@ -215,40 +138,37 @@ export function Home() {
               <LogoMark className="h-10 w-10" animated />
               <span className="inline-flex items-center gap-1.5 self-center rounded-full border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-xs font-medium text-muted">
                 <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-success" />
-                100% gratuit pour commencer
+                {t.hero.freeBadge}
               </span>
               <TrialBadge className="inline-flex items-center gap-1.5 self-center rounded-full bg-accent/15 px-3 py-1.5 text-xs font-semibold text-accent" />
             </div>
 
             <h1 className="mx-auto mt-7 max-w-xl text-[clamp(2.75rem,6vw,4.75rem)] font-black leading-[1.02] tracking-tight text-ink text-balance lg:mx-0">
-              Tu veux économiser{' '}
+              {t.hero.titleLine1}{' '}
               <span className="bg-gradient-to-r from-primary via-accent to-success bg-clip-text text-transparent">
-                plus facilement
+                {t.hero.titleHighlight}
               </span>{' '}
               ?
             </h1>
-            <p className="mx-auto mt-6 max-w-md text-lg text-muted lg:mx-0">
-              SaveUp t'aide à suivre tes dépenses, ton budget et tes objectifs d'épargne — au même
-              endroit, sans compliqué.
-            </p>
+            <p className="mx-auto mt-6 max-w-md text-lg text-muted lg:mx-0">{t.hero.subtitle}</p>
 
             <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
               <Link
                 to="/dashboard"
                 className="btn-sheen rounded-lg bg-primary-strong px-7 py-3.5 font-semibold text-white shadow-[0_0_30px_rgba(74,108,247,0.4)] transition-all hover:brightness-110 hover:shadow-[0_0_45px_rgba(74,108,247,0.55)]"
               >
-                Essayer gratuitement
+                {t.hero.ctaPrimary}
               </Link>
               <a
                 href="#fonctionnalites"
                 className="rounded-lg border border-overlay/20 px-7 py-3.5 font-medium text-ink transition-colors hover:bg-overlay/5"
               >
-                Voir ce que ça donne
+                {t.hero.ctaSecondary}
               </a>
             </div>
 
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3 text-xs text-muted lg:justify-start">
-              {['Sans carte requise', 'Configuration en 2 min', '100% en français'].map((label) => (
+              {t.hero.trustBadges.map((label) => (
                 <span
                   key={label}
                   className="inline-flex items-center gap-1.5 rounded-full border border-overlay/10 bg-overlay/5 px-3 py-1.5"
@@ -283,25 +203,26 @@ export function Home() {
       <section className="mx-auto max-w-5xl px-4 py-24 sm:px-6">
         <Reveal>
           <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
-            Pourquoi SaveUp ?
+            {t.whySaveupSection.heading}
           </h2>
-          <p className="mx-auto mt-3 max-w-lg text-center text-muted">
-            Il existe déjà plein d'apps de budget. Voici ce qui change avec celle-ci.
-          </p>
+          <p className="mx-auto mt-3 max-w-lg text-center text-muted">{t.whySaveupSection.subheading}</p>
         </Reveal>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-3">
-          {WHY_SAVEUP.map(({ Icon, iconClass, title, description }, i) => (
-            <Reveal key={title} delayMs={i * 80}>
-              <div className="glass h-full rounded-3xl border border-overlay/10 p-6 shadow-lg shadow-black/30">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconClass}`}>
-                  <Icon className="h-5 w-5" />
+          {WHY_SAVEUP_VISUALS.map(({ key, Icon, iconClass }, i) => {
+            const content = t.whySaveup[i]
+            return (
+              <Reveal key={key} delayMs={i * 80}>
+                <div className="glass h-full rounded-3xl border border-overlay/10 p-6 shadow-lg shadow-black/30">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconClass}`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mb-2 mt-4 text-lg font-semibold text-ink">{content.title}</h3>
+                  <p className="text-sm text-muted">{content.description}</p>
                 </div>
-                <h3 className="mb-2 mt-4 text-lg font-semibold text-ink">{title}</h3>
-                <p className="text-sm text-muted">{description}</p>
-              </div>
-            </Reveal>
-          ))}
+              </Reveal>
+            )
+          })}
         </div>
       </section>
 
@@ -309,11 +230,9 @@ export function Home() {
       <section id="fonctionnalites" className="mx-auto max-w-5xl px-4 py-24 sm:px-6">
         <Reveal>
           <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
-            Un outil, pas cinq onglets Excel.
+            {t.features.heading}
           </h2>
-          <p className="mx-auto mt-3 max-w-lg text-center text-muted">
-            Ce que tu vois dans l'app, dès les premières minutes.
-          </p>
+          <p className="mx-auto mt-3 max-w-lg text-center text-muted">{t.features.subheading}</p>
         </Reveal>
 
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-6">
@@ -327,14 +246,11 @@ export function Home() {
                   <SlidersIcon className="h-5 w-5" />
                 </div>
                 <span className="text-xs font-semibold uppercase tracking-wide text-accent">
-                  Simulateur « et si »
+                  {t.features.simBadge}
                 </span>
               </div>
-              <h3 className="mb-1 mt-4 text-xl font-bold text-ink">Teste avant de trancher</h3>
-              <p className="mb-6 text-sm text-muted">
-                Coupe une dépense, avance une échéance — vois l'impact avant de le faire pour de
-                vrai.
-              </p>
+              <h3 className="mb-1 mt-4 text-xl font-bold text-ink">{t.features.simTitle}</h3>
+              <p className="mb-6 text-sm text-muted">{t.features.simBody}</p>
               <div className="mt-auto rounded-2xl bg-overlay/5 p-5">
                 <SimulatorPreview />
               </div>
@@ -347,14 +263,12 @@ export function Home() {
               style={{ '--tile-glow': 'rgba(74, 108, 247, 0.4)' } as React.CSSProperties}
             >
               <span className="text-xs font-semibold uppercase tracking-wide text-primary">
-                Score de santé
+                {t.features.scoreBadge}
               </span>
               <div className="mt-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/15 text-2xl font-black text-primary">
                 82
               </div>
-              <p className="mt-3 text-sm text-muted">
-                Un chiffre qui résume tout, et qui bouge avec toi chaque semaine.
-              </p>
+              <p className="mt-3 text-sm text-muted">{t.features.scoreBody}</p>
             </div>
           </Reveal>
 
@@ -363,8 +277,10 @@ export function Home() {
               className="bento-tile glass h-full rounded-3xl border border-overlay/10 p-6 shadow-lg shadow-black/30"
               style={{ '--tile-glow': 'rgba(74, 108, 247, 0.4)' } as React.CSSProperties}
             >
-              <span className="text-xs font-semibold uppercase tracking-wide text-primary">Budget</span>
-              <h3 className="mb-3 mt-1 font-semibold text-ink">Par catégorie</h3>
+              <span className="text-xs font-semibold uppercase tracking-wide text-primary">
+                {t.features.budgetBadge}
+              </span>
+              <h3 className="mb-3 mt-1 font-semibold text-ink">{t.features.budgetTitle}</h3>
               <BudgetIllustration />
             </div>
           </Reveal>
@@ -374,8 +290,10 @@ export function Home() {
               className="bento-tile glass h-full rounded-3xl border border-overlay/10 p-6 shadow-lg shadow-black/30"
               style={{ '--tile-glow': 'rgba(139, 92, 246, 0.4)' } as React.CSSProperties}
             >
-              <span className="text-xs font-semibold uppercase tracking-wide text-accent">Statistiques</span>
-              <h3 className="mb-3 mt-1 font-semibold text-ink">Tes tendances</h3>
+              <span className="text-xs font-semibold uppercase tracking-wide text-accent">
+                {t.features.statsBadge}
+              </span>
+              <h3 className="mb-3 mt-1 font-semibold text-ink">{t.features.statsTitle}</h3>
               <StatsIllustration />
             </div>
           </Reveal>
@@ -385,8 +303,10 @@ export function Home() {
               className="bento-tile glass h-full rounded-3xl border border-overlay/10 p-6 shadow-lg shadow-black/30"
               style={{ '--tile-glow': 'rgba(34, 197, 94, 0.4)' } as React.CSSProperties}
             >
-              <span className="text-xs font-semibold uppercase tracking-wide text-success">Récompenses</span>
-              <h3 className="mb-3 mt-1 font-semibold text-ink">Des badges mérités</h3>
+              <span className="text-xs font-semibold uppercase tracking-wide text-success">
+                {t.features.rewardsBadge}
+              </span>
+              <h3 className="mb-3 mt-1 font-semibold text-ink">{t.features.rewardsTitle}</h3>
               <BadgesIllustration />
             </div>
           </Reveal>
@@ -397,11 +317,9 @@ export function Home() {
       <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
         <Reveal>
           <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
-            L'app, telle quelle.
+            {t.screenshots.heading}
           </h2>
-          <p className="mx-auto mt-3 max-w-lg text-center text-muted">
-            Pas des maquettes — l'interface que tu utilises vraiment, page par page.
-          </p>
+          <p className="mx-auto mt-3 max-w-lg text-center text-muted">{t.screenshots.subheading}</p>
         </Reveal>
 
         <Reveal delayMs={100} className="mt-12">
@@ -414,14 +332,14 @@ export function Home() {
         <Reveal className="mx-auto max-w-4xl">
           <div className="glass flex flex-col items-center gap-4 rounded-3xl border border-overlay/10 p-8 text-center shadow-lg shadow-black/30 sm:flex-row sm:justify-between sm:text-left">
             <div>
-              <p className="text-lg font-semibold text-ink">Convaincu jusqu'ici ?</p>
-              <p className="text-sm text-muted">Ton premier budget est prêt en 2 minutes.</p>
+              <p className="text-lg font-semibold text-ink">{t.midCta.title}</p>
+              <p className="text-sm text-muted">{t.midCta.subtitle}</p>
             </div>
             <Link
               to="/dashboard"
               className="btn-sheen whitespace-nowrap rounded-lg bg-primary-strong px-6 py-3 font-medium text-white transition-all hover:brightness-110"
             >
-              Essayer gratuitement
+              {t.midCta.cta}
             </Link>
           </div>
         </Reveal>
@@ -431,11 +349,9 @@ export function Home() {
       <section id="comment-ca-marche" className="mx-auto max-w-5xl px-4 py-24 sm:px-6">
         <Reveal>
           <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
-            En 3 étapes, ton budget est prêt
+            {t.howItWorks.heading}
           </h2>
-          <p className="mx-auto mt-3 max-w-lg text-center text-muted">
-            Teste la première étape tout de suite — les deux autres t'attendent dans l'app.
-          </p>
+          <p className="mx-auto mt-3 max-w-lg text-center text-muted">{t.howItWorks.subheading}</p>
         </Reveal>
         <Reveal delayMs={100} className="mt-10">
           <LandingStepsPreview />
@@ -446,12 +362,9 @@ export function Home() {
       <section id="comparaison" className="mx-auto max-w-5xl px-4 py-24 sm:px-6">
         <Reveal>
           <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
-            SaveUp vs les alternatives
+            {t.comparison.heading}
           </h2>
-          <p className="mx-auto mt-3 max-w-lg text-center text-muted">
-            Un chatbot répond bien à une question ponctuelle, et un tableur peut tout calculer —
-            mais aucun des deux ne suit ton argent pour toi, jour après jour.
-          </p>
+          <p className="mx-auto mt-3 max-w-lg text-center text-muted">{t.comparison.subheading}</p>
         </Reveal>
 
         <Reveal delayMs={100}>
@@ -462,15 +375,15 @@ export function Home() {
                   <th className="px-4 py-4 font-medium">&nbsp;</th>
                   <th className="px-4 py-4 font-black text-ink">
                     <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                      SaveUp
+                      {t.comparison.colSaveup}
                     </span>
                   </th>
-                  <th className="px-4 py-4 font-medium">Chatbot gratuit</th>
-                  <th className="px-4 py-4 font-medium">Tableur Excel</th>
+                  <th className="px-4 py-4 font-medium">{t.comparison.colChatbot}</th>
+                  <th className="px-4 py-4 font-medium">{t.comparison.colExcel}</th>
                 </tr>
               </thead>
               <tbody>
-                {COMPARISON_ROWS.map((row) => (
+                {t.comparison.rows.map((row) => (
                   <tr
                     key={row.label}
                     className="border-b border-overlay/10 text-sm transition-colors last:border-b-0 hover:bg-overlay/5"
@@ -509,30 +422,25 @@ export function Home() {
       <section className="mx-auto max-w-3xl px-4 py-24 sm:px-6">
         <Reveal>
           <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
-            Tes données, ta confidentialité
+            {t.privacy.heading}
           </h2>
-          <p className="mx-auto mt-3 max-w-lg text-center text-muted">
-            Simple à expliquer : voici exactement ce que SaveUp sait sur toi, et ce qu'il en fait.
-          </p>
+          <p className="mx-auto mt-3 max-w-lg text-center text-muted">{t.privacy.subheading}</p>
         </Reveal>
 
         <Reveal delayMs={100}>
           <div className="glass mt-10 rounded-3xl border border-overlay/10 p-6 shadow-lg shadow-black/30 sm:p-8">
             <ul className="flex flex-col gap-5">
-              {PRIVACY_POINTS.map((point, i) => (
-                <li key={point} className="flex items-start gap-4">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                    {i === 0 ? (
-                      <ImportIcon className="h-5 w-5" />
-                    ) : i === 1 ? (
-                      <LinkOffIcon className="h-5 w-5" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5" />
-                    )}
-                  </span>
-                  <p className="mt-1.5 text-sm text-muted sm:text-base">{point}</p>
-                </li>
-              ))}
+              {t.privacy.points.map((point, i) => {
+                const Icon = PRIVACY_ICONS[i]
+                return (
+                  <li key={point} className="flex items-start gap-4">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <p className="mt-1.5 text-sm text-muted sm:text-base">{point}</p>
+                  </li>
+                )
+              })}
             </ul>
           </div>
         </Reveal>
@@ -541,16 +449,12 @@ export function Home() {
       {/* Résultats — honnête, pas de fausses stats */}
       <section id="resultats" className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6">
         <Reveal>
-          <h2 className="text-3xl font-bold text-ink">Résultats</h2>
+          <h2 className="text-3xl font-bold text-ink">{t.results.heading}</h2>
           <div className="glass mx-auto mt-8 max-w-lg rounded-2xl p-8 shadow-lg shadow-black/30">
             <span className="inline-block rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
-              À venir
+              {t.results.badge}
             </span>
-            <p className="mt-4 text-sm text-muted">
-              SaveUp est tout jeune — on n'a pas encore de résultats concrets d'utilisateurs à
-              partager, et on ne va pas en inventer. Crée ton compte pour voir l'outil à l'œuvre
-              avec tes propres chiffres.
-            </p>
+            <p className="mt-4 text-sm text-muted">{t.results.body}</p>
           </div>
         </Reveal>
       </section>
@@ -563,16 +467,16 @@ export function Home() {
         <Reveal>
           <LogoMark className="mx-auto h-12 w-12" />
           <h2 className="mx-auto mt-6 max-w-2xl text-[clamp(2rem,5vw,3.25rem)] font-black tracking-tight text-ink text-balance">
-            Prêt à voir clair dans tes finances ?
+            {t.finalCta.heading}
           </h2>
           <Link
             to="/dashboard"
             className="btn-sheen mt-8 inline-block rounded-lg bg-primary-strong px-9 py-4 text-lg font-semibold text-white shadow-[0_0_30px_rgba(74,108,247,0.4)] transition-all hover:brightness-110"
           >
-            Commencer gratuitement
+            {t.finalCta.cta}
           </Link>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs text-muted">
-            {['Sans carte requise', 'Configuration en 2 minutes', 'Annule quand tu veux'].map((label) => (
+            {t.finalCta.trustBadges.map((label) => (
               <span
                 key={label}
                 className="inline-flex items-center gap-1.5 rounded-full border border-overlay/10 bg-overlay/5 px-3 py-1.5"
@@ -591,12 +495,12 @@ export function Home() {
       <section id="faq" className="mx-auto max-w-3xl px-4 py-24 sm:px-6">
         <Reveal>
           <h2 className="text-center text-[clamp(1.75rem,4vw,2.75rem)] font-black tracking-tight text-ink text-balance">
-            Questions fréquentes
+            {t.faq.heading}
           </h2>
         </Reveal>
 
         <div className="mt-10 grid gap-3">
-          {FAQ_ITEMS.map((item, i) => (
+          {t.faq.items.map((item, i) => (
             <Reveal key={item.question} delayMs={Math.min(i, 3) * 60}>
               <details className="group glass rounded-2xl border border-overlay/10 p-5 shadow-lg shadow-black/30 open:border-primary/30">
                 <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-ink">

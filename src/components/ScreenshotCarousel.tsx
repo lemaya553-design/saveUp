@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { LogoMark } from './Logo'
+import { useLanguage } from '../hooks/useLanguage'
+import { COMMON } from '../lib/i18n/common'
 
 export interface Screenshot {
   key: string
@@ -14,43 +16,15 @@ export interface Screenshot {
 // to change. The frame has no fixed aspect ratio of its own — it sizes to
 // whatever the image's real dimensions are (see ScreenshotFrame), so
 // nothing is ever cropped regardless of each screenshot's own ratio.
-const SCREENSHOTS: Screenshot[] = [
-  {
-    key: 'dashboard',
-    label: 'Dashboard',
-    description: 'Ton portrait financier en un coup d’œil.',
-    src: '/screenshots/dashboard.png',
-    path: 'saveup.app/dashboard',
-  },
-  {
-    key: 'budget',
-    label: 'Budget',
-    description: 'Chaque dépense, chaque catégorie, à jour automatiquement.',
-    src: '/screenshots/budget.png',
-    path: 'saveup.app/budget',
-  },
-  {
-    key: 'epargne',
-    label: 'Épargne',
-    description: 'Tes objectifs, et le simulateur « et si » pour les tester.',
-    src: '/screenshots/epargne.png',
-    path: 'saveup.app/epargne',
-  },
-  {
-    key: 'statistiques',
-    label: 'Statistiques',
-    description: 'Tendances et comparaisons mensuelles, visualisées.',
-    src: '/screenshots/statistiques.png',
-    path: 'saveup.app/statistiques',
-  },
-  {
-    key: 'recompenses',
-    label: 'Récompenses',
-    description: 'Des badges qui se méritent, pas des points arbitraires.',
-    src: '/screenshots/recompenses.png',
-    path: 'saveup.app/recompenses',
-  },
-]
+// label/description come from COMMON[lang].carousel.screenshots (same key
+// order); src/path are structural (URLs), not translated.
+const SCREENSHOT_PATHS: Record<string, { src: string; path: string }> = {
+  dashboard: { src: '/screenshots/dashboard.png', path: 'saveup.app/dashboard' },
+  budget: { src: '/screenshots/budget.png', path: 'saveup.app/budget' },
+  epargne: { src: '/screenshots/epargne.png', path: 'saveup.app/epargne' },
+  statistiques: { src: '/screenshots/statistiques.png', path: 'saveup.app/statistiques' },
+  recompenses: { src: '/screenshots/recompenses.png', path: 'saveup.app/recompenses' },
+}
 
 function ArrowIcon({ className, flip }: { className: string; flip?: boolean }) {
   return (
@@ -76,7 +50,15 @@ function ArrowIcon({ className, flip }: { className: string; flip?: boolean }) {
 // bug. Instead the <img> renders at its own natural ratio, scaled only by
 // width (h-auto) — the frame's height is *whatever the image's height
 // works out to*, so every pixel of the source file is always shown.
-function ScreenshotFrame({ shot }: { shot: Screenshot }) {
+function ScreenshotFrame({
+  shot,
+  altFor,
+  comingSoon,
+}: {
+  shot: Screenshot
+  altFor: (label: string) => string
+  comingSoon: (label: string) => string
+}) {
   const [errored, setErrored] = useState(false)
 
   return (
@@ -94,7 +76,7 @@ function ScreenshotFrame({ shot }: { shot: Screenshot }) {
         {!errored ? (
           <img
             src={shot.src}
-            alt={`Aperçu de la page ${shot.label} de SaveUp`}
+            alt={altFor(shot.label)}
             className="block h-auto w-full select-none"
             draggable={false}
             loading="lazy"
@@ -104,7 +86,7 @@ function ScreenshotFrame({ shot }: { shot: Screenshot }) {
           // No image to size the box, so the fallback needs its own ratio.
           <div className="flex aspect-[4/5] flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 text-center">
             <LogoMark className="h-9 w-9 opacity-30" />
-            <p className="text-sm text-muted">Capture de {shot.label} à venir</p>
+            <p className="text-sm text-muted">{comingSoon(shot.label)}</p>
           </div>
         )}
       </div>
@@ -118,6 +100,12 @@ export function ScreenshotCarousel() {
   const [dragging, setDragging] = useState(false)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
+  const { lang } = useLanguage()
+  const t = COMMON[lang].carousel
+  const screenshots: Screenshot[] = t.screenshots.map((s) => ({
+    ...s,
+    ...SCREENSHOT_PATHS[s.key],
+  }))
 
   function updateArrows() {
     const el = scrollerRef.current
@@ -185,14 +173,14 @@ export function ScreenshotCarousel() {
         onPointerUp={endDrag}
         onPointerLeave={endDrag}
       >
-        {SCREENSHOTS.map((shot) => (
+        {screenshots.map((shot) => (
           // Each slide is the full width of the scroller — exactly one
           // screenshot fills the view at rest, no peek of the next one. The
           // card itself fills that slide almost edge to edge (px-12/16 just
           // clears the floating arrow buttons, which sit half-overlapping
           // the outer edge) rather than being capped to a small fixed width.
           <div key={shot.key} data-carousel-item className="w-full shrink-0 snap-center px-4 sm:px-16">
-            <ScreenshotFrame shot={shot} />
+            <ScreenshotFrame shot={shot} altFor={t.altFor} comingSoon={t.comingSoon} />
             <p className="mt-4 text-center font-semibold text-ink">{shot.label}</p>
             <p className="mx-auto max-w-xs text-center text-sm text-muted">{shot.description}</p>
           </div>
@@ -203,7 +191,7 @@ export function ScreenshotCarousel() {
         type="button"
         onClick={() => scrollByCard(-1)}
         disabled={!canScrollLeft}
-        aria-label="Capture précédente"
+        aria-label={t.prev}
         className="glass absolute left-0 top-[38%] hidden h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-ink shadow-lg shadow-black/40 disabled:opacity-0 sm:flex"
       >
         <ArrowIcon className="h-5 w-5" flip />
@@ -212,7 +200,7 @@ export function ScreenshotCarousel() {
         type="button"
         onClick={() => scrollByCard(1)}
         disabled={!canScrollRight}
-        aria-label="Capture suivante"
+        aria-label={t.next}
         className="glass absolute right-0 top-[38%] hidden h-11 w-11 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full text-ink shadow-lg shadow-black/40 disabled:opacity-0 sm:flex"
       >
         <ArrowIcon className="h-5 w-5" />

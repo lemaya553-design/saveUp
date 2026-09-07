@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCountUp } from '../hooks/useCountUp'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { COMMON } from '../lib/i18n/common'
 
 function ArrowIcon({ className }: { className: string }) {
   return (
@@ -35,21 +37,23 @@ export function SimulatorPreview() {
   }, [])
 
   const monthly = useCountUp(127, active, 1400)
+  const { lang } = useLanguage()
+  const t = COMMON[lang].simulatorPreview
 
   return (
     <div ref={ref} className="flex h-full flex-col justify-between">
       <div>
-        <p className="text-sm text-muted">Et si tu coupais...</p>
+        <p className="text-sm text-muted">{t.whatIf}</p>
         <p className="mt-1 text-lg font-semibold text-ink line-through decoration-red-400/70 decoration-2">
-          Café à emporter, tous les jours
+          {t.cutExample}
         </p>
       </div>
       <div className="mt-6 flex items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-wide text-muted">Vers ton objectif</p>
+          <p className="text-xs uppercase tracking-wide text-muted">{t.towardGoal}</p>
           <p className="text-3xl font-black text-success">
-            +{formatCurrency(monthly)}
-            <span className="text-base font-medium text-muted">/mois</span>
+            +{lang === 'fr' ? formatCurrency(monthly) : formatCurrencyEN(monthly)}
+            <span className="text-base font-medium text-muted">{t.perMonth}</span>
           </p>
         </div>
         <ArrowIcon className="h-8 w-8 shrink-0 text-success" />

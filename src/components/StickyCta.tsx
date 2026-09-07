@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useLanguage } from '../hooks/useLanguage'
+import { COMMON } from '../lib/i18n/common'
 
 // Appears once the visitor has scrolled past the hero's own CTA (showing it
 // immediately would just duplicate that button at the top of the page) and
@@ -8,6 +10,8 @@ import { Link } from 'react-router-dom'
 // footer's links, would just get in the way instead of helping).
 export function StickyCta() {
   const [visible, setVisible] = useState(false)
+  const { lang } = useLanguage()
+  const t = COMMON[lang].stickyCta
 
   useEffect(() => {
     function onScroll() {
@@ -42,12 +46,12 @@ export function StickyCta() {
             tabIndex={visible ? 0 : -1}
             className="btn-sheen block rounded-xl bg-primary-strong px-8 py-4 text-center text-lg font-bold text-white shadow-[0_0_30px_rgba(74,108,247,0.45)] transition-all hover:brightness-110"
           >
-            Commencer gratuitement
+            {t.cta}
           </Link>
         </div>
         <p className="flex items-center gap-1.5 whitespace-nowrap text-xs text-muted">
           <span aria-hidden="true">🔒</span>
-          Aucune carte de crédit requise
+          {t.noCard}
         </p>
       </div>
     </div>

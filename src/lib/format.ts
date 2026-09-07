@@ -7,6 +7,19 @@ export function formatCurrency(amount: number): string {
   return currencyFormatter.format(amount)
 }
 
+// English marketing copy only (landing page, Tarifs when logged out) — the
+// signed-in app is French-only and keeps using formatCurrency above. A bare
+// "$" in English reads as USD by default; appending "CAD" explicitly avoids
+// that ambiguity for an English-speaking visitor comparing prices.
+const currencyFormatterEN = new Intl.NumberFormat('en-CA', {
+  style: 'currency',
+  currency: 'CAD',
+})
+
+export function formatCurrencyEN(amount: number): string {
+  return `${currencyFormatterEN.format(amount)} CAD`
+}
+
 // Monday 00:00:00 local time of the week containing `date`.
 export function getWeekStart(date: Date): Date {
   const d = new Date(date)

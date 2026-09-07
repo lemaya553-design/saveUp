@@ -1,14 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { LogoMark } from './Logo'
-
-const NAV_LINKS = [
-  { to: '/#comment-ca-marche', label: 'Comment ça marche' },
-  { to: '/#fonctionnalites', label: 'Fonctionnalités' },
-  { to: '/#resultats', label: 'Résultats' },
-  { to: '/tarifs', label: 'Tarifs' },
-  { to: '/#faq', label: 'FAQ' },
-]
+import { LanguageSwitcher } from './LanguageSwitcher'
+import { useLanguage } from '../hooks/useLanguage'
+import { COMMON } from '../lib/i18n/common'
 
 function MenuIcon({ className }: { className: string }) {
   return (
@@ -28,6 +23,16 @@ function CloseIcon({ className }: { className: string }) {
 
 export function LandingHeader() {
   const [open, setOpen] = useState(false)
+  const { lang } = useLanguage()
+  const t = COMMON[lang].header
+
+  const navLinks = [
+    { to: '/#comment-ca-marche', label: t.navComment },
+    { to: '/#fonctionnalites', label: t.navFeatures },
+    { to: '/#resultats', label: t.navResults },
+    { to: '/tarifs', label: t.navPricing },
+    { to: '/#faq', label: t.navFaq },
+  ]
 
   return (
     <header className="sticky top-0 z-20 border-b border-overlay/10 bg-canvas/80 backdrop-blur-md">
@@ -41,7 +46,7 @@ export function LandingHeader() {
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-muted lg:flex">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Link key={link.label} to={link.to} className="whitespace-nowrap transition-colors hover:text-ink">
               {link.label}
             </Link>
@@ -49,18 +54,22 @@ export function LandingHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <div className="hidden sm:block">
+            <LanguageSwitcher />
+          </div>
+
           <Link
             to="/dashboard"
             className="rounded-lg bg-primary-strong px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
           >
-            Commencer gratuitement
+            {t.ctaStart}
           </Link>
 
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             className="flex h-11 w-11 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5 lg:hidden"
-            aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-label={open ? t.closeMenu : t.openMenu}
             aria-expanded={open}
           >
             {open ? <CloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
@@ -71,7 +80,7 @@ export function LandingHeader() {
       {open && (
         <nav className="border-t border-overlay/10 px-4 pb-3 sm:px-6 lg:hidden">
           <ul className="flex flex-col gap-1 pt-2">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <li key={link.label}>
                 <Link
                   to={link.to}
@@ -82,6 +91,9 @@ export function LandingHeader() {
                 </Link>
               </li>
             ))}
+            <li className="mt-1 flex items-center px-3 py-2 sm:hidden">
+              <LanguageSwitcher />
+            </li>
           </ul>
         </nav>
       )}

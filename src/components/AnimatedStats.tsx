@@ -1,18 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCountUp } from '../hooks/useCountUp'
 import { REWARD_TIERS } from '../lib/rewards'
+import { useLanguage } from '../hooks/useLanguage'
+import { COMMON } from '../lib/i18n/common'
+import type { Lang } from '../lib/i18n/language'
 
 // Every number here is a true fact about the product, not a made-up
 // adoption/social-proof metric — SaveUp is too new for those, and the
 // "Résultats" section already says so explicitly rather than inventing
 // stats. badges comes straight from REWARD_TIERS so it can't drift out of
 // sync with the real app.
-const STATS = [
-  { target: REWARD_TIERS.length, suffix: '', label: 'badges à débloquer en épargnant' },
-  { target: 6, suffix: ' mois', label: 'de tendances visualisées d’un coup d’œil' },
-  { target: 3, suffix: '', label: 'étapes pour un premier budget prêt' },
-  { target: 5, suffix: '', label: 'outils réunis dans une seule app' },
-] as const
+function getStats(lang: Lang) {
+  const t = COMMON[lang].stats
+  return [
+    { target: REWARD_TIERS.length, suffix: '', label: t.badges },
+    { target: 6, suffix: t.monthsSuffix, label: t.trends },
+    { target: 3, suffix: '', label: t.steps },
+    { target: 5, suffix: '', label: t.tools },
+  ] as const
+}
 
 function StatItem({
   target,
@@ -40,6 +46,8 @@ function StatItem({
 export function AnimatedStats() {
   const ref = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(false)
+  const { lang } = useLanguage()
+  const STATS = getStats(lang)
 
   useEffect(() => {
     const el = ref.current

@@ -3,16 +3,20 @@
 // stylized mockups built from the same primitives (progress bars, colored
 // bars) the real pages use, in the app's own palette. Two sizes: 'card' for
 // a landing-page feature showcase, 'icon' for a compact list-row glyph
-// (Dashboard's feature links).
+// (Dashboard's feature links). Dashboard only ever renders 'icon' (no text
+// in that variant), so the language-aware 'card' text below never leaks
+// into the French-only signed-in app regardless of the stored language.
+
+import { useLanguage } from '../hooks/useLanguage'
+import { COMMON } from '../lib/i18n/common'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
 
 const ICON_TILE = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl'
+const COLORS = ['bg-primary', 'bg-accent', 'bg-red-400']
 
 export function BudgetIllustration({ variant = 'card' }: { variant?: 'card' | 'icon' }) {
-  const rows = [
-    { label: 'Alimentation', pct: 72, color: 'bg-primary' },
-    { label: 'Transport', pct: 45, color: 'bg-accent' },
-    { label: 'Loisirs', pct: 96, color: 'bg-red-400' },
-  ]
+  const { lang } = useLanguage()
+  const rows = COMMON[lang].illustrations.budgetRows.map((r, i) => ({ ...r, color: COLORS[i] }))
 
   if (variant === 'icon') {
     return (
@@ -44,6 +48,8 @@ export function BudgetIllustration({ variant = 'card' }: { variant?: 'card' | 'i
 }
 
 export function SavingsIllustration({ variant = 'card' }: { variant?: 'card' | 'icon' }) {
+  const { lang } = useLanguage()
+
   if (variant === 'icon') {
     return (
       <div className={`${ICON_TILE} bg-success/15`}>
@@ -55,17 +61,20 @@ export function SavingsIllustration({ variant = 'card' }: { variant?: 'card' | '
     )
   }
 
+  const fmt = lang === 'fr' ? formatCurrency : formatCurrencyEN
+
   return (
     <div aria-hidden="true">
       <div className="flex items-baseline justify-between">
-        <span className="text-xs text-muted">Objectif : Fonds d'urgence</span>
+        <span className="text-xs text-muted">{COMMON[lang].illustrations.savingsGoalLabel}</span>
         <span className="text-sm font-semibold text-success">54 %</span>
       </div>
       <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-overlay/10">
         <div className="h-full rounded-full bg-success" style={{ width: '54%' }} />
       </div>
       <p className="mt-3 text-2xl font-bold text-ink">
-        1 620 $<span className="ml-1.5 text-sm font-normal text-muted">/ 3 000 $</span>
+        {fmt(1620)}
+        <span className="ml-1.5 text-sm font-normal text-muted">/ {fmt(3000)}</span>
       </p>
     </div>
   )

@@ -1,19 +1,21 @@
 import { useState } from 'react'
-import { formatCurrency, WEEKS_PER_MONTH } from '../lib/format'
+import { formatCurrency, formatCurrencyEN, WEEKS_PER_MONTH } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { COMMON } from '../lib/i18n/common'
 
 export function LandingStepsPreview() {
   const [incomeDraft, setIncomeDraft] = useState('3500')
   const income = Math.max(0, Number(incomeDraft) || 0)
   const roughWeeklyBudget = income / WEEKS_PER_MONTH
+  const { lang } = useLanguage()
+  const t = COMMON[lang].steps
 
   return (
     <div className="grid gap-4 sm:grid-cols-3">
       <div className="glass rounded-2xl p-6 shadow-lg shadow-black/30 ring-1 ring-primary/40">
-        <p className="text-xs font-semibold uppercase tracking-wide text-primary">Étape 1 · essaie-la</p>
-        <h3 className="mt-2 text-lg font-semibold text-ink">C'est quoi ton revenu mensuel ?</h3>
-        <p className="mt-1 text-sm text-muted">
-          On calcule tout de suite un aperçu de ton budget hebdomadaire.
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-primary">{t.step1Badge}</p>
+        <h3 className="mt-2 text-lg font-semibold text-ink">{t.step1Title}</h3>
+        <p className="mt-1 text-sm text-muted">{t.step1Body}</p>
         <label className="mt-4 flex items-center gap-2">
           <span className="text-muted">$</span>
           <input
@@ -27,25 +29,24 @@ export function LandingStepsPreview() {
           />
         </label>
         <p className="mt-3 text-sm text-ink">
-          ≈ <span className="font-semibold text-success">{formatCurrency(roughWeeklyBudget)}</span>{' '}
-          <span className="text-muted">par semaine, avant tes dépenses fixes.</span>
+          ≈{' '}
+          <span className="font-semibold text-success">
+            {lang === 'fr' ? formatCurrency(roughWeeklyBudget) : formatCurrencyEN(roughWeeklyBudget)}
+          </span>{' '}
+          <span className="text-muted">{t.perWeek}</span>
         </p>
       </div>
 
       <div className="glass flex flex-col rounded-2xl p-6 opacity-60 shadow-lg shadow-black/30">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted">Étape 2</p>
-        <h3 className="mt-2 text-lg font-semibold text-ink">Tes dépenses fixes</h3>
-        <p className="mt-1 text-sm text-muted">
-          Loyer, abonnements — pour affiner ton budget réel.
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted">{t.step2Badge}</p>
+        <h3 className="mt-2 text-lg font-semibold text-ink">{t.step2Title}</h3>
+        <p className="mt-1 text-sm text-muted">{t.step2Body}</p>
       </div>
 
       <div className="glass flex flex-col rounded-2xl p-6 opacity-60 shadow-lg shadow-black/30">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted">Étape 3</p>
-        <h3 className="mt-2 text-lg font-semibold text-ink">Ton premier objectif</h3>
-        <p className="mt-1 text-sm text-muted">
-          Un montant, une date, et une progression à suivre.
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted">{t.step3Badge}</p>
+        <h3 className="mt-2 text-lg font-semibold text-ink">{t.step3Title}</h3>
+        <p className="mt-1 text-sm text-muted">{t.step3Body}</p>
       </div>
     </div>
   )
