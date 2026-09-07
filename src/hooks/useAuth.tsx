@@ -23,6 +23,7 @@ interface AuthContextValue {
   signOut: () => Promise<void>
   resetPasswordForEmail: (email: string) => Promise<AuthResult>
   updatePassword: (newPassword: string) => Promise<AuthResult>
+  resendConfirmationEmail: (email: string) => Promise<AuthResult>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -45,6 +46,13 @@ function mapAuthError(message: string): string {
   }
   if (lower.includes('invalid email') || lower.includes('unable to validate email')) {
     return "Ce courriel n'est pas valide."
+  }
+  // Supabase's resend cooldown reads "For security purposes, you can only
+  // request this after 59 seconds." — no "rate limit" wording, so it needs
+  // its own check, distinct from the broader rate-limit case below (this
+  // one specifically means "an email was already sent, just wait").
+  if (lower.includes('you can only request this after')) {
+    return 'Un courriel a déjà été envoyé il y a moins d\'une minute — patiente un instant avant de le renvoyer.'
   }
   if (lower.includes('rate limit')) {
     return 'Trop de tentatives — attends une minute avant de réessayer.'
@@ -137,6 +145,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null }
   }, [])
 
+  // Same "waiting for confirmation" screen after signUp — a second click
+  // re-sends the same confirmation link rather than erroring on "already
+  // registered" (that check is for signUp; resend targets an account that
+  // exists but isn't confirmed yet, exactly this one's situation).
+  const resendConfirmationEmail = useCallback(async (email: string): Promise<AuthResult> => {
+    const { error } = await supabase.auth.resend({ type: 'signup', email })
+    if (error) return { error: mapAuthError(error.message) }
+    return { error: null }
+  }, [])
+
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
@@ -149,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       resetPasswordForEmail,
       updatePassword,
+      resendConfirmationEmail,
     }),
     [
       session,
@@ -160,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       resetPasswordForEmail,
       updatePassword,
+      resendConfirmationEmail,
     ],
   )
 

@@ -38,7 +38,11 @@ export function StickyCta() {
       style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
       aria-hidden={!visible}
     >
-      <div className="glass pointer-events-auto relative flex flex-col items-center gap-2 rounded-2xl border-t border-t-overlay/20 px-6 py-4 shadow-2xl shadow-black/50 sm:flex-row sm:gap-5 sm:py-3.5">
+      <div
+        className={`glass relative flex flex-col items-center gap-2 rounded-2xl border-t border-t-overlay/20 px-6 py-4 shadow-2xl shadow-black/50 sm:flex-row sm:gap-5 sm:py-3.5 ${
+          visible ? 'pointer-events-auto' : 'pointer-events-none'
+        }`}
+      >
         <div className="relative">
           <div className="glow-pulse absolute inset-0 -z-10 rounded-xl bg-primary/50 blur-xl" aria-hidden="true" />
           <Link
@@ -49,7 +53,7 @@ export function StickyCta() {
             {t.cta}
           </Link>
         </div>
-        <p className="flex items-center gap-1.5 whitespace-nowrap text-xs text-muted">
+        <p className="flex cursor-default items-center gap-1.5 whitespace-nowrap text-xs text-muted">
           <span aria-hidden="true">🔒</span>
           {t.noCard}
         </p>

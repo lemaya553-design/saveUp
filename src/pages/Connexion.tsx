@@ -51,6 +51,7 @@ export function Connexion() {
     signInWithGoogle,
     resetPasswordForEmail,
     updatePassword,
+    resendConfirmationEmail,
   } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -65,6 +66,12 @@ export function Connexion() {
   const [error, setError] = useState<string | null>(() => readLinkError())
   const [confirmationSent, setConfirmationSent] = useState(false)
   const [resetLinkSent, setResetLinkSent] = useState(false)
+  // Google is the recommended path (fewer stuck signups — see the "ou
+  // utiliser un courriel" link below) — the email/password form stays
+  // collapsed until the visitor deliberately asks for it.
+  const [showEmailForm, setShowEmailForm] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [resendMessage, setResendMessage] = useState<string | null>(null)
 
   // A link error lands with mode still 'signin' by default — bump the user
   // straight to the "request a new link" form instead of a dead-end sign-in
@@ -90,8 +97,17 @@ export function Connexion() {
     setError(null)
     setConfirmationSent(false)
     setResetLinkSent(false)
+    setResendMessage(null)
     setPassword('')
     setConfirmPassword('')
+  }
+
+  async function handleResendConfirmation() {
+    setResending(true)
+    setResendMessage(null)
+    const result = await resendConfirmationEmail(email)
+    setResending(false)
+    setResendMessage(result.error ?? 'Courriel renvoyé.')
   }
 
   async function handleSignIn(e: React.FormEvent) {
@@ -257,10 +273,28 @@ export function Connexion() {
               On a envoyé un lien de confirmation à <span className="text-ink">{email}</span>.
               Clique-le pour activer ton compte, puis reviens te connecter ici.
             </p>
+            <p className="mt-3 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2.5 text-xs text-ink">
+              Rien reçu après quelques minutes ? Vérifie ton dossier
+              <span className="font-medium"> indésirables / pourriels</span> — c'est souvent là qu'il
+              atterrit.
+            </p>
+
+            {resendMessage && (
+              <p className="mt-3 text-sm text-muted">{resendMessage}</p>
+            )}
+
+            <button
+              type="button"
+              onClick={handleResendConfirmation}
+              disabled={resending}
+              className="mt-4 w-full rounded-lg border border-overlay/10 px-5 py-3 font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
+            >
+              {resending ? 'Envoi...' : 'Renvoyer le courriel'}
+            </button>
             <button
               type="button"
               onClick={() => switchMode('signin')}
-              className="mt-6 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110"
+              className="mt-2 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110"
             >
               Retour à la connexion
             </button>
@@ -339,13 +373,17 @@ export function Connexion() {
                 : 'Un courriel, un mot de passe — tes données restent les tiennes.'}
             </p>
 
+            {/* Google is the recommended, prominent path — full-size, high
+                contrast against the dark card, first thing after the
+                heading. Email/password is a real fallback, not hidden, but
+                deliberately secondary (see the discreet link below). */}
             <button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={googleSubmitting}
-              className="mt-6 flex w-full items-center justify-center gap-3 rounded-lg border border-overlay/10 bg-overlay/5 px-5 py-3 font-medium text-ink transition-colors hover:bg-overlay/10 disabled:opacity-60"
+              className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl bg-white px-5 py-4 text-base font-semibold text-gray-900 shadow-lg shadow-black/20 transition-all hover:brightness-95 disabled:opacity-60"
             >
-              <GoogleIcon className="h-5 w-5" />
+              <GoogleIcon className="h-6 w-6" />
               {googleSubmitting
                 ? 'Redirection...'
                 : mode === 'signin'
@@ -353,84 +391,96 @@ export function Connexion() {
                   : "S'inscrire avec Google"}
             </button>
 
-            <div className="my-6 flex items-center gap-3 text-xs text-muted">
-              <div className="h-px flex-1 bg-overlay/10" />
-              ou avec un courriel
-              <div className="h-px flex-1 bg-overlay/10" />
-            </div>
+            {error && (
+              <p className="mt-4 rounded-lg border border-red-900/50 bg-red-950/50 px-3 py-2 text-sm text-red-300">
+                {error}
+              </p>
+            )}
 
-            <form
-              onSubmit={mode === 'signin' ? handleSignIn : handleSignUp}
-              className="flex flex-col gap-3"
-            >
-              <label className="flex flex-col gap-1 text-sm text-muted">
-                Courriel
-                <input
-                  type="email"
-                  autoComplete="email"
-                  autoFocus
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="toi@exemple.com"
-                  className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-                />
-              </label>
-
-              <label className="flex flex-col gap-1 text-sm text-muted">
-                <span className="flex items-center justify-between">
-                  Mot de passe
-                  {mode === 'signin' && (
-                    <button
-                      type="button"
-                      onClick={() => switchMode('forgot')}
-                      className="text-xs font-normal text-accent hover:text-accent/80"
-                    >
-                      Mot de passe oublié ?
-                    </button>
-                  )}
-                </span>
-                <input
-                  type="password"
-                  autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-                />
-              </label>
-
-              {mode === 'signup' && (
-                <label className="flex flex-col gap-1 text-sm text-muted">
-                  Confirme le mot de passe
-                  <input
-                    type="password"
-                    autoComplete="new-password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-                  />
-                </label>
-              )}
-
-              {error && (
-                <p className="rounded-lg border border-red-900/50 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-                  {error}
-                </p>
-              )}
-
+            {!showEmailForm ? (
               <button
-                type="submit"
-                disabled={submitting}
-                className="mt-2 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                type="button"
+                onClick={() => setShowEmailForm(true)}
+                className="mx-auto mt-5 block text-center text-sm text-muted hover:text-ink"
               >
-                {submitting
-                  ? 'Un instant...'
-                  : mode === 'signin'
-                    ? 'Se connecter'
-                    : 'Créer mon compte'}
+                ou utiliser un courriel
               </button>
-            </form>
+            ) : (
+              <>
+                <div className="my-6 flex items-center gap-3 text-xs text-muted">
+                  <div className="h-px flex-1 bg-overlay/10" />
+                  ou avec un courriel
+                  <div className="h-px flex-1 bg-overlay/10" />
+                </div>
+
+                <form
+                  onSubmit={mode === 'signin' ? handleSignIn : handleSignUp}
+                  className="flex flex-col gap-3"
+                >
+                  <label className="flex flex-col gap-1 text-sm text-muted">
+                    Courriel
+                    <input
+                      type="email"
+                      autoComplete="email"
+                      autoFocus
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="toi@exemple.com"
+                      className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-sm text-muted">
+                    <span className="flex items-center justify-between">
+                      Mot de passe
+                      {mode === 'signin' && (
+                        <button
+                          type="button"
+                          onClick={() => switchMode('forgot')}
+                          className="text-xs font-normal text-accent hover:text-accent/80"
+                        >
+                          Mot de passe oublié ?
+                        </button>
+                      )}
+                    </span>
+                    <input
+                      type="password"
+                      autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+                    />
+                  </label>
+
+                  {mode === 'signup' && (
+                    <label className="flex flex-col gap-1 text-sm text-muted">
+                      Confirme le mot de passe
+                      <input
+                        type="password"
+                        autoComplete="new-password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+                      />
+                    </label>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="mt-2 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                  >
+                    {submitting
+                      ? 'Un instant...'
+                      : mode === 'signin'
+                        ? 'Se connecter'
+                        : 'Créer mon compte'}
+                  </button>
+                </form>
+              </>
+            )}
 
             <p className="mt-6 text-center text-sm text-muted">
               {mode === 'signin' ? (
