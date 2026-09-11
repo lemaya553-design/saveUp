@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { PageHeader } from '../components/PageHeader'
 import { Card } from '../components/Card'
@@ -9,6 +9,7 @@ import { AlertBanner } from '../components/AlertBanner'
 import { DashboardStat } from '../components/DashboardStat'
 import { PersonalizedTips } from '../components/PersonalizedTips'
 import { PageSkeleton } from '../components/PageSkeleton'
+import { TIER_ICONS, TIER_UNLOCKED_CLASS } from '../components/rewardIcons'
 import {
   BudgetIllustration,
   SavingsIllustration,
@@ -22,10 +23,13 @@ import { useInvestmentBalance } from '../hooks/useInvestmentBalance'
 import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
+import { useLoginStreak } from '../hooks/useLoginStreak'
+import { useClaimedBadges } from '../hooks/useClaimedBadges'
 import { formatCurrency } from '../lib/format'
 import { getSpendableBudgetCaption, sumThisMonth } from '../lib/budgetInsights'
 import { getBudgetPaceAlert, getSavingsGoalLateAlert } from '../lib/alerts'
 import { generatePersonalizedTips } from '../lib/tips'
+import { STARTER_BADGE, isStarterBadgeUnlocked } from '../lib/rewards'
 
 const FEATURE_LINKS = [
   {
@@ -65,6 +69,12 @@ const DASHBOARD_HELP = {
   ],
 }
 
+// A touch longer than the shared .badge-unlock keyframe (0.7s) so the
+// animation always finishes before the class is removed — same value as
+// RecompensesTab's own claim animation, kept local since it's the only
+// other place this exact interaction happens.
+const CLAIM_ANIMATION_MS = 900
+
 export function Dashboard() {
   const navigate = useNavigate()
   const health = useFinancialHealth()
@@ -74,11 +84,24 @@ export function Dashboard() {
   const expenseHistory = useExpenseHistory()
   const subscription = useSubscription()
   const preferences = usePreferences()
+  const streak = useLoginStreak()
+  const claimedBadges = useClaimedBadges()
+  const [justClaimedStarter, setJustClaimedStarter] = useState(false)
 
   const loading =
     health.loading || goals.loading || contributions.loading || investmentBalance.loading || expenseHistory.loading
   const error =
     health.error || goals.error || contributions.error || investmentBalance.error || expenseHistory.error
+
+  const starterEarned = isStarterBadgeUnlocked(health.hasIncomeRecord)
+  const starterClaimed = claimedBadges.claimedIds.has(STARTER_BADGE.id)
+
+  async function handleClaimStarter() {
+    const ok = await claimedBadges.claim(STARTER_BADGE.id)
+    if (!ok) return
+    setJustClaimedStarter(true)
+    setTimeout(() => setJustClaimedStarter(false), CLAIM_ANIMATION_MS)
+  }
 
   const savingsThisMonth = useMemo(
     () => sumThisMonth(contributions.contributions),
@@ -133,7 +156,14 @@ export function Dashboard() {
     )
   }
 
-  const budgetPct = spendableBudget > 0 ? (health.spentThisMonth / spendableBudget) * 100 : 100
+  // A $0 budget with $0 spent must NOT read as "100% spent" — that's what a
+  // bare `spendableBudget > 0 ? ... : 100` fallback used to do, showing a
+  // full red bar on an account that hasn't spent a single dollar (any
+  // account before setting income, or with savings alone eating the whole
+  // budget). Only fall back to 100 when something was actually spent
+  // against a budget of $0 or less — a real overspend, not an empty one.
+  const budgetPct =
+    spendableBudget > 0 ? (health.spentThisMonth / spendableBudget) * 100 : health.spentThisMonth > 0 ? 100 : 0
   const isOverBudget = budgetPct > 100 || rawSpendableBudget < 0
 
   const totalCurrentAmount = goals.goals.reduce((sum, g) => sum + g.currentAmount, 0)
@@ -164,6 +194,56 @@ export function Dashboard() {
         subtitle="Ton portrait financier en un coup d'œil."
         help={DASHBOARD_HELP}
       />
+
+      {/* Streak + starter badge — surfaced here (not just on Récompenses,
+          which nothing else points a new user toward) so day one has a
+          visible, claimable win even for an account with zero real data. */}
+      <div
+        className={`mb-6 glass flex flex-wrap items-center gap-4 rounded-2xl p-5 shadow-lg shadow-black/30 ${
+          justClaimedStarter ? 'badge-unlock' : ''
+        }`}
+      >
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent/15 text-2xl">
+          🔥
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-ink">
+            {streak.streak} jour{streak.streak > 1 ? 's' : ''} de suite
+          </p>
+          <p className="text-sm text-muted">
+            {streak.streak > 0 ? 'Reviens demain pour garder ta série !' : 'Reviens demain pour commencer une série.'}
+          </p>
+        </div>
+
+        {starterEarned && (
+          <div className="flex items-center gap-3 border-t border-overlay/10 pt-4 sm:ml-auto sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+            <div
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors duration-500 ${
+                starterClaimed || justClaimedStarter ? TIER_UNLOCKED_CLASS.starter : 'bg-overlay/5 text-muted'
+              }`}
+            >
+              {(() => {
+                const StarterIcon = TIER_ICONS.starter
+                return <StarterIcon className="h-5 w-5" />
+              })()}
+            </div>
+            {starterClaimed || justClaimedStarter ? (
+              <p className="text-sm text-ink">{STARTER_BADGE.name}</p>
+            ) : (
+              <>
+                <p className="text-sm text-ink">Badge débloqué : {STARTER_BADGE.name}</p>
+                <button
+                  type="button"
+                  onClick={handleClaimStarter}
+                  className="whitespace-nowrap rounded-full bg-primary-strong px-3 py-1.5 text-xs font-semibold text-white transition-all hover:brightness-110"
+                >
+                  Réclamer
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">

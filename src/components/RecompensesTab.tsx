@@ -7,18 +7,21 @@ import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useClaimedBadges } from '../hooks/useClaimedBadges'
 import { useLoginStreak } from '../hooks/useLoginStreak'
+import { useIncome } from '../hooks/useIncome'
 import { useSubscription } from '../hooks/useSubscription'
 import { formatCurrency } from '../lib/format'
 import { isAtLeast, splitByLimit } from '../lib/plans'
 import { TIER_ICONS, TIER_UNLOCKED_CLASS } from './rewardIcons'
 import {
   REWARD_TIERS,
+  STARTER_BADGE,
   computeSavingsScoreBreakdown,
   getGoalCompletionRequirement,
   getNextTierProgress,
   getSavingsScoreExplanations,
   getTierRequirement,
   getUnlockedTiers,
+  isStarterBadgeUnlocked,
 } from '../lib/rewards'
 
 // How long the grey -> color reveal stays flagged as "just claimed" — a
@@ -33,10 +36,14 @@ export function RecompensesTab() {
   const contributions = useSavingsContributions()
   const claimedBadges = useClaimedBadges()
   const streak = useLoginStreak()
+  const income = useIncome()
   const subscription = useSubscription()
 
-  const loading = goals.loading || contributions.loading || claimedBadges.loading
+  const loading = goals.loading || contributions.loading || claimedBadges.loading || income.loading
   const error = goals.error || contributions.error || claimedBadges.error
+
+  const starterEarned = isStarterBadgeUnlocked(income.hasIncomeRecord)
+  const starterClaimed = claimedBadges.claimedIds.has(STARTER_BADGE.id)
 
   const totalCurrentAmount = goals.goals.reduce((sum, g) => sum + g.currentAmount, 0)
   const totalTargetAmount = goals.goals.reduce((sum, g) => sum + g.targetAmount, 0)
@@ -134,6 +141,42 @@ export function RecompensesTab() {
           </p>
         </div>
       </div>
+
+      {starterEarned && (
+        <div
+          className={`mb-6 glass flex items-center gap-4 rounded-2xl p-5 shadow-lg shadow-black/30 ${
+            justClaimed.has(STARTER_BADGE.id) ? 'badge-unlock' : ''
+          }`}
+        >
+          <div
+            className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full transition-colors duration-500 ${
+              starterClaimed || justClaimed.has(STARTER_BADGE.id) ? TIER_UNLOCKED_CLASS.starter : 'bg-overlay/5 text-muted'
+            }`}
+          >
+            {(() => {
+              const StarterIcon = TIER_ICONS.starter
+              return <StarterIcon className="h-7 w-7" />
+            })()}
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-ink">{STARTER_BADGE.name}</p>
+            <p className="text-sm text-muted">
+              {starterClaimed || justClaimed.has(STARTER_BADGE.id)
+                ? STARTER_BADGE.description
+                : 'Ton premier badge est prêt.'}
+            </p>
+          </div>
+          {!starterClaimed && !justClaimed.has(STARTER_BADGE.id) && (
+            <button
+              type="button"
+              onClick={() => handleClaim(STARTER_BADGE.id)}
+              className="shrink-0 rounded-full bg-primary-strong px-4 py-2 text-sm font-semibold text-white transition-all hover:brightness-110"
+            >
+              Réclamer
+            </button>
+          )}
+        </div>
+      )}
 
       {!hasGoal && (
         <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm">

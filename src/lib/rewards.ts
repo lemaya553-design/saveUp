@@ -40,6 +40,28 @@ export const REWARD_TIERS: RewardTier[] = [
   },
 ]
 
+// Deliberately outside REWARD_TIERS (see "exactly 4 tiers" above) — that
+// array is specifically savings milestones, all money-gated, and adding a
+// 5th would both dilute the motivation those are designed around AND be
+// unreachable for the exact cohort this exists for: someone who skips all
+// of onboarding never saves a dollar on day one. This is the one badge
+// guaranteed reachable regardless of what they filled in — earned the
+// moment onboarding is exited at all (Onboarding.tsx's finish() always
+// persists an income row, even a $0 one, so hasIncomeRecord becoming true
+// IS "has been through onboarding," full skip included). Uses the same
+// claimed_badges table/hook as the money tiers (tier_id is a plain string,
+// no schema tie to REWARD_TIERS) — just kept out of every REWARD_TIERS.length
+// count so the "X/4 réclamés" displays elsewhere stay accurate.
+export const STARTER_BADGE = {
+  id: 'starter',
+  name: 'C\'est parti !',
+  description: 'Ton compte est configuré — la suite se construit avec de vraies données.',
+} as const
+
+export function isStarterBadgeUnlocked(hasIncomeRecord: boolean): boolean {
+  return hasIncomeRecord
+}
+
 export function isTierUnlocked(
   tier: RewardTier,
   currentAmount: number,

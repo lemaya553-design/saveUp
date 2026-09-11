@@ -39,11 +39,26 @@ function StarIcon({ className }: { className: string }) {
   )
 }
 
+function RocketIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 3c2.5 1.5 4 4.5 4 8.5l-4 4-4-4c0-4 1.5-7 4-8.5Z"
+      />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 14 6 16.5 7 20l3.5-2.5M15.5 14 18 16.5 17 20l-3.5-2.5" />
+      <circle cx="12" cy="10" r="1.4" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 export const TIER_ICONS: Record<string, ComponentType<{ className: string }>> = {
   'first-100': FlagIcon,
   'first-500': TrendUpIcon,
   'first-1000': ShieldIcon,
   'goal-complete': StarIcon,
+  starter: RocketIcon,
 }
 
 export const TIER_UNLOCKED_CLASS: Record<string, string> = {
@@ -52,4 +67,5 @@ export const TIER_UNLOCKED_CLASS: Record<string, string> = {
   'first-1000': 'bg-success/15 text-success',
   'goal-complete':
     'bg-success/15 text-success ring-2 ring-success/40 shadow-[0_0_24px_rgba(34,197,94,0.35)]',
+  starter: 'bg-accent/15 text-accent',
 }

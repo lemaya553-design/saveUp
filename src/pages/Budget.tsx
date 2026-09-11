@@ -218,7 +218,12 @@ export function Budget() {
 
   const remainingThisMonth = spendableBudget - monthly.spentThisMonth
   const isOverBudget = remainingThisMonth < 0
-  const spentPct = spendableBudget > 0 ? (monthly.spentThisMonth / spendableBudget) * 100 : 100
+  // A $0 budget with $0 spent must not read as "100% spent" — only fall
+  // back to a full bar when something was actually spent against a budget
+  // that's already at or below zero (a real overspend), matching Dashboard's
+  // identical fix.
+  const spentPct =
+    spendableBudget > 0 ? (monthly.spentThisMonth / spendableBudget) * 100 : monthly.spentThisMonth > 0 ? 100 : 0
   const monthProgressPct = monthly.monthProgress * 100
 
   return (

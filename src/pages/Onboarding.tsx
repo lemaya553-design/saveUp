@@ -60,15 +60,14 @@ export function Onboarding() {
     navigate('/dashboard')
   }
 
-  // "Passer pour l'instant" only ever advances one step at a time — it must
-  // never jump straight to the dashboard except from the very last step,
-  // where there's nowhere left to advance to.
-  async function skip() {
-    if (step < STEPS.length - 1) {
-      setStep(step + 1)
-    } else {
-      await finish()
-    }
+  // "Configurer plus tard" abandons the whole flow in one click, from any
+  // step — it used to only advance one step at a time, which meant
+  // skipping everything took up to 7 clicks. Every step already has its
+  // own way to move forward without this (a form to fill, a choice to
+  // tap, or step 0's own "Continuer sans importer"), so this link only
+  // needs to cover "I don't want to do any of this right now."
+  async function skipAll() {
+    await finish()
   }
 
   async function handleIncomeSubmit(e: React.FormEvent) {
@@ -110,8 +109,8 @@ export function Onboarding() {
             <span>
               Étape {step + 1} sur {STEPS.length} — {STEPS[step]}
             </span>
-            <button type="button" onClick={skip} className="text-muted hover:text-ink">
-              Passer pour l’instant
+            <button type="button" onClick={skipAll} className="text-muted hover:text-ink">
+              Configurer plus tard
             </button>
           </div>
           <ProgressBar value={((step + 1) / STEPS.length) * 100} colorClass="bg-primary" />
