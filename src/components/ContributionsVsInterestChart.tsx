@@ -1,5 +1,5 @@
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { EPARGNE } from '../lib/i18n/epargne'
 
 export function ContributionsVsInterestChart({
@@ -13,7 +13,7 @@ export function ContributionsVsInterestChart({
 }) {
   const { lang } = useLanguage()
   const t = EPARGNE[lang].contributionsVsInterestChart
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
 
   if (finalValue <= 0) {
     return <p className="text-sm text-muted">{t.empty}</p>

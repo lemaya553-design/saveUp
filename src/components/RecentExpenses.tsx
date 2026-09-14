@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Card } from './Card'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useCategories } from '../hooks/useCategories'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { BUDGET } from '../lib/i18n/budget'
 import { COMMON } from '../lib/i18n/common'
@@ -88,7 +88,7 @@ export function RecentExpenses({
 }) {
   const { lang } = useLanguage()
   const t = BUDGET[lang].recentExpenses
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const { categoryNames } = useCategories()
   const [showAll, setShowAll] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Card } from './Card'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { EPARGNE } from '../lib/i18n/epargne'
 import type { Contribution } from '../hooks/useSavingsContributions'
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
@@ -17,7 +17,7 @@ export function ContributionHistory({
 }) {
   const { lang } = useLanguage()
   const t = EPARGNE[lang].contributionHistory
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const [showAll, setShowAll] = useState(false)
   const visible = showAll ? contributions : contributions.slice(0, COLLAPSED_COUNT)
   const goalNameById = new Map(goals.map((g) => [g.id, g.name]))

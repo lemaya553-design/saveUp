@@ -9,7 +9,7 @@
 
 import { useLanguage } from '../hooks/useLanguage'
 import { COMMON } from '../lib/i18n/common'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { formatMoney } from '../lib/format'
 
 const ICON_TILE = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl'
 const COLORS = ['bg-primary', 'bg-accent', 'bg-red-400']
@@ -61,7 +61,7 @@ export function SavingsIllustration({ variant = 'card' }: { variant?: 'card' | '
     )
   }
 
-  const fmt = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const fmt = (amount: number) => formatMoney(amount, lang, 'CAD')
 
   return (
     <div aria-hidden="true">

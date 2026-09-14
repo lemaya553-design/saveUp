@@ -1,4 +1,4 @@
-import { formatCurrency, formatCurrencyEN, getMonthRange } from './format'
+import { formatMoney, getMonthRange, type Currency } from './format'
 import { translateCategoryLabel } from './i18n/categoryLabels'
 import type { Lang } from './i18n/language'
 
@@ -48,8 +48,8 @@ export function computeCategoryBreakdown(
 // the caption explains that instead of silently showing "sur 0,00 $
 // alloués" — a real $0 budget and an over-committed one look identical
 // once clamped, and only one of those is self-explanatory.
-export function getSpendableBudgetCaption(rawSpendableBudget: number, lang: Lang): string {
-  const money = lang === 'fr' ? formatCurrency : formatCurrencyEN
+export function getSpendableBudgetCaption(rawSpendableBudget: number, lang: Lang, currency: Currency): string {
+  const money = (amount: number) => formatMoney(amount, lang, currency)
   if (rawSpendableBudget >= 0) {
     return lang === 'fr' ? `sur ${money(rawSpendableBudget)} alloués` : `of ${money(rawSpendableBudget)} allocated`
   }

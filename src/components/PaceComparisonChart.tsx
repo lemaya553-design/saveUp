@@ -1,5 +1,5 @@
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { EPARGNE } from '../lib/i18n/epargne'
 
 export interface PaceComparisonEntry {
@@ -17,7 +17,7 @@ export interface PaceComparisonEntry {
 export function PaceComparisonChart({ entries }: { entries: PaceComparisonEntry[] }) {
   const { lang } = useLanguage()
   const t = EPARGNE[lang].paceComparisonChart
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
 
   if (entries.length === 0) {
     return <p className="text-sm text-muted">{t.empty}</p>

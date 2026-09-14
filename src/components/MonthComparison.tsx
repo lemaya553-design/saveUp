@@ -1,5 +1,5 @@
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 
 export function MonthComparison({
@@ -13,7 +13,7 @@ export function MonthComparison({
 }) {
   const { lang } = useLanguage()
   const t = STATISTIQUES[lang].monthComparison
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const hasPreviousData = previousAmount > 0
   const maxAmount = Math.max(currentAmount, previousAmount, 1)
   const currentPct = (currentAmount / maxAmount) * 100

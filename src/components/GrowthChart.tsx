@@ -1,6 +1,6 @@
 import { useState, type MouseEvent } from 'react'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { EPARGNE } from '../lib/i18n/epargne'
 import type { EpargneContent } from '../lib/i18n/epargne'
 import type { ProjectionPoint } from '../lib/investment'
@@ -21,7 +21,7 @@ function formatMonthLabel(month: number, t: EpargneContent['growthChart']): stri
 export function GrowthChart({ points }: { points: ProjectionPoint[] }) {
   const { lang } = useLanguage()
   const t = EPARGNE[lang].growthChart
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
 
   if (points.length < 2) return null

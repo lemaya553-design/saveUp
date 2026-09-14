@@ -1,6 +1,6 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { MonthlySpendingPoint } from '../lib/statistics'
 
@@ -28,7 +28,7 @@ function TrendTooltip({
 export function MonthlyTrendChart({ points }: { points: MonthlySpendingPoint[] }) {
   const { lang } = useLanguage()
   const t = STATISTIQUES[lang].monthlyTrendChart
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
 
   if (points.length < 2) {
     return <p className="text-sm text-muted">{t.notEnoughData}</p>

@@ -629,6 +629,13 @@ alter table user_preferences add column if not exists onboarding_frequency text
 
 alter table user_preferences add column if not exists csv_import_count integer not null default 0;
 
+-- Display currency preference (Paramètres) — cosmetic formatting only, never a
+-- conversion rate; stored amounts never change, only the Intl.NumberFormat
+-- currency code used to render them.
+
+alter table user_preferences add column if not exists currency text not null default 'CAD'
+  check (currency in ('CAD', 'USD', 'EUR', 'GBP', 'CHF'));
+
 -- Goal photos (Premium) — SavingsGoalCard, AddGoalCard --------------------------
 -- Column stores the private bucket path, not a URL (the bucket is private —
 -- src/lib/goalPhoto.ts generates short-lived signed URLs on read). Path

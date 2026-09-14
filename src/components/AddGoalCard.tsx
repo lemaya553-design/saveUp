@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
-import { formatCurrency, formatCurrencyEN, getFarFutureDateString, getTodayDateString } from '../lib/format'
+import { getFarFutureDateString, getTodayDateString } from '../lib/format'
 import { computeRequiredPace } from '../lib/savingsProjection'
 import { GoalPhotoPicker } from './GoalPhotoPicker'
 import { useSubscription } from '../hooks/useSubscription'
 import { useToast } from './ToastProvider'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { EPARGNE } from '../lib/i18n/epargne'
 import { COMMON } from '../lib/i18n/common'
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
@@ -21,7 +22,7 @@ export function AddGoalCard({
   const subscription = useSubscription()
   const { lang } = useLanguage()
   const t = EPARGNE[lang].addGoalCard
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const { showToast } = useToast()
   const [open, setOpen] = useState(defaultOpen)
   const [name, setName] = useState('')

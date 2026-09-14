@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
+import { usePreferences } from '../hooks/usePreferences'
+import { getCurrencySymbol } from '../lib/format'
 import { COMMON } from '../lib/i18n/common'
 
 export function QuickAmountEdit({
@@ -15,7 +17,8 @@ export function QuickAmountEdit({
   hint?: string
 }) {
   const { lang } = useLanguage()
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const { currency } = usePreferences()
+  const formatMoney = useMoneyFormat()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(String(amount || ''))
 
@@ -36,7 +39,7 @@ export function QuickAmountEdit({
       {editing ? (
         <form onSubmit={save} className="flex flex-wrap items-center justify-end gap-2 text-sm">
           <span className="text-muted">{label} :</span>
-          <span className="text-muted">$</span>
+          <span className="text-muted">{getCurrencySymbol(currency, lang)}</span>
           <input
             type="number"
             inputMode="decimal"

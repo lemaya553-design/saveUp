@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCountUp } from '../hooks/useCountUp'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { formatMoney } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
 import { COMMON } from '../lib/i18n/common'
 
@@ -52,7 +52,7 @@ export function SimulatorPreview() {
         <div>
           <p className="text-xs uppercase tracking-wide text-muted">{t.towardGoal}</p>
           <p className="text-3xl font-black text-success">
-            +{lang === 'fr' ? formatCurrency(monthly) : formatCurrencyEN(monthly)}
+            +{formatMoney(monthly, lang, 'CAD')}
             <span className="text-base font-medium text-muted">{t.perMonth}</span>
           </p>
         </div>

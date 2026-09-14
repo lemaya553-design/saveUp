@@ -9,7 +9,6 @@ import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { sumThisMonth } from '../lib/budgetInsights'
 import { computeRequiredPace, estimateMonthlyRate } from '../lib/savingsProjection'
 import { computeCategorySpending } from '../lib/categorySpending'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { PageHeader } from '../components/PageHeader'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
@@ -27,6 +26,7 @@ import { TabBar, type TabDef } from '../components/TabBar'
 import { useSubscription } from '../hooks/useSubscription'
 import { useDuels } from '../hooks/useDuels'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { splitByLimit } from '../lib/plans'
 import { EPARGNE } from '../lib/i18n/epargne'
 
@@ -38,7 +38,7 @@ export function Epargne() {
   const navigate = useNavigate()
   const { lang } = useLanguage()
   const t = EPARGNE[lang]
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const TAB_DEFS: TabDef<Tab>[] = [
     { key: 'objectifs', label: t.tabs.objectifs },
     { key: 'simulateur', label: t.tabs.simulateur },

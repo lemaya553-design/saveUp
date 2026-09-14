@@ -1,6 +1,6 @@
 import { computeCategoryMonthOverMonth } from './statistics'
 import { computeRequiredPace, estimateMonthlyRate } from './savingsProjection'
-import { formatCurrency, formatCurrencyEN } from './format'
+import { formatMoney, type Currency } from './format'
 import type { MainGoal } from './onboardingProfile'
 import { translateCategoryLabel } from './i18n/categoryLabels'
 import type { Lang } from './i18n/language'
@@ -53,8 +53,9 @@ function categoryChangeTips(
   now: Date,
   mainGoal: MainGoal | null | undefined,
   lang: Lang,
+  currency: Currency,
 ): Tip[] {
-  const money = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const money = (amount: number) => formatMoney(amount, lang, currency)
   const changes = computeCategoryMonthOverMonth(records, now).filter(
     (c) => c.pctChange !== null && c.lastMonth >= MIN_CATEGORY_AMOUNT && c.thisMonth >= MIN_CATEGORY_AMOUNT,
   )
@@ -122,8 +123,9 @@ function goalTip(
   now: Date,
   mainGoal: MainGoal | null | undefined,
   lang: Lang,
+  currency: Currency,
 ): Tip | null {
-  const money = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const money = (amount: number) => formatMoney(amount, lang, currency)
   const activeGoals = goals.filter((g) => g.targetAmount > 0 && g.currentAmount < g.targetAmount)
   if (activeGoals.length === 0) return null
 
@@ -175,9 +177,14 @@ function goalTip(
 // Simple rule-based tips from real numbers only — no generative/AI copy
 // yet. Every message either fires from a real threshold or doesn't appear;
 // nothing here is a generic filler line except the final no-data fallback.
-export function generatePersonalizedTips(input: TipInput, lang: Lang, now = new Date()): Tip[] {
-  const tips: Tip[] = [...categoryChangeTips(input.expenseRecords, now, input.mainGoal, lang)]
-  const g = goalTip(input.goals, input.contributions, now, input.mainGoal, lang)
+export function generatePersonalizedTips(
+  input: TipInput,
+  lang: Lang,
+  currency: Currency,
+  now = new Date(),
+): Tip[] {
+  const tips: Tip[] = [...categoryChangeTips(input.expenseRecords, now, input.mainGoal, lang, currency)]
+  const g = goalTip(input.goals, input.contributions, now, input.mainGoal, lang, currency)
   if (g) tips.push(g)
 
   if (tips.length === 0) {

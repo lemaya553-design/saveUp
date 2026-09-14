@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { colorForCategoryLabel, SAVINGS_CATEGORY } from '../lib/categoryColors'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { Lang } from '../lib/i18n/language'
@@ -194,7 +194,7 @@ export function CategorySpendingChart({
 }) {
   const { lang } = useLanguage()
   const t = STATISTIQUES[lang].categorySpendingChart
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
   const [anchor, setAnchor] = useState<DropdownAnchor | null>(null)
   const [editingCategory, setEditingCategory] = useState<string | null>(null)

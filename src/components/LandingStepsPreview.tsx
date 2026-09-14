@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { formatCurrency, formatCurrencyEN, WEEKS_PER_MONTH } from '../lib/format'
+import { formatMoney, WEEKS_PER_MONTH } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
 import { COMMON } from '../lib/i18n/common'
 
@@ -31,7 +31,7 @@ export function LandingStepsPreview() {
         <p className="mt-3 text-sm text-ink">
           ≈{' '}
           <span className="font-semibold text-success">
-            {lang === 'fr' ? formatCurrency(roughWeeklyBudget) : formatCurrencyEN(roughWeeklyBudget)}
+            {formatMoney(roughWeeklyBudget, lang, 'CAD')}
           </span>{' '}
           <span className="text-muted">{t.perWeek}</span>
         </p>

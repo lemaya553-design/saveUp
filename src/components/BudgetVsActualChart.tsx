@@ -1,5 +1,5 @@
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { CategoryBudgetStatus } from '../lib/statistics'
@@ -18,7 +18,7 @@ function fillColorClass(status: CategoryBudgetStatus): string {
 export function BudgetVsActualChart({ statuses }: { statuses: CategoryBudgetStatus[] }) {
   const { lang } = useLanguage()
   const t = STATISTIQUES[lang].budgetVsActualChart
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
 
   if (statuses.length === 0) {
     return <p className="text-sm text-muted">{t.empty}</p>

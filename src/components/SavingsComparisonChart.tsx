@@ -1,5 +1,7 @@
 import { useState, type MouseEvent } from 'react'
-import { formatCurrency } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
+import { EPARGNE } from '../lib/i18n/epargne'
 
 export interface ComparisonPoint {
   month: number
@@ -10,10 +12,6 @@ const WIDTH = 320
 const HEIGHT = 130
 const PADDING = 8
 
-function formatMonthLabel(month: number): string {
-  return month === 0 ? "Aujourd'hui" : `${month} mois`
-}
-
 export function SavingsComparisonChart({
   current,
   simulated,
@@ -21,6 +19,9 @@ export function SavingsComparisonChart({
   current: ComparisonPoint[]
   simulated: ComparisonPoint[]
 }) {
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].savingsComparisonChart
+  const formatMoney = useMoneyFormat()
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
 
   if (current.length < 2) return null
@@ -136,8 +137,11 @@ export function SavingsComparisonChart({
               top: `${(Math.min(hoveredCurrent.y, hoveredSimulated.y) / HEIGHT) * 100}%`,
             }}
           >
-            {formatMonthLabel(hoveredCurrent.month)} · {formatCurrency(hoveredCurrent.value)} vs{' '}
-            {formatCurrency(hoveredSimulated.value)}
+            {t.tooltip(
+              hoveredCurrent.month === 0 ? t.today : t.monthsLabel(hoveredCurrent.month),
+              formatMoney(hoveredCurrent.value),
+              formatMoney(hoveredSimulated.value),
+            )}
           </div>
         )}
       </div>
@@ -145,11 +149,11 @@ export function SavingsComparisonChart({
       <div className="mt-3 flex flex-wrap gap-4 text-sm">
         <div className="flex items-center gap-2">
           <span className="h-0.5 w-4 rounded-full bg-primary" aria-hidden="true" />
-          <span className="text-ink">Actuel</span>
+          <span className="text-ink">{t.currentLabel}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="h-0.5 w-4 rounded-full bg-accent" aria-hidden="true" />
-          <span className="text-ink">Simulé</span>
+          <span className="text-ink">{t.simulatedLabel}</span>
         </div>
       </div>
     </div>

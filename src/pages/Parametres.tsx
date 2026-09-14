@@ -11,7 +11,7 @@ import { useSubscription } from '../hooks/useSubscription'
 import { usePwaInstall } from '../hooks/usePwaInstall'
 import { useToast } from '../components/ToastProvider'
 import { useLanguage } from '../hooks/useLanguage'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { formatBillingAmount } from '../lib/format'
 import { PLAN_LIMITS } from '../lib/plans'
 import { PARAMETRES } from '../lib/i18n/parametres'
 import { TARIFS } from '../lib/i18n/tarifs'
@@ -170,7 +170,7 @@ export function Parametres() {
                     month: 'long',
                     year: 'numeric',
                   }),
-                  `${(lang === 'fr' ? formatCurrency : formatCurrencyEN)(PLAN_LIMITS[subscription.plan].monthlyPrice)}`,
+                  `${formatBillingAmount(PLAN_LIMITS[subscription.plan].monthlyPrice, lang)}`,
                   tarifsT.cta.manageSubscription,
                 )}
               </p>

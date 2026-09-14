@@ -10,7 +10,8 @@ import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
 import { useRecurringExpenses } from '../hooks/useRecurringExpenses'
 import { useLanguage } from '../hooks/useLanguage'
-import { getMonthRange, formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
+import { getMonthRange } from '../lib/format'
 import {
   computeCategoryBreakdown,
   computeMonthlyTrend,
@@ -50,7 +51,7 @@ export function Budget() {
   const navigate = useNavigate()
   const { lang } = useLanguage()
   const t = BUDGET[lang]
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const TAB_DEFS: TabDef<Tab>[] = [
     { key: 'depenses', label: t.tabs.depenses },
     { key: 'categories', label: t.tabs.categories },
@@ -237,7 +238,7 @@ export function Budget() {
               </div>
               <p className="mt-2 text-xs text-muted">{t.remaining.progressCaption(spentPct, monthProgressPct)}</p>
               <p className={`mt-1 text-xs ${rawSpendableBudget < 0 ? 'text-red-400' : 'text-muted'}`}>
-                {getSpendableBudgetCaption(rawSpendableBudget, lang)}
+                {getSpendableBudgetCaption(rawSpendableBudget, lang, preferences.currency)}
                 {savingsThisMonth > 0 && rawSpendableBudget >= 0 && t.remaining.includesSavings(formatMoney(savingsThisMonth))}
               </p>
               {upcomingRecurringTotal > 0 && (

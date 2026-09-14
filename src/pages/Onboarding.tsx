@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { ProgressBar } from '../components/ProgressBar'
 import { ImportTransactionsModal } from '../components/ImportTransactionsModal'
 import { UpgradePrompt } from '../components/UpgradePrompt'
-import { formatCurrency, formatCurrencyEN, getFarFutureDateString, getTodayDateString } from '../lib/format'
+import { getFarFutureDateString, getTodayDateString, getCurrencySymbol } from '../lib/format'
 import { useIncome } from '../hooks/useIncome'
 import { useFixedExpenses } from '../hooks/useFixedExpenses'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { COMMON } from '../lib/i18n/common'
 import { ONBOARDING } from '../lib/i18n/onboarding'
 import { canImportCsv, FREE_CSV_IMPORT_LIMIT } from '../lib/plans'
@@ -33,7 +34,7 @@ export function Onboarding() {
   const preferences = usePreferences()
   const mainGoalOptions = getMainGoalOptions(lang)
   const frequencyOptions = getFrequencyOptions(lang)
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
 
   const [step, setStep] = useState(0)
   const [importOpen, setImportOpen] = useState(false)
@@ -160,7 +161,7 @@ export function Onboarding() {
             <h1 className="text-2xl font-bold text-ink">{t.step1.title}</h1>
             <p className="mt-2 text-sm text-muted">{t.step1.subtitle}</p>
             <label className="mt-6 flex items-center gap-2">
-              <span className="text-muted">$</span>
+              <span className="text-muted">{getCurrencySymbol(preferences.currency, lang)}</span>
               <input
                 type="number"
                 inputMode="decimal"

@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Card } from './Card'
 import { CategoryDonutChart, type DonutSegment } from './CategoryDonutChart'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { computeCategorySpending, type ExpenseRecordForSpending } from '../lib/categorySpending'
 import { computeIncomeAllocation } from '../lib/incomeAllocation'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { FixedExpense } from '../hooks/useFixedExpenses'
 
@@ -23,7 +23,7 @@ export function SpendingBreakdownCard({
 }) {
   const { lang } = useLanguage()
   const t = STATISTIQUES[lang].spendingBreakdownCard
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const [tab, setTab] = useState<Tab>('depenses')
   // Independent from the "Dépenses par catégorie" card further down the
   // page — this card is new and shouldn't reach into that one's state.

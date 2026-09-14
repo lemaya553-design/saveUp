@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Modal } from './Modal'
 import { supabase } from '../lib/supabase'
 import { FALLBACK_CATEGORY } from '../lib/categories'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useExpenses } from '../hooks/useExpenses'
 import { useAccounts } from '../hooks/useAccounts'
 import { useCategories } from '../hooks/useCategories'
@@ -10,6 +9,7 @@ import { useCustomKeywords } from '../hooks/useCustomKeywords'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { BUDGET } from '../lib/i18n/budget'
 import { COMMON } from '../lib/i18n/common'
@@ -92,7 +92,7 @@ function ColumnSelect({
 export function ImportTransactionsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { lang } = useLanguage()
   const t = BUDGET[lang].importModal
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const SKIP_LABELS: Record<string, string> = {
     'invalid-date': t.skipLabels.invalidDate,
     'invalid-amount': t.skipLabels.invalidAmount,

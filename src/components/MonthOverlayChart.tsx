@@ -1,6 +1,6 @@
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { Lang } from '../lib/i18n/language'
@@ -130,7 +130,7 @@ function OverlayTooltip({
 export function MonthOverlayChart({ entries }: { entries: CategoryMomChange[] }) {
   const { lang } = useLanguage()
   const t = STATISTIQUES[lang].monthOverlayChart
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
 
   if (entries.length === 0) {
     return <p className="text-sm text-muted">{t.empty}</p>

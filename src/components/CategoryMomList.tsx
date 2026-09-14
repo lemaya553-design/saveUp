@@ -1,5 +1,5 @@
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { CategoryMomChange } from '../lib/statistics'
@@ -7,7 +7,7 @@ import type { CategoryMomChange } from '../lib/statistics'
 export function CategoryMomList({ changes }: { changes: CategoryMomChange[] }) {
   const { lang } = useLanguage()
   const t = STATISTIQUES[lang].categoryMomList
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const relevant = changes.filter((c) => c.thisMonth > 0 || c.lastMonth > 0)
 
   if (relevant.length === 0) {

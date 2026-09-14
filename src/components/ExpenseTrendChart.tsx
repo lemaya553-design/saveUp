@@ -1,11 +1,11 @@
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { BUDGET } from '../lib/i18n/budget'
 import type { MonthlyTotal } from '../lib/budgetInsights'
 
 export function ExpenseTrendChart({ months }: { months: MonthlyTotal[] }) {
   const { lang } = useLanguage()
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const hasData = months.some((m) => m.amount > 0)
 
   if (!hasData) {

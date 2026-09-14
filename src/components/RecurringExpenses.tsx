@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Card } from './Card'
 import { UpgradePrompt } from './UpgradePrompt'
-import { formatCurrency, formatCurrencyEN, getTodayDateString } from '../lib/format'
+import { getTodayDateString } from '../lib/format'
 import { useCategories } from '../hooks/useCategories'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { FALLBACK_CATEGORY } from '../lib/categories'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { BUDGET } from '../lib/i18n/budget'
@@ -263,7 +264,7 @@ export function RecurringExpenses({
 }) {
   const { lang } = useLanguage()
   const t = BUDGET[lang].recurringExpenses
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const [editingId, setEditingId] = useState<string | null>(null)
   const now = new Date()
 

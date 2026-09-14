@@ -1,6 +1,6 @@
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { IncomeExpenseTrendPoint } from '../lib/statistics'
 
@@ -63,7 +63,7 @@ function TrendTooltip({
 export function IncomeExpenseTrendChart({ points }: { points: IncomeExpenseTrendPoint[] }) {
   const { lang } = useLanguage()
   const t = STATISTIQUES[lang].incomeExpenseTrendChart
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
 
   if (points.length < 2) {
     return <p className="text-sm text-muted">{t.notEnoughData}</p>

@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 import { applyAccentColor, applyTheme, type AccentColor, type Theme } from '../lib/theme'
+import type { Currency } from '../lib/format'
 import type { MainGoal, TrackingFrequency } from '../lib/onboardingProfile'
 
 interface PreferencesContextValue {
@@ -10,6 +11,7 @@ interface PreferencesContextValue {
   accentColor: AccentColor
   theme: Theme
   avatarEmoji: string | null
+  currency: Currency
   onboardingMainGoal: MainGoal | null
   onboardingTriedOtherApp: boolean | null
   onboardingFrequency: TrackingFrequency | null
@@ -17,6 +19,7 @@ interface PreferencesContextValue {
   setAccentColor: (value: AccentColor) => void
   setTheme: (value: Theme) => void
   setAvatarEmoji: (value: string | null) => void
+  setCurrency: (value: Currency) => void
   setOnboardingProfile: (mainGoal: MainGoal, triedOtherApp: boolean, frequency: TrackingFrequency) => void
   incrementCsvImportCount: () => void
 }
@@ -35,6 +38,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [accentColor, setAccentColorState] = useState<AccentColor>('bleu')
   const [theme, setThemeState] = useState<Theme>('dark')
   const [avatarEmoji, setAvatarEmojiState] = useState<string | null>(null)
+  const [currency, setCurrencyState] = useState<Currency>('CAD')
   const [onboardingMainGoal, setOnboardingMainGoalState] = useState<MainGoal | null>(null)
   const [onboardingTriedOtherApp, setOnboardingTriedOtherAppState] = useState<boolean | null>(null)
   const [onboardingFrequency, setOnboardingFrequencyState] = useState<TrackingFrequency | null>(null)
@@ -47,7 +51,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     const { data, error: fetchError } = await supabase
       .from('user_preferences')
       .select(
-        'accent_color, theme, avatar_emoji, onboarding_main_goal, onboarding_tried_other_app, onboarding_frequency, csv_import_count',
+        'accent_color, theme, avatar_emoji, currency, onboarding_main_goal, onboarding_tried_other_app, onboarding_frequency, csv_import_count',
       )
       .eq('user_id', userId)
       .maybeSingle()
@@ -59,6 +63,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setAccentColorState(nextAccent)
       setThemeState(nextTheme)
       setAvatarEmojiState(data?.avatar_emoji ?? null)
+      setCurrencyState((data?.currency as Currency | undefined) ?? 'CAD')
       setOnboardingMainGoalState((data?.onboarding_main_goal as MainGoal | null) ?? null)
       setOnboardingTriedOtherAppState(data?.onboarding_tried_other_app ?? null)
       setOnboardingFrequencyState((data?.onboarding_frequency as TrackingFrequency | null) ?? null)
@@ -81,6 +86,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       accent_color?: AccentColor
       theme?: Theme
       avatar_emoji?: string | null
+      currency?: Currency
       onboarding_main_goal?: MainGoal
       onboarding_tried_other_app?: boolean
       onboarding_frequency?: TrackingFrequency
@@ -121,6 +127,14 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [upsert],
   )
 
+  const setCurrency = useCallback(
+    (value: Currency) => {
+      setCurrencyState(value)
+      upsert({ currency: value })
+    },
+    [upsert],
+  )
+
   // Written once, at the end of Onboarding — read back by lib/tips.ts (via
   // Dashboard) to tilt the personalized tips' tone toward the goal the user
   // actually said they cared about.
@@ -155,6 +169,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     accentColor,
     theme,
     avatarEmoji,
+    currency,
     onboardingMainGoal,
     onboardingTriedOtherApp,
     onboardingFrequency,
@@ -162,6 +177,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     setAccentColor,
     setTheme,
     setAvatarEmoji,
+    setCurrency,
     setOnboardingProfile,
     incrementCsvImportCount,
   }

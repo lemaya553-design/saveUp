@@ -11,7 +11,6 @@ import type { useFixedExpenses } from '../hooks/useFixedExpenses'
 import type { useSavingsGoals } from '../hooks/useSavingsGoals'
 import type { useSavingsContributions } from '../hooks/useSavingsContributions'
 import type { CategorySpendingEntry } from '../lib/categorySpending'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { FALLBACK_CATEGORY } from '../lib/categories'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { sumThisMonth } from '../lib/budgetInsights'
@@ -19,6 +18,7 @@ import { computeBudgetScore, computeFixedRatioScore } from '../lib/financialHeal
 import { estimateMonthlyRate } from '../lib/savingsProjection'
 import { formatMonthsAsDuration } from '../lib/investment'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { EPARGNE } from '../lib/i18n/epargne'
 import { COMMON } from '../lib/i18n/common'
 
@@ -48,7 +48,7 @@ export function SimulateurTab({
 }) {
   const { lang } = useLanguage()
   const t = EPARGNE[lang].simulateurTab
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const [simulatedAmounts, setSimulatedAmounts] = useState<Record<string, number>>({})
   const [simulatedCategoryAmounts, setSimulatedCategoryAmounts] = useState<Record<string, number>>({})
   const [simulatedSavings, setSimulatedSavings] = useState<number | null>(null)

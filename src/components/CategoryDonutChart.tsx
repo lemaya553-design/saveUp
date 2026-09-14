@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { colorForCategoryLabel } from '../lib/categoryColors'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 
@@ -60,7 +60,7 @@ export function CategoryDonutChart({
   formatCount?: (count: number) => string
 }) {
   const { lang } = useLanguage()
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const resolvedFormatCount = formatCount ?? STATISTIQUES[lang].categoryDonut.transactionCount
   const [hovered, setHovered] = useState<string | null>(null)
 

@@ -10,7 +10,7 @@ import { useLoginStreak } from '../hooks/useLoginStreak'
 import { useIncome } from '../hooks/useIncome'
 import { useSubscription } from '../hooks/useSubscription'
 import { useLanguage } from '../hooks/useLanguage'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { isAtLeast, splitByLimit } from '../lib/plans'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import { TIER_ICONS, TIER_UNLOCKED_CLASS } from './rewardIcons'
@@ -42,7 +42,7 @@ export function RecompensesTab() {
   const subscription = useSubscription()
   const { lang } = useLanguage()
   const t = STATISTIQUES[lang].recompenses
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
 
   const loading = goals.loading || contributions.loading || claimedBadges.loading || income.loading
   const error = goals.error || contributions.error || claimedBadges.error

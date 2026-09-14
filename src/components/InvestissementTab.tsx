@@ -9,7 +9,7 @@ import { BudgetInsight } from './BudgetInsight'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useInvestmentBalance } from '../hooks/useInvestmentBalance'
 import { useLanguage } from '../hooks/useLanguage'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { EPARGNE } from '../lib/i18n/epargne'
 import { COMMON } from '../lib/i18n/common'
 import {
@@ -29,7 +29,7 @@ import {
 export function InvestissementTab() {
   const { lang } = useLanguage()
   const t = EPARGNE[lang].investissementTab
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const goals = useSavingsGoals()
   const investmentBalance = useInvestmentBalance()
   const [initialAmount, setInitialAmount] = useState('1000')

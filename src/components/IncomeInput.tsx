@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Card } from './Card'
 import { useLanguage } from '../hooks/useLanguage'
+import { usePreferences } from '../hooks/usePreferences'
+import { getCurrencySymbol } from '../lib/format'
 import { COMMON } from '../lib/i18n/common'
 
 export function IncomeInput({
@@ -14,6 +16,7 @@ export function IncomeInput({
 }) {
   const [draft, setDraft] = useState(String(monthlyIncome || ''))
   const { lang } = useLanguage()
+  const { currency } = usePreferences()
   const t = COMMON[lang].incomeInput
 
   function commit() {
@@ -25,7 +28,7 @@ export function IncomeInput({
   return (
     <Card title={t.title} hint={t.hint} compact={compact}>
       <label className="flex items-center gap-2">
-        <span className="text-muted">$</span>
+        <span className="text-muted">{getCurrencySymbol(currency, lang)}</span>
         <input
           type="number"
           inputMode="decimal"

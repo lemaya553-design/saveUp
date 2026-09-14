@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Modal } from './Modal'
 import { UpgradePrompt } from './UpgradePrompt'
-import { formatCurrency, formatCurrencyEN, getTodayDateString } from '../lib/format'
+import { getTodayDateString } from '../lib/format'
 import { getFrequencyOptions, type RecurringFrequency } from '../lib/recurringExpenses'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { BUDGET } from '../lib/i18n/budget'
 import type { FixedExpense } from '../hooks/useFixedExpenses'
 
@@ -35,7 +36,7 @@ export function ConvertToRecurringModal({
 }) {
   const { lang } = useLanguage()
   const t = BUDGET[lang].convertModal
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const [frequency, setFrequency] = useState<RecurringFrequency>('monthly')
   const [startDate, setStartDate] = useState(getTodayDateString())
   const [hasEndDate, setHasEndDate] = useState(false)

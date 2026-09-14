@@ -1,12 +1,12 @@
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { BUDGET } from '../lib/i18n/budget'
 import type { CategoryTotal } from '../lib/budgetInsights'
 
 export function CategoryBreakdown({ categories }: { categories: CategoryTotal[] }) {
   const { lang } = useLanguage()
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   if (categories.length === 0) {
     return <p className="text-sm text-muted">{BUDGET[lang].categoryBreakdown.empty}</p>
   }

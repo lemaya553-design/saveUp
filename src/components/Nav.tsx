@@ -10,6 +10,7 @@ import { LogoMark } from './Logo'
 import { AvatarCircle } from './AvatarCircle'
 import { TrialCountdownBadge } from './TrialCountdownBadge'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { CurrencySwitcher } from './CurrencySwitcher'
 
 function MenuIcon({ className }: { className: string }) {
   return (
@@ -91,9 +92,6 @@ export function Nav() {
             </NavLink>
           ))}
           <TrialCountdownBadge />
-          <div className="ml-1">
-            <LanguageSwitcher />
-          </div>
           <button
             type="button"
             onClick={handleSignOut}
@@ -101,13 +99,19 @@ export function Nav() {
           >
             {t.signOut}
           </button>
+          <div className="ml-1 flex items-center gap-1.5">
+            <LanguageSwitcher />
+            <CurrencySwitcher />
+          </div>
           <Link to="/parametres" aria-label={t.settingsAriaLabel} className="ml-1">
             <AvatarCircle emoji={avatarEmoji} size="sm" />
           </Link>
         </nav>
 
-        <div className="flex items-center gap-2 lg:hidden">
+        <div className="flex items-center gap-1.5 lg:hidden">
           <TrialCountdownBadge />
+          <LanguageSwitcher />
+          <CurrencySwitcher />
           <Link to="/parametres" aria-label={t.settingsAriaLabel}>
             <AvatarCircle emoji={avatarEmoji} size="sm" />
           </Link>
@@ -144,9 +148,6 @@ export function Nav() {
                 </NavLink>
               </li>
             ))}
-            <li className="flex items-center px-3 py-2">
-              <LanguageSwitcher />
-            </li>
             <li>
               <button
                 type="button"

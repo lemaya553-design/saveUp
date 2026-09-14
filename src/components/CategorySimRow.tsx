@@ -1,5 +1,5 @@
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { EPARGNE } from '../lib/i18n/epargne'
 
 // Same slider row as FixedExpenseSimRow, adapted for a plain
@@ -20,7 +20,7 @@ export function CategorySimRow({
 }) {
   const { lang } = useLanguage()
   const t = EPARGNE[lang].simRow
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const sliderMax = Math.max(actualAmount * 2, 50)
   const delta = simulatedAmount - actualAmount
 

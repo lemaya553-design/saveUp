@@ -1,23 +1,49 @@
-const currencyFormatter = new Intl.NumberFormat('fr-CA', {
-  style: 'currency',
-  currency: 'CAD',
-})
+import type { Lang } from './i18n/language'
 
-export function formatCurrency(amount: number): string {
-  return currencyFormatter.format(amount)
+export type Currency = 'CAD' | 'USD' | 'EUR' | 'GBP' | 'CHF'
+export const CURRENCIES: Currency[] = ['CAD', 'USD', 'EUR', 'GBP', 'CHF']
+
+function localeFor(lang: Lang): string {
+  return lang === 'fr' ? 'fr-CA' : 'en-CA'
 }
 
-// English marketing copy only (landing page, Tarifs when logged out) — the
-// signed-in app is French-only and keeps using formatCurrency above. A bare
-// "$" in English reads as USD by default; appending "CAD" explicitly avoids
-// that ambiguity for an English-speaking visitor comparing prices.
-const currencyFormatterEN = new Intl.NumberFormat('en-CA', {
-  style: 'currency',
-  currency: 'CAD',
-})
+const formatterCache = new Map<string, Intl.NumberFormat>()
 
-export function formatCurrencyEN(amount: number): string {
-  return `${currencyFormatterEN.format(amount)} CAD`
+function getFormatter(lang: Lang, currency: Currency): Intl.NumberFormat {
+  const key = `${lang}:${currency}`
+  let formatter = formatterCache.get(key)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(localeFor(lang), { style: 'currency', currency })
+    formatterCache.set(key, formatter)
+  }
+  return formatter
+}
+
+// The one place a dollar amount gets turned into display text anywhere in
+// the app. `currency` is purely cosmetic — it changes which symbol/format
+// Intl.NumberFormat renders, never the underlying stored number, and there
+// is no exchange-rate conversion anywhere. `lang` picks the number
+// convention (1 234,56 € vs. €1,234.56 for the same EUR amount), independent
+// of which currency is selected.
+export function formatMoney(amount: number, lang: Lang, currency: Currency): string {
+  return getFormatter(lang, currency).format(amount)
+}
+
+// For real billing amounts (Stripe subscription pricing) only — these are
+// actually charged in CAD regardless of the user's cosmetic display-currency
+// preference, so showing them in another currency would misstate what gets
+// charged. Never wire this to the currency preference.
+export function formatBillingAmount(amount: number, lang: Lang): string {
+  return formatMoney(amount, lang, 'CAD')
+}
+
+// Just the symbol/code (e.g. "$", "€", "CHF"), for a raw number input's
+// adornment rather than a fully formatted amount.
+export function getCurrencySymbol(currency: Currency, lang: Lang): string {
+  const part = getFormatter(lang, currency)
+    .formatToParts(0)
+    .find((p) => p.type === 'currency')
+  return part?.value ?? currency
 }
 
 // Monday 00:00:00 local time of the week containing `date`.

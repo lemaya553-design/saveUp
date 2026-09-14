@@ -7,7 +7,8 @@ import { useCategories } from '../hooks/useCategories'
 import { useRecurringExpenses } from '../hooks/useRecurringExpenses'
 import { useSubscription } from '../hooks/useSubscription'
 import { useLanguage } from '../hooks/useLanguage'
-import { formatCurrency, formatCurrencyEN, getTodayDateString } from '../lib/format'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
+import { getTodayDateString } from '../lib/format'
 import { FALLBACK_CATEGORY } from '../lib/categories'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import type { RecurringFrequency } from '../lib/recurringExpenses'
@@ -59,7 +60,7 @@ export function QuickAddFab() {
   const { showToast } = useToast()
   const { lang } = useLanguage()
   const t = MISC[lang].quickAddFab
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const [open, setOpen] = useState(false)
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')

@@ -274,6 +274,7 @@ export interface Database {
           accent_color: string
           theme: string
           avatar_emoji: string | null
+          currency: string
           onboarding_main_goal: string | null
           onboarding_tried_other_app: boolean | null
           onboarding_frequency: string | null
@@ -285,6 +286,7 @@ export interface Database {
           accent_color?: string
           theme?: string
           avatar_emoji?: string | null
+          currency?: string
           onboarding_main_goal?: string | null
           onboarding_tried_other_app?: boolean | null
           onboarding_frequency?: string | null
@@ -296,6 +298,7 @@ export interface Database {
           accent_color?: string
           theme?: string
           avatar_emoji?: string | null
+          currency?: string
           onboarding_main_goal?: string | null
           onboarding_tried_other_app?: boolean | null
           onboarding_frequency?: string | null

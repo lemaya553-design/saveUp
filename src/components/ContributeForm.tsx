@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Card } from './Card'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { EPARGNE } from '../lib/i18n/epargne'
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
 
@@ -18,7 +18,7 @@ export function ContributeForm({
 }) {
   const { lang } = useLanguage()
   const t = EPARGNE[lang].contributeForm
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const [goalId, setGoalId] = useState(goals[0]?.id ?? '')
   const [amount, setAmount] = useState('')
   const [submitting, setSubmitting] = useState(false)

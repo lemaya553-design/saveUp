@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
-import { formatCurrency } from '../lib/format'
+import { formatMoney as formatMoneyRaw } from '../lib/format'
+
+const formatCurrency = (amount: number) => formatMoneyRaw(amount, 'fr', 'CAD')
 import { computeBudgetScore, computeFixedRatioScore, getScoreColorClass } from '../lib/financialHealth'
 import { ScoreTrendBadge } from './ScoreTrendBadge'
 import type { ScoreTrend } from '../hooks/useFinancialHealth'

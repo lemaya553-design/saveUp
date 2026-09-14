@@ -1,6 +1,6 @@
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useCategories } from '../hooks/useCategories'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { EPARGNE } from '../lib/i18n/epargne'
 
@@ -30,7 +30,7 @@ export function HypotheticalExpenses({
 }) {
   const { lang } = useLanguage()
   const t = EPARGNE[lang].hypotheticalExpenses
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const { categoryNames } = useCategories()
 
   return (

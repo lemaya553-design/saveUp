@@ -7,7 +7,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
 import { useLanguage } from '../hooks/useLanguage'
 import { PLAN_LIMITS, PLAN_ORDER, TRIAL_DAYS, type Plan } from '../lib/plans'
-import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { formatBillingAmount } from '../lib/format'
 import { TARIFS } from '../lib/i18n/tarifs'
 
 export function Tarifs() {
@@ -20,7 +20,7 @@ export function Tarifs() {
   // marketing header.
   const { lang } = useLanguage()
   const t = TARIFS[lang]
-  const fmt = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const fmt = (amount: number) => formatBillingAmount(amount, lang)
 
   async function handleChoose(planId: Exclude<Plan, 'free'>) {
     if (!user) {

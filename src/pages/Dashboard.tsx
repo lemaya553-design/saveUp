@@ -26,7 +26,7 @@ import { usePreferences } from '../hooks/usePreferences'
 import { useLoginStreak } from '../hooks/useLoginStreak'
 import { useClaimedBadges } from '../hooks/useClaimedBadges'
 import { useLanguage } from '../hooks/useLanguage'
-import { formatCurrency } from '../lib/format'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { getSpendableBudgetCaption, sumThisMonth } from '../lib/budgetInsights'
 import { getBudgetPaceAlert, getSavingsGoalLateAlert } from '../lib/alerts'
 import { generatePersonalizedTips } from '../lib/tips'
@@ -50,6 +50,7 @@ export function Dashboard() {
   const navigate = useNavigate()
   const { lang } = useLanguage()
   const t = DASHBOARD[lang]
+  const formatMoney = useMoneyFormat()
   const health = useFinancialHealth()
   const goals = useSavingsGoals()
   const contributions = useSavingsContributions()
@@ -160,6 +161,7 @@ export function Dashboard() {
       mainGoal: preferences.onboardingMainGoal,
     },
     lang,
+    preferences.currency,
   )
 
   return (
@@ -249,16 +251,16 @@ export function Dashboard() {
         <div className="grid gap-4 sm:col-span-2">
           <DashboardStat
             label={t.spent.label}
-            value={formatCurrency(health.spentThisMonth)}
+            value={formatMoney(health.spentThisMonth)}
             valueColorClass={isOverBudget ? 'text-red-400' : 'text-ink'}
             progress={budgetPct}
             progressColorClass={isOverBudget ? 'bg-red-400' : 'bg-primary'}
-            caption={getSpendableBudgetCaption(rawSpendableBudget, lang)}
+            caption={getSpendableBudgetCaption(rawSpendableBudget, lang, preferences.currency)}
           />
 
           <DashboardStat
             label={t.saved.label}
-            value={formatCurrency(totalCurrentAmount)}
+            value={formatMoney(totalCurrentAmount)}
             valueColorClass="text-success"
             progress={totalTargetAmount > 0 ? goalProgress : undefined}
             progressColorClass="bg-success"
@@ -267,7 +269,7 @@ export function Dashboard() {
                 {goals.goals.length === 0
                   ? t.saved.noGoal
                   : goals.goals.length === 1
-                    ? t.saved.oneGoal(formatCurrency(totalTargetAmount))
+                    ? t.saved.oneGoal(formatMoney(totalTargetAmount))
                     : t.saved.manyGoals(goals.goals.length)}
               </Link>
             }
@@ -278,17 +280,17 @@ export function Dashboard() {
       <div className="grid gap-6">
         <Card title={t.accumulated.title} hint={t.accumulated.hint}>
           <p className="text-3xl font-bold text-success sm:text-4xl">
-            {formatCurrency(totalCurrentAmount + investmentBalance.currentAmount)}
+            {formatMoney(totalCurrentAmount + investmentBalance.currentAmount)}
           </p>
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-xs text-muted">{t.accumulated.savedLabel}</p>
-              <p className="font-medium text-ink">{formatCurrency(totalCurrentAmount)}</p>
+              <p className="font-medium text-ink">{formatMoney(totalCurrentAmount)}</p>
             </div>
             <div>
               <p className="text-xs text-muted">{t.accumulated.investedLabel}</p>
               <Link to="/epargne/investissement" className="font-medium text-ink hover:text-accent">
-                {formatCurrency(investmentBalance.currentAmount)}
+                {formatMoney(investmentBalance.currentAmount)}
               </Link>
             </div>
           </div>

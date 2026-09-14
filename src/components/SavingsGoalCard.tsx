@@ -4,7 +4,7 @@ import { ProgressBar } from './ProgressBar'
 import { GoalPhotoPicker } from './GoalPhotoPicker'
 import { CreateDuelModal } from './CreateDuelModal'
 import { useToast } from './ToastProvider'
-import { formatCurrency, formatCurrencyEN, getFarFutureDateString, getTodayDateString } from '../lib/format'
+import { getFarFutureDateString, getTodayDateString } from '../lib/format'
 import {
   computeWeeklyContributionDots,
   countRecentContributions,
@@ -18,6 +18,7 @@ import type { DuelDurationDays } from '../lib/duels'
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber'
 import { useSubscription } from '../hooks/useSubscription'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { EPARGNE } from '../lib/i18n/epargne'
 import { COMMON } from '../lib/i18n/common'
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
@@ -93,7 +94,7 @@ export function SavingsGoalCard({
   const subscription = useSubscription()
   const { lang } = useLanguage()
   const t = EPARGNE[lang].goalCard
-  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const formatMoney = useMoneyFormat()
   const { showToast } = useToast()
   const [editing, setEditing] = useState(false)
   const [duelModalOpen, setDuelModalOpen] = useState(false)

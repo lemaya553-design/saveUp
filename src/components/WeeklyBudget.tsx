@@ -1,5 +1,7 @@
 import { Card } from './Card'
-import { formatCurrency } from '../lib/format'
+import { formatMoney as formatMoneyRaw } from '../lib/format'
+
+const formatCurrency = (amount: number) => formatMoneyRaw(amount, 'fr', 'CAD')
 
 export function WeeklyBudget({
   weeklyBudget,

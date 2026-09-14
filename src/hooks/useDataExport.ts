@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react'
 import type * as XLSXType from 'xlsx'
 import { supabase } from '../lib/supabase'
-import { formatCurrency, formatCurrencyEN, toDateString } from '../lib/format'
+import { formatMoney, toDateString, type Currency } from '../lib/format'
 import { useLanguage } from './useLanguage'
+import { usePreferences } from './usePreferences'
 import { EXPORTS } from '../lib/i18n/exports'
 import type { Lang } from '../lib/i18n/language'
 
@@ -65,15 +66,13 @@ async function loadExportData(): Promise<{ data: ExportData | null; error: strin
   }
 }
 
-// EN exports reuse formatCurrencyEN (CAD-suffixed) so an English reader
-// doesn't misread a bare "$" as USD — same rationale as the marketing pages,
-// see lib/format.ts.
-function fmtCurrency(amount: number, lang: Lang): string {
-  return lang === 'en' ? formatCurrencyEN(amount) : formatCurrency(amount)
+function fmtCurrency(amount: number, lang: Lang, currency: Currency): string {
+  return formatMoney(amount, lang, currency)
 }
 
 export function useDataExport() {
   const { lang } = useLanguage()
+  const { currency } = usePreferences()
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -177,10 +176,10 @@ export function useDataExport() {
       startY: 32,
       head: [[t.pdfSummaryHead, t.pdfValueHead]],
       body: [
-        [t.monthlyIncome, fmtCurrency(data.monthlyIncome, lang)],
-        [t.totalFixedExpenses, fmtCurrency(data.fixedExpenses.reduce((s, e) => s + e.amount, 0), lang)],
+        [t.monthlyIncome, fmtCurrency(data.monthlyIncome, lang, currency)],
+        [t.totalFixedExpenses, fmtCurrency(data.fixedExpenses.reduce((s, e) => s + e.amount, 0), lang, currency)],
         [t.totalTransactions, String(data.transactions.length)],
-        [t.totalSaved, fmtCurrency(data.goals.reduce((s, g) => s + g.current, 0), lang)],
+        [t.totalSaved, fmtCurrency(data.goals.reduce((s, g) => s + g.current, 0), lang, currency)],
       ],
     })
 
@@ -192,7 +191,7 @@ export function useDataExport() {
       autoTable(doc, {
         startY: cursorY + 4,
         head: [[t.colName, t.colCategory, t.colAmount]],
-        body: data.fixedExpenses.map((e) => [e.name, e.category, fmtCurrency(e.amount, lang)]),
+        body: data.fixedExpenses.map((e) => [e.name, e.category, fmtCurrency(e.amount, lang, currency)]),
       })
       cursorY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10
     }
@@ -203,7 +202,7 @@ export function useDataExport() {
       autoTable(doc, {
         startY: cursorY + 4,
         head: [[t.colCategory, t.colTotal, t.colPctOfTotal]],
-        body: data.categoryTotals.map((c) => [c.category, fmtCurrency(c.total, lang), `${Math.round(c.pct)}%`]),
+        body: data.categoryTotals.map((c) => [c.category, fmtCurrency(c.total, lang, currency), `${Math.round(c.pct)}%`]),
       })
       cursorY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10
     }
@@ -216,8 +215,8 @@ export function useDataExport() {
         head: [[t.colGoal, t.pdfColCurrent, t.pdfColTarget, t.pdfColProgress]],
         body: data.goals.map((g) => [
           g.name,
-          fmtCurrency(g.current, lang),
-          fmtCurrency(g.target, lang),
+          fmtCurrency(g.current, lang, currency),
+          fmtCurrency(g.target, lang, currency),
           `${Math.round(g.progressPct)}%`,
         ]),
       })
@@ -231,14 +230,14 @@ export function useDataExport() {
       autoTable(doc, {
         startY: 24,
         head: [[t.colDate, t.colDescription, t.colCategory, t.colAmount]],
-        body: data.transactions.map((tr) => [tr.date, tr.description, tr.category, fmtCurrency(tr.amount, lang)]),
+        body: data.transactions.map((tr) => [tr.date, tr.description, tr.category, fmtCurrency(tr.amount, lang, currency)]),
         styles: { fontSize: 8 },
       })
     }
 
     doc.save(`saveup-rapport-${toDateString(new Date())}.pdf`)
     setExporting(false)
-  }, [lang])
+  }, [lang, currency])
 
   return { exporting, error, exportExcel, exportPdf }
 }

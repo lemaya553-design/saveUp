@@ -241,6 +241,13 @@ export interface EpargneContent {
     addPhoto: string
     removePhoto: string
   }
+  savingsComparisonChart: {
+    today: string
+    monthsLabel: (n: number) => string
+    tooltip: (monthLabel: string, currentAmount: string, simulatedAmount: string) => string
+    currentLabel: string
+    simulatedLabel: string
+  }
 }
 
 export const EPARGNE: Record<Lang, EpargneContent> = {
@@ -544,6 +551,13 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
       addPhoto: 'Ajouter une photo',
       removePhoto: 'Supprimer la photo',
     },
+    savingsComparisonChart: {
+      today: "Aujourd'hui",
+      monthsLabel: (n) => `${n} mois`,
+      tooltip: (monthLabel, currentAmount, simulatedAmount) => `${monthLabel} · ${currentAmount} vs ${simulatedAmount}`,
+      currentLabel: 'Actuel',
+      simulatedLabel: 'Simulé',
+    },
   },
   en: {
     tabs: {
@@ -831,6 +845,13 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
       replacePhoto: 'Replace photo',
       addPhoto: 'Add a photo',
       removePhoto: 'Remove photo',
+    },
+    savingsComparisonChart: {
+      today: 'Today',
+      monthsLabel: (n) => `${n} months`,
+      tooltip: (monthLabel, currentAmount, simulatedAmount) => `${monthLabel} · ${currentAmount} vs ${simulatedAmount}`,
+      currentLabel: 'Current',
+      simulatedLabel: 'Simulated',
     },
   },
 }

@@ -4,8 +4,10 @@ import { UpgradePrompt } from './UpgradePrompt'
 import { useCategories, type Category } from '../hooks/useCategories'
 import { useSubscription } from '../hooks/useSubscription'
 import { useLanguage } from '../hooks/useLanguage'
+import { usePreferences } from '../hooks/usePreferences'
 import { FALLBACK_CATEGORY } from '../lib/categories'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
+import { getCurrencySymbol } from '../lib/format'
 import { BUDGET } from '../lib/i18n/budget'
 import { COMMON } from '../lib/i18n/common'
 import type { Lang } from '../lib/i18n/language'
@@ -20,6 +22,7 @@ function BudgetInput({
   onSave: (id: string, value: number | null) => void
 }) {
   const t = BUDGET[lang].categoryManager
+  const { currency } = usePreferences()
   const [draft, setDraft] = useState(category.monthlyBudget !== null ? String(category.monthlyBudget) : '')
 
   function commit() {
@@ -48,7 +51,7 @@ function BudgetInput({
         placeholder={t.nonePlaceholder}
         className="w-20 rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-1 text-xs text-ink focus:border-primary focus:outline-none"
       />
-      <span>$</span>
+      <span>{getCurrencySymbol(currency, lang)}</span>
     </label>
   )
 }
