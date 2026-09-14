@@ -1,4 +1,5 @@
 import { getMonthRange, getPreviousMonthRange, toDateString } from './format'
+import type { Lang } from './i18n/language'
 
 // ---------------------------------------------------------------------------
 // 6-month (or fewer) spending trend
@@ -17,12 +18,14 @@ export interface MonthlySpendingPoint {
 // données").
 export function computeMonthlySpendingTrend(
   records: { amount: number; spent_at: string }[],
+  lang: Lang,
   now = new Date(),
   maxMonths = 6,
 ): MonthlySpendingPoint[] {
+  const locale = lang === 'fr' ? 'fr-CA' : 'en-CA'
   if (records.length === 0) {
     const { start } = getMonthRange(now)
-    return [{ label: start.toLocaleDateString('fr-CA', { month: 'short' }), monthStart: toDateString(start), amount: 0 }]
+    return [{ label: start.toLocaleDateString(locale, { month: 'short' }), monthStart: toDateString(start), amount: 0 }]
   }
 
   const earliestSpentAt = records.reduce((min, r) => (r.spent_at < min ? r.spent_at : min), records[0].spent_at)
@@ -43,7 +46,7 @@ export function computeMonthlySpendingTrend(
       .reduce((sum, r) => sum + r.amount, 0)
 
     points.push({
-      label: monthDate.toLocaleDateString('fr-CA', { month: 'short' }),
+      label: monthDate.toLocaleDateString(locale, { month: 'short' }),
       monthStart: toDateString(start),
       amount,
     })
@@ -74,10 +77,11 @@ export function computeIncomeExpenseTrend(
   adHocRecords: { amount: number; spent_at: string }[],
   currentFixedExpensesTotal: number,
   monthlyIncome: number,
+  lang: Lang,
   now = new Date(),
   maxMonths = 6,
 ): IncomeExpenseTrendPoint[] {
-  const monthlyAdHoc = computeMonthlySpendingTrend(adHocRecords, now, maxMonths)
+  const monthlyAdHoc = computeMonthlySpendingTrend(adHocRecords, lang, now, maxMonths)
 
   return monthlyAdHoc.map((point) => {
     const expenses = currentFixedExpensesTotal + point.amount

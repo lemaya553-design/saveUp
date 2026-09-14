@@ -1,4 +1,7 @@
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
+import { EPARGNE } from '../lib/i18n/epargne'
 import type { FixedExpense } from '../hooks/useFixedExpenses'
 
 export function FixedExpenseSimRow({
@@ -10,6 +13,9 @@ export function FixedExpenseSimRow({
   simulatedAmount: number
   onChange: (id: string, amount: number) => void
 }) {
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].simRow
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const sliderMax = Math.max(expense.amount * 2, 50)
   const delta = simulatedAmount - expense.amount
 
@@ -18,14 +24,14 @@ export function FixedExpenseSimRow({
       <div className="mb-1 flex items-center justify-between text-sm">
         <div>
           <span className="text-ink">{expense.name}</span>
-          <span className="ml-2 text-xs text-muted">{expense.category}</span>
+          <span className="ml-2 text-xs text-muted">{translateCategoryLabel(expense.category, lang)}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="font-medium text-ink">{formatCurrency(simulatedAmount)}</span>
+          <span className="font-medium text-ink">{formatMoney(simulatedAmount)}</span>
           {delta !== 0 && (
             <span className={`text-xs font-semibold ${delta < 0 ? 'text-success' : 'text-red-400'}`}>
               ({delta > 0 ? '+' : ''}
-              {formatCurrency(delta)})
+              {formatMoney(delta)})
             </span>
           )}
         </div>
@@ -38,9 +44,9 @@ export function FixedExpenseSimRow({
         value={Math.min(simulatedAmount, sliderMax)}
         onChange={(e) => onChange(expense.id, Number(e.target.value))}
         className="w-full accent-primary"
-        aria-label={`Montant simulé pour ${expense.name}`}
+        aria-label={t.simulatedAmountAria(expense.name)}
       />
-      <p className="text-xs text-muted">Actuel : {formatCurrency(expense.amount)}</p>
+      <p className="text-xs text-muted">{t.actual(formatMoney(expense.amount))}</p>
     </div>
   )
 }

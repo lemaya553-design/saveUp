@@ -8,7 +8,10 @@ import { BeforeAfterRow } from './BeforeAfterRow'
 import { BudgetInsight } from './BudgetInsight'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useInvestmentBalance } from '../hooks/useInvestmentBalance'
-import { formatCurrency } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { EPARGNE } from '../lib/i18n/epargne'
+import { COMMON } from '../lib/i18n/common'
 import {
   PROJECTION_HORIZONS_YEARS,
   computeContributionsBreakdown,
@@ -24,6 +27,9 @@ import {
 // already-loaded goals rather than threaded through props, same tradeoff as
 // every other self-contained tab in this app (RecategorizeCard, etc.).
 export function InvestissementTab() {
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].investissementTab
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const goals = useSavingsGoals()
   const investmentBalance = useInvestmentBalance()
   const [initialAmount, setInitialAmount] = useState('1000')
@@ -59,11 +65,11 @@ export function InvestissementTab() {
 
   const ruleOf72Text =
     ruleOf72Years !== null
-      ? `La règle du 72 : à ${input.annualRatePercent}% par année, un montant placé double environ tous les ${ruleOf72Years.toFixed(1)} ans, grâce à l'intérêt composé.`
-      : "La règle du 72 estime le temps pour doubler un placement (72 ÷ taux). Choisis un taux de rendement positif ci-dessus pour voir l'estimation."
+      ? t.ruleOf72(input.annualRatePercent, ruleOf72Years.toFixed(1))
+      : t.ruleOf72Fallback
 
   if (investmentBalance.loading) {
-    return <p className="text-sm text-muted">Chargement...</p>
+    return <p className="text-sm text-muted">{COMMON[lang].app.loading}</p>
   }
 
   const error = investmentBalance.error || goals.error
@@ -71,10 +77,10 @@ export function InvestissementTab() {
   return (
     <div>
       <QuickAmountEdit
-        label="Montant actuellement investi"
+        label={t.currentAmountLabel}
         amount={investmentBalance.currentAmount}
         onChange={investmentBalance.setCurrentAmount}
-        hint="Ton vrai montant investi à ce jour."
+        hint={t.currentAmountHint}
       />
 
       {error && (
@@ -84,13 +90,10 @@ export function InvestissementTab() {
       )}
 
       <div className="mt-6 grid gap-6">
-        <Card
-          title="Paramètres"
-          hint="Un scénario hypothétique — n'affecte pas ton montant réellement investi ci-dessus."
-        >
+        <Card title={t.settingsTitle} hint={t.settingsHint}>
           <div className="grid gap-4 sm:grid-cols-3">
             <label className="flex flex-col gap-1 text-sm text-muted">
-              Montant initial
+              {t.initialAmountLabel}
               <input
                 type="number"
                 inputMode="decimal"
@@ -103,7 +106,7 @@ export function InvestissementTab() {
             </label>
 
             <label className="flex flex-col gap-1 text-sm text-muted">
-              Taux de rendement annuel estimé (%)
+              {t.annualRateLabel}
               <input
                 type="number"
                 inputMode="decimal"
@@ -115,7 +118,7 @@ export function InvestissementTab() {
             </label>
 
             <label className="flex flex-col gap-1 text-sm text-muted">
-              Contribution mensuelle
+              {t.monthlyContributionLabel}
               <input
                 type="number"
                 inputMode="decimal"
@@ -129,7 +132,7 @@ export function InvestissementTab() {
           </div>
         </Card>
 
-        <Card title="Projection" hint="Ce que ton placement pourrait valoir, selon l'horizon choisi.">
+        <Card title={t.projectionTitle} hint={t.projectionHint}>
           <div className="mb-4 flex flex-wrap gap-2">
             {PROJECTION_HORIZONS_YEARS.map((years) => (
               <button
@@ -142,38 +145,30 @@ export function InvestissementTab() {
                     : 'bg-overlay/5 text-muted hover:text-ink'
                 }`}
               >
-                {years} an{years > 1 ? 's' : ''}
+                {t.years(years)}
               </button>
             ))}
           </div>
 
           <p className="text-3xl font-bold text-success sm:text-4xl">
-            {formatCurrency(breakdown.finalValue)}
+            {formatMoney(breakdown.finalValue)}
           </p>
-          <p className="mb-4 text-xs text-muted">
-            Valeur estimée dans {horizonYears} an{horizonYears > 1 ? 's' : ''}.
-          </p>
+          <p className="mb-4 text-xs text-muted">{t.estimatedValueIn(horizonYears)}</p>
 
           <GrowthChart points={growthSeries} />
         </Card>
 
-        <Card
-          title="Impact de ta contribution mensuelle"
-          hint={`Ce que ${formatCurrency(input.monthlyContribution)}/mois change sur ${horizonYears} an${horizonYears > 1 ? 's' : ''}.`}
-        >
+        <Card title={t.monthlyImpactTitle} hint={t.monthlyImpactHint(formatMoney(input.monthlyContribution), horizonYears)}>
           <BeforeAfterRow
-            label="Valeur finale"
+            label={t.finalValueLabel}
             before={withoutContributionValue}
             after={breakdown.finalValue}
-            formatValue={formatCurrency}
+            formatValue={formatMoney}
             higherIsBetter
           />
         </Card>
 
-        <Card
-          title="D'où vient l'argent"
-          hint={`Répartition entre tes contributions et les intérêts gagnés, sur ${horizonYears} an${horizonYears > 1 ? 's' : ''}.`}
-        >
+        <Card title={t.whereMoneyTitle} hint={t.whereMoneyHint(horizonYears)}>
           <ContributionsVsInterestChart
             totalContributions={breakdown.totalContributions}
             interestEarned={breakdown.interestEarned}
@@ -183,23 +178,17 @@ export function InvestissementTab() {
 
         <BudgetInsight text={ruleOf72Text} />
 
-        <Card
-          title="Tes objectifs d'épargne"
-          hint="Combien de temps il te faudrait pour les atteindre avec ces paramètres."
-        >
+        <Card title={t.goalsTitle} hint={t.goalsHint}>
           {goals.loading ? (
-            <p className="text-sm text-muted">Chargement...</p>
+            <p className="text-sm text-muted">{COMMON[lang].app.loading}</p>
           ) : goals.goals.length === 0 ? (
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-muted">
-                Fixe un objectif dans l'onglet Objectifs pour voir combien de temps il te faudrait
-                pour l'atteindre avec ces paramètres.
-              </p>
+              <p className="text-sm text-muted">{t.noGoalsHint}</p>
               <Link
                 to="/epargne/objectifs"
                 className="whitespace-nowrap rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
               >
-                Fixer un objectif
+                {t.setGoalButton}
               </Link>
             </div>
           ) : (
@@ -213,10 +202,10 @@ export function InvestissementTab() {
                     <p className="font-medium text-ink">{goal.name}</p>
                     <p className="text-muted">
                       {alreadyMet
-                        ? '🎉 Déjà atteint.'
+                        ? t.alreadyReached
                         : months !== null
-                          ? `Avec ces paramètres, tu l'atteindrais en environ ${formatMonthsAsDuration(months)}.`
-                          : "Avec ces paramètres, tu ne l'atteindrais pas dans un horizon raisonnable — augmente le montant initial, la contribution ou le taux."}
+                          ? t.wouldReachWithParams(formatMonthsAsDuration(months, lang))
+                          : t.wouldNotReach}
                     </p>
                   </li>
                 )
@@ -225,11 +214,7 @@ export function InvestissementTab() {
           )}
         </Card>
 
-        <p className="text-xs text-muted">
-          Ceci est un outil éducatif basé sur un calcul d'intérêt composé théorique et ne
-          constitue pas un conseil financier. Les rendements réels varient et peuvent être
-          négatifs.
-        </p>
+        <p className="text-xs text-muted">{t.disclaimer}</p>
       </div>
     </div>
   )

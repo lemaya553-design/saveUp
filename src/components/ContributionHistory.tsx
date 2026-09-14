@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Card } from './Card'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { EPARGNE } from '../lib/i18n/epargne'
 import type { Contribution } from '../hooks/useSavingsContributions'
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
 
@@ -13,14 +15,17 @@ export function ContributionHistory({
   contributions: Contribution[]
   goals: SavingsGoal[]
 }) {
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].contributionHistory
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const [showAll, setShowAll] = useState(false)
   const visible = showAll ? contributions : contributions.slice(0, COLLAPSED_COUNT)
   const goalNameById = new Map(goals.map((g) => [g.id, g.name]))
 
   return (
-    <Card title="Historique des contributions" hint="Tes derniers ajouts, les plus récents en premier.">
+    <Card title={t.title} hint={t.hint}>
       {contributions.length === 0 ? (
-        <p className="text-sm text-muted">Aucune contribution enregistrée pour l'instant.</p>
+        <p className="text-sm text-muted">{t.empty}</p>
       ) : (
         <>
           <ul className="divide-y divide-overlay/10">
@@ -28,10 +33,10 @@ export function ContributionHistory({
               <li key={contribution.id} className="flex items-center justify-between py-2 text-sm">
                 <div>
                   <p className="text-ink">
-                    {contribution.goal_id ? goalNameById.get(contribution.goal_id) ?? 'Objectif supprimé' : 'Objectif supprimé'}
+                    {contribution.goal_id ? goalNameById.get(contribution.goal_id) ?? t.deletedGoal : t.deletedGoal}
                   </p>
                   <p className="text-xs text-muted">
-                    {new Date(contribution.created_at).toLocaleDateString('fr-CA', {
+                    {new Date(contribution.created_at).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-CA', {
                       day: 'numeric',
                       month: 'short',
                       year: 'numeric',
@@ -39,7 +44,7 @@ export function ContributionHistory({
                   </p>
                 </div>
                 <span className="font-medium text-success">
-                  +{formatCurrency(contribution.amount)}
+                  +{formatMoney(contribution.amount)}
                 </span>
               </li>
             ))}
@@ -51,7 +56,7 @@ export function ContributionHistory({
               onClick={() => setShowAll((v) => !v)}
               className="-mx-2 mt-3 rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
             >
-              {showAll ? 'Réduire' : `Voir tout l'historique (${contributions.length})`}
+              {showAll ? t.collapse : t.viewAll(contributions.length)}
             </button>
           )}
         </>

@@ -1,4 +1,6 @@
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { EPARGNE } from '../lib/i18n/epargne'
 
 export interface PaceComparisonEntry {
   id: string
@@ -13,12 +15,12 @@ export interface PaceComparisonEntry {
 // FOR THIS goal", not "which goal needs the most money", so a small goal's
 // bars stay just as readable as a big one's.
 export function PaceComparisonChart({ entries }: { entries: PaceComparisonEntry[] }) {
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].paceComparisonChart
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+
   if (entries.length === 0) {
-    return (
-      <p className="text-sm text-muted">
-        Ajoute une échéance à un objectif pour voir son rythme actuel comparé à ce qu'il faudrait.
-      </p>
-    )
+    return <p className="text-sm text-muted">{t.empty}</p>
   }
 
   return (
@@ -37,13 +39,13 @@ export function PaceComparisonChart({ entries }: { entries: PaceComparisonEntry[
                   entry.isAhead ? 'bg-success/15 text-success' : 'bg-red-400/15 text-red-400'
                 }`}
               >
-                {entry.isAhead ? '↑ En avance' : '↓ En retard'}
+                {entry.isAhead ? t.ahead : t.behind}
               </span>
             </div>
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
-                <span className="w-16 shrink-0 text-[11px] text-muted">Actuel</span>
+                <span className="w-16 shrink-0 text-[11px] text-muted">{t.actualLabel}</span>
                 <div className="h-3 flex-1 overflow-hidden rounded-full bg-overlay/10">
                   <div
                     className="h-full rounded-full bg-primary transition-all"
@@ -51,11 +53,11 @@ export function PaceComparisonChart({ entries }: { entries: PaceComparisonEntry[
                   />
                 </div>
                 <span className="w-24 shrink-0 text-right text-xs font-medium text-ink">
-                  {formatCurrency(entry.monthlyRate)}/mois
+                  {t.perMonth(formatMoney(entry.monthlyRate))}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-16 shrink-0 text-[11px] text-muted">Nécessaire</span>
+                <span className="w-16 shrink-0 text-[11px] text-muted">{t.requiredLabel}</span>
                 <div className="h-3 flex-1 overflow-hidden rounded-full bg-overlay/10">
                   <div
                     className="h-full rounded-full bg-accent transition-all"
@@ -63,7 +65,7 @@ export function PaceComparisonChart({ entries }: { entries: PaceComparisonEntry[
                   />
                 </div>
                 <span className="w-24 shrink-0 text-right text-xs font-medium text-ink">
-                  {formatCurrency(entry.requiredPerMonth)}/mois
+                  {t.perMonth(formatMoney(entry.requiredPerMonth))}
                 </span>
               </div>
             </div>

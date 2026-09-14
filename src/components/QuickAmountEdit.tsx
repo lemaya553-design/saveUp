@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { COMMON } from '../lib/i18n/common'
 
 export function QuickAmountEdit({
   label,
@@ -12,6 +14,8 @@ export function QuickAmountEdit({
   onChange: (value: number) => void
   hint?: string
 }) {
+  const { lang } = useLanguage()
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(String(amount || ''))
 
@@ -47,22 +51,22 @@ export function QuickAmountEdit({
             type="submit"
             className="rounded-lg bg-primary-strong px-3 py-1 font-medium text-white transition-all hover:brightness-110"
           >
-            Enregistrer
+            {COMMON[lang].app.save}
           </button>
           <button type="button" onClick={cancel} className="text-muted hover:text-ink">
-            Annuler
+            {COMMON[lang].app.cancel}
           </button>
         </form>
       ) : (
         <div className="flex items-center justify-end gap-2 text-sm">
           <span className="text-muted">{label} :</span>
-          <span className="font-medium text-ink">{formatCurrency(amount)}</span>
+          <span className="font-medium text-ink">{formatMoney(amount)}</span>
           <button
             type="button"
             onClick={() => setEditing(true)}
             className="text-accent hover:text-accent/80"
           >
-            Modifier
+            {COMMON[lang].app.modify}
           </button>
         </div>
       )}

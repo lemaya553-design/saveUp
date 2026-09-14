@@ -1,5 +1,7 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { MonthlySpendingPoint } from '../lib/statistics'
 
 const LINE_COLOR = '#4a6cf7'
@@ -7,27 +9,29 @@ const LINE_COLOR = '#4a6cf7'
 function TrendTooltip({
   active,
   payload,
+  formatMoney,
 }: {
   active?: boolean
   payload?: { payload: MonthlySpendingPoint }[]
+  formatMoney: (amount: number) => string
 }) {
   if (!active || !payload?.length) return null
   const point = payload[0].payload
   return (
     <div className="glass rounded-lg px-3 py-2 text-xs shadow-lg shadow-black/40">
       <p className="font-semibold capitalize text-ink">{point.label}</p>
-      <p className="text-muted">{formatCurrency(point.amount)}</p>
+      <p className="text-muted">{formatMoney(point.amount)}</p>
     </div>
   )
 }
 
 export function MonthlyTrendChart({ points }: { points: MonthlySpendingPoint[] }) {
+  const { lang } = useLanguage()
+  const t = STATISTIQUES[lang].monthlyTrendChart
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+
   if (points.length < 2) {
-    return (
-      <p className="text-sm text-muted">
-        Pas encore assez d'historique pour une tendance — reviens dans quelques semaines.
-      </p>
-    )
+    return <p className="text-sm text-muted">{t.notEnoughData}</p>
   }
 
   return (
@@ -37,7 +41,7 @@ export function MonthlyTrendChart({ points }: { points: MonthlySpendingPoint[] }
         <XAxis dataKey="label" tick={{ fill: 'var(--color-muted)', fontSize: 12 }} tickLine={false} axisLine={false} />
         <YAxis hide />
         <Tooltip
-          content={<TrendTooltip />}
+          content={<TrendTooltip formatMoney={formatMoney} />}
           cursor={{ stroke: 'color-mix(in srgb, var(--color-overlay) 15%, transparent)' }}
         />
         <Line

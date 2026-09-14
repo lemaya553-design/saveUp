@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { colorForCategoryLabel, SAVINGS_CATEGORY } from '../lib/categoryColors'
+import { useLanguage } from '../hooks/useLanguage'
+import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
+import { STATISTIQUES } from '../lib/i18n/statistiques'
+import type { Lang } from '../lib/i18n/language'
 import type { CategorySpendingEntry, CategoryTransaction } from '../lib/categorySpending'
 
 function barColor(entry: CategorySpendingEntry): string {
@@ -20,12 +24,14 @@ function BarTopLabel({
   width,
   index,
   entries,
+  formatMoney,
 }: {
   x?: number | string
   y?: number | string
   width?: number | string
   index?: number
   entries: CategorySpendingEntry[]
+  formatMoney: (amount: number) => string
 }) {
   if (x === undefined || y === undefined || width === undefined || index === undefined) return null
   const entry = entries[index]
@@ -44,7 +50,7 @@ function BarTopLabel({
       fontSize={12}
       fontWeight={600}
     >
-      {formatCurrency(entry.total)}
+      {formatMoney(entry.total)}
     </text>
   )
 }
@@ -64,6 +70,7 @@ function CategoryTick({
   onStartEdit,
   onCommitEdit,
   onCancelEdit,
+  lang,
 }: {
   x?: number | string
   y?: number | string
@@ -73,6 +80,7 @@ function CategoryTick({
   onStartEdit: (name: string) => void
   onCommitEdit: (id: string, newName: string) => void
   onCancelEdit: () => void
+  lang: Lang
 }) {
   if (x === undefined || y === undefined || !payload) return null
   const numX = Number(x)
@@ -111,7 +119,7 @@ function CategoryTick({
       style={{ cursor: isEditable ? 'pointer' : 'default' }}
     >
       <text x={0} y={12} textAnchor="middle" fill="var(--color-ink)" fontSize={12}>
-        {name}
+        {translateCategoryLabel(name, lang)}
         {isEditable ? (
           <tspan fill="var(--color-muted)" dx={3} fontSize={10}>
             ✎
@@ -125,27 +133,30 @@ function CategoryTick({
 function ChartTooltip({
   active,
   payload,
+  lang,
+  formatMoney,
 }: {
   active?: boolean
   payload?: { payload: CategorySpendingEntry }[]
+  lang: Lang
+  formatMoney: (amount: number) => string
 }) {
   if (!active || !payload?.length) return null
   const entry = payload[0].payload
   const isSavings = entry.category === SAVINGS_CATEGORY
+  const t = STATISTIQUES[lang].categorySpendingChart
   return (
     <div className="glass rounded-lg px-3 py-2 text-xs shadow-lg shadow-black/40">
-      <p className="font-semibold text-ink">{entry.category}</p>
+      <p className="font-semibold text-ink">{translateCategoryLabel(entry.category, lang)}</p>
       {isSavings ? (
-        <p className="mt-1 text-ink">Mis de côté ce mois-là</p>
+        <p className="mt-1 text-ink">{t.tooltipSavings}</p>
       ) : (
         <p className="mt-1 text-ink">
-          {entry.pctOfIncome !== null
-            ? `${entry.pctOfIncome.toFixed(0)}% de ton revenu`
-            : 'Revenu mensuel non défini'}
+          {entry.pctOfIncome !== null ? t.tooltipPctOfIncome(`${entry.pctOfIncome.toFixed(0)}%`) : t.tooltipNoIncome}
         </p>
       )}
-      <p className="text-muted">{formatCurrency(entry.total)}</p>
-      <p className="mt-1 text-accent">Clique pour voir le détail</p>
+      <p className="text-muted">{formatMoney(entry.total)}</p>
+      <p className="mt-1 text-accent">{t.tooltipClickDetail}</p>
     </div>
   )
 }
@@ -181,6 +192,9 @@ export function CategorySpendingChart({
   onRenameCategory?: (id: string, newName: string) => void | Promise<void>
   onReclassify?: (transaction: CategoryTransaction, newCategory: string) => void | Promise<void>
 }) {
+  const { lang } = useLanguage()
+  const t = STATISTIQUES[lang].categorySpendingChart
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
   const [anchor, setAnchor] = useState<DropdownAnchor | null>(null)
   const [editingCategory, setEditingCategory] = useState<string | null>(null)
@@ -248,11 +262,7 @@ export function CategorySpendingChart({
   }, [expandedCategory])
 
   if (displayEntries.length === 0) {
-    return (
-      <p className="text-sm text-muted">
-        Aucune dépense ponctuelle enregistrée ce mois-ci pour l'instant.
-      </p>
-    )
+    return <p className="text-sm text-muted">{t.empty}</p>
   }
 
   const expanded = displayEntries.find((e) => e.category === expandedCategory) ?? null
@@ -278,6 +288,7 @@ export function CategorySpendingChart({
                     onStartEdit={setEditingCategory}
                     onCommitEdit={commitRename}
                     onCancelEdit={() => setEditingCategory(null)}
+                    lang={lang}
                   />
                 )}
                 tickLine={false}
@@ -285,7 +296,7 @@ export function CategorySpendingChart({
                 interval={0}
                 height={28}
               />
-              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+              <Tooltip content={<ChartTooltip lang={lang} formatMoney={formatMoney} />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
               <Bar
                 dataKey="total"
                 radius={[6, 6, 0, 0]}
@@ -301,7 +312,7 @@ export function CategorySpendingChart({
                   setAnchor(anchorFromRect(rect))
                   setExpandedCategory(clicked)
                 }}
-                label={(props) => <BarTopLabel {...props} entries={displayEntries} />}
+                label={(props) => <BarTopLabel {...props} entries={displayEntries} formatMoney={formatMoney} />}
               >
                 {displayEntries.map((entry) => {
                   const isActive = entry.category === expandedCategory
@@ -358,7 +369,7 @@ export function CategorySpendingChart({
 
       {dragging && (
         <p className="mt-1 text-center text-xs text-muted">
-          Dépose sur une catégorie pour y déplacer « {dragging.transaction.description} ».
+          {t.dropHint(dragging.transaction.description)}
         </p>
       )}
 
@@ -372,7 +383,7 @@ export function CategorySpendingChart({
           >
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-accent">
-                {expanded.category}
+                {translateCategoryLabel(expanded.category, lang)}
               </p>
               <button
                 type="button"
@@ -383,32 +394,32 @@ export function CategorySpendingChart({
               </button>
             </div>
             <p className="mb-2 text-xs text-muted">
-              {expanded.transactions.length} transaction{expanded.transactions.length > 1 ? 's' : ''}
-              {expanded.category !== SAVINGS_CATEGORY && onReclassify && ' — glisse une ligne sur une autre colonne pour la reclasser'}
+              {t.transactionCount(expanded.transactions.length)}
+              {expanded.category !== SAVINGS_CATEGORY && onReclassify && t.dragToReclassify}
             </p>
             <ul className="max-h-48 divide-y divide-overlay/10 overflow-y-auto">
-              {expanded.transactions.map((t) => {
+              {expanded.transactions.map((tx) => {
                 const draggableItem = expanded.category !== SAVINGS_CATEGORY && !!onReclassify
                 return (
                   <li
-                    key={t.id}
+                    key={tx.id}
                     draggable={draggableItem}
                     onDragStart={(e) => {
                       if (!draggableItem) return
-                      setDragging({ transaction: t, fromCategory: expanded.category })
+                      setDragging({ transaction: tx, fromCategory: expanded.category })
                       e.dataTransfer.effectAllowed = 'move'
-                      e.dataTransfer.setData('text/plain', t.id)
+                      e.dataTransfer.setData('text/plain', tx.id)
                     }}
                     onDragEnd={endDrag}
                     className={`flex items-center justify-between gap-2 py-1.5 text-xs ${
                       draggableItem ? 'cursor-grab active:cursor-grabbing' : ''
-                    } ${dragging?.transaction.id === t.id ? 'opacity-40' : ''}`}
+                    } ${dragging?.transaction.id === tx.id ? 'opacity-40' : ''}`}
                   >
-                    <span className="min-w-0 flex-1 truncate text-ink">{t.description}</span>
+                    <span className="min-w-0 flex-1 truncate text-ink">{tx.description}</span>
                     <span className="whitespace-nowrap text-muted">
-                      {new Date(t.spent_at).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short' })}
+                      {new Date(tx.spent_at).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-CA', { day: 'numeric', month: 'short' })}
                     </span>
-                    <span className="whitespace-nowrap font-medium text-ink">{formatCurrency(t.amount)}</span>
+                    <span className="whitespace-nowrap font-medium text-ink">{formatMoney(tx.amount)}</span>
                   </li>
                 )
               })}

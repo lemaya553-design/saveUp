@@ -1,3 +1,5 @@
+import type { Lang } from './i18n/language'
+
 export interface ProjectionInput {
   initialAmount: number
   annualRatePercent: number
@@ -99,7 +101,18 @@ export function getRuleOf72Years(annualRatePercent: number): number | null {
   return 72 / annualRatePercent
 }
 
-export function formatMonthsAsDuration(months: number): string {
+export function formatMonthsAsDuration(months: number, lang: Lang): string {
+  if (lang === 'en') {
+    if (months <= 0) return 'less than a month'
+    const years = Math.floor(months / 12)
+    const remainingMonths = months % 12
+    const yearLabel = years === 1 ? 'year' : 'years'
+    const monthLabel = remainingMonths === 1 ? 'month' : 'months'
+
+    if (years > 0 && remainingMonths > 0) return `${years} ${yearLabel} ${remainingMonths} ${monthLabel}`
+    if (years > 0) return `${years} ${yearLabel}`
+    return `${remainingMonths} ${monthLabel}`
+  }
   if (months <= 0) return 'moins d’un mois'
   const years = Math.floor(months / 12)
   const remainingMonths = months % 12

@@ -3,19 +3,13 @@ import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useAuth } from '../hooks/useAuth'
 import { usePreferences } from '../hooks/usePreferences'
+import { useLanguage } from '../hooks/useLanguage'
 import { REWARD_TIERS, getUnlockedTiers } from '../lib/rewards'
+import { COMMON } from '../lib/i18n/common'
 import { LogoMark } from './Logo'
 import { AvatarCircle } from './AvatarCircle'
 import { TrialCountdownBadge } from './TrialCountdownBadge'
-
-const links = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/budget', label: 'Budget' },
-  { to: '/epargne', label: 'Épargne' },
-  { to: '/statistiques', label: 'Statistiques' },
-  { to: '/tarifs', label: 'Tarifs' },
-  { to: '/parametres', label: 'Paramètres' },
-]
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 function MenuIcon({ className }: { className: string }) {
   return (
@@ -37,10 +31,21 @@ export function Nav() {
   const goals = useSavingsGoals()
   const { signOut } = useAuth()
   const { avatarEmoji } = usePreferences()
+  const { lang } = useLanguage()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const totalCurrentAmount = goals.goals.reduce((sum, g) => sum + g.currentAmount, 0)
   const unlockedCount = goals.loading ? null : getUnlockedTiers(totalCurrentAmount, goals.goals).length
+  const t = COMMON[lang].nav
+
+  const links = [
+    { to: '/dashboard', label: t.dashboard },
+    { to: '/budget', label: t.budget },
+    { to: '/epargne', label: t.epargne },
+    { to: '/statistiques', label: t.statistiques },
+    { to: '/tarifs', label: t.tarifs },
+    { to: '/parametres', label: t.parametres },
+  ]
 
   function renderBadge(to: string) {
     if (to !== '/statistiques' || unlockedCount === null) return null
@@ -86,28 +91,31 @@ export function Nav() {
             </NavLink>
           ))}
           <TrialCountdownBadge />
+          <div className="ml-1">
+            <LanguageSwitcher />
+          </div>
           <button
             type="button"
             onClick={handleSignOut}
             className="ml-1 rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:bg-overlay/5 hover:text-red-400"
           >
-            Déconnexion
+            {t.signOut}
           </button>
-          <Link to="/parametres" aria-label="Paramètres et personnalisation" className="ml-1">
+          <Link to="/parametres" aria-label={t.settingsAriaLabel} className="ml-1">
             <AvatarCircle emoji={avatarEmoji} size="sm" />
           </Link>
         </nav>
 
         <div className="flex items-center gap-2 lg:hidden">
           <TrialCountdownBadge />
-          <Link to="/parametres" aria-label="Paramètres et personnalisation">
+          <Link to="/parametres" aria-label={t.settingsAriaLabel}>
             <AvatarCircle emoji={avatarEmoji} size="sm" />
           </Link>
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             className="flex h-11 w-11 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5"
-            aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-label={open ? COMMON[lang].header.closeMenu : COMMON[lang].header.openMenu}
             aria-expanded={open}
           >
             {open ? <CloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
@@ -136,13 +144,16 @@ export function Nav() {
                 </NavLink>
               </li>
             ))}
+            <li className="flex items-center px-3 py-2">
+              <LanguageSwitcher />
+            </li>
             <li>
               <button
                 type="button"
                 onClick={handleSignOut}
                 className="flex min-h-[44px] w-full items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-overlay/5 hover:text-red-400"
               >
-                Déconnexion
+                {t.signOut}
               </button>
             </li>
           </ul>

@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import type { Lang } from './i18n/language'
 
 export const GOAL_PHOTO_BUCKET = 'goal-photos'
 export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -49,26 +50,37 @@ export async function compressImage(file: File): Promise<Blob> {
 }
 
 // Validates, compresses, and uploads in one step — callers just get back a
-// path to persist on the goal row, or a French error to show. Storage RLS
+// path to persist on the goal row, or a localized error to show. Storage RLS
 // (see supabase/schema.sql) is what actually enforces Premium-only on the
 // write; this function doesn't need to know the caller's plan.
 export async function uploadGoalPhoto(
   userId: string,
   goalId: string,
   file: File,
+  lang: Lang,
 ): Promise<{ path: string | null; error: string | null }> {
   if (!isAcceptedImageType(file.type)) {
-    return { path: null, error: 'Formats acceptés : JPG, PNG ou WebP.' }
+    return {
+      path: null,
+      error: lang === 'fr' ? 'Formats acceptés : JPG, PNG ou WebP.' : 'Accepted formats: JPG, PNG, or WebP.',
+    }
   }
   if (file.size > MAX_INPUT_BYTES) {
-    return { path: null, error: `Image trop grande (max ${Math.round(MAX_INPUT_BYTES / (1024 * 1024))} Mo).` }
+    const mb = Math.round(MAX_INPUT_BYTES / (1024 * 1024))
+    return {
+      path: null,
+      error: lang === 'fr' ? `Image trop grande (max ${mb} Mo).` : `Image too large (max ${mb} MB).`,
+    }
   }
 
   let compressed: Blob
   try {
     compressed = await compressImage(file)
   } catch {
-    return { path: null, error: "Impossible de traiter cette image — essaie-en une autre." }
+    return {
+      path: null,
+      error: lang === 'fr' ? 'Impossible de traiter cette image — essaie-en une autre.' : 'Could not process this image — try another one.',
+    }
   }
 
   const path = `${userId}/${goalId}.webp`
@@ -82,7 +94,11 @@ export async function uploadGoalPhoto(
     const isRlsDenial = error.message.toLowerCase().includes('row-level security')
     return {
       path: null,
-      error: isRlsDenial ? "Photo d'objectif — fonctionnalité Premium." : error.message,
+      error: isRlsDenial
+        ? lang === 'fr'
+          ? "Photo d'objectif — fonctionnalité Premium."
+          : 'Goal photo — Premium feature.'
+        : error.message,
     }
   }
   return { path, error: null }

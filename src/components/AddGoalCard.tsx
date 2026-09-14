@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react'
-import { formatCurrency, getFarFutureDateString, getTodayDateString } from '../lib/format'
+import { formatCurrency, formatCurrencyEN, getFarFutureDateString, getTodayDateString } from '../lib/format'
 import { computeRequiredPace } from '../lib/savingsProjection'
 import { GoalPhotoPicker } from './GoalPhotoPicker'
 import { useSubscription } from '../hooks/useSubscription'
 import { useToast } from './ToastProvider'
+import { useLanguage } from '../hooks/useLanguage'
+import { EPARGNE } from '../lib/i18n/epargne'
+import { COMMON } from '../lib/i18n/common'
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
 
 export function AddGoalCard({
@@ -16,6 +19,9 @@ export function AddGoalCard({
   defaultOpen?: boolean
 }) {
   const subscription = useSubscription()
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].addGoalCard
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const { showToast } = useToast()
   const [open, setOpen] = useState(defaultOpen)
   const [name, setName] = useState('')
@@ -58,7 +64,7 @@ export function AddGoalCard({
     if (created && photoFile) {
       const { error: photoErr } = await onSetPhoto(created.id, photoFile)
       if (photoErr) {
-        showToast("Objectif créé, mais la photo n'a pas pu être envoyée — réessaie depuis « Modifier ».")
+        showToast(t.photoUploadFailedToast)
       }
     }
     setSubmitting(false)
@@ -72,21 +78,21 @@ export function AddGoalCard({
         onClick={() => setOpen(true)}
         className="glass flex min-h-[96px] min-w-0 items-center justify-center rounded-2xl border-2 border-dashed border-overlay/15 p-5 text-sm font-medium text-muted transition-colors hover:border-primary/40 hover:text-ink"
       >
-        + Nouvel objectif
+        {t.newGoalButton}
       </button>
     )
   }
 
   return (
     <div className="glass min-w-0 rounded-2xl p-5 shadow-lg shadow-black/30">
-      <h2 className="text-lg font-semibold text-ink">Nouvel objectif</h2>
-      <p className="mb-4 mt-1 text-xs text-muted">Un nom, un montant à atteindre, et une échéance si tu en as une.</p>
+      <h2 className="text-lg font-semibold text-ink">{t.heading}</h2>
+      <p className="mb-4 mt-1 text-xs text-muted">{t.hint}</p>
       <form onSubmit={submit} className="flex flex-wrap gap-2">
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Nom (ex: Voyage)"
+          placeholder={t.namePlaceholder}
           autoFocus
           className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
@@ -97,11 +103,11 @@ export function AddGoalCard({
           step="0.01"
           value={target}
           onChange={(e) => setTarget(e.target.value)}
-          placeholder="Montant cible"
+          placeholder={t.targetPlaceholder}
           className="w-32 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         <label className="flex flex-col gap-1 text-xs text-muted">
-          Échéance (optionnel)
+          {t.dueDateOptionalLabel}
           <input
             type="date"
             value={targetDate}
@@ -113,7 +119,7 @@ export function AddGoalCard({
         </label>
 
         <div className="w-full">
-          <p className="mb-1.5 text-xs text-muted">Photo (optionnel)</p>
+          <p className="mb-1.5 text-xs text-muted">{t.photoOptionalLabel}</p>
           <GoalPhotoPicker
             photoUrl={photoPreviewUrl}
             isPremium={subscription.limits.goalPhotos}
@@ -134,26 +140,25 @@ export function AddGoalCard({
             disabled={submitting}
             className="rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
           >
-            {submitting ? 'Création...' : 'Créer'}
+            {submitting ? t.creating : COMMON[lang].app.createAction}
           </button>
           <button
             type="button"
             onClick={resetForm}
             className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
           >
-            Annuler
+            {COMMON[lang].app.cancel}
           </button>
         </div>
       </form>
 
       {requiredPace && (
         <p className="mt-3 text-xs text-accent">
-          Pour l'atteindre à temps, épargne environ {formatCurrency(requiredPace.perWeek)} par semaine
-          (ou {formatCurrency(requiredPace.perMonth)} par mois).
+          {t.requiredPace(formatMoney(requiredPace.perWeek), formatMoney(requiredPace.perMonth))}
         </p>
       )}
       {target && Number(target) > 0 && targetDate && !requiredPace && (
-        <p className="mt-3 text-xs text-red-400">L'échéance choisie est déjà passée.</p>
+        <p className="mt-3 text-xs text-red-400">{t.pastDeadline}</p>
       )}
     </div>
   )

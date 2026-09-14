@@ -4,7 +4,7 @@ import { ProgressBar } from './ProgressBar'
 import { GoalPhotoPicker } from './GoalPhotoPicker'
 import { CreateDuelModal } from './CreateDuelModal'
 import { useToast } from './ToastProvider'
-import { formatCurrency, getFarFutureDateString, getTodayDateString } from '../lib/format'
+import { formatCurrency, formatCurrencyEN, getFarFutureDateString, getTodayDateString } from '../lib/format'
 import {
   computeWeeklyContributionDots,
   countRecentContributions,
@@ -17,6 +17,9 @@ import {
 import type { DuelDurationDays } from '../lib/duels'
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber'
 import { useSubscription } from '../hooks/useSubscription'
+import { useLanguage } from '../hooks/useLanguage'
+import { EPARGNE } from '../lib/i18n/epargne'
+import { COMMON } from '../lib/i18n/common'
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
 import type { Contribution } from '../hooks/useSavingsContributions'
 
@@ -88,6 +91,9 @@ export function SavingsGoalCard({
   locked?: boolean
 }) {
   const subscription = useSubscription()
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].goalCard
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const { showToast } = useToast()
   const [editing, setEditing] = useState(false)
   const [duelModalOpen, setDuelModalOpen] = useState(false)
@@ -122,6 +128,7 @@ export function SavingsGoalCard({
   const animatedDays = useAnimatedNumber(hasEstimate && !exceedsSanityCeiling ? projectedDays : 0)
   const displayDate = new Date(now.getTime() + animatedDays * DAY_MS)
   const { months: displayMonths, days: displayDays } = monthsAndDaysBetween(now, displayDate)
+  const displayDuration = formatMonthsAndDays(displayMonths, displayDays, lang)
 
   // Short toast the moment a contribution visibly pulls the date closer —
   // skipped on mount (nothing to compare against yet) and on a contribution
@@ -137,11 +144,11 @@ export function SavingsGoalCard({
     if (prev !== null && prev !== projectedDays) {
       const delta = prev - projectedDays
       if (delta >= 1) {
-        showToast(`Tu viens de gagner ${delta} jour${delta > 1 ? 's' : ''} !`)
+        showToast(t.wonDaysToast(delta))
       }
     }
     prevProjectedDaysRef.current = projectedDays
-  }, [hasEstimate, exceedsSanityCeiling, projectedDays, showToast])
+  }, [hasEstimate, exceedsSanityCeiling, projectedDays, showToast, t])
 
   // Target-date comparison — only meaningful once there's an estimate to
   // compare (see the render branch below for the "no estimate" cases).
@@ -150,20 +157,19 @@ export function SavingsGoalCard({
   if (goal.targetDate && hasEstimate && !exceedsSanityCeiling) {
     const targetDateObj = new Date(goal.targetDate)
     if (targetDateObj.getTime() < now.getTime()) {
-      targetComparisonText = 'Ta date visée est dépassée.'
+      targetComparisonText = t.pastTargetDate
       targetAhead = false
     } else {
       const deltaDays = daysBetween(displayDate, targetDateObj)
       if (Math.abs(deltaDays) < 1) {
-        targetComparisonText = 'Pile sur ta date visée.'
+        targetComparisonText = t.onTargetDate
       } else {
         const gapDays = Math.abs(deltaDays)
         const gapDate = new Date(now.getTime() + gapDays * DAY_MS)
         const gap = monthsAndDaysBetween(now, gapDate)
         targetAhead = deltaDays > 0
-        targetComparisonText = `≈ ${formatMonthsAndDays(gap.months, gap.days)} ${
-          targetAhead ? "d'avance" : 'de retard'
-        } sur ta date visée`
+        const gapLabel = formatMonthsAndDays(gap.months, gap.days, lang)
+        targetComparisonText = targetAhead ? t.aheadOfTarget(gapLabel) : t.behindTarget(gapLabel)
       }
     }
   }
@@ -196,7 +202,7 @@ export function SavingsGoalCard({
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Nom de l'objectif"
+            placeholder={t.namePlaceholder}
             className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
           />
           <input
@@ -206,11 +212,11 @@ export function SavingsGoalCard({
             step="0.01"
             value={target}
             onChange={(e) => setTarget(e.target.value)}
-            placeholder="Montant cible"
+            placeholder={t.targetPlaceholder}
             className="w-32 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
           />
           <label className="flex flex-col gap-1 text-xs text-muted">
-            Échéance (optionnel)
+            {t.dueDateOptionalLabel}
             <input
               type="date"
               value={targetDate}
@@ -222,7 +228,7 @@ export function SavingsGoalCard({
           </label>
 
           <div className="w-full">
-            <p className="mb-1.5 text-xs text-muted">Photo (optionnel)</p>
+            <p className="mb-1.5 text-xs text-muted">{t.photoOptionalLabel}</p>
             <GoalPhotoPicker
               photoUrl={goal.photoUrl}
               isPremium={subscription.limits.goalPhotos}
@@ -239,14 +245,14 @@ export function SavingsGoalCard({
               type="submit"
               className="rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110"
             >
-              Enregistrer
+              {COMMON[lang].app.save}
             </button>
             <button
               type="button"
               onClick={() => setEditing(false)}
               className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
             >
-              Annuler
+              {COMMON[lang].app.cancel}
             </button>
           </div>
         </form>
@@ -292,8 +298,8 @@ export function SavingsGoalCard({
               <p className={`truncate font-semibold ${textPrimary}`}>{goal.name}</p>
               {goal.targetDate && (
                 <p className={`text-xs ${textSecondary}`}>
-                  Échéance :{' '}
-                  {new Date(goal.targetDate).toLocaleDateString('fr-CA', {
+                  {t.dueDatePrefix}{' '}
+                  {new Date(goal.targetDate).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-CA', {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric',
@@ -311,7 +317,7 @@ export function SavingsGoalCard({
                   showPhoto ? 'text-white hover:bg-white/10' : 'text-accent hover:bg-accent/10 hover:text-accent/80'
                 }`}
               >
-                Modifier
+                {COMMON[lang].app.modify}
               </button>
             )}
             <button
@@ -320,9 +326,9 @@ export function SavingsGoalCard({
               className={`rounded-md px-2 py-1.5 text-sm ${
                 showPhoto ? 'text-red-300 hover:bg-red-500/20' : 'text-red-400 hover:bg-red-500/10 hover:text-red-300'
               }`}
-              aria-label={`Supprimer ${goal.name}`}
+              aria-label={t.deleteAriaLabel(goal.name)}
             >
-              Supprimer
+              {COMMON[lang].app.delete}
             </button>
           </div>
         </div>
@@ -332,41 +338,33 @@ export function SavingsGoalCard({
             to="/tarifs"
             className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent hover:bg-accent/25"
           >
-            🔒 En pause — passe à Standard pour la réactiver
+            {t.pausedBadge}
           </Link>
         )}
 
         <p className={`text-2xl font-bold ${textPrimary}`}>
-          {formatCurrency(goal.currentAmount)}
+          {formatMoney(goal.currentAmount)}
           <span className={`ml-1.5 text-sm font-normal ${textSecondary}`}>
-            / {formatCurrency(goal.targetAmount)}
+            / {formatMoney(goal.targetAmount)}
           </span>
         </p>
         <div className="mt-3">
           <ProgressBar value={progress} colorClass={progress >= 100 ? 'bg-success' : 'bg-primary'} />
         </div>
         <p className={`mt-1.5 text-xs ${textSecondary}`}>
-          {progress.toFixed(0)}% atteint
-          {remaining > 0 && <> · {formatCurrency(remaining)} restant</>}
+          {t.percentReached(Math.round(progress))}
+          {remaining > 0 && t.remainingSuffix(formatMoney(remaining))}
         </p>
 
         {remaining <= 0 ? (
-          <p className="mt-3 text-xs text-success">🎉 Objectif atteint.</p>
+          <p className="mt-3 text-xs text-success">{t.goalReached}</p>
         ) : !hasEstimate ? (
-          <p className={`mt-3 text-xs ${textSecondary}`}>
-            Pas assez d'historique pour estimer — ajoute quelques contributions pour voir une
-            projection.
-          </p>
+          <p className={`mt-3 text-xs ${textSecondary}`}>{t.notEnoughHistory}</p>
         ) : exceedsSanityCeiling ? (
-          <p className={`mt-3 text-xs ${textSecondary}`}>
-            À ce rythme, ça prendrait plus de 10 ans — augmente tes contributions pour une
-            estimation utile.
-          </p>
+          <p className={`mt-3 text-xs ${textSecondary}`}>{t.exceedsCeiling}</p>
         ) : (
           <div className={`mt-3 rounded-lg ${paceBg} px-3 py-2`}>
-            <p className={`text-sm font-medium ${textPrimary}`}>
-              ≈ dans {formatMonthsAndDays(displayMonths, displayDays)}
-            </p>
+            <p className={`text-sm font-medium ${textPrimary}`}>{t.estimateIn(displayDuration)}</p>
             {targetComparisonText && (
               <p className={`mt-0.5 text-xs font-medium ${targetAhead ? 'text-success' : 'text-red-400'}`}>
                 {targetComparisonText}
@@ -377,7 +375,7 @@ export function SavingsGoalCard({
 
         <div className={`mt-4 border-t pt-3 ${dividerBorder}`}>
           <p className={`mb-1.5 text-xs ${textSecondary}`}>
-            Régularité ({weeklyDots.filter(Boolean).length}/{weeklyDots.length} dernières semaines)
+            {t.consistency(weeklyDots.filter(Boolean).length, weeklyDots.length)}
           </p>
           <div className="flex gap-1.5">
             {weeklyDots.map((hasContribution, i) => (
@@ -398,7 +396,7 @@ export function SavingsGoalCard({
                 showPhoto ? 'text-white/80 hover:text-white' : 'text-muted hover:text-ink'
               }`}
             >
-              ⚔ En duel — voir le résultat
+              {t.duelActiveLink}
             </Link>
           ) : (
             <button
@@ -408,7 +406,7 @@ export function SavingsGoalCard({
                 showPhoto ? 'text-white/80 hover:text-white' : 'text-accent hover:text-accent/80'
               }`}
             >
-              ⚔ Lancer un duel
+              {t.startDuelButton}
             </button>
           ))}
       </div>

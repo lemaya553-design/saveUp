@@ -1,4 +1,6 @@
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { STATISTIQUES } from '../lib/i18n/statistiques'
 
 export function MonthComparison({
   currentAmount,
@@ -9,6 +11,9 @@ export function MonthComparison({
   previousAmount: number
   previousLabel: string
 }) {
+  const { lang } = useLanguage()
+  const t = STATISTIQUES[lang].monthComparison
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const hasPreviousData = previousAmount > 0
   const maxAmount = Math.max(currentAmount, previousAmount, 1)
   const currentPct = (currentAmount / maxAmount) * 100
@@ -23,8 +28,8 @@ export function MonthComparison({
     <div className="glass rounded-2xl p-5 shadow-lg shadow-black/30">
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-ink">Ce mois vs le mois passé</h2>
-          <p className="mt-1 text-xs text-muted">Combien tu as dépensé, comparé au mois précédent.</p>
+          <h2 className="text-lg font-semibold text-ink">{t.heading}</h2>
+          <p className="mt-1 text-xs text-muted">{t.hint}</p>
         </div>
         {hasPreviousData && pctChange !== null && (
           <span
@@ -41,8 +46,8 @@ export function MonthComparison({
       <div className="space-y-3">
         <div>
           <div className="mb-1 flex items-center justify-between text-xs">
-            <span className="text-muted">Ce mois-ci</span>
-            <span className="font-medium text-ink">{formatCurrency(currentAmount)}</span>
+            <span className="text-muted">{t.thisMonth}</span>
+            <span className="font-medium text-ink">{formatMoney(currentAmount)}</span>
           </div>
           <div className="h-2.5 w-full overflow-hidden rounded-full bg-overlay/10">
             <div
@@ -56,7 +61,7 @@ export function MonthComparison({
           <div className="mb-1 flex items-center justify-between text-xs">
             <span className="text-muted capitalize">{previousLabel}</span>
             <span className="text-muted">
-              {hasPreviousData ? formatCurrency(previousAmount) : 'Pas de données'}
+              {hasPreviousData ? formatMoney(previousAmount) : t.noData}
             </span>
           </div>
           <div className="h-2.5 w-full overflow-hidden rounded-full bg-overlay/10">

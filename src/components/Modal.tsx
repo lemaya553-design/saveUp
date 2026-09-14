@@ -1,4 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
+import { useLanguage } from '../hooks/useLanguage'
+import { COMMON } from '../lib/i18n/common'
 
 export function Modal({
   open,
@@ -13,6 +15,8 @@ export function Modal({
   children: ReactNode
   maxWidthClassName?: string
 }) {
+  const { lang } = useLanguage()
+
   useEffect(() => {
     if (!open) return
     function handleKey(e: KeyboardEvent) {
@@ -44,7 +48,7 @@ export function Modal({
             type="button"
             onClick={onClose}
             className="flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-overlay/5 hover:text-ink"
-            aria-label="Fermer"
+            aria-label={COMMON[lang].app.close}
           >
             ✕
           </button>

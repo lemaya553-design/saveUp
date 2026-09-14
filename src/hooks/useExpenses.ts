@@ -4,6 +4,8 @@ import { emitExpensesChanged, onExpensesChanged } from '../lib/events'
 import { pickCategory } from '../lib/importParsing'
 import { FALLBACK_CATEGORY } from '../lib/categories'
 import { useAuth } from './useAuth'
+import { useLanguage } from './useLanguage'
+import { COMMON } from '../lib/i18n/common'
 
 export interface Expense {
   id: string
@@ -16,6 +18,7 @@ export interface Expense {
 
 export function useExpenses() {
   const { user } = useAuth()
+  const { lang } = useLanguage()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -58,13 +61,13 @@ export function useExpenses() {
         .select()
         .single()
       if (insertError || !data) {
-        setError(insertError?.message ?? 'Insert failed')
+        setError(insertError?.message ?? COMMON[lang].app.saveFailed)
         return
       }
       setExpenses((prev) => [data, ...prev])
       emitExpensesChanged()
     },
-    [userId],
+    [userId, lang],
   )
 
   // Used by CSV/Excel import: inserted in batches (PostgREST payloads stay
@@ -85,7 +88,7 @@ export function useExpenses() {
       // while the user was mid-wizard (picking columns, browsing their bank
       // portal for the file) used to fail this guard silently — 0 imported,
       // no error — which looked exactly like nothing happened for no reason.
-      if (!userId) return { imported: 0, error: 'Ta session a expiré — reconnecte-toi et réessaie.' }
+      if (!userId) return { imported: 0, error: COMMON[lang].app.sessionExpired }
       if (rows.length === 0) return { imported: 0, error: null }
 
       const BATCH_SIZE = 500
@@ -104,7 +107,7 @@ export function useExpenses() {
       emitExpensesChanged()
       return { imported, error: null }
     },
-    [userId],
+    [userId, lang],
   )
 
   // A plain .select() only returns however many rows PostgREST's configured

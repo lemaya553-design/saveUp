@@ -1,16 +1,33 @@
 import { getMonthRange } from './format'
+import type { Lang } from './i18n/language'
 
 export type RecurringFrequency = 'weekly' | 'biweekly' | 'monthly' | 'yearly'
 
-export const FREQUENCY_OPTIONS: { value: RecurringFrequency; label: string }[] = [
-  { value: 'weekly', label: 'Hebdomadaire' },
-  { value: 'biweekly', label: 'Aux deux semaines' },
-  { value: 'monthly', label: 'Mensuelle' },
-  { value: 'yearly', label: 'Annuelle' },
-]
+// Lang-aware, same pattern as lib/onboardingProfile.ts's
+// FREQUENCY_OPTIONS_BY_LANG/getFrequencyOptions — every consumer (Budget's
+// RecurringExpenses.tsx/ConvertToRecurringModal.tsx, and QuickAddFab.tsx)
+// now needs a `lang` value to render these.
+const FREQUENCY_OPTIONS_BY_LANG: Record<Lang, { value: RecurringFrequency; label: string }[]> = {
+  fr: [
+    { value: 'weekly', label: 'Hebdomadaire' },
+    { value: 'biweekly', label: 'Aux deux semaines' },
+    { value: 'monthly', label: 'Mensuelle' },
+    { value: 'yearly', label: 'Annuelle' },
+  ],
+  en: [
+    { value: 'weekly', label: 'Weekly' },
+    { value: 'biweekly', label: 'Biweekly' },
+    { value: 'monthly', label: 'Monthly' },
+    { value: 'yearly', label: 'Yearly' },
+  ],
+}
 
-export function frequencyLabel(frequency: RecurringFrequency): string {
-  return FREQUENCY_OPTIONS.find((f) => f.value === frequency)?.label ?? frequency
+export function getFrequencyOptions(lang: Lang): { value: RecurringFrequency; label: string }[] {
+  return FREQUENCY_OPTIONS_BY_LANG[lang]
+}
+
+export function frequencyLabel(frequency: RecurringFrequency, lang: Lang): string {
+  return FREQUENCY_OPTIONS_BY_LANG[lang].find((f) => f.value === frequency)?.label ?? frequency
 }
 
 export interface RecurringExpense {

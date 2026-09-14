@@ -5,6 +5,7 @@ import {
   resolveCategoryName,
   type CanonicalCategory,
 } from './importParsing'
+import type { Lang } from './i18n/language'
 
 export interface CategorySuggestion {
   // Stable across renders for the same input — lets the UI track a
@@ -65,6 +66,7 @@ function titleCase(word: string): string {
 export function detectCategorySuggestions(
   rows: { id: string; description: string }[],
   categoryNames: string[],
+  lang: Lang,
   threshold = 3,
 ): CategorySuggestion[] {
   const suggestions: CategorySuggestion[] = []
@@ -93,7 +95,7 @@ export function detectCategorySuggestions(
     if (group.ids.length < threshold) continue
     suggestions.push({
       id: `canonical:${canonical}`,
-      suggestedName: CANONICAL_DISPLAY_NAMES[canonical],
+      suggestedName: CANONICAL_DISPLAY_NAMES[canonical][lang],
       merchantLabel: [...group.merchantKeys].slice(0, 3).map(titleCase).join(', '),
       transactionIds: group.ids,
       count: group.ids.length,

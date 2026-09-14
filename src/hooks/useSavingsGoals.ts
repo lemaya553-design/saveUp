@@ -3,6 +3,9 @@ import { supabase } from '../lib/supabase'
 import { emitGoalsChanged, onGoalsChanged } from '../lib/events'
 import { deleteGoalPhoto, signGoalPhotoUrls, uploadGoalPhoto } from '../lib/goalPhoto'
 import { useAuth } from './useAuth'
+import { useLanguage } from './useLanguage'
+import { COMMON } from '../lib/i18n/common'
+import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
 
 export interface SavingsGoal {
   id: string
@@ -38,6 +41,7 @@ function fromRow(row: {
 
 export function useSavingsGoals() {
   const { user } = useAuth()
+  const { lang } = useLanguage()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -84,7 +88,7 @@ export function useSavingsGoals() {
         .select()
         .single()
       if (insertError || !data) {
-        setError(insertError?.message ?? 'Insert failed')
+        setError(insertError?.message ?? COMMON[lang].app.saveFailed)
         return null
       }
       const goal = fromRow(data)
@@ -92,7 +96,7 @@ export function useSavingsGoals() {
       emitGoalsChanged()
       return goal
     },
-    [userId],
+    [userId, lang],
   )
 
   const updateGoal = useCallback(
@@ -177,10 +181,10 @@ export function useSavingsGoals() {
   // generic error banner.
   const setGoalPhoto = useCallback(
     async (goalId: string, file: File): Promise<{ error: string | null }> => {
-      if (!userId) return { error: 'Non connecté.' }
-      const { path, error: uploadError } = await uploadGoalPhoto(userId, goalId, file)
+      if (!userId) return { error: HOOK_ERRORS[lang].savingsGoals.notSignedIn }
+      const { path, error: uploadError } = await uploadGoalPhoto(userId, goalId, file, lang)
       if (uploadError || !path) {
-        return { error: uploadError ?? "Impossible d'envoyer la photo — réessaie." }
+        return { error: uploadError ?? HOOK_ERRORS[lang].savingsGoals.photoUploadFailed }
       }
       const { error: updateError } = await supabase
         .from('savings_goals')
@@ -195,7 +199,7 @@ export function useSavingsGoals() {
       )
       return { error: null }
     },
-    [userId],
+    [userId, lang],
   )
 
   const removeGoalPhoto = useCallback(

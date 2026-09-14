@@ -25,48 +25,19 @@ import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
 import { useLoginStreak } from '../hooks/useLoginStreak'
 import { useClaimedBadges } from '../hooks/useClaimedBadges'
+import { useLanguage } from '../hooks/useLanguage'
 import { formatCurrency } from '../lib/format'
 import { getSpendableBudgetCaption, sumThisMonth } from '../lib/budgetInsights'
 import { getBudgetPaceAlert, getSavingsGoalLateAlert } from '../lib/alerts'
 import { generatePersonalizedTips } from '../lib/tips'
 import { STARTER_BADGE, isStarterBadgeUnlocked } from '../lib/rewards'
+import { DASHBOARD } from '../lib/i18n/dashboard'
 
-const FEATURE_LINKS = [
-  {
-    to: '/budget',
-    Illustration: BudgetIllustration,
-    title: 'Budget',
-    description: 'Dépenses par catégorie, comparées à ce que tu t\'es fixé.',
-  },
-  {
-    to: '/epargne',
-    Illustration: SavingsIllustration,
-    title: 'Épargne',
-    description: 'Tes objectifs et leur progression.',
-  },
-  {
-    to: '/statistiques',
-    Illustration: StatsIllustration,
-    title: 'Statistiques',
-    description: 'Tendances et comparaisons mensuelles, en détail.',
-  },
-  {
-    to: '/statistiques/recompenses',
-    Illustration: BadgesIllustration,
-    title: 'Récompenses',
-    description: 'Tes badges et ta série de connexions.',
-  },
-]
-
-const DASHBOARD_HELP = {
-  purpose:
-    'Un coup d\'œil sur ta santé financière : ton score, ce qu\'il te reste à dépenser ce mois-ci et la progression de tes objectifs.',
-  actions: [
-    'Consulte ton score de santé financière et son évolution récente.',
-    'Vérifie combien il te reste à dépenser ce mois-ci.',
-    'Lis tes conseils personnalisés — générés à partir de tes vraies dépenses et objectifs.',
-    'Clique sur une carte (Budget, Épargne, Statistiques...) pour y aller directement.',
-  ],
+const ILLUSTRATIONS_BY_PATH: Record<string, typeof BudgetIllustration> = {
+  '/budget': BudgetIllustration,
+  '/epargne': SavingsIllustration,
+  '/statistiques': StatsIllustration,
+  '/statistiques/recompenses': BadgesIllustration,
 }
 
 // A touch longer than the shared .badge-unlock keyframe (0.7s) so the
@@ -77,6 +48,8 @@ const CLAIM_ANIMATION_MS = 900
 
 export function Dashboard() {
   const navigate = useNavigate()
+  const { lang } = useLanguage()
+  const t = DASHBOARD[lang]
   const health = useFinancialHealth()
   const goals = useSavingsGoals()
   const contributions = useSavingsContributions()
@@ -141,15 +114,11 @@ export function Dashboard() {
   if (isFreshUser) {
     return (
       <div className="mx-auto max-w-3xl px-4 pb-10">
-        <PageHeader
-          title="Comment tu t'en sors"
-          subtitle="Ton portrait financier en un coup d'œil."
-          help={DASHBOARD_HELP}
-        />
+        <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={t.help} />
         <EmptyState
-          title="Tu n'as pas encore de budget"
-          description="Commence par ajouter ton revenu mensuel — tout le reste (budget, alertes, score) se calcule automatiquement à partir de là."
-          actionLabel="Ajouter mes revenus"
+          title={t.freshUser.title}
+          description={t.freshUser.description}
+          actionLabel={t.freshUser.actionLabel}
           actionTo="/budget"
         />
       </div>
@@ -170,30 +139,32 @@ export function Dashboard() {
   const totalTargetAmount = goals.goals.reduce((sum, g) => sum + g.targetAmount, 0)
   const goalProgress = totalTargetAmount > 0 ? Math.min(100, (totalCurrentAmount / totalTargetAmount) * 100) : 0
 
-  const budgetPaceAlert = getBudgetPaceAlert({
-    spentThisMonth: health.spentThisMonth,
-    discretionaryBudget: spendableBudget,
-    monthProgress: health.monthProgress,
-  })
+  const budgetPaceAlert = getBudgetPaceAlert(
+    {
+      spentThisMonth: health.spentThisMonth,
+      discretionaryBudget: spendableBudget,
+      monthProgress: health.monthProgress,
+    },
+    lang,
+  )
   // Only the single most urgent late goal, to keep the banner list short.
   const savingsGoalLateAlert = goals.goals
-    .map((g) => getSavingsGoalLateAlert(g))
+    .map((g) => getSavingsGoalLateAlert(g, lang))
     .find((alert) => alert !== null)
 
-  const tips = generatePersonalizedTips({
-    expenseRecords: expenseHistory.records,
-    goals: goals.goals,
-    contributions: contributions.contributions,
-    mainGoal: preferences.onboardingMainGoal,
-  })
+  const tips = generatePersonalizedTips(
+    {
+      expenseRecords: expenseHistory.records,
+      goals: goals.goals,
+      contributions: contributions.contributions,
+      mainGoal: preferences.onboardingMainGoal,
+    },
+    lang,
+  )
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader
-        title="Comment tu t'en sors"
-        subtitle="Ton portrait financier en un coup d'œil."
-        help={DASHBOARD_HELP}
-      />
+      <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={t.help} />
 
       {/* Streak + starter badge — surfaced here (not just on Récompenses,
           which nothing else points a new user toward) so day one has a
@@ -207,11 +178,9 @@ export function Dashboard() {
           🔥
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-ink">
-            {streak.streak} jour{streak.streak > 1 ? 's' : ''} de suite
-          </p>
+          <p className="font-semibold text-ink">{t.streak.days(streak.streak)}</p>
           <p className="text-sm text-muted">
-            {streak.streak > 0 ? 'Reviens demain pour garder ta série !' : 'Reviens demain pour commencer une série.'}
+            {streak.streak > 0 ? t.streak.comeBackActive : t.streak.comeBackStart}
           </p>
         </div>
 
@@ -228,16 +197,16 @@ export function Dashboard() {
               })()}
             </div>
             {starterClaimed || justClaimedStarter ? (
-              <p className="text-sm text-ink">{STARTER_BADGE.name}</p>
+              <p className="text-sm text-ink">{STARTER_BADGE.name[lang]}</p>
             ) : (
               <>
-                <p className="text-sm text-ink">Badge débloqué : {STARTER_BADGE.name}</p>
+                <p className="text-sm text-ink">{t.starterBadge.unlocked(STARTER_BADGE.name[lang])}</p>
                 <button
                   type="button"
                   onClick={handleClaimStarter}
                   className="whitespace-nowrap rounded-full bg-primary-strong px-3 py-1.5 text-xs font-semibold text-white transition-all hover:brightness-110"
                 >
-                  Réclamer
+                  {t.starterBadge.claim}
                 </button>
               </>
             )}
@@ -264,31 +233,31 @@ export function Dashboard() {
           stacked narrower beside it rather than three equal-weight boxes. */}
       <div className="mb-6 grid gap-4 sm:grid-cols-5">
         <div className="glass flex flex-col items-center rounded-2xl p-6 text-center shadow-lg shadow-black/30 sm:col-span-3 sm:justify-center">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted">Score de santé</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">{t.score.label}</p>
           <div className="mt-2 w-full max-w-[240px]">
             <ScoreGauge score={health.breakdown.score} />
           </div>
           <ScoreTrendBadge trend={health.trend} />
           <p className="mt-3 max-w-[26ch] text-xs text-muted">
-            Reflète tes habitudes de dépenses et de budget.{' '}
+            {t.score.caption}{' '}
             <Link to="/statistiques/recompenses" className="text-accent hover:text-accent/80">
-              Voir tes récompenses →
+              {t.score.linkText}
             </Link>
           </p>
         </div>
 
         <div className="grid gap-4 sm:col-span-2">
           <DashboardStat
-            label="Dépensé ce mois-ci"
+            label={t.spent.label}
             value={formatCurrency(health.spentThisMonth)}
             valueColorClass={isOverBudget ? 'text-red-400' : 'text-ink'}
             progress={budgetPct}
             progressColorClass={isOverBudget ? 'bg-red-400' : 'bg-primary'}
-            caption={getSpendableBudgetCaption(rawSpendableBudget)}
+            caption={getSpendableBudgetCaption(rawSpendableBudget, lang)}
           />
 
           <DashboardStat
-            label="Épargné"
+            label={t.saved.label}
             value={formatCurrency(totalCurrentAmount)}
             valueColorClass="text-success"
             progress={totalTargetAmount > 0 ? goalProgress : undefined}
@@ -296,10 +265,10 @@ export function Dashboard() {
             caption={
               <Link to="/epargne" className="hover:text-accent">
                 {goals.goals.length === 0
-                  ? 'Fixe un objectif dans Épargne →'
+                  ? t.saved.noGoal
                   : goals.goals.length === 1
-                    ? `vers ${formatCurrency(totalTargetAmount)} →`
-                    : `${goals.goals.length} objectifs actifs →`}
+                    ? t.saved.oneGoal(formatCurrency(totalTargetAmount))
+                    : t.saved.manyGoals(goals.goals.length)}
               </Link>
             }
           />
@@ -307,20 +276,17 @@ export function Dashboard() {
       </div>
 
       <div className="grid gap-6">
-        <Card
-          title="Ce que tu as accumulé"
-          hint="Épargne totale (tous objectifs) et montant réellement investi à ce jour."
-        >
+        <Card title={t.accumulated.title} hint={t.accumulated.hint}>
           <p className="text-3xl font-bold text-success sm:text-4xl">
             {formatCurrency(totalCurrentAmount + investmentBalance.currentAmount)}
           </p>
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-xs text-muted">Épargné</p>
+              <p className="text-xs text-muted">{t.accumulated.savedLabel}</p>
               <p className="font-medium text-ink">{formatCurrency(totalCurrentAmount)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted">Investi</p>
+              <p className="text-xs text-muted">{t.accumulated.investedLabel}</p>
               <Link to="/epargne/investissement" className="font-medium text-ink hover:text-accent">
                 {formatCurrency(investmentBalance.currentAmount)}
               </Link>
@@ -331,24 +297,25 @@ export function Dashboard() {
         <PersonalizedTips tips={tips} />
 
         <div>
-          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">
-            Aller plus loin
-          </p>
+          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">{t.goFurther}</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            {FEATURE_LINKS.map(({ to, Illustration, title, description }) => (
-              <Link
-                key={to}
-                to={to}
-                className="hover-lift glass flex min-w-0 items-center gap-3 rounded-2xl p-4 shadow-lg shadow-black/30"
-              >
-                <Illustration variant="icon" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-ink">{title}</p>
-                  <p className="truncate text-xs text-muted">{description}</p>
-                </div>
-                <span className="shrink-0 text-accent">→</span>
-              </Link>
-            ))}
+            {t.featureLinks.map(({ to, title, description }) => {
+              const Illustration = ILLUSTRATIONS_BY_PATH[to]
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  className="hover-lift glass flex min-w-0 items-center gap-3 rounded-2xl p-4 shadow-lg shadow-black/30"
+                >
+                  <Illustration variant="icon" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-ink">{title}</p>
+                    <p className="truncate text-xs text-muted">{description}</p>
+                  </div>
+                  <span className="shrink-0 text-accent">→</span>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </div>

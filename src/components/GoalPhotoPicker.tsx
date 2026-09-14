@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import { isAcceptedImageType, MAX_INPUT_BYTES } from '../lib/goalPhoto'
+import { useLanguage } from '../hooks/useLanguage'
+import { EPARGNE } from '../lib/i18n/epargne'
 
 // Shared between AddGoalCard (create) and SavingsGoalCard's edit mode
 // (replace/remove) — same picker, same Premium gate, same validation.
@@ -20,13 +22,16 @@ export function GoalPhotoPicker({
   onError: (message: string) => void
   onRemove?: () => void
 }) {
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].goalPhotoPicker
+
   if (!isPremium) {
     return (
       <Link
         to="/tarifs"
         className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1.5 text-xs font-semibold text-accent transition-colors hover:bg-accent/25"
       >
-        🔒 Photo de l'objectif — Premium
+        {t.premiumBadge}
       </Link>
     )
   }
@@ -36,11 +41,11 @@ export function GoalPhotoPicker({
     e.target.value = ''
     if (!file) return
     if (!isAcceptedImageType(file.type)) {
-      onError('Formats acceptés : JPG, PNG ou WebP.')
+      onError(t.formatError)
       return
     }
     if (file.size > MAX_INPUT_BYTES) {
-      onError(`Image trop grande (max ${Math.round(MAX_INPUT_BYTES / (1024 * 1024))} Mo).`)
+      onError(t.tooLargeError(Math.round(MAX_INPUT_BYTES / (1024 * 1024))))
       return
     }
     onSelectFile(file)
@@ -65,7 +70,7 @@ export function GoalPhotoPicker({
               uploading ? 'pointer-events-none opacity-60' : 'cursor-pointer'
             }`}
           >
-            {uploading ? 'Envoi en cours...' : photoUrl ? 'Remplacer la photo' : 'Ajouter une photo'}
+            {uploading ? t.uploading : photoUrl ? t.replacePhoto : t.addPhoto}
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -80,7 +85,7 @@ export function GoalPhotoPicker({
               onClick={onRemove}
               className="text-xs text-red-400 hover:text-red-300"
             >
-              Supprimer la photo
+              {t.removePhoto}
             </button>
           )}
         </div>

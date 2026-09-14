@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Card } from './Card'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { EPARGNE } from '../lib/i18n/epargne'
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
 
 export function ContributeForm({
@@ -14,6 +16,9 @@ export function ContributeForm({
   discretionaryBudget: number
   savingsThisMonth: number
 }) {
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].contributeForm
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const [goalId, setGoalId] = useState(goals[0]?.id ?? '')
   const [amount, setAmount] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -38,7 +43,7 @@ export function ContributeForm({
   }
 
   return (
-    <Card title="Ajoute à ton épargne" hint="Chaque fois que tu mets de l'argent de côté, note-le ici.">
+    <Card title={t.title} hint={t.hint}>
       <form onSubmit={submit} className="flex flex-wrap gap-2">
         {goals.length > 1 && (
           <select
@@ -60,7 +65,7 @@ export function ContributeForm({
           step="0.01"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder="Montant"
+          placeholder={t.amountPlaceholder}
           className="flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         <button
@@ -68,7 +73,7 @@ export function ContributeForm({
           disabled={submitting}
           className="rounded-lg bg-success px-6 py-2 font-semibold text-canvas transition-all hover:brightness-110 disabled:opacity-60"
         >
-          {submitting ? 'Épargne...' : 'Épargner'}
+          {submitting ? t.submitting : t.submitButton}
         </button>
       </form>
 
@@ -76,10 +81,8 @@ export function ContributeForm({
         <p className="mt-3 flex items-start gap-1.5 text-xs text-accent">
           <span aria-hidden="true">⚠</span>
           <span>
-            {remainingBeforeThis > 0
-              ? `Il ne te reste que ${formatCurrency(remainingBeforeThis)} de budget disponible ce mois-ci — cette contribution le dépasserait.`
-              : `Ton budget disponible de ce mois-ci est déjà épuisé par tes épargnes.`}{' '}
-            Tu peux quand même continuer.
+            {remainingBeforeThis > 0 ? t.overBudget(formatMoney(remainingBeforeThis)) : t.budgetExhausted}{' '}
+            {t.canContinueAnyway}
           </span>
         </p>
       )}

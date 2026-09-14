@@ -3,15 +3,23 @@ import { Card } from './Card'
 import { UpgradePrompt } from './UpgradePrompt'
 import { useCategories, type Category } from '../hooks/useCategories'
 import { useSubscription } from '../hooks/useSubscription'
+import { useLanguage } from '../hooks/useLanguage'
 import { FALLBACK_CATEGORY } from '../lib/categories'
+import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
+import { BUDGET } from '../lib/i18n/budget'
+import { COMMON } from '../lib/i18n/common'
+import type { Lang } from '../lib/i18n/language'
 
 function BudgetInput({
   category,
+  lang,
   onSave,
 }: {
   category: Category
+  lang: Lang
   onSave: (id: string, value: number | null) => void
 }) {
+  const t = BUDGET[lang].categoryManager
   const [draft, setDraft] = useState(category.monthlyBudget !== null ? String(category.monthlyBudget) : '')
 
   function commit() {
@@ -27,7 +35,7 @@ function BudgetInput({
 
   return (
     <label className="flex items-center gap-1.5 text-xs text-muted">
-      Budget mensuel
+      {t.monthlyBudget}
       <input
         type="number"
         inputMode="decimal"
@@ -37,7 +45,7 @@ function BudgetInput({
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
-        placeholder="Aucun"
+        placeholder={t.nonePlaceholder}
         className="w-20 rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-1 text-xs text-ink focus:border-primary focus:outline-none"
       />
       <span>$</span>
@@ -47,17 +55,20 @@ function BudgetInput({
 
 function CategoryRow({
   category,
+  lang,
   onRename,
   onRequestDelete,
   onSetBudget,
   checking,
 }: {
   category: Category
+  lang: Lang
   onRename: (id: string, newName: string) => void
   onRequestDelete: (id: string) => void
   onSetBudget: (id: string, value: number | null) => void
   checking: boolean
 }) {
+  const t = BUDGET[lang].categoryManager
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(category.name)
   const isFallback = category.name === FALLBACK_CATEGORY
@@ -83,7 +94,7 @@ function CategoryRow({
           type="submit"
           className="rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
         >
-          Enregistrer
+          {COMMON[lang].app.save}
         </button>
         <button
           type="button"
@@ -93,7 +104,7 @@ function CategoryRow({
           }}
           className="text-sm text-muted hover:text-ink"
         >
-          Annuler
+          {COMMON[lang].app.cancel}
         </button>
       </form>
     )
@@ -101,15 +112,15 @@ function CategoryRow({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 py-2">
-      <span className="text-ink">{category.name}</span>
+      <span className="text-ink">{translateCategoryLabel(category.name, lang)}</span>
       <div className="flex flex-wrap items-center gap-3">
-        <BudgetInput category={category} onSave={onSetBudget} />
+        <BudgetInput category={category} lang={lang} onSave={onSetBudget} />
         <button
           type="button"
           onClick={() => setEditing(true)}
           className="rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
         >
-          Renommer
+          {t.rename}
         </button>
         {!isFallback && (
           <button
@@ -118,7 +129,7 @@ function CategoryRow({
             disabled={checking}
             className="rounded-md px-2 py-1.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-60"
           >
-            {checking ? 'Vérification...' : 'Supprimer'}
+            {checking ? t.checking : COMMON[lang].app.delete}
           </button>
         )}
       </div>
@@ -127,6 +138,8 @@ function CategoryRow({
 }
 
 export function CategoryManager() {
+  const { lang } = useLanguage()
+  const t = BUDGET[lang].categoryManager
   const { categories, loading, error, addCategory, renameCategory, removeCategory, setCategoryBudget, getUsageCount } =
     useCategories()
   const { limits } = useSubscription()
@@ -168,20 +181,18 @@ export function CategoryManager() {
   }
 
   return (
-    <Card
-      title="Catégories"
-      hint="Crée, renomme ou supprime tes catégories de dépenses, et fixe un budget mensuel par catégorie (visible dans Statistiques)."
-    >
+    <Card title={t.cardTitle} hint={t.cardHint}>
       {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
 
       {loading ? (
-        <p className="py-2 text-sm text-muted">Chargement des catégories...</p>
+        <p className="py-2 text-sm text-muted">{t.loading}</p>
       ) : (
         <ul className="divide-y divide-overlay/10">
           {categories.map((category) => (
             <li key={category.id}>
               <CategoryRow
                 category={category}
+                lang={lang}
                 onRename={renameCategory}
                 onRequestDelete={requestDelete}
                 onSetBudget={setCategoryBudget}
@@ -195,9 +206,11 @@ export function CategoryManager() {
       {pendingDelete && (
         <div className="mt-3 rounded-lg border border-accent/30 bg-accent/10 px-4 py-3 text-sm">
           <p className="text-ink">
-            « {pendingDelete.name} » est utilisée par {pendingDelete.usageCount} dépense
-            {pendingDelete.usageCount > 1 ? 's' : ''}. Les réassigner à « {FALLBACK_CATEGORY} » et
-            supprimer la catégorie ?
+            {t.confirmDelete(
+              translateCategoryLabel(pendingDelete.name, lang),
+              pendingDelete.usageCount,
+              translateCategoryLabel(FALLBACK_CATEGORY, lang),
+            )}
           </p>
           <div className="mt-3 flex gap-2">
             <button
@@ -205,14 +218,14 @@ export function CategoryManager() {
               onClick={confirmDelete}
               className="rounded-lg border border-red-400/40 px-3 py-1.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-950/30"
             >
-              Réassigner et supprimer
+              {t.reassignAndDelete}
             </button>
             <button
               type="button"
               onClick={() => setPendingDelete(null)}
               className="rounded-lg border border-overlay/10 px-3 py-1.5 text-sm text-muted hover:text-ink"
             >
-              Annuler
+              {COMMON[lang].app.cancel}
             </button>
           </div>
         </div>
@@ -221,8 +234,8 @@ export function CategoryManager() {
       {atCategoryLimit ? (
         <div className="mt-4">
           <UpgradePrompt
-            title={`Limite de ${limits.maxCategories} catégories atteinte`}
-            description="Le plan Gratuit est limité à un petit nombre de catégories. Passe à Standard pour en créer autant que tu veux."
+            title={t.limitReached(limits.maxCategories ?? 0)}
+            description={t.limitDescription}
             minPlan="standard"
           />
         </div>
@@ -232,7 +245,7 @@ export function CategoryManager() {
             type="text"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="Nouvelle catégorie"
+            placeholder={t.newCategoryPlaceholder}
             className="flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
           />
           <button
@@ -240,7 +253,7 @@ export function CategoryManager() {
             disabled={addingCategory}
             className="rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
           >
-            {addingCategory ? 'Ajout...' : 'Ajouter'}
+            {addingCategory ? t.adding : COMMON[lang].app.add}
           </button>
         </form>
       )}

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Modal } from './Modal'
 import { UpgradePrompt } from './UpgradePrompt'
-import { formatCurrency, getTodayDateString } from '../lib/format'
-import { FREQUENCY_OPTIONS, type RecurringFrequency } from '../lib/recurringExpenses'
+import { formatCurrency, formatCurrencyEN, getTodayDateString } from '../lib/format'
+import { getFrequencyOptions, type RecurringFrequency } from '../lib/recurringExpenses'
+import { useLanguage } from '../hooks/useLanguage'
+import { BUDGET } from '../lib/i18n/budget'
 import type { FixedExpense } from '../hooks/useFixedExpenses'
 
 // A fixed expense and a recurring expense are meant to be mutually
@@ -31,6 +33,9 @@ export function ConvertToRecurringModal({
   ) => Promise<boolean>
   onClose: () => void
 }) {
+  const { lang } = useLanguage()
+  const t = BUDGET[lang].convertModal
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const [frequency, setFrequency] = useState<RecurringFrequency>('monthly')
   const [startDate, setStartDate] = useState(getTodayDateString())
   const [hasEndDate, setHasEndDate] = useState(false)
@@ -54,30 +59,26 @@ export function ConvertToRecurringModal({
   }
 
   return (
-    <Modal open={expense !== null} onClose={onClose} title="Convertir en récurrence">
+    <Modal open={expense !== null} onClose={onClose} title={t.title}>
       {expense && atLimit ? (
         <UpgradePrompt
-          title={`Limite de ${maxRecurringExpenses} récurrence${maxRecurringExpenses === 1 ? '' : 's'} atteinte`}
-          description="Le plan Gratuit est limité en nombre de récurrences actives. Passe à Standard pour en créer autant que tu veux."
+          title={t.limitReached(maxRecurringExpenses ?? 0)}
+          description={t.limitDescription}
           minPlan="standard"
         />
       ) : (
         expense && (
         <form onSubmit={submit} className="flex flex-col gap-3">
-          <p className="text-sm text-muted">
-            <span className="font-medium text-ink">{expense.name}</span> —{' '}
-            {formatCurrency(expense.amount)} deviendra une vraie transaction générée automatiquement à
-            chaque échéance, et sera retirée de tes dépenses fixes.
-          </p>
+          <p className="text-sm text-muted">{t.description(expense.name, formatMoney(expense.amount))}</p>
 
           <label className="flex flex-col gap-1 text-sm text-muted">
-            Fréquence
+            {t.frequency}
             <select
               value={frequency}
               onChange={(e) => setFrequency(e.target.value as RecurringFrequency)}
               className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
             >
-              {FREQUENCY_OPTIONS.map((f) => (
+              {getFrequencyOptions(lang).map((f) => (
                 <option key={f.value} value={f.value} className="bg-surface">
                   {f.label}
                 </option>
@@ -86,7 +87,7 @@ export function ConvertToRecurringModal({
           </label>
 
           <label className="flex flex-col gap-1 text-sm text-muted">
-            Première occurrence
+            {t.firstOccurrence}
             <input
               type="date"
               value={startDate}
@@ -102,7 +103,7 @@ export function ConvertToRecurringModal({
               onChange={(e) => setHasEndDate(e.target.checked)}
               className="h-4 w-4 accent-primary"
             />
-            Date de fin (optionnel)
+            {t.endDateLabel}
           </label>
           {hasEndDate && (
             <input
@@ -119,7 +120,7 @@ export function ConvertToRecurringModal({
             disabled={submitting}
             className="rounded-lg bg-primary-strong px-5 py-2.5 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
           >
-            {submitting ? 'Conversion...' : 'Convertir'}
+            {submitting ? t.converting : t.convertButton}
           </button>
         </form>
         )

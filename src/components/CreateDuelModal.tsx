@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Modal } from './Modal'
 import { DUEL_DURATION_OPTIONS, type DuelDurationDays } from '../lib/duels'
+import { useLanguage } from '../hooks/useLanguage'
+import { EPARGNE } from '../lib/i18n/epargne'
+import { COMMON } from '../lib/i18n/common'
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
 
 export function CreateDuelModal({
@@ -14,6 +17,8 @@ export function CreateDuelModal({
   goal: SavingsGoal
   onCreate: (durationDays: DuelDurationDays, displayName: string) => Promise<{ inviteToken: string | null; error: string | null }>
 }) {
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].createDuelModal
   const [durationDays, setDurationDays] = useState<DuelDurationDays>(30)
   const [displayName, setDisplayName] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -37,7 +42,7 @@ export function CreateDuelModal({
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!displayName.trim()) {
-      setError('Un prénom est requis.')
+      setError(t.nameRequired)
       return
     }
     setSubmitting(true)
@@ -45,7 +50,7 @@ export function CreateDuelModal({
     const { inviteToken, error: createError } = await onCreate(durationDays, displayName.trim())
     setSubmitting(false)
     if (createError || !inviteToken) {
-      setError(createError ?? 'Impossible de créer le duel.')
+      setError(createError ?? t.createFailedFallback)
       return
     }
     setInviteUrl(`${window.location.origin}/duels/rejoindre/${inviteToken}`)
@@ -59,13 +64,10 @@ export function CreateDuelModal({
   }
 
   return (
-    <Modal open={open} onClose={handleClose} title="Lancer un duel d'épargne">
+    <Modal open={open} onClose={handleClose} title={t.modalTitle}>
       {inviteUrl ? (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-muted">
-            Envoie ce lien à ton adversaire — dès qu'il l'ouvre et choisit un de ses objectifs, le
-            duel commence pour {durationDays} jours.
-          </p>
+          <p className="text-sm text-muted">{t.sendLinkHint(durationDays)}</p>
           <div className="flex gap-2">
             <input
               type="text"
@@ -79,7 +81,7 @@ export function CreateDuelModal({
               onClick={copyLink}
               className="shrink-0 rounded-lg bg-primary-strong px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
             >
-              {copied ? 'Copié !' : 'Copier'}
+              {copied ? t.copied : t.copy}
             </button>
           </div>
           <button
@@ -87,17 +89,17 @@ export function CreateDuelModal({
             onClick={handleClose}
             className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
           >
-            Fermer
+            {COMMON[lang].app.close}
           </button>
         </div>
       ) : (
         <form onSubmit={submit} className="flex flex-col gap-4">
           <p className="text-sm text-muted">
-            Objectif : <span className="text-ink">{goal.name}</span>
+            {t.goalLabelPrefix} <span className="text-ink">{goal.name}</span>
           </p>
 
           <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Durée du duel</p>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">{t.durationLabel}</p>
             <div className="flex gap-2">
               {DUEL_DURATION_OPTIONS.map((d) => (
                 <button
@@ -110,30 +112,27 @@ export function CreateDuelModal({
                       : 'border border-overlay/10 text-muted hover:text-ink'
                   }`}
                 >
-                  {d} jours
+                  {t.daysOption(d)}
                 </button>
               ))}
             </div>
           </div>
 
           <label className="flex flex-col gap-1 text-sm text-muted">
-            Ton prénom (affiché à ton adversaire)
+            {t.displayNameLabel}
             <input
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Ex : Alex"
+              placeholder={t.namePlaceholder}
               autoFocus
               className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
             />
           </label>
 
           <div className="rounded-lg border border-accent/30 bg-accent/10 px-3 py-2.5 text-xs text-muted">
-            <p className="font-medium text-ink">Ce que voit ton adversaire</p>
-            <p className="mt-1">
-              Seulement ton prénom et ton % de progression. Jamais tes montants en dollars, ni le
-              nom de ton objectif.
-            </p>
+            <p className="font-medium text-ink">{t.whatOpponentSeesTitle}</p>
+            <p className="mt-1">{t.whatOpponentSeesBody}</p>
           </div>
 
           {error && <p className="text-xs text-red-400">{error}</p>}
@@ -144,14 +143,14 @@ export function CreateDuelModal({
               disabled={submitting}
               className="flex-1 rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
             >
-              {submitting ? 'Création...' : 'Générer le lien'}
+              {submitting ? t.creating : t.generateLink}
             </button>
             <button
               type="button"
               onClick={handleClose}
               className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
             >
-              Annuler
+              {COMMON[lang].app.cancel}
             </button>
           </div>
         </form>

@@ -3,6 +3,9 @@ import { supabase } from '../lib/supabase'
 import { emitCategoriesChanged, emitExpensesChanged, onCategoriesChanged } from '../lib/events'
 import { FALLBACK_CATEGORY } from '../lib/categories'
 import { useAuth } from './useAuth'
+import { useLanguage } from './useLanguage'
+import { COMMON } from '../lib/i18n/common'
+import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
 
 export interface Category {
   id: string
@@ -26,6 +29,7 @@ function sortCategories(categories: Category[]): Category[] {
 
 export function useCategories() {
   const { user } = useAuth()
+  const { lang } = useLanguage()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -64,13 +68,13 @@ export function useCategories() {
         .select()
         .single()
       if (insertError || !data) {
-        setError(insertError?.message ?? 'Insert failed')
+        setError(insertError?.message ?? COMMON[lang].app.saveFailed)
         return
       }
       setCategories((prev) => sortCategories([...prev, fromRow(data)]))
       emitCategoriesChanged()
     },
-    [userId],
+    [userId, lang],
   )
 
   const setCategoryBudget = useCallback(async (id: string, monthlyBudget: number | null) => {
@@ -129,7 +133,7 @@ export function useCategories() {
       const category = categories.find((c) => c.id === id)
       if (!category) return
       if (category.name === FALLBACK_CATEGORY) {
-        setError(`La catégorie « ${FALLBACK_CATEGORY} » ne peut pas être supprimée.`)
+        setError(HOOK_ERRORS[lang].categories.cannotDeleteFallback(FALLBACK_CATEGORY))
         return
       }
 
@@ -149,7 +153,7 @@ export function useCategories() {
       emitCategoriesChanged()
       if (opts?.reassignTo) emitExpensesChanged()
     },
-    [categories],
+    [categories, lang],
   )
 
   return {

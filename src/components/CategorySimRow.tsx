@@ -1,4 +1,6 @@
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { EPARGNE } from '../lib/i18n/epargne'
 
 // Same slider row as FixedExpenseSimRow, adapted for a plain
 // category/amount pair instead of a FixedExpense record — used for both
@@ -16,6 +18,9 @@ export function CategorySimRow({
   simulatedAmount: number
   onChange: (amount: number) => void
 }) {
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].simRow
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const sliderMax = Math.max(actualAmount * 2, 50)
   const delta = simulatedAmount - actualAmount
 
@@ -24,11 +29,11 @@ export function CategorySimRow({
       <div className="mb-1 flex items-center justify-between text-sm">
         <span className="text-ink">{label}</span>
         <div className="flex items-center gap-2">
-          <span className="font-medium text-ink">{formatCurrency(simulatedAmount)}</span>
+          <span className="font-medium text-ink">{formatMoney(simulatedAmount)}</span>
           {delta !== 0 && (
             <span className={`text-xs font-semibold ${delta < 0 ? 'text-success' : 'text-red-400'}`}>
               ({delta > 0 ? '+' : ''}
-              {formatCurrency(delta)})
+              {formatMoney(delta)})
             </span>
           )}
         </div>
@@ -41,9 +46,9 @@ export function CategorySimRow({
         value={Math.min(simulatedAmount, sliderMax)}
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full accent-primary"
-        aria-label={`Montant simulé pour ${label}`}
+        aria-label={t.simulatedAmountAria(label)}
       />
-      <p className="text-xs text-muted">Actuel : {formatCurrency(actualAmount)}</p>
+      <p className="text-xs text-muted">{t.actual(formatMoney(actualAmount))}</p>
     </div>
   )
 }

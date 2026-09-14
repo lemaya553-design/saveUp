@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useLanguage } from '../hooks/useLanguage'
+import { CONNEXION } from '../lib/i18n/connexion'
+import type { Lang } from '../lib/i18n/language'
 
 type Mode = 'signin' | 'signup' | 'forgot'
 
@@ -29,16 +32,17 @@ function GoogleIcon({ className }: { className: string }) {
 
 // Supabase puts recovery-link problems (expired, already used) directly in
 // the redirect URL rather than as a catchable JS error, since there's no
-// session yet to attach an error to — read it straight from the URL.
-function readLinkError(): string | null {
+// session yet to attach an error to — read it straight from the URL. This
+// reads from window.location, not React state, so it can't call
+// useLanguage() itself — callers pass the current lang in explicitly.
+function readLinkError(lang: Lang): string | null {
   const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
   const search = new URLSearchParams(window.location.search)
   const code = hash.get('error_code') ?? search.get('error_code')
   const description = hash.get('error_description') ?? search.get('error_description')
   if (!code && !description) return null
-  return code === 'otp_expired'
-    ? 'Ce lien de réinitialisation a expiré. Demande-en un nouveau ci-dessous.'
-    : "Ce lien n'est plus valide. Demande-en un nouveau ci-dessous."
+  const t = CONNEXION[lang]
+  return code === 'otp_expired' ? t.errors.linkExpired : t.errors.linkInvalid
 }
 
 export function Connexion() {
@@ -56,6 +60,8 @@ export function Connexion() {
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from ?? '/dashboard'
+  const { lang } = useLanguage()
+  const t = CONNEXION[lang]
 
   // Signup is the default parcours — this is where a new visitor coming
   // from the landing page's "Commencer gratuitement" lands, and most
@@ -68,7 +74,7 @@ export function Connexion() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [googleSubmitting, setGoogleSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(() => readLinkError())
+  const [error, setError] = useState<string | null>(() => readLinkError(lang))
   // Supabase returns the exact same error for "wrong password" and "no
   // account with this email" (deliberate anti-enumeration behavior,
   // verified against the real project) — so this never claims certainty,
@@ -87,7 +93,7 @@ export function Connexion() {
   // straight to the "request a new link" form instead of a dead-end sign-in
   // screen with just an error banner above it.
   useEffect(() => {
-    if (readLinkError()) setMode('forgot')
+    if (readLinkError(lang)) setMode('forgot')
     // Clean the error params out of the URL so a refresh doesn't reprocess them.
     if (window.location.hash || window.location.search) {
       window.history.replaceState(null, '', window.location.pathname)
@@ -116,9 +122,9 @@ export function Connexion() {
   async function handleResendConfirmation() {
     setResending(true)
     setResendMessage(null)
-    const result = await resendConfirmationEmail(email)
+    const result = await resendConfirmationEmail(email, lang)
     setResending(false)
-    setResendMessage(result.error ?? 'Courriel renvoyé.')
+    setResendMessage(result.error ?? t.resend.sent)
   }
 
   async function handleSignIn(e: React.FormEvent) {
@@ -126,11 +132,11 @@ export function Connexion() {
     setError(null)
     setNoAccountHint(false)
     if (!email.trim() || !password) {
-      setError('Entre ton courriel et ton mot de passe.')
+      setError(t.errors.signInMissingFields)
       return
     }
     setSubmitting(true)
-    const result = await signIn(email.trim(), password)
+    const result = await signIn(email.trim(), password, lang)
     setSubmitting(false)
     if (result.error) {
       setError(result.error)
@@ -144,19 +150,19 @@ export function Connexion() {
     e.preventDefault()
     setError(null)
     if (!email.trim() || !password) {
-      setError('Entre un courriel et un mot de passe.')
+      setError(t.errors.signUpMissingFields)
       return
     }
     if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères.')
+      setError(t.errors.passwordTooShort)
       return
     }
     if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.')
+      setError(t.errors.passwordMismatch)
       return
     }
     setSubmitting(true)
-    const result = await signUp(email.trim(), password)
+    const result = await signUp(email.trim(), password, lang)
     setSubmitting(false)
     if (result.error) {
       setError(result.error)
@@ -176,7 +182,7 @@ export function Connexion() {
   async function handleGoogleSignIn() {
     setError(null)
     setGoogleSubmitting(true)
-    const result = await signInWithGoogle(from)
+    const result = await signInWithGoogle(from, lang)
     if (result.error) {
       setError(result.error)
       setGoogleSubmitting(false)
@@ -187,11 +193,11 @@ export function Connexion() {
     e.preventDefault()
     setError(null)
     if (!email.trim()) {
-      setError('Entre ton courriel.')
+      setError(t.errors.forgotMissingEmail)
       return
     }
     setSubmitting(true)
-    const result = await resetPasswordForEmail(email.trim())
+    const result = await resetPasswordForEmail(email.trim(), lang)
     setSubmitting(false)
     if (result.error) {
       setError(result.error)
@@ -207,15 +213,15 @@ export function Connexion() {
     e.preventDefault()
     setError(null)
     if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères.')
+      setError(t.errors.passwordTooShort)
       return
     }
     if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.')
+      setError(t.errors.passwordMismatch)
       return
     }
     setSubmitting(true)
-    const result = await updatePassword(password)
+    const result = await updatePassword(password, lang)
     setSubmitting(false)
     if (result.error) {
       setError(result.error)
@@ -236,12 +242,12 @@ export function Connexion() {
 
         {passwordRecovery ? (
           <>
-            <h1 className="mt-6 text-2xl font-bold text-ink">Choisis un nouveau mot de passe</h1>
-            <p className="mt-2 text-sm text-muted">Ton nouveau mot de passe remplace l'ancien immédiatement.</p>
+            <h1 className="mt-6 text-2xl font-bold text-ink">{t.recovery.title}</h1>
+            <p className="mt-2 text-sm text-muted">{t.recovery.subtitle}</p>
 
             <form onSubmit={handleSetNewPassword} className="mt-6 flex flex-col gap-3">
               <label className="flex flex-col gap-1 text-sm text-muted">
-                Nouveau mot de passe
+                {t.common.newPasswordLabel}
                 <input
                   type="password"
                   autoComplete="new-password"
@@ -253,7 +259,7 @@ export function Connexion() {
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm text-muted">
-                Confirme le mot de passe
+                {t.common.confirmPasswordLabel}
                 <input
                   type="password"
                   autoComplete="new-password"
@@ -275,21 +281,22 @@ export function Connexion() {
                 disabled={submitting}
                 className="mt-2 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
               >
-                {submitting ? 'Un instant...' : 'Enregistrer le nouveau mot de passe'}
+                {submitting ? t.common.submitting : t.recovery.submit}
               </button>
             </form>
           </>
         ) : confirmationSent ? (
           <div className="mt-6">
-            <h1 className="text-2xl font-bold text-ink">Vérifie ta boîte courriel</h1>
+            <h1 className="text-2xl font-bold text-ink">{t.common.checkYourEmail}</h1>
             <p className="mt-2 text-sm text-muted">
-              On a envoyé un lien de confirmation à <span className="text-ink">{email}</span>.
-              Clique-le pour activer ton compte, puis reviens te connecter ici.
+              {t.confirmationSent.bodyPrefix}
+              <span className="text-ink">{email}</span>
+              {t.confirmationSent.bodySuffix}
             </p>
             <p className="mt-3 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2.5 text-xs text-ink">
-              Rien reçu après quelques minutes ? Vérifie ton dossier
-              <span className="font-medium"> indésirables / pourriels</span> — c'est souvent là qu'il
-              atterrit.
+              {t.confirmationSent.spamPrefix}
+              <span className="font-medium">{t.confirmationSent.spamBold}</span>
+              {t.confirmationSent.spamSuffix}
             </p>
 
             {resendMessage && (
@@ -302,49 +309,48 @@ export function Connexion() {
               disabled={resending}
               className="mt-4 w-full rounded-lg border border-overlay/10 px-5 py-3 font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
             >
-              {resending ? 'Envoi...' : 'Renvoyer le courriel'}
+              {resending ? t.confirmationSent.resendBusy : t.confirmationSent.resendIdle}
             </button>
             <button
               type="button"
               onClick={() => switchMode('signin')}
               className="mt-2 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110"
             >
-              Retour à la connexion
+              {t.common.backToSignIn}
             </button>
           </div>
         ) : mode === 'forgot' ? (
           resetLinkSent ? (
             <div className="mt-6">
-              <h1 className="text-2xl font-bold text-ink">Vérifie ta boîte courriel</h1>
+              <h1 className="text-2xl font-bold text-ink">{t.common.checkYourEmail}</h1>
               <p className="mt-2 text-sm text-muted">
-                Si un compte existe avec <span className="text-ink">{email}</span>, un lien pour
-                réinitialiser le mot de passe vient d'être envoyé.
+                {t.forgot.linkSentPrefix}
+                <span className="text-ink">{email}</span>
+                {t.forgot.linkSentSuffix}
               </p>
               <button
                 type="button"
                 onClick={() => switchMode('signin')}
                 className="mt-6 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110"
               >
-                Retour à la connexion
+                {t.common.backToSignIn}
               </button>
             </div>
           ) : (
             <>
-              <h1 className="mt-6 text-2xl font-bold text-ink">Mot de passe oublié</h1>
-              <p className="mt-2 text-sm text-muted">
-                Entre ton courriel — on t'envoie un lien pour en choisir un nouveau.
-              </p>
+              <h1 className="mt-6 text-2xl font-bold text-ink">{t.forgot.title}</h1>
+              <p className="mt-2 text-sm text-muted">{t.forgot.subtitle}</p>
 
               <form onSubmit={handleForgotPassword} className="mt-6 flex flex-col gap-3">
                 <label className="flex flex-col gap-1 text-sm text-muted">
-                  Courriel
+                  {t.common.emailLabel}
                   <input
                     type="email"
                     autoComplete="email"
                     autoFocus
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="toi@exemple.com"
+                    placeholder={t.common.emailPlaceholder}
                     className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
                   />
                 </label>
@@ -360,7 +366,7 @@ export function Connexion() {
                   disabled={submitting}
                   className="mt-2 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
                 >
-                  {submitting ? 'Un instant...' : 'Envoyer le lien'}
+                  {submitting ? t.common.submitting : t.forgot.submit}
                 </button>
               </form>
 
@@ -370,7 +376,7 @@ export function Connexion() {
                   onClick={() => switchMode('signin')}
                   className="text-accent hover:text-accent/80"
                 >
-                  Retour à la connexion
+                  {t.common.backToSignIn}
                 </button>
               </p>
             </>
@@ -378,12 +384,10 @@ export function Connexion() {
         ) : (
           <>
             <h1 className="mt-6 text-2xl font-bold text-ink">
-              {mode === 'signin' ? 'Content de te revoir' : 'Crée ton compte'}
+              {mode === 'signin' ? t.signInUp.signInTitle : t.signInUp.signUpTitle}
             </h1>
             <p className="mt-2 text-sm text-muted">
-              {mode === 'signin'
-                ? 'Connecte-toi pour retrouver ton budget.'
-                : 'Un courriel, un mot de passe — tes données restent les tiennes.'}
+              {mode === 'signin' ? t.signInUp.signInSubtitle : t.signInUp.signUpSubtitle}
             </p>
 
             {/* Google is the recommended, prominent path — full-size, high
@@ -398,10 +402,10 @@ export function Connexion() {
             >
               <GoogleIcon className="h-6 w-6" />
               {googleSubmitting
-                ? 'Redirection...'
+                ? t.signInUp.googleRedirecting
                 : mode === 'signin'
-                  ? 'Continuer avec Google'
-                  : "S'inscrire avec Google"}
+                  ? t.signInUp.googleContinue
+                  : t.signInUp.googleSignUp}
             </button>
 
             {error && (
@@ -412,13 +416,13 @@ export function Connexion() {
 
             {noAccountHint && (
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2.5 text-sm text-ink">
-                <span>Aucun compte avec ce courriel — tu veux en créer un ?</span>
+                <span>{t.signInUp.noAccountHint}</span>
                 <button
                   type="button"
                   onClick={() => switchMode('signup')}
                   className="whitespace-nowrap rounded-lg bg-primary-strong px-3 py-1.5 text-xs font-medium text-white transition-all hover:brightness-110"
                 >
-                  Créer un compte
+                  {t.signInUp.createAccount}
                 </button>
               </div>
             )}
@@ -429,13 +433,13 @@ export function Connexion() {
                 onClick={() => setShowEmailForm(true)}
                 className="mx-auto mt-5 block text-center text-sm text-muted hover:text-ink"
               >
-                ou utiliser un courriel
+                {t.signInUp.useEmailInstead}
               </button>
             ) : (
               <>
                 <div className="my-6 flex items-center gap-3 text-xs text-muted">
                   <div className="h-px flex-1 bg-overlay/10" />
-                  ou avec un courriel
+                  {t.signInUp.orWithEmail}
                   <div className="h-px flex-1 bg-overlay/10" />
                 </div>
 
@@ -444,28 +448,28 @@ export function Connexion() {
                   className="flex flex-col gap-3"
                 >
                   <label className="flex flex-col gap-1 text-sm text-muted">
-                    Courriel
+                    {t.common.emailLabel}
                     <input
                       type="email"
                       autoComplete="email"
                       autoFocus
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="toi@exemple.com"
+                      placeholder={t.common.emailPlaceholder}
                       className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
                     />
                   </label>
 
                   <label className="flex flex-col gap-1 text-sm text-muted">
                     <span className="flex items-center justify-between">
-                      Mot de passe
+                      {t.common.passwordLabel}
                       {mode === 'signin' && (
                         <button
                           type="button"
                           onClick={() => switchMode('forgot')}
                           className="text-xs font-normal text-accent hover:text-accent/80"
                         >
-                          Mot de passe oublié ?
+                          {t.signInUp.forgotPasswordLink}
                         </button>
                       )}
                     </span>
@@ -481,7 +485,7 @@ export function Connexion() {
 
                   {mode === 'signup' && (
                     <label className="flex flex-col gap-1 text-sm text-muted">
-                      Confirme le mot de passe
+                      {t.common.confirmPasswordLabel}
                       <input
                         type="password"
                         autoComplete="new-password"
@@ -499,10 +503,10 @@ export function Connexion() {
                     className="mt-2 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
                   >
                     {submitting
-                      ? 'Un instant...'
+                      ? t.common.submitting
                       : mode === 'signin'
-                        ? 'Se connecter'
-                        : 'Créer mon compte'}
+                        ? t.signInUp.signInSubmit
+                        : t.signInUp.signUpSubmit}
                   </button>
                 </form>
               </>
@@ -511,24 +515,24 @@ export function Connexion() {
             <p className="mt-6 text-center text-sm text-muted">
               {mode === 'signin' ? (
                 <>
-                  Pas encore de compte ?{' '}
+                  {t.signInUp.noAccountYet}{' '}
                   <button
                     type="button"
                     onClick={() => switchMode('signup')}
                     className="text-accent hover:text-accent/80"
                   >
-                    Inscris-toi
+                    {t.signInUp.signUpLink}
                   </button>
                 </>
               ) : (
                 <>
-                  Déjà un compte ?{' '}
+                  {t.signInUp.alreadyAccount}{' '}
                   <button
                     type="button"
                     onClick={() => switchMode('signin')}
                     className="text-accent hover:text-accent/80"
                   >
-                    Connecte-toi
+                    {t.signInUp.signInLink}
                   </button>
                 </>
               )}

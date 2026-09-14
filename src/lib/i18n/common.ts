@@ -4,6 +4,33 @@ import type { Lang } from './language'
 // and/or Tarifs (header, footer, sticky CTA, the little illustrations) —
 // kept separate from home.ts/tarifs.ts since these aren't tied to one page.
 export interface CommonContent {
+  // Universal action words repeated across dozens of components throughout
+  // the signed-in app (edit/delete/save buttons, modal close, form nav).
+  // Every page/component dictionary should reuse these via
+  // COMMON[lang].app.* instead of re-declaring its own translation of
+  // "Modifier"/"Supprimer"/etc., so the same action is never worded two
+  // different ways in two different corners of the app.
+  app: {
+    modify: string
+    delete: string
+    cancel: string
+    save: string
+    add: string
+    close: string
+    continueAction: string
+    back: string
+    loading: string
+    confirm: string
+    createAction: string
+    // Shared across every hook that guards a mutation behind a still-present
+    // userId — reused instead of re-declaring the same sentence in
+    // useAccounts.ts/useExpenses.ts/useSubscription.ts.
+    sessionExpired: string
+    // Generic insert-failure fallback shown only when the database didn't
+    // return a more specific error message — reused across
+    // useCategories.ts/useExpenses.ts/useFixedExpenses.ts/useSavingsGoals.ts.
+    saveFailed: string
+  }
   header: {
     navComment: string
     navFeatures: string
@@ -13,6 +40,24 @@ export interface CommonContent {
     ctaStart: string
     openMenu: string
     closeMenu: string
+  }
+  // Shared by Budget.tsx and Parametres.tsx (Compte tab) — same component,
+  // same copy in both places.
+  incomeInput: {
+    title: string
+    hint: string
+  }
+  // The signed-in app's own top nav (Nav.tsx) — distinct from `header`
+  // above, which is the logged-out marketing header.
+  nav: {
+    dashboard: string
+    budget: string
+    epargne: string
+    statistiques: string
+    tarifs: string
+    parametres: string
+    signOut: string
+    settingsAriaLabel: string
   }
   footer: {
     pricing: string
@@ -67,6 +112,21 @@ export interface CommonContent {
 
 export const COMMON: Record<Lang, CommonContent> = {
   fr: {
+    app: {
+      modify: 'Modifier',
+      delete: 'Supprimer',
+      cancel: 'Annuler',
+      save: 'Enregistrer',
+      add: 'Ajouter',
+      close: 'Fermer',
+      continueAction: 'Continuer',
+      back: 'Retour',
+      loading: 'Chargement...',
+      confirm: 'Confirmer',
+      createAction: 'Créer',
+      sessionExpired: 'Ta session a expiré — reconnecte-toi et réessaie.',
+      saveFailed: "Impossible d'enregistrer — réessaie.",
+    },
     header: {
       navComment: 'Comment ça marche',
       navFeatures: 'Fonctionnalités',
@@ -76,6 +136,20 @@ export const COMMON: Record<Lang, CommonContent> = {
       ctaStart: 'Commencer gratuitement',
       openMenu: 'Ouvrir le menu',
       closeMenu: 'Fermer le menu',
+    },
+    incomeInput: {
+      title: 'Revenu mensuel',
+      hint: "On l'utilise pour calculer ton budget hebdomadaire disponible.",
+    },
+    nav: {
+      dashboard: 'Dashboard',
+      budget: 'Budget',
+      epargne: 'Épargne',
+      statistiques: 'Statistiques',
+      tarifs: 'Tarifs',
+      parametres: 'Paramètres',
+      signOut: 'Déconnexion',
+      settingsAriaLabel: 'Paramètres et personnalisation',
     },
     footer: {
       pricing: 'Tarifs',
@@ -138,6 +212,21 @@ export const COMMON: Record<Lang, CommonContent> = {
     },
   },
   en: {
+    app: {
+      modify: 'Edit',
+      delete: 'Delete',
+      cancel: 'Cancel',
+      save: 'Save',
+      add: 'Add',
+      close: 'Close',
+      continueAction: 'Continue',
+      back: 'Back',
+      loading: 'Loading...',
+      confirm: 'Confirm',
+      createAction: 'Create',
+      sessionExpired: 'Your session has expired — sign back in and try again.',
+      saveFailed: "Couldn't save — try again.",
+    },
     header: {
       navComment: 'How it works',
       navFeatures: 'Features',
@@ -147,6 +236,20 @@ export const COMMON: Record<Lang, CommonContent> = {
       ctaStart: 'Start for free',
       openMenu: 'Open menu',
       closeMenu: 'Close menu',
+    },
+    incomeInput: {
+      title: 'Monthly income',
+      hint: 'Used to work out your available weekly budget.',
+    },
+    nav: {
+      dashboard: 'Dashboard',
+      budget: 'Budget',
+      epargne: 'Savings',
+      statistiques: 'Statistics',
+      tarifs: 'Pricing',
+      parametres: 'Settings',
+      signOut: 'Sign out',
+      settingsAriaLabel: 'Settings and personalization',
     },
     footer: {
       pricing: 'Pricing',

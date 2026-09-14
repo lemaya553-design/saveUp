@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLanguage } from '../hooks/useLanguage'
+import { MISC } from '../lib/i18n/misc'
 
 interface HelpButtonProps {
   title: string
@@ -13,6 +15,8 @@ interface HelpButtonProps {
 // per-page (purpose + a short list of the main actions), aimed at someone
 // new to the app rather than a full help center.
 export function HelpButton({ title, purpose, actions, className = '' }: HelpButtonProps) {
+  const { lang } = useLanguage()
+  const t = MISC[lang].helpButton
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -41,7 +45,7 @@ export function HelpButton({ title, purpose, actions, className = '' }: HelpButt
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={`Aide : ${title}`}
+        aria-label={t.ariaLabel(title)}
         className="flex h-8 w-8 items-center justify-center rounded-full border border-overlay/15 bg-overlay/5 text-sm font-semibold text-muted backdrop-blur-sm transition-colors hover:border-overlay/25 hover:bg-overlay/10 hover:text-ink"
       >
         ?
@@ -50,15 +54,15 @@ export function HelpButton({ title, purpose, actions, className = '' }: HelpButt
       {open && (
         <div
           role="dialog"
-          aria-label={`Aide : ${title}`}
+          aria-label={t.ariaLabel(title)}
           className="glass absolute right-0 top-full mt-2 w-72 rounded-2xl p-4 text-left shadow-lg shadow-black/40 sm:w-80"
         >
           <p className="text-sm font-semibold text-ink">{title}</p>
 
-          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-accent">À quoi sert cette page</p>
+          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-accent">{t.purposeHeading}</p>
           <p className="mt-1 text-sm text-muted">{purpose}</p>
 
-          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-accent">Comment l'utiliser</p>
+          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-accent">{t.actionsHeading}</p>
           <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-muted">
             {actions.map((action) => (
               <li key={action}>{action}</li>

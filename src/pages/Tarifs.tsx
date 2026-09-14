@@ -15,11 +15,10 @@ export function Tarifs() {
   const { user } = useAuth()
   const subscription = useSubscription()
   const [pendingPlan, setPendingPlan] = useState<Plan | null>(null)
-  // The signed-in app stays French regardless of the stored marketing-page
-  // language — only a logged-out visitor (or the language switcher, which
-  // only ever shows on the logged-out header) can move this off 'fr'.
-  const { lang: storedLang } = useLanguage()
-  const lang = user ? 'fr' : storedLang
+  // Now shared with the rest of the signed-in app — Nav.tsx's own
+  // LanguageSwitcher keeps this in sync everywhere, not just the logged-out
+  // marketing header.
+  const { lang } = useLanguage()
   const t = TARIFS[lang]
   const fmt = lang === 'fr' ? formatCurrency : formatCurrencyEN
 

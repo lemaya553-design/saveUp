@@ -9,7 +9,7 @@ import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { sumThisMonth } from '../lib/budgetInsights'
 import { computeRequiredPace, estimateMonthlyRate } from '../lib/savingsProjection'
 import { computeCategorySpending } from '../lib/categorySpending'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { PageHeader } from '../components/PageHeader'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
@@ -26,68 +26,31 @@ import { PageSkeleton } from '../components/PageSkeleton'
 import { TabBar, type TabDef } from '../components/TabBar'
 import { useSubscription } from '../hooks/useSubscription'
 import { useDuels } from '../hooks/useDuels'
+import { useLanguage } from '../hooks/useLanguage'
 import { splitByLimit } from '../lib/plans'
+import { EPARGNE } from '../lib/i18n/epargne'
 
 type Tab = 'objectifs' | 'simulateur' | 'duels' | 'investissement'
 const TABS: Tab[] = ['objectifs', 'simulateur', 'duels', 'investissement']
-const TAB_DEFS: TabDef<Tab>[] = [
-  { key: 'objectifs', label: 'Objectifs' },
-  { key: 'simulateur', label: 'Simulateur « et si »' },
-  { key: 'duels', label: 'Duels' },
-  { key: 'investissement', label: 'Investissement' },
-]
-
-const OBJECTIFS_HELP = {
-  title: 'Objectifs',
-  purpose: 'Crée et suis tes objectifs d\'épargne (voyage, fonds d\'urgence...) et leur progression.',
-  actions: [
-    'Crée un nouvel objectif avec un montant cible et, si tu veux, une date.',
-    'Ajoute une contribution à un objectif existant pour le faire avancer.',
-    'Compare ton rythme actuel au rythme nécessaire pour atteindre tes dates cibles.',
-  ],
-}
-
-const SIMULATEUR_HELP = {
-  title: 'Simulateur « et si »',
-  purpose:
-    'Teste l\'effet d\'un changement (revenu, dépenses, rythme d\'épargne) avant de l\'appliquer pour de vrai.',
-  actions: [
-    'Ajuste les curseurs pour simuler un changement de revenu ou de dépenses par catégorie.',
-    'Regarde l\'impact estimé sur ta capacité d\'épargne mensuelle.',
-    'Rien n\'est enregistré ici : c\'est un essai, pas une vraie modification de ton budget.',
-  ],
-}
-
-const DUELS_HELP = {
-  title: 'Duels',
-  purpose: "Affronte un ami sur vos objectifs d'épargne respectifs, chacun sur son propre argent.",
-  actions: [
-    'Lance un duel depuis un de tes objectifs (onglet Objectifs), et envoie le lien à un ami.',
-    'Vous voyez chacun le % de progression de l\'autre — jamais les montants en dollars.',
-    'Le duel dure 30, 60 ou 90 jours ; à la fin, celui qui a le plus progressé gagne.',
-  ],
-}
-
-const INVESTISSEMENT_HELP = {
-  title: 'Investissement',
-  purpose: 'Estime la croissance future d\'un placement grâce à l\'intérêt composé.',
-  actions: [
-    'Indique le montant actuellement investi et un taux de rendement annuel.',
-    'Compare la projection sur différentes durées (1, 5, 10 ans...).',
-    'Consulte l\'estimation du temps pour doubler ton placement (règle du 72).',
-  ],
-}
-
-const HELP_BY_TAB: Record<Tab, typeof OBJECTIFS_HELP> = {
-  objectifs: OBJECTIFS_HELP,
-  simulateur: SIMULATEUR_HELP,
-  duels: DUELS_HELP,
-  investissement: INVESTISSEMENT_HELP,
-}
 
 export function Epargne() {
   const { tab: tabParam } = useParams<{ tab: string }>()
   const navigate = useNavigate()
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang]
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const TAB_DEFS: TabDef<Tab>[] = [
+    { key: 'objectifs', label: t.tabs.objectifs },
+    { key: 'simulateur', label: t.tabs.simulateur },
+    { key: 'duels', label: t.tabs.duels },
+    { key: 'investissement', label: t.tabs.investissement },
+  ]
+  const HELP_BY_TAB: Record<Tab, { title: string; purpose: string; actions: string[] }> = {
+    objectifs: t.help.objectifs,
+    simulateur: t.help.simulateur,
+    duels: t.help.duels,
+    investissement: t.help.investissement,
+  }
   const [showCreateForm, setShowCreateForm] = useState(false)
 
   // Loaded once here and passed down to the Objectifs/Simulateur tabs, so
@@ -173,11 +136,7 @@ export function Epargne() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader
-        title="Vers quoi tu épargnes"
-        subtitle="Tes objectifs d'épargne, un simulateur, tes duels et tes placements."
-        help={HELP_BY_TAB[tab]}
-      />
+      <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={HELP_BY_TAB[tab]} />
 
       <TabBar tabs={TAB_DEFS} active={tab} onChange={(next) => navigate(`/epargne/${next}`)} />
 
@@ -190,9 +149,9 @@ export function Epargne() {
       {tab === 'objectifs' ? (
         !hasGoals && !showCreateForm ? (
           <EmptyState
-            title="Tu n'as pas encore d'objectif d'épargne"
-            description="Fixe un montant à atteindre pour commencer à suivre ta progression et débloquer des badges."
-            actionLabel="Fixer mon premier objectif"
+            title={t.objectifsTab.emptyTitle}
+            description={t.objectifsTab.emptyDescription}
+            actionLabel={t.objectifsTab.emptyAction}
             onAction={() => setShowCreateForm(true)}
           />
         ) : (
@@ -201,20 +160,20 @@ export function Epargne() {
               <div className="glass rounded-2xl p-6 shadow-lg shadow-black/30">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted">Épargné</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted">{t.objectifsTab.savedLabel}</p>
                     <p className="mt-1 text-2xl font-bold text-success sm:text-3xl">
-                      {formatCurrency(totalCurrentAmount)}
+                      {formatMoney(totalCurrentAmount)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted">Objectif total</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted">{t.objectifsTab.totalTargetLabel}</p>
                     <p className="mt-1 text-2xl font-bold text-ink sm:text-3xl">
-                      {formatCurrency(totalTargetAmount)}
+                      {formatMoney(totalTargetAmount)}
                     </p>
                   </div>
                   <div className="col-span-2 sm:col-span-1">
                     <p className="text-xs font-medium uppercase tracking-wide text-muted">
-                      {goals.goals.length} objectif{goals.goals.length > 1 ? 's' : ''}
+                      {t.objectifsTab.goalsCount(goals.goals.length)}
                     </p>
                     <p className="mt-1 text-2xl font-bold text-primary sm:text-3xl">
                       {overallProgress.toFixed(0)}%
@@ -249,8 +208,8 @@ export function Epargne() {
               ))}
               {subscription.limits.maxGoals !== null && goals.goals.length >= subscription.limits.maxGoals ? (
                 <UpgradePrompt
-                  title={`Limite de ${subscription.limits.maxGoals} objectif${subscription.limits.maxGoals > 1 ? 's' : ''} atteinte`}
-                  description="Le plan Gratuit est limité à un objectif d'épargne actif. Passe à Standard pour en suivre autant que tu veux."
+                  title={t.objectifsTab.limitReachedTitle(subscription.limits.maxGoals)}
+                  description={t.objectifsTab.limitReachedDescription}
                   minPlan="standard"
                 />
               ) : (
@@ -260,10 +219,7 @@ export function Epargne() {
 
             {hasGoals && (
               <>
-                <Card
-                  title="Rythme actuel vs nécessaire"
-                  hint="Ce que tu mets de côté par mois, comparé à ce qu'il faudrait pour respecter l'échéance de chaque objectif."
-                >
+                <Card title={t.objectifsTab.paceCardTitle} hint={t.objectifsTab.paceCardHint}>
                   <PaceComparisonChart entries={paceComparison} />
                 </Card>
 
@@ -293,8 +249,8 @@ export function Epargne() {
           />
         ) : (
           <UpgradePrompt
-            title="Simulateur « et si » — fonctionnalité Premium"
-            description="Teste des scénarios de dépenses/épargne et vois leur impact sur ton budget et ton score avant de les appliquer pour de vrai."
+            title={t.simulatorGate.title}
+            description={t.simulatorGate.description}
             minPlan="premium"
           />
         )

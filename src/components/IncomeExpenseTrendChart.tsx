@@ -1,5 +1,7 @@
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { IncomeExpenseTrendPoint } from '../lib/statistics'
 
 const EXPENSE_COLOR = '#4a6cf7'
@@ -33,29 +35,38 @@ function SavingsRateLabel({
   )
 }
 
-function TrendTooltip({ active, payload }: { active?: boolean; payload?: { payload: IncomeExpenseTrendPoint }[] }) {
+function TrendTooltip({
+  active,
+  payload,
+  formatMoney,
+  t,
+}: {
+  active?: boolean
+  payload?: { payload: IncomeExpenseTrendPoint }[]
+  formatMoney: (amount: number) => string
+  t: (typeof STATISTIQUES)['fr']['incomeExpenseTrendChart']
+}) {
   if (!active || !payload?.length) return null
   const point = payload[0].payload
   return (
     <div className="glass rounded-lg px-3 py-2 text-xs shadow-lg shadow-black/40">
       <p className="font-semibold capitalize text-ink">{point.label}</p>
-      <p className="mt-1 text-ink">Dépenses : {formatCurrency(point.expenses)}</p>
-      <p className="text-muted">Revenu : {formatCurrency(point.income)}</p>
+      <p className="mt-1 text-ink">{t.expenses(formatMoney(point.expenses))}</p>
+      <p className="text-muted">{t.income(formatMoney(point.income))}</p>
       <p className={`mt-1 font-medium ${point.savingsRatePct >= 0 ? 'text-success' : 'text-red-400'}`}>
-        Taux d'épargne : {point.savingsRatePct >= 0 ? '+' : ''}
-        {point.savingsRatePct.toFixed(0)}%
+        {t.savingsRate(`${point.savingsRatePct >= 0 ? '+' : ''}${point.savingsRatePct.toFixed(0)}%`)}
       </p>
     </div>
   )
 }
 
 export function IncomeExpenseTrendChart({ points }: { points: IncomeExpenseTrendPoint[] }) {
+  const { lang } = useLanguage()
+  const t = STATISTIQUES[lang].incomeExpenseTrendChart
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+
   if (points.length < 2) {
-    return (
-      <p className="text-sm text-muted">
-        Pas encore assez d'historique pour une tendance — reviens dans quelques semaines.
-      </p>
-    )
+    return <p className="text-sm text-muted">{t.notEnoughData}</p>
   }
 
   const income = points[0]?.income ?? 0
@@ -67,13 +78,13 @@ export function IncomeExpenseTrendChart({ points }: { points: IncomeExpenseTrend
           <CartesianGrid stroke="color-mix(in srgb, var(--color-overlay) 8%, transparent)" vertical={false} />
           <XAxis dataKey="label" tick={{ fill: 'var(--color-muted)', fontSize: 12 }} tickLine={false} axisLine={false} />
           <YAxis hide domain={[0, (dataMax: number) => Math.max(dataMax, income) * 1.2]} />
-          <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+          <Tooltip content={<TrendTooltip formatMoney={formatMoney} t={t} />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
           <ReferenceLine
             y={income}
             stroke="var(--color-muted)"
             strokeDasharray="4 3"
             label={{
-              value: `Revenu actuel : ${formatCurrency(income)}`,
+              value: t.currentIncome(formatMoney(income)),
               position: 'insideTopRight',
               fill: 'var(--color-muted)',
               fontSize: 11,
@@ -87,10 +98,7 @@ export function IncomeExpenseTrendChart({ points }: { points: IncomeExpenseTrend
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-      <p className="mt-1 text-center text-xs text-muted">
-        Basé sur ton revenu et tes dépenses fixes actuels appliqués rétroactivement — pas
-        nécessairement ce qu'ils étaient chaque mois.
-      </p>
+      <p className="mt-1 text-center text-xs text-muted">{t.footnote}</p>
     </div>
   )
 }

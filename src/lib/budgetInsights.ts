@@ -1,4 +1,6 @@
-import { formatCurrency, getMonthRange } from './format'
+import { formatCurrency, formatCurrencyEN, getMonthRange } from './format'
+import { translateCategoryLabel } from './i18n/categoryLabels'
+import type { Lang } from './i18n/language'
 
 export interface CategoryTotal {
   category: string
@@ -46,11 +48,14 @@ export function computeCategoryBreakdown(
 // the caption explains that instead of silently showing "sur 0,00 $
 // alloués" — a real $0 budget and an over-committed one look identical
 // once clamped, and only one of those is self-explanatory.
-export function getSpendableBudgetCaption(rawSpendableBudget: number): string {
+export function getSpendableBudgetCaption(rawSpendableBudget: number, lang: Lang): string {
+  const money = lang === 'fr' ? formatCurrency : formatCurrencyEN
   if (rawSpendableBudget >= 0) {
-    return `sur ${formatCurrency(rawSpendableBudget)} alloués`
+    return lang === 'fr' ? `sur ${money(rawSpendableBudget)} alloués` : `of ${money(rawSpendableBudget)} allocated`
   }
-  return `Dépassé de ${formatCurrency(Math.abs(rawSpendableBudget))} — l'épargne du mois dépasse ton revenu disponible`
+  return lang === 'fr'
+    ? `Dépassé de ${money(Math.abs(rawSpendableBudget))} — l'épargne du mois dépasse ton revenu disponible`
+    : `Over by ${money(Math.abs(rawSpendableBudget))} — this month's savings exceed your available income`
 }
 
 // Sum of records (savings contributions, expenses, anything with an
@@ -77,6 +82,7 @@ export interface MonthlyTotal {
 // oldest first.
 export function computeMonthlyTrend(
   records: { amount: number; spent_at: string }[],
+  lang: Lang,
   now = new Date(),
 ): MonthlyTotal[] {
   const months: MonthlyTotal[] = []
@@ -90,7 +96,10 @@ export function computeMonthlyTrend(
         return d >= start && d < end
       })
       .reduce((sum, r) => sum + r.amount, 0)
-    months.push({ label: monthDate.toLocaleDateString('fr-CA', { month: 'short' }), amount })
+    months.push({
+      label: monthDate.toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-CA', { month: 'short' }),
+      amount,
+    })
   }
 
   return months
@@ -109,10 +118,13 @@ function totalsByCategory(records: { amount: number; category: string }[]): Map<
 // month, or — with barely any data — an encouragement to keep logging.
 export function generateBudgetInsight(
   records: { amount: number; category: string; spent_at: string }[],
+  lang: Lang,
   now = new Date(),
 ): string {
   if (records.length < 3) {
-    return 'Continue à noter tes dépenses — dès que tu en as quelques-unes, tu verras des insights personnalisés ici.'
+    return lang === 'fr'
+      ? 'Continue à noter tes dépenses — dès que tu en as quelques-unes, tu verras des insights personnalisés ici.'
+      : "Keep logging your expenses — once you've got a few, you'll see personalized insights here."
   }
 
   const { start: thisMonthStart, end: thisMonthEnd } = getMonthRange(now)
@@ -144,15 +156,23 @@ export function generateBudgetInsight(
   }
 
   if (biggestIncreaseCategory) {
-    return `Tu dépenses ${Math.round(biggestIncreasePct)}% de plus en ${biggestIncreaseCategory} que le mois dernier.`
+    const category = translateCategoryLabel(biggestIncreaseCategory, lang)
+    return lang === 'fr'
+      ? `Tu dépenses ${Math.round(biggestIncreasePct)}% de plus en ${category} que le mois dernier.`
+      : `You're spending ${Math.round(biggestIncreasePct)}% more on ${category} than last month.`
   }
 
   if (thisMonthTotals.size > 0) {
     const [topCategory, topAmount] = [...thisMonthTotals.entries()].sort((a, b) => b[1] - a[1])[0]
     const total = [...thisMonthTotals.values()].reduce((sum, v) => sum + v, 0)
     const pct = total > 0 ? Math.round((topAmount / total) * 100) : 0
-    return `Ton poste le plus lourd ce mois-ci est ${topCategory}, avec ${pct}% de tes dépenses.`
+    const category = translateCategoryLabel(topCategory, lang)
+    return lang === 'fr'
+      ? `Ton poste le plus lourd ce mois-ci est ${category}, avec ${pct}% de tes dépenses.`
+      : `Your biggest category this month is ${category}, at ${pct}% of your spending.`
   }
 
-  return 'Continue à noter tes dépenses — dès que tu en as quelques-unes ce mois-ci, tu verras des insights personnalisés ici.'
+  return lang === 'fr'
+    ? 'Continue à noter tes dépenses — dès que tu en as quelques-unes ce mois-ci, tu verras des insights personnalisés ici.'
+    : "Keep logging your expenses — once you've got a few this month, you'll see personalized insights here."
 }

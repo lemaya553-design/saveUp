@@ -2,6 +2,8 @@ import { useCallback, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { buildCsv, downloadCsv } from '../lib/csv'
 import { toDateString } from '../lib/format'
+import { useLanguage } from './useLanguage'
+import { EXPORTS } from '../lib/i18n/exports'
 
 interface CsvRow {
   date: string
@@ -14,10 +16,12 @@ interface CsvRow {
 // Pulls the FULL history from Supabase (not the 50-row caps the in-app
 // hooks use for display) so the export is complete, not a recent slice.
 export function useCsvExport() {
+  const { lang } = useLanguage()
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const exportAll = useCallback(async () => {
+    const t = EXPORTS[lang].csv
     setExporting(true)
     setError(null)
 
@@ -41,7 +45,7 @@ export function useCsvExport() {
     for (const e of expensesRes.data ?? []) {
       rows.push({
         date: toDateString(new Date(e.spent_at)),
-        type: 'Dépense',
+        type: t.expenseType,
         description: e.description,
         amount: e.amount,
         category: e.category,
@@ -51,7 +55,7 @@ export function useCsvExport() {
     for (const e of fixedRes.data ?? []) {
       rows.push({
         date: toDateString(new Date(e.created_at)),
-        type: 'Dépense fixe',
+        type: t.fixedExpenseType,
         description: e.name,
         amount: e.amount,
         category: e.category,
@@ -59,26 +63,26 @@ export function useCsvExport() {
     }
 
     for (const c of contributionsRes.data ?? []) {
-      const goalName = c.goal_id ? (goalNameById.get(c.goal_id) ?? 'Objectif supprimé') : 'Objectif supprimé'
+      const goalName = c.goal_id ? (goalNameById.get(c.goal_id) ?? t.deletedGoal) : t.deletedGoal
       rows.push({
         date: toDateString(new Date(c.created_at)),
-        type: 'Contribution épargne',
-        description: `Épargne — ${goalName}`,
+        type: t.savingsContributionType,
+        description: t.savingsDescription(goalName),
         amount: c.amount,
-        category: 'Épargne',
+        category: t.savingsCategory,
       })
     }
 
     rows.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
 
     const csv = buildCsv([
-      ['Date', 'Type', 'Description', 'Montant', 'Catégorie'],
+      [t.dateHeader, t.typeHeader, t.descriptionHeader, t.amountHeader, t.categoryHeader],
       ...rows.map((r) => [r.date, r.type, r.description, r.amount.toFixed(2), r.category]),
     ])
 
     downloadCsv(`saveup-export-${toDateString(new Date())}.csv`, csv)
     setExporting(false)
-  }, [])
+  }, [lang])
 
   return { exporting, error, exportAll }
 }

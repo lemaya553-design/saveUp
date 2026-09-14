@@ -1,5 +1,8 @@
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useCategories } from '../hooks/useCategories'
+import { useLanguage } from '../hooks/useLanguage'
+import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
+import { EPARGNE } from '../lib/i18n/epargne'
 
 export interface HypotheticalExpense {
   id: string
@@ -25,6 +28,9 @@ export function HypotheticalExpenses({
   onUpdate: (id: string, patch: Partial<Pick<HypotheticalExpense, 'name' | 'amount' | 'category'>>) => void
   onRemove: (id: string) => void
 }) {
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].hypotheticalExpenses
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const { categoryNames } = useCategories()
 
   return (
@@ -40,7 +46,7 @@ export function HypotheticalExpenses({
                     type="text"
                     value={expense.name}
                     onChange={(e) => onUpdate(expense.id, { name: e.target.value })}
-                    placeholder="Nom (ex: Nouvel abonnement)"
+                    placeholder={t.namePlaceholder}
                     className="min-w-[120px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-1.5 text-sm text-ink placeholder-muted focus:border-primary focus:outline-none"
                   />
                   <select
@@ -50,23 +56,23 @@ export function HypotheticalExpenses({
                   >
                     {categoryNames.map((cat) => (
                       <option key={cat} value={cat} className="bg-surface">
-                        {cat}
+                        {translateCategoryLabel(cat, lang)}
                       </option>
                     ))}
                   </select>
-                  <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">nouvelle</span>
+                  <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">{t.newBadge}</span>
                   <button
                     type="button"
                     onClick={() => onRemove(expense.id)}
                     className="rounded-md px-2 py-1.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                    aria-label={`Retirer ${expense.name || 'cette dépense hypothétique'}`}
+                    aria-label={t.removeAria(expense.name || t.fallbackName)}
                   >
-                    Retirer
+                    {t.removeButton}
                   </button>
                 </div>
 
                 <div className="mb-1 flex items-center justify-end text-sm">
-                  <span className="font-medium text-red-400">+{formatCurrency(expense.amount)}/mois</span>
+                  <span className="font-medium text-red-400">{t.perMonthDelta(formatMoney(expense.amount))}</span>
                 </div>
                 <input
                   type="range"
@@ -76,7 +82,7 @@ export function HypotheticalExpenses({
                   value={Math.min(expense.amount, sliderMax)}
                   onChange={(e) => onUpdate(expense.id, { amount: Number(e.target.value) })}
                   className="w-full accent-primary"
-                  aria-label={`Montant hypothétique pour ${expense.name || 'cette dépense'}`}
+                  aria-label={t.amountAria(expense.name || t.fallbackName)}
                 />
               </li>
             )
@@ -89,7 +95,7 @@ export function HypotheticalExpenses({
         onClick={onAdd}
         className="w-full rounded-xl border-2 border-dashed border-overlay/15 px-4 py-3 text-sm font-medium text-muted transition-colors hover:border-primary/40 hover:text-ink"
       >
-        + Ajouter une dépense hypothétique
+        {t.addButton}
       </button>
     </div>
   )

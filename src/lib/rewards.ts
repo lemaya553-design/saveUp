@@ -1,10 +1,11 @@
 import { computeSavingsRegularity } from './financialHealth'
+import type { Lang } from './i18n/language'
 
 export interface RewardTier {
   id: string
   thresholdAmount: number | 'goal-complete'
-  name: string
-  description: string
+  name: Record<Lang, string>
+  description: Record<Lang, string>
   // Free plan gets the first 2 tiers ("badges de base"); the rest need
   // Standard — set only on tiers that require more than the free plan.
   minPlan?: 'standard'
@@ -15,27 +16,27 @@ export const REWARD_TIERS: RewardTier[] = [
   {
     id: 'first-100',
     thresholdAmount: 100,
-    name: 'Premier pas',
-    description: 'Premier 100 $ épargné.',
+    name: { fr: 'Premier pas', en: 'First step' },
+    description: { fr: 'Premier 100 $ épargné.', en: 'First $100 saved.' },
   },
   {
     id: 'first-500',
     thresholdAmount: 500,
-    name: 'Sur la bonne voie',
-    description: '500 $ épargnés.',
+    name: { fr: 'Sur la bonne voie', en: 'On track' },
+    description: { fr: '500 $ épargnés.', en: '$500 saved.' },
   },
   {
     id: 'first-1000',
     thresholdAmount: 1000,
-    name: 'Épargnant sérieux',
-    description: '1 000 $ épargnés.',
+    name: { fr: 'Épargnant sérieux', en: 'Serious saver' },
+    description: { fr: '1 000 $ épargnés.', en: '$1,000 saved.' },
     minPlan: 'standard',
   },
   {
     id: 'goal-complete',
     thresholdAmount: 'goal-complete',
-    name: 'Objectif atteint',
-    description: 'Objectif d’épargne complété.',
+    name: { fr: 'Objectif atteint', en: 'Goal reached' },
+    description: { fr: 'Objectif d’épargne complété.', en: 'Savings goal completed.' },
     minPlan: 'standard',
   },
 ]
@@ -54,8 +55,11 @@ export const REWARD_TIERS: RewardTier[] = [
 // count so the "X/4 réclamés" displays elsewhere stay accurate.
 export const STARTER_BADGE = {
   id: 'starter',
-  name: 'C\'est parti !',
-  description: 'Ton compte est configuré — la suite se construit avec de vraies données.',
+  name: { fr: 'C\'est parti !', en: 'Let\'s go!' },
+  description: {
+    fr: 'Ton compte est configuré — la suite se construit avec de vraies données.',
+    en: 'Your account is set up — everything else builds from real data.',
+  },
 } as const
 
 export function isStarterBadgeUnlocked(hasIncomeRecord: boolean): boolean {
@@ -121,7 +125,34 @@ export interface SavingsScoreExplanation {
 
 export function getSavingsScoreExplanations(
   breakdown: SavingsScoreBreakdown,
+  lang: Lang,
 ): SavingsScoreExplanation[] {
+  if (lang === 'en') {
+    return [
+      {
+        label: 'Amount saved',
+        value: breakdown.amountScore,
+        max: 100,
+        detail:
+          breakdown.amountScore >= 70
+            ? "You're well on your way to your goal."
+            : breakdown.amountScore >= 30
+              ? "You're making progress — keep adding to your savings."
+              : 'Add to your savings to move this score up.',
+      },
+      {
+        label: 'Regularity',
+        value: breakdown.regularityScore,
+        max: 100,
+        detail:
+          breakdown.regularityScore >= 70
+            ? 'You save regularly — that makes all the difference.'
+            : breakdown.regularityScore >= 30
+              ? 'Save a bit more often to improve this score.'
+              : 'No recent regular savings — even a small amount each week helps.',
+      },
+    ]
+  }
   return [
     {
       label: 'Montant épargné',

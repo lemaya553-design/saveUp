@@ -11,12 +11,16 @@ import type { useFixedExpenses } from '../hooks/useFixedExpenses'
 import type { useSavingsGoals } from '../hooks/useSavingsGoals'
 import type { useSavingsContributions } from '../hooks/useSavingsContributions'
 import type { CategorySpendingEntry } from '../lib/categorySpending'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { FALLBACK_CATEGORY } from '../lib/categories'
+import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { sumThisMonth } from '../lib/budgetInsights'
 import { computeBudgetScore, computeFixedRatioScore } from '../lib/financialHealth'
 import { estimateMonthlyRate } from '../lib/savingsProjection'
 import { formatMonthsAsDuration } from '../lib/investment'
+import { useLanguage } from '../hooks/useLanguage'
+import { EPARGNE } from '../lib/i18n/epargne'
+import { COMMON } from '../lib/i18n/common'
 
 const GRAPH_MONTHS = 12
 
@@ -42,6 +46,9 @@ export function SimulateurTab({
   categorySpending: CategorySpendingEntry[]
   onGoToObjectifs: () => void
 }) {
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].simulateurTab
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const [simulatedAmounts, setSimulatedAmounts] = useState<Record<string, number>>({})
   const [simulatedCategoryAmounts, setSimulatedCategoryAmounts] = useState<Record<string, number>>({})
   const [simulatedSavings, setSimulatedSavings] = useState<number | null>(null)
@@ -252,8 +259,8 @@ export function SimulateurTab({
   }
 
   const applyClauses = [
-    changedCount > 0 ? `${changedCount} dépense(s) modifiée(s)` : null,
-    addedCount > 0 ? `${addedCount} nouvelle(s) dépense(s) ajoutée(s)` : null,
+    changedCount > 0 ? t.modifiedClause(changedCount) : null,
+    addedCount > 0 ? t.addedClause(addedCount) : null,
   ].filter(Boolean)
 
   // Purely a display aggregate for the header pill below — doesn't feed into
@@ -263,20 +270,18 @@ export function SimulateurTab({
   return (
     <div className="grid gap-6">
       <div className="glass flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3">
-        <p className="text-xs text-muted">
-          Rien n'est modifié tant que tu n'as pas cliqué sur « Appliquer pour de vrai ».
-        </p>
+        <p className="text-xs text-muted">{t.notModifiedYet}</p>
         {hasSliderChanges && (
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent">
-              {totalAdjustedCount} ajustement{totalAdjustedCount > 1 ? 's' : ''}
+              {t.adjustmentsCount(totalAdjustedCount)}
             </span>
             <button
               type="button"
               onClick={resetSimulation}
               className="rounded-full border border-overlay/10 px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-overlay/20 hover:text-ink"
             >
-              ↺ Réinitialiser
+              {t.reset}
             </button>
           </div>
         )}
@@ -284,21 +289,21 @@ export function SimulateurTab({
 
       {applySuccess && (
         <div className="rounded-lg border border-success/40 bg-success/10 px-4 py-3 text-sm text-success">
-          Modifications appliquées à tes vraies dépenses fixes ✓
+          {t.appliedSuccess}
         </div>
       )}
 
       <div>
-        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">Ajuste ton scénario</p>
+        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">{t.adjustScenario}</p>
         <div className="grid gap-4 md:grid-cols-2">
-          <Card title="Dépenses fixes" hint="Ajuste chaque dépense, ou ajoute-en une nouvelle à tester.">
+          <Card title={t.fixedExpensesTitle} hint={t.fixedExpensesHint}>
             {fixed.fixedExpenses.length === 0 ? (
               <p className="mb-3 text-sm text-muted">
-                Aucune dépense fixe pour l'instant —{' '}
+                {t.noFixedExpenses.before}
                 <Link to="/budget" className="text-accent hover:text-accent/80">
-                  ajoutes-en dans Budget
-                </Link>{' '}
-                ou teste-en une hypothétique ci-dessous.
+                  {t.noFixedExpenses.linkText}
+                </Link>
+                {t.noFixedExpenses.after}
               </p>
             ) : (
               <div className="mb-3 divide-y divide-overlay/10">
@@ -321,17 +326,15 @@ export function SimulateurTab({
             />
           </Card>
 
-          <Card title="Dépenses du mois" hint="Tes dépenses ponctuelles par catégorie, et ton épargne.">
+          <Card title={t.monthlySpendingTitle} hint={t.monthlySpendingHint}>
             {categorySpending.length === 0 ? (
-              <p className="mb-3 text-sm text-muted">
-                Aucune dépense ponctuelle enregistrée ce mois-ci pour l'instant.
-              </p>
+              <p className="mb-3 text-sm text-muted">{t.noCategorySpending}</p>
             ) : (
               <div className="mb-1 divide-y divide-overlay/10">
                 {categorySpending.map((entry) => (
                   <CategorySimRow
                     key={entry.category}
-                    label={entry.category}
+                    label={translateCategoryLabel(entry.category, lang)}
                     actualAmount={entry.total}
                     simulatedAmount={simulatedCategoryAmounts[entry.category] ?? entry.total}
                     onChange={(amount) => updateSimulatedCategoryAmount(entry.category, amount)}
@@ -342,7 +345,7 @@ export function SimulateurTab({
 
             <div className="border-t border-overlay/10 pt-1">
               <CategorySimRow
-                label="Épargne"
+                label={t.savingsRowLabel}
                 actualAmount={savingsThisMonth}
                 simulatedAmount={effectiveSimulatedSavings}
                 onChange={updateSimulatedSavings}
@@ -353,25 +356,25 @@ export function SimulateurTab({
       </div>
 
       <div>
-        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">Résultats</p>
+        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">{t.resultsTitle}</p>
         <div className="grid gap-4">
-          <Card title="Avant → après" hint="L'impact de ce scénario sur ton budget et ton score.">
+          <Card title={t.beforeAfterTitle} hint={t.beforeAfterHint}>
             <BeforeAfterRow
-              label="Budget disponible ce mois-ci"
+              label={t.availableBudgetLabel}
               before={spendableBudgetBefore}
               after={spendableBudgetAfter}
-              formatValue={formatCurrency}
+              formatValue={formatMoney}
               higherIsBetter
             />
             <BeforeAfterRow
-              label="Reste à dépenser ce mois-ci"
+              label={t.remainingToSpendLabel}
               before={remainingBefore}
               after={remainingAfter}
-              formatValue={formatCurrency}
+              formatValue={formatMoney}
               higherIsBetter
             />
             <BeforeAfterRow
-              label="Score de santé financière"
+              label={t.healthScoreLabel}
               before={scoreBefore}
               after={scoreAfter}
               formatValue={(v) => `${Math.round(v)}/100`}
@@ -379,18 +382,16 @@ export function SimulateurTab({
             />
           </Card>
 
-          <Card title="Impact sur ton épargne" hint="Basé sur le rythme de tes contributions récentes, par objectif.">
+          <Card title={t.savingsImpactTitle} hint={t.savingsImpactHint}>
             {goals.goals.length === 0 ? (
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-muted">
-                  Fixe un objectif pour voir l'impact de ce scénario sur ton épargne.
-                </p>
+                <p className="text-sm text-muted">{t.noGoalsForImpact}</p>
                 <button
                   type="button"
                   onClick={onGoToObjectifs}
                   className="whitespace-nowrap rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
                 >
-                  Fixer un objectif
+                  {t.setGoalButton}
                 </button>
               </div>
             ) : (
@@ -400,29 +401,28 @@ export function SimulateurTab({
                     if (remaining <= 0) {
                       return (
                         <p key={goal.id} className="py-2 text-sm text-success">
-                          🎉 {goal.name} — déjà atteint.
+                          {t.alreadyReached(goal.name)}
                         </p>
                       )
                     }
                     if (monthsBefore === null && monthsAfter === null) {
                       return (
                         <p key={goal.id} className="py-2 text-sm text-muted">
-                          {goal.name} : pas assez d'historique de contributions pour estimer un rythme.
+                          {t.notEnoughHistoryForGoal(goal.name)}
                         </p>
                       )
                     }
                     if (monthsAfter === null) {
                       return (
                         <p key={goal.id} className="py-2 text-sm text-red-400">
-                          {goal.name} : avec ce scénario, tu ne progresserais plus vers cet objectif.
+                          {t.noProgressScenario(goal.name)}
                         </p>
                       )
                     }
                     if (monthsBefore === null) {
                       return (
                         <p key={goal.id} className="py-2 text-sm text-ink">
-                          {goal.name} : avec ce scénario, tu l'atteindrais en environ{' '}
-                          {formatMonthsAsDuration(monthsAfter)}.
+                          {t.wouldReachIn(goal.name, formatMonthsAsDuration(monthsAfter, lang))}
                         </p>
                       )
                     }
@@ -432,7 +432,7 @@ export function SimulateurTab({
                         label={goal.name}
                         before={monthsBefore}
                         after={monthsAfter}
-                        formatValue={(v) => formatMonthsAsDuration(v)}
+                        formatValue={(v) => formatMonthsAsDuration(v, lang)}
                         higherIsBetter={false}
                       />
                     )
@@ -441,7 +441,7 @@ export function SimulateurTab({
 
                 <div className="mt-5 border-t border-overlay/10 pt-4">
                   <p className="mb-2 text-xs uppercase tracking-wide text-muted">
-                    Épargne totale — {GRAPH_MONTHS} prochains mois
+                    {t.totalSavingsHeader(GRAPH_MONTHS)}
                   </p>
                   <SavingsComparisonChart current={comparisonSeries.current} simulated={comparisonSeries.simulated} />
                 </div>
@@ -453,13 +453,11 @@ export function SimulateurTab({
 
       {hasChanges && (
         <div className="glass rounded-2xl border border-success/30 p-5 shadow-lg shadow-black/30">
-          <h2 className="text-lg font-semibold text-ink">Prêt à l'appliquer ?</h2>
-          <p className="mb-4 mt-1 text-xs text-muted">Ceci modifiera tes vraies dépenses fixes.</p>
+          <h2 className="text-lg font-semibold text-ink">{t.readyToApplyTitle}</h2>
+          <p className="mb-4 mt-1 text-xs text-muted">{t.willModify}</p>
           {showApplyConfirm ? (
             <div>
-              <p className="text-sm text-ink">
-                Ceci va appliquer {applyClauses.join(' et ')} à tes vraies dépenses fixes.
-              </p>
+              <p className="text-sm text-ink">{t.willApply(applyClauses.join(t.applyJoin))}</p>
               <div className="mt-3 flex gap-2">
                 <button
                   type="button"
@@ -467,14 +465,14 @@ export function SimulateurTab({
                   disabled={applying}
                   className="rounded-lg bg-success px-5 py-2 font-semibold text-canvas transition-all hover:brightness-110 disabled:opacity-60"
                 >
-                  {applying ? 'Application...' : 'Confirmer'}
+                  {applying ? t.applying : COMMON[lang].app.confirm}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowApplyConfirm(false)}
                   className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
                 >
-                  Annuler
+                  {COMMON[lang].app.cancel}
                 </button>
               </div>
             </div>
@@ -484,7 +482,7 @@ export function SimulateurTab({
               onClick={() => setShowApplyConfirm(true)}
               className="rounded-lg bg-success px-5 py-2 font-semibold text-canvas transition-all hover:brightness-110"
             >
-              Appliquer pour de vrai
+              {t.applyForReal}
             </button>
           )}
         </div>

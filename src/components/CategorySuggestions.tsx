@@ -5,6 +5,9 @@ import { useExpenses } from '../hooks/useExpenses'
 import { useCategories } from '../hooks/useCategories'
 import { useCustomKeywords } from '../hooks/useCustomKeywords'
 import { useSubscription } from '../hooks/useSubscription'
+import { useLanguage } from '../hooks/useLanguage'
+import { BUDGET } from '../lib/i18n/budget'
+import { COMMON } from '../lib/i18n/common'
 import { detectCategorySuggestions, type CategorySuggestion } from '../lib/categorySuggestions'
 
 // 3+ transactions from the same (or same-concept) merchant is enough to be
@@ -13,6 +16,8 @@ import { detectCategorySuggestions, type CategorySuggestion } from '../lib/categ
 const SUGGESTION_THRESHOLD = 3
 
 export function CategorySuggestions() {
+  const { lang } = useLanguage()
+  const t = BUDGET[lang].categorySuggestions
   const expenses = useExpenses()
   const categories = useCategories()
   const customKeywords = useCustomKeywords()
@@ -43,8 +48,8 @@ export function CategorySuggestions() {
   }, [])
 
   const suggestions = useMemo(
-    () => detectCategorySuggestions(rows, categories.categoryNames, SUGGESTION_THRESHOLD),
-    [rows, categories.categoryNames],
+    () => detectCategorySuggestions(rows, categories.categoryNames, lang, SUGGESTION_THRESHOLD),
+    [rows, categories.categoryNames, lang],
   )
   const visible = suggestions.filter((s) => !dismissedIds.has(s.id))
 
@@ -65,9 +70,7 @@ export function CategorySuggestions() {
 
     const existing = categories.categories.find((c) => c.name.trim().toLowerCase() === name.toLowerCase())
     if (!existing && atCategoryLimit) {
-      setConfirmError(
-        `Limite de ${subscription.limits.maxCategories} catégories atteinte — passe à Standard pour en créer d'autres.`,
-      )
+      setConfirmError(t.limitErrorMessage(subscription.limits.maxCategories ?? 0))
       setConfirmingId(null)
       return
     }
@@ -95,16 +98,13 @@ export function CategorySuggestions() {
   if (loading || visible.length === 0) return null
 
   return (
-    <Card
-      title="Catégories suggérées"
-      hint="Des dépenses « Autre » qui reviennent souvent — tu peux créer une catégorie pour elles en un clic, ou ignorer."
-    >
+    <Card title={t.cardTitle} hint={t.cardHint}>
       {confirmError && <p className="mb-3 text-sm text-red-400">{confirmError}</p>}
       {atCategoryLimit && (
         <div className="mb-3">
           <UpgradePrompt
-            title={`Limite de ${subscription.limits.maxCategories} catégories atteinte`}
-            description="Tu peux toujours réassigner vers une catégorie existante ci-dessous, mais créer une nouvelle catégorie demande de passer à Standard."
+            title={t.limitReached(subscription.limits.maxCategories ?? 0)}
+            description={t.limitDescription}
             minPlan="standard"
           />
         </div>
@@ -113,9 +113,8 @@ export function CategorySuggestions() {
         {visible.map((suggestion) => (
           <li key={suggestion.id} className="rounded-lg border border-overlay/10 bg-overlay/5 p-3">
             <p className="text-sm text-ink">
-              On a détecté <span className="font-semibold">{suggestion.count} dépenses</span> chez{' '}
-              <span className="font-semibold">{suggestion.merchantLabel}</span> — ça ressemble à une
-              catégorie à part.
+              {t.detectedPrefix} <span className="font-semibold">{t.detectedCount(suggestion.count)}</span>{' '}
+              {t.detectedAt} <span className="font-semibold">{suggestion.merchantLabel}</span> {t.detectedSuffix}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <input
@@ -123,7 +122,7 @@ export function CategorySuggestions() {
                 value={nameFor(suggestion)}
                 onChange={(e) => setDrafts((prev) => ({ ...prev, [suggestion.id]: e.target.value }))}
                 className="min-w-[10rem] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
-                aria-label="Nom de la catégorie suggérée"
+                aria-label={t.nameAriaLabel}
               />
               <button
                 type="button"
@@ -131,7 +130,7 @@ export function CategorySuggestions() {
                 disabled={confirmingId === suggestion.id || !nameFor(suggestion).trim()}
                 className="rounded-lg bg-primary-strong px-4 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
               >
-                {confirmingId === suggestion.id ? 'Création...' : 'Confirmer'}
+                {confirmingId === suggestion.id ? t.creating : COMMON[lang].app.confirm}
               </button>
               <button
                 type="button"
@@ -139,7 +138,7 @@ export function CategorySuggestions() {
                 disabled={confirmingId === suggestion.id}
                 className="text-sm text-muted hover:text-ink disabled:opacity-60"
               >
-                Ignorer
+                {t.ignore}
               </button>
             </div>
           </li>

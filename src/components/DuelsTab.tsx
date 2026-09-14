@@ -3,6 +3,9 @@ import { EmptyState } from './EmptyState'
 import { DuelCard } from './DuelCard'
 import { useDuels } from '../hooks/useDuels'
 import { useToast } from './ToastProvider'
+import { useLanguage } from '../hooks/useLanguage'
+import { EPARGNE } from '../lib/i18n/epargne'
+import { COMMON } from '../lib/i18n/common'
 
 // Self-contained (own useDuels() instance) — was its own route, now the
 // Duels tab on Épargne. The Objectifs tab keeps its own separate useDuels()
@@ -10,6 +13,8 @@ import { useToast } from './ToastProvider'
 // this causes matches the tradeoff every other self-contained tab in this
 // app already makes (RecategorizeCard, etc.).
 export function DuelsTab({ onGoToObjectifs }: { onGoToObjectifs: () => void }) {
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].duelsTab
   const { loading, error, duels, abandonDuel } = useDuels()
   const { showToast } = useToast()
   const [abandoning, setAbandoning] = useState<string | null>(null)
@@ -17,7 +22,7 @@ export function DuelsTab({ onGoToObjectifs }: { onGoToObjectifs: () => void }) {
   async function handleCopyInvite(duel: { inviteToken: string }) {
     const url = `${window.location.origin}/duels/rejoindre/${duel.inviteToken}`
     await navigator.clipboard.writeText(url)
-    showToast('Lien copié.')
+    showToast(t.linkCopied)
   }
 
   async function handleAbandon(duelId: string) {
@@ -28,7 +33,7 @@ export function DuelsTab({ onGoToObjectifs }: { onGoToObjectifs: () => void }) {
   }
 
   if (loading) {
-    return <p className="text-sm text-muted">Chargement...</p>
+    return <p className="text-sm text-muted">{COMMON[lang].app.loading}</p>
   }
 
   const active = duels.filter((d) => d.status === 'pending' || d.status === 'active')
@@ -44,16 +49,16 @@ export function DuelsTab({ onGoToObjectifs }: { onGoToObjectifs: () => void }) {
 
       {duels.length === 0 ? (
         <EmptyState
-          title="Aucun duel pour l'instant"
-          description="Lance un duel depuis un de tes objectifs d'épargne, dans l'onglet Objectifs, pour affronter un ami."
-          actionLabel="Voir mes objectifs"
+          title={t.emptyTitle}
+          description={t.emptyDescription}
+          actionLabel={t.emptyAction}
           onAction={onGoToObjectifs}
         />
       ) : (
         <div className="flex flex-col gap-8">
           {active.length > 0 && (
             <div>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">En cours</h2>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">{t.activeSection}</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 {active.map((duel) => (
                   <DuelCard
@@ -70,7 +75,7 @@ export function DuelsTab({ onGoToObjectifs }: { onGoToObjectifs: () => void }) {
 
           {past.length > 0 && (
             <div>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">Terminés</h2>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">{t.pastSection}</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 {past.map((duel) => (
                   <DuelCard key={duel.id} duel={duel} onCopyInvite={handleCopyInvite} onAbandon={handleAbandon} />

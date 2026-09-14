@@ -6,9 +6,12 @@ import { useExpenses } from '../hooks/useExpenses'
 import { useCategories } from '../hooks/useCategories'
 import { useRecurringExpenses } from '../hooks/useRecurringExpenses'
 import { useSubscription } from '../hooks/useSubscription'
-import { formatCurrency, getTodayDateString } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { formatCurrency, formatCurrencyEN, getTodayDateString } from '../lib/format'
 import { FALLBACK_CATEGORY } from '../lib/categories'
-import { FREQUENCY_OPTIONS, type RecurringFrequency } from '../lib/recurringExpenses'
+import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
+import type { RecurringFrequency } from '../lib/recurringExpenses'
+import { MISC } from '../lib/i18n/misc'
 
 function PlusIcon({ className }: { className: string }) {
   return (
@@ -54,6 +57,9 @@ export function QuickAddFab() {
   const recurring = useRecurringExpenses()
   const subscription = useSubscription()
   const { showToast } = useToast()
+  const { lang } = useLanguage()
+  const t = MISC[lang].quickAddFab
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const [open, setOpen] = useState(false)
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
@@ -102,13 +108,13 @@ export function QuickAddFab() {
       setSubmitting(false)
       if (!ok) return
       closeAndReset()
-      showToast(`Récurrence créée : ${label} — ${formatCurrency(parsed)}`)
+      showToast(t.toastRecurringCreated(label, formatMoney(parsed)))
       return
     }
     await addExpense(label, parsed, category)
     setSubmitting(false)
     closeAndReset()
-    showToast(`Dépense ajoutée : ${label} — ${formatCurrency(parsed)}`)
+    showToast(t.toastExpenseAdded(label, formatMoney(parsed)))
   }
 
   async function logFrequent(item: FrequentExpense) {
@@ -116,7 +122,7 @@ export function QuickAddFab() {
     await addExpense(item.description, item.amount, item.category)
     setSubmitting(false)
     setOpen(false)
-    showToast(`Dépense ajoutée : ${item.description} — ${formatCurrency(item.amount)}`)
+    showToast(t.toastExpenseAdded(item.description, formatMoney(item.amount)))
   }
 
   return (
@@ -126,15 +132,15 @@ export function QuickAddFab() {
         onClick={() => setOpen(true)}
         className="fixed right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-strong text-white shadow-lg shadow-black/40 transition-all hover:brightness-110"
         style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
-        aria-label="Ajouter une dépense"
+        aria-label={t.fabAriaLabel}
       >
         <PlusIcon className="h-6 w-6" />
       </button>
 
-      <Modal open={open} onClose={closeAndReset} title="Ajoute une dépense">
+      <Modal open={open} onClose={closeAndReset} title={t.modalTitle}>
         {frequentExpenses.length > 0 && (
           <div className="mb-4">
-            <p className="mb-2 text-xs text-muted">Dépenses fréquentes</p>
+            <p className="mb-2 text-xs text-muted">{t.frequentLabel}</p>
             <div className="flex flex-wrap gap-2">
               {frequentExpenses.map((item) => (
                 <button
@@ -144,7 +150,7 @@ export function QuickAddFab() {
                   disabled={submitting}
                   className="rounded-full border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink transition-colors hover:border-primary/40 disabled:opacity-60"
                 >
-                  {item.description} · {formatCurrency(item.amount)}
+                  {item.description} · {formatMoney(item.amount)}
                 </button>
               ))}
             </div>
@@ -156,7 +162,7 @@ export function QuickAddFab() {
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description (ex: Café)"
+            placeholder={t.descriptionPlaceholder}
             autoFocus
             className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
           />
@@ -168,7 +174,7 @@ export function QuickAddFab() {
               step="0.01"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="Montant"
+              placeholder={t.amountPlaceholder}
               className="flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
             />
             <select
@@ -178,7 +184,7 @@ export function QuickAddFab() {
             >
               {categoryNames.map((cat) => (
                 <option key={cat} value={cat} className="bg-surface">
-                  {cat}
+                  {translateCategoryLabel(cat, lang)}
                 </option>
               ))}
             </select>
@@ -186,8 +192,8 @@ export function QuickAddFab() {
 
           {atRecurringLimit && !isRecurring ? (
             <UpgradePrompt
-              title={`Limite de ${subscription.limits.maxRecurringExpenses} récurrence${subscription.limits.maxRecurringExpenses === 1 ? '' : 's'} atteinte`}
-              description="Passe à Standard pour créer des récurrences illimitées."
+              title={t.recurringLimitTitle(subscription.limits.maxRecurringExpenses ?? 0)}
+              description={t.recurringLimitDescription}
               minPlan="standard"
             />
           ) : (
@@ -198,20 +204,20 @@ export function QuickAddFab() {
                 onChange={(e) => setIsRecurring(e.target.checked)}
                 className="h-4 w-4 accent-primary"
               />
-              🔁 Rendre récurrente
+              {t.makeRecurring}
             </label>
           )}
 
           {isRecurring && (
             <div className="flex flex-col gap-3 rounded-lg border border-overlay/10 bg-overlay/[0.03] p-3">
               <label className="flex flex-col gap-1 text-xs text-muted">
-                Fréquence
+                {t.frequencyLabel}
                 <select
                   value={frequency}
                   onChange={(e) => setFrequency(e.target.value as RecurringFrequency)}
                   className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
                 >
-                  {FREQUENCY_OPTIONS.map((f) => (
+                  {t.frequencyOptions.map((f) => (
                     <option key={f.value} value={f.value} className="bg-surface">
                       {f.label}
                     </option>
@@ -220,7 +226,7 @@ export function QuickAddFab() {
               </label>
 
               <label className="flex flex-col gap-1 text-xs text-muted">
-                Première occurrence
+                {t.firstOccurrenceLabel}
                 <input
                   type="date"
                   value={startDate}
@@ -240,7 +246,7 @@ export function QuickAddFab() {
                   onChange={(e) => setHasEndDate(e.target.checked)}
                   className="h-4 w-4 accent-primary"
                 />
-                Date de fin (optionnel)
+                {t.endDateOptionalLabel}
               </label>
               {hasEndDate && (
                 <input
@@ -259,7 +265,7 @@ export function QuickAddFab() {
             disabled={submitting}
             className="rounded-lg bg-primary-strong px-5 py-2.5 font-semibold text-white transition-all hover:brightness-110 disabled:opacity-60"
           >
-            {submitting ? 'Ajout...' : isRecurring ? 'Créer la récurrence' : 'Ajouter'}
+            {submitting ? t.submitAdding : isRecurring ? t.submitCreateRecurring : t.submitAdd}
           </button>
         </form>
       </Modal>

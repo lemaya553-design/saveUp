@@ -1,5 +1,6 @@
 import Papa from 'papaparse'
 import type * as XLSXType from 'xlsx'
+import type { Lang } from './i18n/language'
 
 export interface ParsedFile {
   headers: string[]
@@ -39,43 +40,54 @@ const MAX_IMPORT_ROWS = 2000
 // ---------------------------------------------------------------------------
 // File parsing
 
-export async function parseFile(file: File): Promise<ParsedFile> {
+export async function parseFile(file: File, lang: Lang): Promise<ParsedFile> {
   const name = file.name.toLowerCase()
-  const rows = name.endsWith('.csv') ? await parseCsv(file) : await parseXlsx(file)
+  const rows = name.endsWith('.csv') ? await parseCsv(file, lang) : await parseXlsx(file, lang)
 
   const nonEmpty = rows.filter((row) => row.some((cell) => cell.trim() !== ''))
   if (nonEmpty.length === 0) {
-    throw new Error('Le fichier est vide.')
+    throw new Error(lang === 'fr' ? 'Le fichier est vide.' : 'The file is empty.')
   }
   if (nonEmpty.length === 1) {
-    throw new Error("Le fichier ne contient qu'une ligne d'en-têtes, aucune donnée à importer.")
+    throw new Error(
+      lang === 'fr'
+        ? "Le fichier ne contient qu'une ligne d'en-têtes, aucune donnée à importer."
+        : 'The file only has a header row — no data to import.',
+    )
   }
   if (nonEmpty.length - 1 > MAX_IMPORT_ROWS) {
     throw new Error(
-      `Le fichier contient plus de ${MAX_IMPORT_ROWS} lignes — divise-le en fichiers plus petits pour l'importer.`,
+      lang === 'fr'
+        ? `Le fichier contient plus de ${MAX_IMPORT_ROWS} lignes — divise-le en fichiers plus petits pour l'importer.`
+        : `The file has more than ${MAX_IMPORT_ROWS} rows — split it into smaller files to import it.`,
     )
   }
 
   const [headerRow, ...dataRows] = nonEmpty
   const width = headerRow.length
   return {
-    headers: headerRow.map((h, i) => (h.trim() ? h.trim() : `Colonne ${i + 1}`)),
+    headers: headerRow.map((h, i) => (h.trim() ? h.trim() : lang === 'fr' ? `Colonne ${i + 1}` : `Column ${i + 1}`)),
     // Pad/truncate every row to the header width so column indices stay valid.
     rows: dataRows.map((row) => Array.from({ length: width }, (_, i) => row[i] ?? '')),
   }
 }
 
-function parseCsv(file: File): Promise<string[][]> {
+function parseCsv(file: File, lang: Lang): Promise<string[][]> {
   return new Promise((resolve, reject) => {
     Papa.parse<string[]>(file, {
       skipEmptyLines: true,
       complete: (result) => resolve(result.data),
-      error: (err: Error) => reject(new Error(`Impossible de lire le CSV : ${err.message}`)),
+      error: (err: Error) =>
+        reject(
+          new Error(
+            lang === 'fr' ? `Impossible de lire le CSV : ${err.message}` : `Could not read the CSV: ${err.message}`,
+          ),
+        ),
     })
   })
 }
 
-async function parseXlsx(file: File): Promise<string[][]> {
+async function parseXlsx(file: File, lang: Lang): Promise<string[][]> {
   // SheetJS is a large library only needed by the (much rarer) Excel import
   // path — loaded on demand so CSV imports, and every page that isn't this
   // modal, don't pay for it in the initial bundle.
@@ -85,10 +97,16 @@ async function parseXlsx(file: File): Promise<string[][]> {
     const buffer = await file.arrayBuffer()
     workbook = XLSX.read(buffer, { type: 'array' })
   } catch {
-    throw new Error("Ce fichier n'a pas pu être lu — est-ce bien un fichier Excel (.xlsx) valide ?")
+    throw new Error(
+      lang === 'fr'
+        ? "Ce fichier n'a pas pu être lu — est-ce bien un fichier Excel (.xlsx) valide ?"
+        : 'This file could not be read — is it a valid Excel (.xlsx) file?',
+    )
   }
   const sheetName = workbook.SheetNames[0]
-  if (!sheetName) throw new Error("Ce classeur Excel ne contient aucune feuille.")
+  if (!sheetName) {
+    throw new Error(lang === 'fr' ? 'Ce classeur Excel ne contient aucune feuille.' : 'This Excel workbook has no sheets.')
+  }
   const sheet = workbook.Sheets[sheetName]
   const rows = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, raw: false, defval: '' })
   return rows.map((row) => row.map((cell) => String(cell ?? '')))
@@ -318,14 +336,14 @@ const CANONICAL_SYNONYMS: Record<CanonicalCategory, string[]> = {
 // not necessarily a good display name (e.g. restaurant's synonyms lead with
 // "alimentation" for matching purposes, but a *suggested new category* reads
 // better as "Restauration").
-export const CANONICAL_DISPLAY_NAMES: Record<CanonicalCategory, string> = {
-  grocery: 'Alimentation',
-  fuel_transport: 'Transport',
-  pharmacy_health: 'Santé',
-  entertainment: 'Loisirs',
-  restaurant: 'Restauration',
-  housing_utilities: 'Logement',
-  electronics_software: 'Électronique',
+export const CANONICAL_DISPLAY_NAMES: Record<CanonicalCategory, Record<Lang, string>> = {
+  grocery: { fr: 'Alimentation', en: 'Groceries' },
+  fuel_transport: { fr: 'Transport', en: 'Transport' },
+  pharmacy_health: { fr: 'Santé', en: 'Health' },
+  entertainment: { fr: 'Loisirs', en: 'Fun money' },
+  restaurant: { fr: 'Restauration', en: 'Dining out' },
+  housing_utilities: { fr: 'Logement', en: 'Housing' },
+  electronics_software: { fr: 'Électronique', en: 'Electronics' },
 }
 
 // Keyword → concept. Checked as a normalized substring match against the
@@ -554,6 +572,7 @@ export function buildImportRows(
   mapping: ColumnMapping,
   categoryNames: string[],
   fallbackCategory: string,
+  lang: Lang,
   customKeywords: CustomKeyword[] = [],
 ): ImportRow[] {
   return rows.map((raw, index) => {
@@ -604,7 +623,7 @@ export function buildImportRows(
     return {
       index,
       raw,
-      description: description || 'Transaction importée',
+      description: description || (lang === 'fr' ? 'Transaction importée' : 'Imported transaction'),
       spentAt,
       amount: skipReason ? null : amount,
       category,

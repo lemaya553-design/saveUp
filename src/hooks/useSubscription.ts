@@ -2,12 +2,16 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { PLAN_LIMITS, type Plan } from '../lib/plans'
 import { useAuth } from './useAuth'
+import { useLanguage } from './useLanguage'
+import { COMMON } from '../lib/i18n/common'
+import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
 
 // Same "no row = default" convention as useIncome.ts (hasIncomeRecord) — a
 // user only ever gets a `subscriptions` row once the Stripe webhook writes
 // one after a real checkout, so absence of a row means `free`, not an error.
 export function useSubscription() {
   const { user, session } = useAuth()
+  const { lang } = useLanguage()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -56,7 +60,7 @@ export function useSubscription() {
   // nothing visible telling the user anything went wrong.
   async function callBillingApi(path: string, body: Record<string, unknown>): Promise<string | null> {
     if (!session) {
-      setError('Ta session a expiré — reconnecte-toi et réessaie.')
+      setError(COMMON[lang].app.sessionExpired)
       return null
     }
     setError(null)
@@ -75,30 +79,32 @@ export function useSubscription() {
 
       if (!res.ok) {
         setError(
+          // parsed?.error is raw text from the api/*.ts serverless backend —
+          // a deliberate pass-through, left untranslated.
           parsed?.error ??
             (isJson
-              ? "Une erreur est survenue — réessaie."
-              : `Le service de paiement n'a pas répondu correctement (code ${res.status}) — réessaie dans un instant.`),
+              ? HOOK_ERRORS[lang].subscription.genericError
+              : HOOK_ERRORS[lang].subscription.badResponse(res.status)),
         )
         return null
       }
       if (!parsed?.url) {
-        setError("Réponse inattendue du service de paiement — réessaie.")
+        setError(HOOK_ERRORS[lang].subscription.unexpectedResponse)
         return null
       }
       return parsed.url as string
     } catch {
-      setError('Impossible de contacter le service de paiement — vérifie ta connexion et réessaie.')
+      setError(HOOK_ERRORS[lang].subscription.networkError)
       return null
     }
   }
 
   const startCheckout = useCallback(
     (targetPlan: 'standard' | 'premium') => callBillingApi('/api/create-checkout-session', { plan: targetPlan }),
-    [session],
+    [session, lang],
   )
 
-  const openBillingPortal = useCallback(() => callBillingApi('/api/create-portal-session', {}), [session])
+  const openBillingPortal = useCallback(() => callBillingApi('/api/create-portal-session', {}), [session, lang])
 
   return {
     loading,

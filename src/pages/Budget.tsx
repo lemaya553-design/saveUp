@@ -9,7 +9,8 @@ import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
 import { useRecurringExpenses } from '../hooks/useRecurringExpenses'
-import { getMonthRange, formatCurrency } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { getMonthRange, formatCurrency, formatCurrencyEN } from '../lib/format'
 import {
   computeCategoryBreakdown,
   computeMonthlyTrend,
@@ -20,6 +21,7 @@ import {
 import { getCategoryShareAlert } from '../lib/alerts'
 import { canImportCsv, FREE_CSV_IMPORT_LIMIT } from '../lib/plans'
 import { computeUpcomingRecurringTotal } from '../lib/recurringExpenses'
+import { BUDGET } from '../lib/i18n/budget'
 import { PageHeader } from '../components/PageHeader'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
@@ -42,64 +44,25 @@ import { UpgradePrompt } from '../components/UpgradePrompt'
 
 type Tab = 'depenses' | 'categories' | 'import' | 'recurrences'
 const TABS: Tab[] = ['depenses', 'categories', 'import', 'recurrences']
-const TAB_DEFS: TabDef<Tab>[] = [
-  { key: 'depenses', label: 'Dépenses' },
-  { key: 'categories', label: 'Catégories' },
-  { key: 'import', label: 'Import' },
-  { key: 'recurrences', label: 'Récurrences' },
-]
-
-const DEPENSES_HELP = {
-  title: 'Dépenses',
-  purpose:
-    'Suis tes dépenses par catégorie ce mois-ci, et compare-les à ton revenu et tes dépenses fixes.',
-  actions: [
-    'Ajoute ton revenu mensuel et tes dépenses fixes (loyer, abonnements...).',
-    'Enregistre une dépense et choisis sa catégorie.',
-    'Repère les catégories où tu dépasses ton budget habituel.',
-  ],
-}
-
-const CATEGORIES_HELP = {
-  title: 'Catégories',
-  purpose: 'Gère tes catégories de dépenses, leur budget mensuel, et corrige leur classement.',
-  actions: [
-    'Ajoute, renomme ou fixe un budget mensuel pour une catégorie.',
-    'Accepte les suggestions de nouvelles catégories détectées dans tes dépenses.',
-    'Relance le classement automatique sur tes dépenses déjà enregistrées.',
-  ],
-}
-
-const IMPORT_HELP = {
-  title: 'Import',
-  purpose: 'Importe un relevé bancaire au lieu de saisir tes dépenses une par une.',
-  actions: [
-    "Choisis un fichier .csv ou .xlsx depuis ta banque.",
-    "Associe les colonnes du fichier aux bons champs.",
-    'Confirme pour ajouter toutes les transactions à ton budget.',
-  ],
-}
-
-const RECURRENCES_HELP = {
-  title: 'Récurrences',
-  purpose: "Crée une dépense une fois — loyer, abonnement, facture — et laisse-la se reproduire toute seule.",
-  actions: [
-    'Choisis une fréquence (hebdomadaire, aux deux semaines, mensuelle, annuelle) et une date de fin optionnelle.',
-    'Les transactions se génèrent automatiquement à chaque échéance, même si tu ne rouvres pas l\'app.',
-    'Modifie ou supprime une récurrence à tout moment — tu choisis si ça s\'applique aussi aux transactions déjà générées.',
-  ],
-}
-
-const HELP_BY_TAB: Record<Tab, typeof DEPENSES_HELP> = {
-  depenses: DEPENSES_HELP,
-  categories: CATEGORIES_HELP,
-  import: IMPORT_HELP,
-  recurrences: RECURRENCES_HELP,
-}
 
 export function Budget() {
   const { tab: tabParam } = useParams<{ tab: string }>()
   const navigate = useNavigate()
+  const { lang } = useLanguage()
+  const t = BUDGET[lang]
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const TAB_DEFS: TabDef<Tab>[] = [
+    { key: 'depenses', label: t.tabs.depenses },
+    { key: 'categories', label: t.tabs.categories },
+    { key: 'import', label: t.tabs.import },
+    { key: 'recurrences', label: t.tabs.recurrences },
+  ]
+  const HELP_BY_TAB: Record<Tab, { title: string; purpose: string; actions: string[] }> = {
+    depenses: t.help.depenses,
+    categories: t.help.categories,
+    import: t.help.import,
+    recurrences: t.help.recurrences,
+  }
   const income = useIncome()
   const fixed = useFixedExpenses()
   const spending = useExpenses()
@@ -172,9 +135,15 @@ export function Budget() {
     () => computeCategoryBreakdown(fixed.fixedExpenses, thisMonthRecords, savingsThisMonth),
     [fixed.fixedExpenses, thisMonthRecords, savingsThisMonth],
   )
-  const monthlyTrend = useMemo(() => computeMonthlyTrend(history.records), [history.records])
-  const insightText = useMemo(() => generateBudgetInsight(history.records), [history.records])
-  const categoryShareAlert = useMemo(() => getCategoryShareAlert(history.records), [history.records])
+  const monthlyTrend = useMemo(() => computeMonthlyTrend(history.records, lang), [history.records, lang])
+  const insightText = useMemo(
+    () => generateBudgetInsight(history.records, lang),
+    [history.records, lang],
+  )
+  const categoryShareAlert = useMemo(
+    () => getCategoryShareAlert(history.records, lang),
+    [history.records, lang],
+  )
 
   if (!tabParam || !TABS.includes(tabParam as Tab)) {
     return <Navigate to="/budget/depenses" replace />
@@ -188,11 +157,7 @@ export function Budget() {
   if (tab === 'depenses' && income.monthlyIncome === 0) {
     return (
       <div className="mx-auto max-w-3xl px-4 pb-10">
-        <PageHeader
-          title="Où va ton argent ce mois-ci"
-          subtitle="Revenu, dépenses fixes et budget de la semaine."
-          help={DEPENSES_HELP}
-        />
+        <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={t.help.depenses} />
 
         <TabBar tabs={TAB_DEFS} active={tab} onChange={(next) => navigate(`/budget/${next}`)} />
 
@@ -206,9 +171,9 @@ export function Budget() {
           <IncomeInput monthlyIncome={income.monthlyIncome} onChange={income.setMonthlyIncome} />
         ) : (
           <EmptyState
-            title="Tu n'as pas encore de budget"
-            description="Commence par ajouter ton revenu mensuel — le reste se calcule automatiquement à partir de là."
-            actionLabel="Ajouter mes revenus"
+            title={t.noIncome.title}
+            description={t.noIncome.description}
+            actionLabel={t.noIncome.actionLabel}
             onAction={() => setShowIncomeForm(true)}
           />
         )}
@@ -228,11 +193,7 @@ export function Budget() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader
-        title="Où va ton argent ce mois-ci"
-        subtitle="Revenu, dépenses fixes et budget de la semaine."
-        help={HELP_BY_TAB[tab]}
-      />
+      <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={HELP_BY_TAB[tab]} />
 
       <TabBar tabs={TAB_DEFS} active={tab} onChange={(next) => navigate(`/budget/${next}`)} />
 
@@ -252,15 +213,13 @@ export function Budget() {
 
           <div className="grid gap-4">
             <div className="glass rounded-xl p-4 shadow-lg shadow-black/30">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted">
-                Il te reste ce mois-ci
-              </p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted">{t.remaining.label}</p>
               <p
                 className={`mt-1 text-3xl font-bold sm:text-4xl ${
                   isOverBudget ? 'text-red-400' : 'text-success'
                 }`}
               >
-                {formatCurrency(remainingThisMonth)}
+                {formatMoney(remainingThisMonth)}
               </p>
 
               <div className="relative mt-3 h-2 w-full overflow-hidden rounded-full bg-overlay/10">
@@ -276,29 +235,19 @@ export function Budget() {
                   aria-hidden="true"
                 />
               </div>
-              <p className="mt-2 text-xs text-muted">
-                {Math.round(spentPct)}% dépensé · {Math.round(monthProgressPct)}% du mois écoulé
-                (repère blanc)
-              </p>
+              <p className="mt-2 text-xs text-muted">{t.remaining.progressCaption(spentPct, monthProgressPct)}</p>
               <p className={`mt-1 text-xs ${rawSpendableBudget < 0 ? 'text-red-400' : 'text-muted'}`}>
-                {getSpendableBudgetCaption(rawSpendableBudget)}
-                {savingsThisMonth > 0 && rawSpendableBudget >= 0 && (
-                  <> — inclut {formatCurrency(savingsThisMonth)} déjà mis de côté ce mois-ci.</>
-                )}
+                {getSpendableBudgetCaption(rawSpendableBudget, lang)}
+                {savingsThisMonth > 0 && rawSpendableBudget >= 0 && t.remaining.includesSavings(formatMoney(savingsThisMonth))}
               </p>
               {upcomingRecurringTotal > 0 && (
                 <p className="mt-1 text-xs text-muted">
-                  Dont {formatCurrency(upcomingRecurringTotal)} de récurrences à venir ce mois-ci — voir
-                  l'onglet Récurrences.
+                  {t.remaining.upcomingRecurring(formatMoney(upcomingRecurringTotal))}
                 </p>
               )}
             </div>
 
-            <Card
-              title="Répartition par catégorie"
-              hint="Dépenses fixes, dépenses du mois et épargne, regroupées par catégorie."
-              compact
-            >
+            <Card title={t.breakdownCard.title} hint={t.breakdownCard.hint} compact>
               <CategoryBreakdown categories={categoryBreakdown} />
             </Card>
 
@@ -321,11 +270,7 @@ export function Budget() {
               compact
             />
 
-            <Card
-              title="Tendance sur 3 mois"
-              hint="Total de tes dépenses du jour le jour, mois par mois."
-              compact
-            >
+            <Card title={t.trendCard.title} hint={t.trendCard.hint} compact>
               <ExpenseTrendChart months={monthlyTrend} />
             </Card>
 
@@ -344,10 +289,7 @@ export function Budget() {
 
       {tab === 'import' && (
         <div className="grid gap-6">
-          <Card
-            title="Importer des transactions"
-            hint="Depuis un relevé de carte de crédit ou de compte (.csv, .xlsx)."
-          >
+          <Card title={t.importTab.cardTitle} hint={t.importTab.cardHint}>
             {canImportCsv(subscription.plan, preferences.csvImportCount) ? (
               <div>
                 <button
@@ -355,24 +297,21 @@ export function Budget() {
                   onClick={() => setImportOpen(true)}
                   className="rounded-lg bg-primary-strong px-5 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110"
                 >
-                  Importer un fichier
+                  {t.importTab.importButton}
                 </button>
                 {subscription.plan === 'free' && (
                   <p className="mt-2 text-xs text-muted">
-                    Il te reste {FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount} import
-                    {FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount > 1 ? 's' : ''} gratuit
-                    {FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount > 1 ? 's' : ''} sur le plan
-                    Gratuit.
+                    {t.importTab.freeRemaining(FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount)}
                   </p>
                 )}
               </div>
             ) : (
               <UpgradePrompt
-                title="Import CSV — fonctionnalité Standard"
+                title={t.importTab.upgradeTitle}
                 description={
                   subscription.plan === 'free'
-                    ? `Tu as utilisé tes ${FREE_CSV_IMPORT_LIMIT} imports gratuits — passe à Standard pour un import illimité.`
-                    : 'Importe directement un relevé bancaire au lieu de saisir tes dépenses une par une.'
+                    ? t.importTab.upgradeUsedLimit(FREE_CSV_IMPORT_LIMIT)
+                    : t.importTab.upgradeGeneric
                 }
                 minPlan="standard"
               />

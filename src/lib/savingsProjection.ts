@@ -1,4 +1,5 @@
 import { WEEKS_PER_MONTH } from './format'
+import type { Lang } from './i18n/language'
 
 export interface RequiredPace {
   perWeek: number
@@ -95,7 +96,15 @@ export function monthsAndDaysBetween(from: Date, to: Date): { months: number; da
   return { months: Math.max(0, months), days: Math.max(0, days) }
 }
 
-export function formatMonthsAndDays(months: number, days: number): string {
+export function formatMonthsAndDays(months: number, days: number, lang: Lang): string {
+  if (lang === 'en') {
+    const monthPart = months > 0 ? `${months} month${months > 1 ? 's' : ''}` : ''
+    const dayPart = days > 0 ? `${days} day${days > 1 ? 's' : ''}` : ''
+    if (monthPart && dayPart) return `${monthPart}, ${dayPart}`
+    if (monthPart) return monthPart
+    if (dayPart) return dayPart
+    return 'today'
+  }
   const monthPart = months > 0 ? `${months} mois` : ''
   const dayPart = days > 0 ? `${days} jour${days > 1 ? 's' : ''}` : ''
   if (monthPart && dayPart) return `${monthPart}, ${dayPart}`

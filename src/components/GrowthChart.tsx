@@ -1,21 +1,27 @@
 import { useState, type MouseEvent } from 'react'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { EPARGNE } from '../lib/i18n/epargne'
+import type { EpargneContent } from '../lib/i18n/epargne'
 import type { ProjectionPoint } from '../lib/investment'
 
 const WIDTH = 320
 const HEIGHT = 130
 const PADDING = 8
 
-function formatMonthLabel(month: number): string {
-  if (month === 0) return 'Départ'
+function formatMonthLabel(month: number, t: EpargneContent['growthChart']): string {
+  if (month === 0) return t.start
   const years = Math.floor(month / 12)
   const remainingMonths = month % 12
-  if (years === 0) return `${month} mois`
-  if (remainingMonths === 0) return `${years} an${years > 1 ? 's' : ''}`
-  return `${years} an${years > 1 ? 's' : ''} ${remainingMonths} mois`
+  if (years === 0) return t.monthsLabel(month)
+  if (remainingMonths === 0) return t.yearsLabel(years)
+  return t.yearsMonthsLabel(years, remainingMonths)
 }
 
 export function GrowthChart({ points }: { points: ProjectionPoint[] }) {
+  const { lang } = useLanguage()
+  const t = EPARGNE[lang].growthChart
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
 
   if (points.length < 2) return null
@@ -103,7 +109,7 @@ export function GrowthChart({ points }: { points: ProjectionPoint[] }) {
           className="glass pointer-events-none absolute -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-lg px-2 py-1 text-xs text-ink"
           style={{ left: `${(hovered.x / WIDTH) * 100}%`, top: `${(hovered.y / HEIGHT) * 100}%` }}
         >
-          {formatMonthLabel(hovered.month)} · {formatCurrency(hovered.value)}
+          {formatMonthLabel(hovered.month, t)} · {formatMoney(hovered.value)}
         </div>
       )}
     </div>

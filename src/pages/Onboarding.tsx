@@ -3,39 +3,37 @@ import { useNavigate } from 'react-router-dom'
 import { ProgressBar } from '../components/ProgressBar'
 import { ImportTransactionsModal } from '../components/ImportTransactionsModal'
 import { UpgradePrompt } from '../components/UpgradePrompt'
-import { formatCurrency, getFarFutureDateString, getTodayDateString } from '../lib/format'
+import { formatCurrency, formatCurrencyEN, getFarFutureDateString, getTodayDateString } from '../lib/format'
 import { useIncome } from '../hooks/useIncome'
 import { useFixedExpenses } from '../hooks/useFixedExpenses'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
+import { useLanguage } from '../hooks/useLanguage'
+import { COMMON } from '../lib/i18n/common'
+import { ONBOARDING } from '../lib/i18n/onboarding'
 import { canImportCsv, FREE_CSV_IMPORT_LIMIT } from '../lib/plans'
 import {
-  MAIN_GOAL_OPTIONS,
-  FREQUENCY_OPTIONS,
+  getMainGoalOptions,
+  getFrequencyOptions,
   computeOnboardingProfile,
   type MainGoal,
   type TrackingFrequency,
 } from '../lib/onboardingProfile'
 
-const STEPS = [
-  'Données de départ',
-  'Revenu',
-  'Dépenses fixes',
-  'Objectif d’épargne',
-  'Ton objectif principal',
-  'Ton expérience',
-  'Ton rythme de suivi',
-  'Ton profil',
-]
-
 export function Onboarding() {
   const navigate = useNavigate()
+  const { lang } = useLanguage()
+  const t = ONBOARDING[lang]
+  const common = COMMON[lang]
   const income = useIncome()
   const fixed = useFixedExpenses()
   const goals = useSavingsGoals()
   const subscription = useSubscription()
   const preferences = usePreferences()
+  const mainGoalOptions = getMainGoalOptions(lang)
+  const frequencyOptions = getFrequencyOptions(lang)
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
 
   const [step, setStep] = useState(0)
   const [importOpen, setImportOpen] = useState(false)
@@ -106,19 +104,17 @@ export function Onboarding() {
       <div className="glass w-full max-w-lg rounded-2xl p-8 shadow-2xl shadow-black/40">
         <div className="mb-6">
           <div className="mb-2 flex items-center justify-between text-xs text-muted">
-            <span>
-              Étape {step + 1} sur {STEPS.length} — {STEPS[step]}
-            </span>
+            <span>{t.stepIndicator(step + 1, t.steps.length, t.steps[step])}</span>
             <button type="button" onClick={skipAll} className="text-muted hover:text-ink">
-              Configurer plus tard
+              {t.skipLater}
             </button>
           </div>
-          <ProgressBar value={((step + 1) / STEPS.length) * 100} colorClass="bg-primary" />
+          <ProgressBar value={((step + 1) / t.steps.length) * 100} colorClass="bg-primary" />
         </div>
 
         {step === 0 && (
           <div>
-            <h1 className="text-2xl font-bold text-ink">Remplis ton compte pour voir l’app en action</h1>
+            <h1 className="text-2xl font-bold text-ink">{t.step0.title}</h1>
 
             <div className="mt-6 grid gap-3">
               {canImportCsv(subscription.plan, preferences.csvImportCount) ? (
@@ -127,28 +123,20 @@ export function Onboarding() {
                   onClick={() => setImportOpen(true)}
                   className="glass rounded-2xl p-4 text-left transition-colors hover:bg-overlay/5"
                 >
-                  <p className="font-semibold text-ink">📄 Importer mon relevé bancaire</p>
+                  <p className="font-semibold text-ink">{t.step0.importCardTitle}</p>
                   <p className="mt-1 text-sm text-muted">
-                    Depuis un fichier .csv ou .xlsx exporté de ta banque — tes vraies transactions,
-                    catégorisées automatiquement.
-                    {subscription.plan === 'free' && (
-                      <>
-                        {' '}
-                        Il te reste {FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount} import
-                        {FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount > 1 ? 's' : ''} gratuit
-                        {FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount > 1 ? 's' : ''} sur le plan
-                        Gratuit.
-                      </>
-                    )}
+                    {t.step0.importCardDesc}
+                    {subscription.plan === 'free' &&
+                      t.step0.importsRemaining(FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount)}
                   </p>
                 </button>
               ) : (
                 <UpgradePrompt
-                  title="Import CSV — fonctionnalité Standard"
+                  title={t.step0.upgradeTitle}
                   description={
                     subscription.plan === 'free'
-                      ? `Tu as utilisé tes ${FREE_CSV_IMPORT_LIMIT} imports gratuits — ajoute tes dépenses à la main, ou passe à Standard pour un import illimité.`
-                      : 'Sur le plan Gratuit, ajoute tes dépenses à la main — ou passe à Standard pour importer un relevé bancaire directement.'
+                      ? t.step0.upgradeDescUsedLimit(FREE_CSV_IMPORT_LIMIT)
+                      : t.step0.upgradeDescFreePlan
                   }
                   minPlan="standard"
                 />
@@ -161,7 +149,7 @@ export function Onboarding() {
                 onClick={() => setStep(1)}
                 className="rounded-lg border border-overlay/10 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-overlay/5"
               >
-                Continuer sans importer →
+                {t.step0.continueWithoutImport}
               </button>
             </div>
           </div>
@@ -169,10 +157,8 @@ export function Onboarding() {
 
         {step === 1 && (
           <form onSubmit={handleIncomeSubmit}>
-            <h1 className="text-2xl font-bold text-ink">C’est quoi ton revenu mensuel ?</h1>
-            <p className="mt-2 text-sm text-muted">
-              On s’en sert pour calculer ce que tu peux dépenser chaque semaine, automatiquement.
-            </p>
+            <h1 className="text-2xl font-bold text-ink">{t.step1.title}</h1>
+            <p className="mt-2 text-sm text-muted">{t.step1.subtitle}</p>
             <label className="mt-6 flex items-center gap-2">
               <span className="text-muted">$</span>
               <input
@@ -183,7 +169,7 @@ export function Onboarding() {
                 autoFocus
                 value={incomeDraft}
                 onChange={(e) => setIncomeDraft(e.target.value)}
-                placeholder="0.00"
+                placeholder={t.step1.amountPlaceholder}
                 className="w-full rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-lg text-ink placeholder-muted focus:border-primary focus:outline-none"
               />
             </label>
@@ -191,25 +177,22 @@ export function Onboarding() {
               type="submit"
               className="mt-6 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110"
             >
-              Continuer
+              {common.app.continueAction}
             </button>
           </form>
         )}
 
         {step === 2 && (
           <div>
-            <h1 className="text-2xl font-bold text-ink">Tes dépenses fixes principales</h1>
-            <p className="mt-2 text-sm text-muted">
-              Loyer, abonnements, assurances — tout ce qui revient chaque mois. Tu pourras en
-              ajouter d’autres plus tard.
-            </p>
+            <h1 className="text-2xl font-bold text-ink">{t.step2.title}</h1>
+            <p className="mt-2 text-sm text-muted">{t.step2.subtitle}</p>
 
             <form onSubmit={handleAddExpense} className="mt-6 flex flex-wrap gap-2">
               <input
                 type="text"
                 value={expenseName}
                 onChange={(e) => setExpenseName(e.target.value)}
-                placeholder="Nom (ex: Loyer)"
+                placeholder={t.step2.namePlaceholder}
                 className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
               />
               <input
@@ -219,14 +202,14 @@ export function Onboarding() {
                 step="0.01"
                 value={expenseAmount}
                 onChange={(e) => setExpenseAmount(e.target.value)}
-                placeholder="Montant"
+                placeholder={t.step2.amountPlaceholder}
                 className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
               />
               <button
                 type="submit"
                 className="rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110"
               >
-                Ajouter
+                {common.app.add}
               </button>
             </form>
 
@@ -235,7 +218,7 @@ export function Onboarding() {
                 {fixed.fixedExpenses.map((expense) => (
                   <li key={expense.id} className="flex items-center justify-between py-2 text-sm">
                     <span className="text-ink">{expense.name}</span>
-                    <span className="text-muted">{formatCurrency(expense.amount)}</span>
+                    <span className="text-muted">{formatMoney(expense.amount)}</span>
                   </li>
                 ))}
               </ul>
@@ -247,14 +230,14 @@ export function Onboarding() {
                 onClick={() => setStep(1)}
                 className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
               >
-                Retour
+                {common.app.back}
               </button>
               <button
                 type="button"
                 onClick={() => setStep(3)}
                 className="flex-1 rounded-lg bg-primary-strong px-5 py-2 font-medium text-white transition-all hover:brightness-110"
               >
-                Continuer
+                {common.app.continueAction}
               </button>
             </div>
           </div>
@@ -262,18 +245,15 @@ export function Onboarding() {
 
         {step === 3 && (
           <form onSubmit={handleGoalSubmit}>
-            <h1 className="text-2xl font-bold text-ink">Fixe un premier objectif d’épargne</h1>
-            <p className="mt-2 text-sm text-muted">
-              Un montant à atteindre, et une date si tu en as une en tête. Tu pourras l’ajuster
-              n’importe quand.
-            </p>
+            <h1 className="text-2xl font-bold text-ink">{t.step3.title}</h1>
+            <p className="mt-2 text-sm text-muted">{t.step3.subtitle}</p>
 
             <div className="mt-6 flex flex-col gap-3">
               <input
                 type="text"
                 value={goalName}
                 onChange={(e) => setGoalName(e.target.value)}
-                placeholder="Nom de l’objectif (ex: Mon premier objectif)"
+                placeholder={t.step3.namePlaceholder}
                 className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
               />
               <input
@@ -283,11 +263,11 @@ export function Onboarding() {
                 step="0.01"
                 value={goalAmount}
                 onChange={(e) => setGoalAmount(e.target.value)}
-                placeholder="Montant cible"
+                placeholder={t.step3.amountPlaceholder}
                 className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
               />
               <label className="flex flex-col gap-1 text-xs text-muted">
-                Échéance (optionnel)
+                {t.step3.dueDateLabel}
                 <input
                   type="date"
                   value={goalDate}
@@ -305,13 +285,13 @@ export function Onboarding() {
                 onClick={() => setStep(2)}
                 className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
               >
-                Retour
+                {common.app.back}
               </button>
               <button
                 type="submit"
                 className="flex-1 rounded-lg bg-primary-strong px-5 py-2 font-medium text-white transition-all hover:brightness-110"
               >
-                Continuer
+                {common.app.continueAction}
               </button>
             </div>
           </form>
@@ -319,11 +299,11 @@ export function Onboarding() {
 
         {step === 4 && (
           <div>
-            <h1 className="text-2xl font-bold text-ink">Quel est ton objectif principal ?</h1>
-            <p className="mt-2 text-sm text-muted">Ça nous aide à mettre en avant ce qui compte le plus pour toi.</p>
+            <h1 className="text-2xl font-bold text-ink">{t.step4.title}</h1>
+            <p className="mt-2 text-sm text-muted">{t.step4.subtitle}</p>
 
             <div className="mt-6 grid gap-3">
-              {MAIN_GOAL_OPTIONS.map((option) => (
+              {mainGoalOptions.map((option) => (
                 <button
                   key={option.value}
                   type="button"
@@ -346,7 +326,7 @@ export function Onboarding() {
                 onClick={() => setStep(3)}
                 className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
               >
-                Retour
+                {common.app.back}
               </button>
             </div>
           </div>
@@ -354,15 +334,13 @@ export function Onboarding() {
 
         {step === 5 && (
           <div>
-            <h1 className="text-2xl font-bold text-ink">As-tu déjà essayé une autre app de budget avant ?</h1>
-            <p className="mt-2 text-sm text-muted">
-              Si quelque chose ne t'a pas convaincu ailleurs, on aimerait mieux faire ici.
-            </p>
+            <h1 className="text-2xl font-bold text-ink">{t.step5.title}</h1>
+            <p className="mt-2 text-sm text-muted">{t.step5.subtitle}</p>
 
             <div className="mt-6 grid grid-cols-2 gap-3">
               {[
-                { value: true, label: 'Oui' },
-                { value: false, label: 'Non' },
+                { value: true, label: t.step5.yes },
+                { value: false, label: t.step5.no },
               ].map((option) => (
                 <button
                   key={String(option.value)}
@@ -386,7 +364,7 @@ export function Onboarding() {
                 onClick={() => setStep(4)}
                 className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
               >
-                Retour
+                {common.app.back}
               </button>
             </div>
           </div>
@@ -394,11 +372,11 @@ export function Onboarding() {
 
         {step === 6 && (
           <div>
-            <h1 className="text-2xl font-bold text-ink">À quelle fréquence veux-tu suivre tes finances ?</h1>
-            <p className="mt-2 text-sm text-muted">On adapte ce qu'on te montre en premier selon ton rythme.</p>
+            <h1 className="text-2xl font-bold text-ink">{t.step6.title}</h1>
+            <p className="mt-2 text-sm text-muted">{t.step6.subtitle}</p>
 
             <div className="mt-6 grid gap-3">
-              {FREQUENCY_OPTIONS.map((option) => (
+              {frequencyOptions.map((option) => (
                 <button
                   key={option.value}
                   type="button"
@@ -421,7 +399,7 @@ export function Onboarding() {
                 onClick={() => setStep(5)}
                 className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
               >
-                Retour
+                {common.app.back}
               </button>
             </div>
           </div>
@@ -433,16 +411,17 @@ export function Onboarding() {
               mainGoal ?? 'autre',
               triedOtherApp ?? false,
               frequency ?? 'hebdomadaire',
+              lang,
             )
             return (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-accent">Ton profil</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-accent">{t.step7.badge}</p>
                 <h1 className="mt-1 text-2xl font-bold text-ink">{profile.name}</h1>
                 <p className="mt-3 text-sm text-muted">{profile.description}</p>
 
                 <div className="mt-6">
                   <p className="text-xs font-medium uppercase tracking-wide text-muted">
-                    Ce que SaveUp va te montrer
+                    {t.step7.previewTitle}
                   </p>
                   <ul className="mt-2 flex flex-col gap-2">
                     {profile.previewPoints.map((point) => (
@@ -462,14 +441,14 @@ export function Onboarding() {
                     onClick={() => setStep(6)}
                     className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
                   >
-                    Retour
+                    {common.app.back}
                   </button>
                   <button
                     type="button"
                     onClick={handleFinishProfile}
                     className="flex-1 rounded-lg bg-success px-5 py-2 font-semibold text-canvas transition-all hover:brightness-110"
                   >
-                    Voir mon Dashboard
+                    {t.step7.dashboardCta}
                   </button>
                 </div>
               </div>

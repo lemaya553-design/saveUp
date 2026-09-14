@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { colorForCategoryLabel } from '../lib/categoryColors'
+import { useLanguage } from '../hooks/useLanguage'
+import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
+import { STATISTIQUES } from '../lib/i18n/statistiques'
 
 export interface DonutSegment {
   category: string
@@ -14,23 +17,25 @@ export interface DonutSegment {
   count: number | null
 }
 
-const defaultFormatCount = (count: number) => `${count} transaction${count > 1 ? 's' : ''}`
-
 function DonutTooltip({
   active,
   payload,
   formatCount,
+  formatMoney,
+  lang,
 }: {
   active?: boolean
   payload?: { payload: DonutSegment }[]
   formatCount: (count: number) => string
+  formatMoney: (amount: number) => string
+  lang: import('../lib/i18n/language').Lang
 }) {
   if (!active || !payload?.length) return null
   const entry = payload[0].payload
   return (
     <div className="glass rounded-lg px-3 py-2 text-xs shadow-lg shadow-black/40">
-      <p className="font-semibold text-ink">{entry.category}</p>
-      <p className="mt-1 text-ink">{formatCurrency(entry.amount)}</p>
+      <p className="font-semibold text-ink">{translateCategoryLabel(entry.category, lang)}</p>
+      <p className="mt-1 text-ink">{formatMoney(entry.amount)}</p>
       <p className="text-muted">
         {entry.pct.toFixed(0)}%{entry.count !== null ? ` · ${formatCount(entry.count)}` : ''}
       </p>
@@ -43,7 +48,7 @@ export function CategoryDonutChart({
   centerTotal,
   centerLabel,
   emptyMessage,
-  formatCount = defaultFormatCount,
+  formatCount,
 }: {
   segments: DonutSegment[]
   centerTotal: number
@@ -54,6 +59,9 @@ export function CategoryDonutChart({
   // "transaction" would misdescribe a recurring fixed expense.
   formatCount?: (count: number) => string
 }) {
+  const { lang } = useLanguage()
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const resolvedFormatCount = formatCount ?? STATISTIQUES[lang].categoryDonut.transactionCount
   const [hovered, setHovered] = useState<string | null>(null)
 
   if (segments.length === 0) {
@@ -90,11 +98,11 @@ export function CategoryDonutChart({
                 />
               ))}
             </Pie>
-            <Tooltip content={<DonutTooltip formatCount={formatCount} />} />
+            <Tooltip content={<DonutTooltip formatCount={resolvedFormatCount} formatMoney={formatMoney} lang={lang} />} />
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-bold text-ink">{formatCurrency(centerTotal)}</span>
+          <span className="text-2xl font-bold text-ink">{formatMoney(centerTotal)}</span>
           <span className="mt-0.5 text-xs text-muted">{centerLabel}</span>
         </div>
       </div>
@@ -115,12 +123,12 @@ export function CategoryDonutChart({
               style={{ backgroundColor: colorForCategoryLabel(s.category) }}
             />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm text-ink">{s.category}</p>
+              <p className="truncate text-sm text-ink">{translateCategoryLabel(s.category, lang)}</p>
               <p className="text-xs text-muted">
-                {s.pct.toFixed(0)}%{s.count !== null ? ` · ${formatCount(s.count)}` : ''}
+                {s.pct.toFixed(0)}%{s.count !== null ? ` · ${resolvedFormatCount(s.count)}` : ''}
               </p>
             </div>
-            <span className="shrink-0 text-sm font-medium text-ink">{formatCurrency(s.amount)}</span>
+            <span className="shrink-0 text-sm font-medium text-ink">{formatMoney(s.amount)}</span>
           </li>
         ))}
       </ul>

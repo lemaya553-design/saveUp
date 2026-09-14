@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Card } from './Card'
+import { useLanguage } from '../hooks/useLanguage'
+import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { Tip } from '../lib/tips'
 
 const TONE_STYLES: Record<Tip['tone'], { border: string; bg: string; text: string; icon: string }> = {
@@ -9,23 +11,25 @@ const TONE_STYLES: Record<Tip['tone'], { border: string; bg: string; text: strin
 }
 
 export function PersonalizedTips({ tips }: { tips: Tip[] }) {
+  const { lang } = useLanguage()
+  const t = STATISTIQUES[lang].personalizedTips
   return (
-    <Card title="Conseils personnalisés" hint="Basés sur tes vraies dépenses, tendances et objectifs.">
+    <Card title={t.title} hint={t.hint}>
       {tips.length === 0 ? (
         // Every tip in lib/tips.ts requires real spending/contribution/goal
         // history — a blank <ul> here used to render as a titled card with
         // nothing inside it, reading as broken rather than "not yet." This
         // points at the two fastest ways to get a first real tip.
         <p className="text-sm text-muted">
-          Pas encore de conseils — ajoute une{' '}
+          {t.emptyPre}
           <Link to="/budget/depenses" className="text-accent hover:text-accent/80">
-            dépense
-          </Link>{' '}
-          ou un{' '}
+            {t.emptyExpenseLink}
+          </Link>
+          {t.emptyAnd}
           <Link to="/epargne/objectifs" className="text-accent hover:text-accent/80">
-            objectif d'épargne
-          </Link>{' '}
-          pour voir tes premiers conseils personnalisés ici.
+            {t.emptyGoalLink}
+          </Link>
+          {t.emptyPost}
         </p>
       ) : (
         <ul className="flex flex-col gap-2">

@@ -1,17 +1,24 @@
 import { useMemo, useState } from 'react'
 import { Card } from './Card'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useCategories } from '../hooks/useCategories'
+import { useLanguage } from '../hooks/useLanguage'
+import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
+import { BUDGET } from '../lib/i18n/budget'
+import { COMMON } from '../lib/i18n/common'
+import type { Lang } from '../lib/i18n/language'
 import type { Expense } from '../hooks/useExpenses'
 
 const COLLAPSED_COUNT = 5
 
 function EditRow({
   expense,
+  lang,
   onSave,
   onCancel,
 }: {
   expense: Expense
+  lang: Lang
   onSave: (description: string, amount: number, category: string) => void
   onCancel: () => void
 }) {
@@ -51,7 +58,7 @@ function EditRow({
       >
         {categoryNames.map((cat) => (
           <option key={cat} value={cat} className="bg-surface">
-            {cat}
+            {translateCategoryLabel(cat, lang)}
           </option>
         ))}
       </select>
@@ -59,10 +66,10 @@ function EditRow({
         type="submit"
         className="rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
       >
-        Enregistrer
+        {COMMON[lang].app.save}
       </button>
       <button type="button" onClick={onCancel} className="text-sm text-muted hover:text-ink">
-        Annuler
+        {COMMON[lang].app.cancel}
       </button>
     </form>
   )
@@ -79,6 +86,9 @@ export function RecentExpenses({
   onRemove: (id: string) => void
   compact?: boolean
 }) {
+  const { lang } = useLanguage()
+  const t = BUDGET[lang].recentExpenses
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const { categoryNames } = useCategories()
   const [showAll, setShowAll] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -111,13 +121,9 @@ export function RecentExpenses({
   }
 
   return (
-    <Card
-      title="Dépenses récentes"
-      hint="Tes dernières dépenses (jusqu'à 50), les plus récentes en premier."
-      compact={compact}
-    >
+    <Card title={t.cardTitle} hint={t.cardHint} compact={compact}>
       {expenses.length === 0 ? (
-        <p className="text-sm text-muted">Aucune dépense enregistrée pour l'instant.</p>
+        <p className="text-sm text-muted">{t.empty}</p>
       ) : (
         <>
           <div className="mb-3 flex flex-wrap gap-2">
@@ -125,7 +131,7 @@ export function RecentExpenses({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher une description..."
+              placeholder={t.searchPlaceholder}
               className="min-w-[160px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink placeholder-muted focus:border-primary focus:outline-none"
             />
             <select
@@ -134,16 +140,16 @@ export function RecentExpenses({
               className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
             >
               <option value="" className="bg-surface">
-                Toutes les catégories
+                {t.allCategories}
               </option>
               {categoryNames.map((cat) => (
                 <option key={cat} value={cat} className="bg-surface">
-                  {cat}
+                  {translateCategoryLabel(cat, lang)}
                 </option>
               ))}
             </select>
             <label className="flex items-center gap-1 text-xs text-muted">
-              Du
+              {t.from}
               <input
                 type="date"
                 value={dateFrom}
@@ -152,7 +158,7 @@ export function RecentExpenses({
               />
             </label>
             <label className="flex items-center gap-1 text-xs text-muted">
-              Au
+              {t.to}
               <input
                 type="date"
                 value={dateTo}
@@ -166,13 +172,13 @@ export function RecentExpenses({
                 onClick={clearFilters}
                 className="-mx-2 -my-1 rounded-md px-2 py-1 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
               >
-                Effacer les filtres
+                {t.clearFilters}
               </button>
             )}
           </div>
 
           {filtered.length === 0 ? (
-            <p className="text-sm text-muted">Aucune dépense ne correspond à ces filtres.</p>
+            <p className="text-sm text-muted">{t.noMatch}</p>
           ) : (
             <ul className="divide-y divide-overlay/10">
               {visible.map((expense) =>
@@ -180,6 +186,7 @@ export function RecentExpenses({
                   <li key={expense.id}>
                     <EditRow
                       expense={expense}
+                      lang={lang}
                       onCancel={() => setEditingId(null)}
                       onSave={(description, amount, category) => {
                         onUpdate(expense.id, description, amount, category)
@@ -192,12 +199,12 @@ export function RecentExpenses({
                     <div>
                       <p className="text-ink">{expense.description}</p>
                       <p className="text-xs text-muted">
-                        {new Date(expense.spent_at).toLocaleDateString('fr-CA', {
+                        {new Date(expense.spent_at).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-CA', {
                           weekday: 'short',
                           day: 'numeric',
                           month: 'short',
                         })}{' '}
-                        · {expense.category}
+                        · {translateCategoryLabel(expense.category, lang)}
                         {expense.account && (
                           <span className="ml-1.5 rounded-full bg-overlay/5 px-1.5 py-0.5 text-muted">
                             {expense.account}
@@ -206,21 +213,21 @@ export function RecentExpenses({
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="mr-2 font-medium text-ink">{formatCurrency(expense.amount)}</span>
+                      <span className="mr-2 font-medium text-ink">{formatMoney(expense.amount)}</span>
                       <button
                         type="button"
                         onClick={() => setEditingId(expense.id)}
                         className="rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
                       >
-                        Modifier
+                        {COMMON[lang].app.modify}
                       </button>
                       <button
                         type="button"
                         onClick={() => onRemove(expense.id)}
                         className="rounded-md px-2 py-1.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                        aria-label={`Supprimer ${expense.description}`}
+                        aria-label={t.deleteAria(expense.description)}
                       >
-                        Supprimer
+                        {COMMON[lang].app.delete}
                       </button>
                     </div>
                   </li>
@@ -235,7 +242,7 @@ export function RecentExpenses({
               onClick={() => setShowAll((v) => !v)}
               className="-mx-2 mt-3 rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
             >
-              {showAll ? 'Réduire' : `Voir tout l'historique (${filtered.length})`}
+              {showAll ? t.collapse : t.showAll(filtered.length)}
             </button>
           )}
         </>

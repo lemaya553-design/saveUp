@@ -1,11 +1,13 @@
+import type { Lang } from './i18n/language'
+
 export type AccentColor = 'bleu' | 'vert' | 'violet' | 'orange'
 export type Theme = 'dark' | 'light'
 
-export const ACCENT_COLORS: { value: AccentColor; label: string; swatch: string }[] = [
-  { value: 'bleu', label: 'Bleu', swatch: '#4a6cf7' },
-  { value: 'vert', label: 'Vert', swatch: '#22c55e' },
-  { value: 'violet', label: 'Violet', swatch: '#8b5cf6' },
-  { value: 'orange', label: 'Orange', swatch: '#f97316' },
+export const ACCENT_COLORS: { value: AccentColor; label: Record<Lang, string>; swatch: string }[] = [
+  { value: 'bleu', label: { fr: 'Bleu', en: 'Blue' }, swatch: '#4a6cf7' },
+  { value: 'vert', label: { fr: 'Vert', en: 'Green' }, swatch: '#22c55e' },
+  { value: 'violet', label: { fr: 'Violet', en: 'Purple' }, swatch: '#8b5cf6' },
+  { value: 'orange', label: { fr: 'Orange', en: 'Orange' }, swatch: '#f97316' },
 ]
 
 export const AVATAR_EMOJIS = ['😊', '💰', '🚀', '🎯', '🌟', '🐱', '🦊', '🌈', '🐢', '🍀', '⭐', '🐙']

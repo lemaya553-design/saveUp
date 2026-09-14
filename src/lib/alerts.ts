@@ -1,4 +1,6 @@
 import { getMonthRange } from './format'
+import { translateCategoryLabel } from './i18n/categoryLabels'
+import type { Lang } from './i18n/language'
 
 export interface BudgetPaceAlertInput {
   spentThisMonth: number
@@ -8,7 +10,7 @@ export interface BudgetPaceAlertInput {
 
 // Flags spending that's running well ahead of how far the month has gotten
 // (not just "over budget" — "on track to be over budget").
-export function getBudgetPaceAlert(input: BudgetPaceAlertInput): string | null {
+export function getBudgetPaceAlert(input: BudgetPaceAlertInput, lang: Lang): string | null {
   if (input.discretionaryBudget <= 0) return null
 
   const spentPct = input.spentThisMonth / input.discretionaryBudget
@@ -17,7 +19,9 @@ export function getBudgetPaceAlert(input: BudgetPaceAlertInput): string | null {
   if (spentPct >= 0.6 && paceRatio >= 1.4) {
     const spentPctRounded = Math.round(spentPct * 100)
     const remainingMonthPct = Math.round((1 - input.monthProgress) * 100)
-    return `Tu as déjà dépensé ${spentPctRounded}% de ton budget du mois, avec encore ${remainingMonthPct}% du mois à venir.`
+    return lang === 'fr'
+      ? `Tu as déjà dépensé ${spentPctRounded}% de ton budget du mois, avec encore ${remainingMonthPct}% du mois à venir.`
+      : `You've already spent ${spentPctRounded}% of this month's budget, with ${remainingMonthPct}% of the month still to go.`
   }
   return null
 }
@@ -33,6 +37,7 @@ export interface SavingsGoalLateAlertInput {
 // enough that the current progress won't realistically get there in time.
 export function getSavingsGoalLateAlert(
   input: SavingsGoalLateAlertInput,
+  lang: Lang,
   now = new Date(),
 ): string | null {
   if (!input.targetDate || input.targetAmount <= 0) return null
@@ -43,13 +48,21 @@ export function getSavingsGoalLateAlert(
   const progress = input.currentAmount / input.targetAmount
 
   if (daysUntilTarget < 0) {
-    return `L'échéance de « ${input.name} » est passée et l'objectif n'est pas encore atteint.`
+    return lang === 'fr'
+      ? `L'échéance de « ${input.name} » est passée et l'objectif n'est pas encore atteint.`
+      : `The deadline for "${input.name}" has passed and the goal hasn't been reached yet.`
   }
   if (daysUntilTarget <= 14 && progress < 0.8) {
-    const dayLabel = daysUntilTarget === 1 ? 'jour' : 'jours'
-    return `Il reste ${daysUntilTarget} ${dayLabel} pour « ${input.name} » et tu es à ${Math.round(
+    if (lang === 'fr') {
+      const dayLabel = daysUntilTarget === 1 ? 'jour' : 'jours'
+      return `Il reste ${daysUntilTarget} ${dayLabel} pour « ${input.name} » et tu es à ${Math.round(
+        progress * 100,
+      )}% — le rythme actuel risque de ne pas suffire.`
+    }
+    const dayLabel = daysUntilTarget === 1 ? 'day' : 'days'
+    return `${daysUntilTarget} ${dayLabel} left for "${input.name}" and you're at ${Math.round(
       progress * 100,
-    )}% — le rythme actuel risque de ne pas suffire.`
+    )}% — the current pace may not be enough.`
   }
   return null
 }
@@ -60,6 +73,7 @@ export function getSavingsGoalLateAlert(
 // category is out of proportion."
 export function getCategoryShareAlert(
   records: { amount: number; category: string; spent_at: string }[],
+  lang: Lang,
   now = new Date(),
 ): string | null {
   const { start: thisMonthStart, end: thisMonthEnd } = getMonthRange(now)
@@ -103,5 +117,9 @@ export function getCategoryShareAlert(
   }
 
   if (!flaggedCategory) return null
-  return `${flaggedCategory} représente déjà ${Math.round(flaggedShare * 100)}% de tes dépenses ce mois-ci.`
+  const category = translateCategoryLabel(flaggedCategory, lang)
+  const pct = Math.round(flaggedShare * 100)
+  return lang === 'fr'
+    ? `${category} représente déjà ${pct}% de tes dépenses ce mois-ci.`
+    : `${category} already makes up ${pct}% of your spending this month.`
 }

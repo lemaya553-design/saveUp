@@ -1,7 +1,10 @@
 import { useCallback, useState } from 'react'
 import type * as XLSXType from 'xlsx'
 import { supabase } from '../lib/supabase'
-import { formatCurrency, toDateString } from '../lib/format'
+import { formatCurrency, formatCurrencyEN, toDateString } from '../lib/format'
+import { useLanguage } from './useLanguage'
+import { EXPORTS } from '../lib/i18n/exports'
+import type { Lang } from '../lib/i18n/language'
 
 interface ExportData {
   monthlyIncome: number
@@ -62,16 +65,25 @@ async function loadExportData(): Promise<{ data: ExportData | null; error: strin
   }
 }
 
+// EN exports reuse formatCurrencyEN (CAD-suffixed) so an English reader
+// doesn't misread a bare "$" as USD — same rationale as the marketing pages,
+// see lib/format.ts.
+function fmtCurrency(amount: number, lang: Lang): string {
+  return lang === 'en' ? formatCurrencyEN(amount) : formatCurrency(amount)
+}
+
 export function useDataExport() {
+  const { lang } = useLanguage()
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const exportExcel = useCallback(async () => {
+    const t = EXPORTS[lang].dataExport
     setExporting(true)
     setError(null)
     const { data, error: loadError } = await loadExportData()
     if (loadError || !data) {
-      setError(loadError ?? 'Erreur lors de la préparation des données.')
+      setError(loadError ?? t.prepFailed)
       setExporting(false)
       return
     }
@@ -80,69 +92,72 @@ export function useDataExport() {
     const wb = XLSX.utils.book_new()
 
     const summarySheet = XLSX.utils.aoa_to_sheet([
-      ['SaveUp — Rapport exporté le', toDateString(new Date())],
+      [t.reportGeneratedOn, toDateString(new Date())],
       [],
-      ['Revenu mensuel', data.monthlyIncome],
-      ['Total dépenses fixes', data.fixedExpenses.reduce((s, e) => s + e.amount, 0)],
-      ['Total transactions', data.transactions.length],
-      ['Total épargné (tous objectifs)', data.goals.reduce((s, g) => s + g.current, 0)],
+      [t.monthlyIncome, data.monthlyIncome],
+      [t.totalFixedExpenses, data.fixedExpenses.reduce((s, e) => s + e.amount, 0)],
+      [t.totalTransactions, data.transactions.length],
+      [t.totalSaved, data.goals.reduce((s, g) => s + g.current, 0)],
     ])
-    XLSX.utils.book_append_sheet(wb, summarySheet, 'Résumé')
+    XLSX.utils.book_append_sheet(wb, summarySheet, t.sheetSummary)
 
     XLSX.utils.book_append_sheet(
       wb,
-      XLSX.utils.json_to_sheet(data.fixedExpenses.map((e) => ({ Nom: e.name, Catégorie: e.category, Montant: e.amount }))),
-      'Dépenses fixes',
+      XLSX.utils.json_to_sheet(
+        data.fixedExpenses.map((e) => ({ [t.colName]: e.name, [t.colCategory]: e.category, [t.colAmount]: e.amount })),
+      ),
+      t.sheetFixedExpenses,
     )
 
     XLSX.utils.book_append_sheet(
       wb,
       XLSX.utils.json_to_sheet(
         data.categoryTotals.map((c) => ({
-          Catégorie: c.category,
-          Total: c.total,
-          '% du total': Math.round(c.pct * 10) / 10,
+          [t.colCategory]: c.category,
+          [t.colTotal]: c.total,
+          [t.colPctOfTotal]: Math.round(c.pct * 10) / 10,
         })),
       ),
-      'Par catégorie',
+      t.sheetByCategory,
     )
 
     XLSX.utils.book_append_sheet(
       wb,
       XLSX.utils.json_to_sheet(
-        data.transactions.map((t) => ({
-          Date: t.date,
-          Description: t.description,
-          Catégorie: t.category,
-          Montant: t.amount,
+        data.transactions.map((tr) => ({
+          [t.colDate]: tr.date,
+          [t.colDescription]: tr.description,
+          [t.colCategory]: tr.category,
+          [t.colAmount]: tr.amount,
         })),
       ),
-      'Transactions',
+      t.sheetTransactions,
     )
 
     XLSX.utils.book_append_sheet(
       wb,
       XLSX.utils.json_to_sheet(
         data.goals.map((g) => ({
-          Objectif: g.name,
-          'Montant actuel': g.current,
-          'Montant cible': g.target,
-          'Progression %': Math.round(g.progressPct * 10) / 10,
+          [t.colGoal]: g.name,
+          [t.colCurrentAmount]: g.current,
+          [t.colTargetAmount]: g.target,
+          [t.colProgressPct]: Math.round(g.progressPct * 10) / 10,
         })),
       ),
-      'Objectifs d’épargne',
+      t.sheetGoals,
     )
 
     XLSX.writeFile(wb, `saveup-rapport-${toDateString(new Date())}.xlsx`)
     setExporting(false)
-  }, [])
+  }, [lang])
 
   const exportPdf = useCallback(async () => {
+    const t = EXPORTS[lang].dataExport
     setExporting(true)
     setError(null)
     const { data, error: loadError } = await loadExportData()
     if (loadError || !data) {
-      setError(loadError ?? 'Erreur lors de la préparation des données.')
+      setError(loadError ?? t.prepFailed)
       setExporting(false)
       return
     }
@@ -154,18 +169,18 @@ export function useDataExport() {
 
     const doc = new JsPDF()
     doc.setFontSize(16)
-    doc.text('SaveUp — Rapport financier', 14, 18)
+    doc.text(t.pdfTitle, 14, 18)
     doc.setFontSize(10)
-    doc.text(`Généré le ${toDateString(new Date())}`, 14, 25)
+    doc.text(t.pdfGeneratedOn(toDateString(new Date())), 14, 25)
 
     autoTable(doc, {
       startY: 32,
-      head: [['Résumé', 'Valeur']],
+      head: [[t.pdfSummaryHead, t.pdfValueHead]],
       body: [
-        ['Revenu mensuel', formatCurrency(data.monthlyIncome)],
-        ['Total dépenses fixes', formatCurrency(data.fixedExpenses.reduce((s, e) => s + e.amount, 0))],
-        ['Total transactions', String(data.transactions.length)],
-        ['Total épargné (tous objectifs)', formatCurrency(data.goals.reduce((s, g) => s + g.current, 0))],
+        [t.monthlyIncome, fmtCurrency(data.monthlyIncome, lang)],
+        [t.totalFixedExpenses, fmtCurrency(data.fixedExpenses.reduce((s, e) => s + e.amount, 0), lang)],
+        [t.totalTransactions, String(data.transactions.length)],
+        [t.totalSaved, fmtCurrency(data.goals.reduce((s, g) => s + g.current, 0), lang)],
       ],
     })
 
@@ -173,36 +188,36 @@ export function useDataExport() {
 
     if (data.fixedExpenses.length > 0) {
       doc.setFontSize(12)
-      doc.text('Dépenses fixes', 14, cursorY)
+      doc.text(t.sheetFixedExpenses, 14, cursorY)
       autoTable(doc, {
         startY: cursorY + 4,
-        head: [['Nom', 'Catégorie', 'Montant']],
-        body: data.fixedExpenses.map((e) => [e.name, e.category, formatCurrency(e.amount)]),
+        head: [[t.colName, t.colCategory, t.colAmount]],
+        body: data.fixedExpenses.map((e) => [e.name, e.category, fmtCurrency(e.amount, lang)]),
       })
       cursorY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10
     }
 
     if (data.categoryTotals.length > 0) {
       doc.setFontSize(12)
-      doc.text('Répartition par catégorie', 14, cursorY)
+      doc.text(t.pdfCategoryBreakdownHeading, 14, cursorY)
       autoTable(doc, {
         startY: cursorY + 4,
-        head: [['Catégorie', 'Total', '% du total']],
-        body: data.categoryTotals.map((c) => [c.category, formatCurrency(c.total), `${Math.round(c.pct)}%`]),
+        head: [[t.colCategory, t.colTotal, t.colPctOfTotal]],
+        body: data.categoryTotals.map((c) => [c.category, fmtCurrency(c.total, lang), `${Math.round(c.pct)}%`]),
       })
       cursorY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10
     }
 
     if (data.goals.length > 0) {
       doc.setFontSize(12)
-      doc.text('Objectifs d’épargne', 14, cursorY)
+      doc.text(t.sheetGoals, 14, cursorY)
       autoTable(doc, {
         startY: cursorY + 4,
-        head: [['Objectif', 'Actuel', 'Cible', 'Progression']],
+        head: [[t.colGoal, t.pdfColCurrent, t.pdfColTarget, t.pdfColProgress]],
         body: data.goals.map((g) => [
           g.name,
-          formatCurrency(g.current),
-          formatCurrency(g.target),
+          fmtCurrency(g.current, lang),
+          fmtCurrency(g.target, lang),
           `${Math.round(g.progressPct)}%`,
         ]),
       })
@@ -212,18 +227,18 @@ export function useDataExport() {
     if (data.transactions.length > 0) {
       doc.addPage()
       doc.setFontSize(12)
-      doc.text('Transactions', 14, 18)
+      doc.text(t.sheetTransactions, 14, 18)
       autoTable(doc, {
         startY: 24,
-        head: [['Date', 'Description', 'Catégorie', 'Montant']],
-        body: data.transactions.map((t) => [t.date, t.description, t.category, formatCurrency(t.amount)]),
+        head: [[t.colDate, t.colDescription, t.colCategory, t.colAmount]],
+        body: data.transactions.map((tr) => [tr.date, tr.description, tr.category, fmtCurrency(tr.amount, lang)]),
         styles: { fontSize: 8 },
       })
     }
 
     doc.save(`saveup-rapport-${toDateString(new Date())}.pdf`)
     setExporting(false)
-  }, [])
+  }, [lang])
 
   return { exporting, error, exportExcel, exportPdf }
 }

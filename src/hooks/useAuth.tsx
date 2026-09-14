@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import type { Lang } from '../lib/i18n/language'
 
 interface AuthResult {
   error: string | null
@@ -25,21 +26,54 @@ interface AuthContextValue {
   // though `user` is also truthy at that point (the recovery link signs
   // them in).
   passwordRecovery: boolean
-  signUp: (email: string, password: string) => Promise<AuthResult>
-  signIn: (email: string, password: string) => Promise<AuthResult>
-  signInWithGoogle: (redirectPath?: string) => Promise<AuthResult>
+  signUp: (email: string, password: string, lang: Lang) => Promise<AuthResult>
+  signIn: (email: string, password: string, lang: Lang) => Promise<AuthResult>
+  signInWithGoogle: (redirectPath: string | undefined, lang: Lang) => Promise<AuthResult>
   signOut: () => Promise<void>
-  resetPasswordForEmail: (email: string) => Promise<AuthResult>
-  updatePassword: (newPassword: string) => Promise<AuthResult>
-  resendConfirmationEmail: (email: string) => Promise<AuthResult>
+  resetPasswordForEmail: (email: string, lang: Lang) => Promise<AuthResult>
+  updatePassword: (newPassword: string, lang: Lang) => Promise<AuthResult>
+  resendConfirmationEmail: (email: string, lang: Lang) => Promise<AuthResult>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 // Supabase's auth errors come back in English regardless of project locale —
-// map the handful users actually hit to clear French messages.
-function mapAuthError(message: string): string {
+// map the handful users actually hit to clear messages in the active UI language.
+function mapAuthError(message: string, lang: Lang): string {
   const lower = message.toLowerCase()
+  if (lang === 'en') {
+    if (lower.includes('already registered') || lower.includes('already exists')) {
+      return 'An account already exists with this email.'
+    }
+    if (lower.includes('password should be at least') || lower.includes('password is too short')) {
+      return 'Password must be at least 6 characters.'
+    }
+    if (lower.includes('invalid login credentials')) {
+      return 'Incorrect email or password.'
+    }
+    if (lower.includes('email not confirmed')) {
+      return 'Confirm your email before signing in — check your inbox.'
+    }
+    if (lower.includes('invalid email') || lower.includes('unable to validate email')) {
+      return 'This email is not valid.'
+    }
+    if (lower.includes('you can only request this after')) {
+      return 'An email was already sent less than a minute ago — wait a moment before resending.'
+    }
+    if (lower.includes('rate limit')) {
+      return 'Too many attempts — wait a minute before trying again.'
+    }
+    if (lower.includes('auth session missing') || lower.includes('session not found')) {
+      return 'This reset link has expired or was already used. Request a new one.'
+    }
+    if (lower.includes('same as the old password') || lower.includes('should be different')) {
+      return 'Choose a password different from your old one.'
+    }
+    if (lower.includes('provider is not enabled') || lower.includes('unsupported provider')) {
+      return 'Google sign-in is not enabled on this account yet.'
+    }
+    return 'Something went wrong. Try again.'
+  }
   if (lower.includes('already registered') || lower.includes('already exists')) {
     return 'Un compte existe déjà avec ce courriel.'
   }
@@ -104,18 +138,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // hook in the app, that would re-render most of the tree on every auth
   // event (including silent background token refreshes, which fire
   // periodically even when nothing the user cares about changed).
-  const signUp = useCallback(async (email: string, password: string): Promise<AuthResult> => {
+  const signUp = useCallback(async (email: string, password: string, lang: Lang): Promise<AuthResult> => {
     const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) return { error: mapAuthError(error.message) }
+    if (error) return { error: mapAuthError(error.message, lang) }
     // With email confirmation enabled (Supabase's default), signUp succeeds
     // but returns no session until the user clicks the confirmation link.
     const needsEmailConfirmation = !data.session
     return { error: null, needsEmailConfirmation }
   }, [])
 
-  const signIn = useCallback(async (email: string, password: string): Promise<AuthResult> => {
+  const signIn = useCallback(async (email: string, password: string, lang: Lang): Promise<AuthResult> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) return { error: mapAuthError(error.message), code: error.code }
+    if (error) return { error: mapAuthError(error.message, lang), code: error.code }
     return { error: null }
   }, [])
 
@@ -125,12 +159,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // in the Supabase dashboard yet); anything after (user cancels, callback
   // fails) comes back as a `?error=...` query param on the redirect landing
   // page instead, not through this promise.
-  const signInWithGoogle = useCallback(async (redirectPath = '/dashboard'): Promise<AuthResult> => {
+  const signInWithGoogle = useCallback(async (redirectPath = '/dashboard', lang: Lang): Promise<AuthResult> => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}${redirectPath}` },
     })
-    if (error) return { error: mapAuthError(error.message) }
+    if (error) return { error: mapAuthError(error.message, lang) }
     return { error: null }
   }, [])
 
@@ -138,17 +172,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut()
   }, [])
 
-  const resetPasswordForEmail = useCallback(async (email: string): Promise<AuthResult> => {
+  const resetPasswordForEmail = useCallback(async (email: string, lang: Lang): Promise<AuthResult> => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/connexion`,
     })
-    if (error) return { error: mapAuthError(error.message) }
+    if (error) return { error: mapAuthError(error.message, lang) }
     return { error: null }
   }, [])
 
-  const updatePassword = useCallback(async (newPassword: string): Promise<AuthResult> => {
+  const updatePassword = useCallback(async (newPassword: string, lang: Lang): Promise<AuthResult> => {
     const { error } = await supabase.auth.updateUser({ password: newPassword })
-    if (error) return { error: mapAuthError(error.message) }
+    if (error) return { error: mapAuthError(error.message, lang) }
     setPasswordRecovery(false)
     return { error: null }
   }, [])
@@ -157,9 +191,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // re-sends the same confirmation link rather than erroring on "already
   // registered" (that check is for signUp; resend targets an account that
   // exists but isn't confirmed yet, exactly this one's situation).
-  const resendConfirmationEmail = useCallback(async (email: string): Promise<AuthResult> => {
+  const resendConfirmationEmail = useCallback(async (email: string, lang: Lang): Promise<AuthResult> => {
     const { error } = await supabase.auth.resend({ type: 'signup', email })
-    if (error) return { error: mapAuthError(error.message) }
+    if (error) return { error: mapAuthError(error.message, lang) }
     return { error: null }
   }, [])
 

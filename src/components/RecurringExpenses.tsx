@@ -1,11 +1,16 @@
 import { useState } from 'react'
 import { Card } from './Card'
 import { UpgradePrompt } from './UpgradePrompt'
-import { formatCurrency, getTodayDateString } from '../lib/format'
+import { formatCurrency, formatCurrencyEN, getTodayDateString } from '../lib/format'
 import { useCategories } from '../hooks/useCategories'
+import { useLanguage } from '../hooks/useLanguage'
 import { FALLBACK_CATEGORY } from '../lib/categories'
+import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
+import { BUDGET } from '../lib/i18n/budget'
+import { COMMON } from '../lib/i18n/common'
+import type { Lang } from '../lib/i18n/language'
 import {
-  FREQUENCY_OPTIONS,
+  getFrequencyOptions,
   computeUpcomingOccurrencesInMonth,
   frequencyLabel,
   isRecurringExpenseEnded,
@@ -15,16 +20,19 @@ import {
 
 function EditRow({
   rule,
+  lang,
   onSave,
   onCancel,
 }: {
   rule: RecurringExpense
+  lang: Lang
   onSave: (
     fields: { description: string; amount: number; category: string },
     applyToPast: boolean,
   ) => void
   onCancel: () => void
 }) {
+  const t = BUDGET[lang].recurringExpenses
   const { categoryNames } = useCategories()
   const [description, setDescription] = useState(rule.description)
   const [amount, setAmount] = useState(String(rule.amount))
@@ -63,7 +71,7 @@ function EditRow({
         >
           {categoryNames.map((cat) => (
             <option key={cat} value={cat} className="bg-surface">
-              {cat}
+              {translateCategoryLabel(cat, lang)}
             </option>
           ))}
         </select>
@@ -76,7 +84,7 @@ function EditRow({
           onChange={(e) => setApplyToPast(e.target.checked)}
           className="h-4 w-4 accent-primary"
         />
-        Appliquer aussi aux transactions déjà générées par cette récurrence
+        {t.applyToPast}
       </label>
 
       <div className="flex gap-2">
@@ -84,10 +92,10 @@ function EditRow({
           type="submit"
           className="rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
         >
-          Enregistrer
+          {COMMON[lang].app.save}
         </button>
         <button type="button" onClick={onCancel} className="text-sm text-muted hover:text-ink">
-          Annuler
+          {COMMON[lang].app.cancel}
         </button>
       </div>
     </form>
@@ -95,8 +103,10 @@ function EditRow({
 }
 
 function AddForm({
+  lang,
   onAdd,
 }: {
+  lang: Lang
   onAdd: (
     description: string,
     amount: number,
@@ -106,6 +116,7 @@ function AddForm({
     endDate: string | null,
   ) => Promise<boolean>
 }) {
+  const t = BUDGET[lang].recurringExpenses
   const { categoryNames } = useCategories()
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
@@ -145,7 +156,7 @@ function AddForm({
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Nom (ex: Loyer)"
+          placeholder={t.namePlaceholder}
           className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         <input
@@ -155,7 +166,7 @@ function AddForm({
           step="0.01"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder="Montant"
+          placeholder={t.amountPlaceholder}
           className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         <select
@@ -165,7 +176,7 @@ function AddForm({
         >
           {categoryNames.map((cat) => (
             <option key={cat} value={cat} className="bg-surface">
-              {cat}
+              {translateCategoryLabel(cat, lang)}
             </option>
           ))}
         </select>
@@ -177,14 +188,14 @@ function AddForm({
           onChange={(e) => setFrequency(e.target.value as RecurringFrequency)}
           className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
         >
-          {FREQUENCY_OPTIONS.map((f) => (
+          {getFrequencyOptions(lang).map((f) => (
             <option key={f.value} value={f.value} className="bg-surface">
               {f.label}
             </option>
           ))}
         </select>
         <label className="flex items-center gap-1.5 text-xs text-muted">
-          Première occurrence
+          {t.firstOccurrence}
           <input
             type="date"
             value={startDate}
@@ -201,7 +212,7 @@ function AddForm({
           onChange={(e) => setHasEndDate(e.target.checked)}
           className="h-4 w-4 accent-primary"
         />
-        Date de fin (optionnel — laisse décoché pour indéfini)
+        {t.endDateLabel}
       </label>
       {hasEndDate && (
         <input
@@ -218,7 +229,7 @@ function AddForm({
         disabled={submitting}
         className="w-fit rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
       >
-        {submitting ? 'Création...' : 'Créer la récurrence'}
+        {submitting ? t.creating : t.createButton}
       </button>
     </form>
   )
@@ -250,21 +261,16 @@ export function RecurringExpenses({
   ) => void
   onRemove: (id: string) => void
 }) {
+  const { lang } = useLanguage()
+  const t = BUDGET[lang].recurringExpenses
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
   const [editingId, setEditingId] = useState<string | null>(null)
   const now = new Date()
 
   return (
-    <Card
-      title="Récurrences"
-      hint="Loyer, abonnements, factures — créées une fois, générées automatiquement à chaque échéance."
-    >
+    <Card title={t.cardTitle} hint={t.cardHint}>
       <ul className="mb-4 divide-y divide-overlay/10">
-        {rules.length === 0 && (
-          <li className="py-2 text-sm text-muted">
-            Aucune récurrence pour l'instant — crée-en une ci-dessous, ou depuis le bouton + en ajoutant
-            une dépense.
-          </li>
-        )}
+        {rules.length === 0 && <li className="py-2 text-sm text-muted">{t.empty}</li>}
         {rules.map((rule) => {
           const ended = isRecurringExpenseEnded(rule)
           const upcoming = ended ? [] : computeUpcomingOccurrencesInMonth(rule, now)
@@ -273,6 +279,7 @@ export function RecurringExpenses({
             <li key={rule.id}>
               <EditRow
                 rule={rule}
+                lang={lang}
                 onCancel={() => setEditingId(null)}
                 onSave={(fields, applyToPast) => {
                   onUpdate(rule.id, fields, applyToPast)
@@ -284,32 +291,28 @@ export function RecurringExpenses({
             <li key={rule.id} className="flex flex-wrap items-center justify-between gap-y-1 py-2">
               <div>
                 <span className="text-ink">{rule.description}</span>
-                <span className="ml-2 text-xs text-muted">{rule.category}</span>
+                <span className="ml-2 text-xs text-muted">{translateCategoryLabel(rule.category, lang)}</span>
                 <p className="text-xs text-muted">
-                  {frequencyLabel(rule.frequency)}
-                  {ended
-                    ? ' · terminée'
-                    : upcoming.length > 0
-                      ? ` · ${upcoming.length} à venir ce mois-ci`
-                      : ' · rien à venir ce mois-ci'}
+                  {frequencyLabel(rule.frequency, lang)}
+                  {ended ? ` · ${t.ended}` : upcoming.length > 0 ? ` · ${t.upcomingCount(upcoming.length)}` : ` · ${t.noneUpcoming}`}
                 </p>
               </div>
               <div className="flex items-center gap-1">
-                <span className="mr-2 font-medium text-ink">{formatCurrency(rule.amount)}</span>
+                <span className="mr-2 font-medium text-ink">{formatMoney(rule.amount)}</span>
                 <button
                   type="button"
                   onClick={() => setEditingId(rule.id)}
                   className="rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
                 >
-                  Modifier
+                  {COMMON[lang].app.modify}
                 </button>
                 <button
                   type="button"
                   onClick={() => onRemove(rule.id)}
                   className="rounded-md px-2 py-1.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                  aria-label={`Supprimer ${rule.description}`}
+                  aria-label={t.deleteAria(rule.description)}
                 >
-                  Supprimer
+                  {COMMON[lang].app.delete}
                 </button>
               </div>
             </li>
@@ -319,12 +322,12 @@ export function RecurringExpenses({
 
       {atLimit ? (
         <UpgradePrompt
-          title={`Limite de ${maxRecurringExpenses} récurrence${maxRecurringExpenses === 1 ? '' : 's'} atteinte`}
-          description="Le plan Gratuit est limité en nombre de récurrences actives. Passe à Standard pour en créer autant que tu veux."
+          title={t.limitReached(maxRecurringExpenses ?? 0)}
+          description={t.limitDescription}
           minPlan="standard"
         />
       ) : (
-        <AddForm onAdd={onAdd} />
+        <AddForm lang={lang} onAdd={onAdd} />
       )}
     </Card>
   )

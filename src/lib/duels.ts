@@ -1,4 +1,5 @@
 import { daysBetween, formatMonthsAndDays, monthsAndDaysBetween } from './savingsProjection'
+import type { Lang } from './i18n/language'
 
 export type DuelStatus = 'pending' | 'active' | 'completed' | 'abandoned'
 export const DUEL_DURATION_OPTIONS = [30, 60, 90] as const
@@ -35,12 +36,15 @@ export function getLeader(duel: Duel): 'me' | 'opponent' | 'tie' | null {
   return duel.me.progressPct > duel.opponent.progressPct ? 'me' : 'opponent'
 }
 
-export function formatTimeRemaining(endsAt: string, now: Date): string {
+// Null means the duel is over — callers show their own localized "over"
+// label instead; otherwise the raw duration ("4 months, 2 days") for the
+// caller to wrap in its own "X remaining" phrasing.
+export function getTimeRemainingLabel(endsAt: string, now: Date, lang: Lang): string | null {
   const end = new Date(endsAt)
   const days = daysBetween(now, end)
-  if (days <= 0) return 'Terminé'
+  if (days <= 0) return null
   const { months, days: d } = monthsAndDaysBetween(now, end)
-  return `${formatMonthsAndDays(months, d)} restant${days > 1 ? 's' : ''}`
+  return formatMonthsAndDays(months, d, lang)
 }
 
 export function isInviteExpired(expiresAt: string, now: Date): boolean {

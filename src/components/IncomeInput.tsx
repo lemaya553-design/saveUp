@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Card } from './Card'
+import { useLanguage } from '../hooks/useLanguage'
+import { COMMON } from '../lib/i18n/common'
 
 export function IncomeInput({
   monthlyIncome,
@@ -11,6 +13,8 @@ export function IncomeInput({
   compact?: boolean
 }) {
   const [draft, setDraft] = useState(String(monthlyIncome || ''))
+  const { lang } = useLanguage()
+  const t = COMMON[lang].incomeInput
 
   function commit() {
     const value = Math.max(0, Number(draft) || 0)
@@ -19,11 +23,7 @@ export function IncomeInput({
   }
 
   return (
-    <Card
-      title="Revenu mensuel"
-      hint="On l'utilise pour calculer ton budget hebdomadaire disponible."
-      compact={compact}
-    >
+    <Card title={t.title} hint={t.hint} compact={compact}>
       <label className="flex items-center gap-2">
         <span className="text-muted">$</span>
         <input

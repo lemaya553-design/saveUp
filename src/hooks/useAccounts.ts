@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
+import { useLanguage } from './useLanguage'
+import { COMMON } from '../lib/i18n/common'
+import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
 
 export interface Account {
   id: string
@@ -13,6 +16,7 @@ export interface Account {
 // instead of retyped every time.
 export function useAccounts() {
   const { user } = useAuth()
+  const { lang } = useLanguage()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -54,9 +58,9 @@ export function useAccounts() {
   const addAccount = useCallback(
     async (name: string): Promise<{ account: Account | null; error: string | null }> => {
       const trimmed = name.trim()
-      if (!trimmed) return { account: null, error: 'Le nom du compte ne peut pas être vide.' }
+      if (!trimmed) return { account: null, error: HOOK_ERRORS[lang].accounts.nameEmpty }
       if (!userId) {
-        return { account: null, error: 'Ta session a expiré — reconnecte-toi et réessaie.' }
+        return { account: null, error: COMMON[lang].app.sessionExpired }
       }
 
       const existing = accounts.find((a) => a.name.toLowerCase() === trimmed.toLowerCase())
@@ -70,15 +74,15 @@ export function useAccounts() {
       if (insertError || !data) {
         const message =
           insertError?.code === '23505'
-            ? 'Ce nom de compte existe déjà.'
-            : (insertError?.message ?? 'Impossible de créer ce compte.')
+            ? HOOK_ERRORS[lang].accounts.nameExists
+            : (insertError?.message ?? HOOK_ERRORS[lang].accounts.createFailed)
         setError(message)
         return { account: null, error: message }
       }
       setAccounts((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name, 'fr')))
       return { account: data, error: null }
     },
-    [userId, accounts],
+    [userId, accounts, lang],
   )
 
   return { loading, error, accounts, addAccount }

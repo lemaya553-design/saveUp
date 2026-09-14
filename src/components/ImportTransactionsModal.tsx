@@ -2,13 +2,17 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Modal } from './Modal'
 import { supabase } from '../lib/supabase'
 import { FALLBACK_CATEGORY } from '../lib/categories'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { useExpenses } from '../hooks/useExpenses'
 import { useAccounts } from '../hooks/useAccounts'
 import { useCategories } from '../hooks/useCategories'
 import { useCustomKeywords } from '../hooks/useCustomKeywords'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
+import { useLanguage } from '../hooks/useLanguage'
+import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
+import { BUDGET } from '../lib/i18n/budget'
+import { COMMON } from '../lib/i18n/common'
 import {
   parseFile,
   detectColumnMapping,
@@ -24,12 +28,6 @@ import {
 type Step = 'upload' | 'account' | 'mapping' | 'result'
 
 const PREVIEW_LIMIT = 25
-
-const SKIP_LABELS: Record<string, string> = {
-  'invalid-date': 'date illisible',
-  'invalid-amount': 'montant illisible',
-  'not-an-expense': 'pas une dépense (revenu ou 0 $) — ignoré',
-}
 
 function ToggleButton({
   active,
@@ -59,12 +57,14 @@ function ColumnSelect({
   value,
   onChange,
   allowNone = false,
+  noneLabel,
 }: {
   label: string
   headers: string[]
   value: number | null
   onChange: (value: number | null) => void
   allowNone?: boolean
+  noneLabel?: string
 }) {
   return (
     <label className="flex flex-col gap-1 text-sm text-muted">
@@ -76,7 +76,7 @@ function ColumnSelect({
       >
         {allowNone && (
           <option value="" className="bg-surface">
-            — Aucune —
+            {noneLabel}
           </option>
         )}
         {headers.map((header, i) => (
@@ -90,6 +90,14 @@ function ColumnSelect({
 }
 
 export function ImportTransactionsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { lang } = useLanguage()
+  const t = BUDGET[lang].importModal
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+  const SKIP_LABELS: Record<string, string> = {
+    'invalid-date': t.skipLabels.invalidDate,
+    'invalid-amount': t.skipLabels.invalidAmount,
+    'not-an-expense': t.skipLabels.notAnExpense,
+  }
   const { addExpensesBulk } = useExpenses()
   const { accounts, addAccount } = useAccounts()
   const { categoryNames } = useCategories()
@@ -145,12 +153,12 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
     setFileName(file.name)
     setReading(true)
     try {
-      const parsed = await parseFile(file)
+      const parsed = await parseFile(file, lang)
       setParsedFile(parsed)
       setMapping(detectColumnMapping(parsed.headers))
       setStep('account')
     } catch (err) {
-      setFileError(err instanceof Error ? err.message : 'Impossible de lire ce fichier.')
+      setFileError(err instanceof Error ? err.message : t.fileReadError)
     } finally {
       setReading(false)
     }
@@ -165,7 +173,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
     const { account, error } = await addAccount(trimmed)
     setCreatingAccount(false)
     if (!account) {
-      setAccountError(error ?? "Impossible de créer ce compte — réessaie.")
+      setAccountError(error ?? t.accountCreateError)
       return
     }
     setSelectedAccountName(account.name)
@@ -174,9 +182,9 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
 
   const importRows = useMemo(() => {
     if (!parsedFile || !mapping) return []
-    const built = buildImportRows(parsedFile.rows, mapping, categoryNames, FALLBACK_CATEGORY, customKeywords)
+    const built = buildImportRows(parsedFile.rows, mapping, categoryNames, FALLBACK_CATEGORY, lang, customKeywords)
     return existing ? markDuplicates(built, existing) : built
-  }, [parsedFile, mapping, existing, categoryNames])
+  }, [parsedFile, mapping, existing, categoryNames, lang])
 
   const dateRangeKey = useMemo(() => {
     const dates = importRows.map((r) => r.spentAt).filter((d): d is string => d !== null)
@@ -263,14 +271,10 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
   }
 
   return (
-    <Modal open={open} onClose={handleClose} title="Importer des transactions" maxWidthClassName="max-w-3xl">
+    <Modal open={open} onClose={handleClose} title={t.title} maxWidthClassName="max-w-3xl">
       {step === 'upload' && (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-muted">
-            Importe un relevé de carte de crédit ou de compte bancaire (.csv ou .xlsx). SaveUp
-            essaie de deviner la catégorie de chaque transaction à partir du commerçant (sinon «
-            {FALLBACK_CATEGORY} » par défaut) — tu pourras toujours ajuster après l'import.
-          </p>
+          <p className="text-sm text-muted">{t.upload.intro(translateCategoryLabel(FALLBACK_CATEGORY, lang))}</p>
 
           <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-overlay/15 p-6 text-center text-sm text-muted transition-colors hover:border-primary/40 hover:text-ink">
             <input
@@ -281,11 +285,11 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               className="hidden"
             />
             {reading ? (
-              <span>Lecture de {fileName}...</span>
+              <span>{t.upload.readingFile(fileName)}</span>
             ) : (
               <>
-                <span className="font-medium">Clique pour choisir un fichier</span>
-                <span className="text-xs">.csv ou .xlsx</span>
+                <span className="font-medium">{t.upload.dropCta}</span>
+                <span className="text-xs">{t.upload.dropHint}</span>
               </>
             )}
           </label>
@@ -299,26 +303,16 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
           <details className="group rounded-xl border border-overlay/10 bg-overlay/[0.03] px-4 py-3">
             <summary className="cursor-pointer text-sm font-medium text-ink marker:content-none">
               <span className="mr-1.5 inline-block transition-transform group-open:rotate-90">›</span>
-              Comment obtenir ce fichier de ta banque ?
+              {t.upload.howToSummary}
             </summary>
             <div className="mt-3 flex flex-col gap-3 text-sm text-muted">
               <div>
-                <p className="font-medium text-ink">Format attendu</p>
-                <p className="mt-1">
-                  Un fichier .csv ou .xlsx avec au minimum une colonne <span className="text-ink">Date</span> et une
-                  colonne <span className="text-ink">Montant</span>. Une colonne{' '}
-                  <span className="text-ink">Description</span> aide à deviner la catégorie automatiquement ; une
-                  colonne Catégorie est optionnelle. Tu pourras corriger l'association des colonnes à l'étape
-                  suivante si la détection automatique se trompe.
-                </p>
+                <p className="font-medium text-ink">{t.upload.formatTitle}</p>
+                <p className="mt-1">{t.upload.formatBody}</p>
               </div>
               <div>
-                <p className="font-medium text-ink">Comment l'obtenir</p>
-                <p className="mt-1">
-                  Dans le portail en ligne de ta banque, cherche « Historique des transactions », « Relevés » ou «
-                  Exporter » sur le compte ou la carte de crédit visé, choisis une plage de dates, puis sélectionne
-                  le format CSV ou Excel (pas PDF).
-                </p>
+                <p className="font-medium text-ink">{t.upload.obtainTitle}</p>
+                <p className="mt-1">{t.upload.obtainBody}</p>
               </div>
             </div>
           </details>
@@ -329,18 +323,15 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
         <div className="flex flex-col gap-5">
           <div>
             <p className="text-sm text-muted">
-              Fichier : <span className="text-ink">{fileName}</span>
+              {t.fileLabel} <span className="text-ink">{fileName}</span>
             </p>
-            <p className="mt-1 text-sm text-ink">De quel compte proviennent ces transactions ?</p>
-            <p className="mt-1 text-xs text-muted">
-              Ex : « Carte de crédit », « Débit » — pour retrouver facilement la source de chaque
-              dépense plus tard.
-            </p>
+            <p className="mt-1 text-sm text-ink">{t.account.question}</p>
+            <p className="mt-1 text-xs text-muted">{t.account.hint}</p>
           </div>
 
           {accounts.length > 0 && (
             <div>
-              <p className="mb-2 text-xs text-muted">Comptes existants</p>
+              <p className="mb-2 text-xs text-muted">{t.account.existingAccounts}</p>
               <div className="flex flex-wrap gap-2">
                 {accounts.map((account) => (
                   <ToggleButton
@@ -357,12 +348,12 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
 
           <form onSubmit={handleCreateAccount} className="flex flex-wrap items-end gap-2">
             <label className="flex flex-1 flex-col gap-1 text-sm text-muted">
-              {accounts.length > 0 ? 'Ou crée un nouveau compte' : 'Nom du compte'}
+              {accounts.length > 0 ? t.account.newAccountLabel : t.account.newAccountLabelAlone}
               <input
                 type="text"
                 value={newAccountName}
                 onChange={(e) => setNewAccountName(e.target.value)}
-                placeholder="Ex : Carte de crédit"
+                placeholder={t.account.newAccountPlaceholder}
                 className="min-w-[180px] rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
               />
             </label>
@@ -371,7 +362,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               disabled={creatingAccount || !newAccountName.trim()}
               className="rounded-lg border border-overlay/10 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
             >
-              {creatingAccount ? 'Création...' : 'Créer'}
+              {creatingAccount ? t.account.creating : t.account.create}
             </button>
           </form>
 
@@ -382,7 +373,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
           )}
 
           {selectedAccountName && (
-            <p className="text-sm text-success">✓ Compte sélectionné : {selectedAccountName}</p>
+            <p className="text-sm text-success">{t.account.selected(selectedAccountName)}</p>
           )}
 
           <div className="flex flex-wrap gap-2">
@@ -391,7 +382,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               onClick={resetAll}
               className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
             >
-              Recommencer
+              {t.account.restart}
             </button>
             <button
               type="button"
@@ -399,7 +390,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               onClick={() => setStep('mapping')}
               className="ml-auto rounded-lg bg-primary-strong px-5 py-2.5 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
             >
-              Continuer →
+              {t.account.continueButton}
             </button>
           </div>
         </div>
@@ -409,61 +400,59 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
         <div className="flex flex-col gap-5">
           <div>
             <p className="text-sm text-muted">
-              Fichier : <span className="text-ink">{fileName}</span> — {parsedFile.rows.length} ligne
-              {parsedFile.rows.length > 1 ? 's' : ''} détectée{parsedFile.rows.length > 1 ? 's' : ''}
-              {' '}· Compte : <span className="text-ink">{selectedAccountName}</span>.
+              {t.fileLabel} <span className="text-ink">{fileName}</span> — {t.mapping.rowsDetected(parsedFile.rows.length)}
+              {' '}
+              {t.mapping.accountLabel} <span className="text-ink">{selectedAccountName}</span>.
             </p>
-            <p className="mt-1 text-xs text-muted">
-              Associe les colonnes du fichier à Date, Description et Montant si la détection
-              automatique s'est trompée.
-            </p>
+            <p className="mt-1 text-xs text-muted">{t.mapping.hint}</p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <ColumnSelect
-              label="Colonne Date"
+              label={t.mapping.dateColumn}
               headers={parsedFile.headers}
               value={mapping.dateColumn}
               onChange={(v) => updateMapping({ dateColumn: v })}
             />
             <ColumnSelect
-              label="Colonne Description (optionnel)"
+              label={t.mapping.descriptionColumn}
               headers={parsedFile.headers}
               value={mapping.descriptionColumn}
               onChange={(v) => updateMapping({ descriptionColumn: v })}
               allowNone
+              noneLabel={t.mapping.noneOption}
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <ColumnSelect
-              label="Colonne Catégorie (optionnel)"
+              label={t.mapping.categoryColumn}
               headers={parsedFile.headers}
               value={mapping.categoryColumn}
               onChange={(v) => updateMapping({ categoryColumn: v })}
               allowNone
+              noneLabel={t.mapping.noneOption}
             />
             <p className="self-end pb-2 text-xs text-muted">
-              Sans colonne (ou si elle est vide), SaveUp devine la catégorie à partir du nom du
-              commerçant — repérable au badge <span className="text-accent">suggéré</span>{' '}
-              ci-dessous. Recatégorise après l'import si besoin.
+              {t.mapping.categoryHintPrefix} <span className="text-accent">{t.mapping.suggestedBadge}</span>{' '}
+              {t.mapping.categoryHintSuffix}
             </p>
           </div>
 
           <div>
-            <p className="mb-2 text-sm text-muted">Montant</p>
+            <p className="mb-2 text-sm text-muted">{t.mapping.amountLabel}</p>
             <div className="flex flex-wrap gap-2">
               <ToggleButton
                 active={mapping.amountMode === 'single'}
                 onClick={() => updateMapping({ amountMode: 'single' as AmountMode })}
               >
-                Une seule colonne Montant
+                {t.mapping.singleMode}
               </ToggleButton>
               <ToggleButton
                 active={mapping.amountMode === 'split'}
                 onClick={() => updateMapping({ amountMode: 'split' as AmountMode })}
               >
-                Débit et Crédit séparés
+                {t.mapping.splitMode}
               </ToggleButton>
             </div>
           </div>
@@ -471,25 +460,25 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
           {mapping.amountMode === 'single' ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <ColumnSelect
-                label="Colonne Montant"
+                label={t.mapping.amountColumn}
                 headers={parsedFile.headers}
                 value={mapping.amountColumn}
                 onChange={(v) => updateMapping({ amountColumn: v })}
               />
               <div>
-                <p className="mb-2 text-sm text-muted">Dans cette colonne, les dépenses sont :</p>
+                <p className="mb-2 text-sm text-muted">{t.mapping.signQuestion}</p>
                 <div className="flex flex-wrap gap-2">
                   <ToggleButton
                     active={mapping.expenseSign === 'negative'}
                     onClick={() => updateMapping({ expenseSign: 'negative' as ExpenseSign })}
                   >
-                    Négatives (-45,00)
+                    {t.mapping.negativeOption}
                   </ToggleButton>
                   <ToggleButton
                     active={mapping.expenseSign === 'positive'}
                     onClick={() => updateMapping({ expenseSign: 'positive' as ExpenseSign })}
                   >
-                    Positives (45,00)
+                    {t.mapping.positiveOption}
                   </ToggleButton>
                 </div>
               </div>
@@ -497,17 +486,18 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               <ColumnSelect
-                label="Colonne Débit (sorties d'argent)"
+                label={t.mapping.debitColumn}
                 headers={parsedFile.headers}
                 value={mapping.debitColumn}
                 onChange={(v) => updateMapping({ debitColumn: v })}
               />
               <ColumnSelect
-                label="Colonne Crédit (entrées d'argent, optionnel)"
+                label={t.mapping.creditColumn}
                 headers={parsedFile.headers}
                 value={mapping.creditColumn}
                 onChange={(v) => updateMapping({ creditColumn: v })}
                 allowNone
+                noneLabel={t.mapping.noneOption}
               />
             </div>
           )}
@@ -515,30 +505,29 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
           <div className="border-t border-overlay/10 pt-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm text-ink">
-                <span className="font-semibold text-success">{selectedCount}</span> sélectionnée
-                {selectedCount > 1 ? 's' : ''} · {formatCurrency(selectedTotal)}
+                <span className="font-semibold text-success">{selectedCount}</span> {t.mapping.selectedLabel(selectedCount)} · {formatMoney(selectedTotal)}
                 {duplicateCount > 0 && (
-                  <span className="text-muted"> · {duplicateCount} doublon{duplicateCount > 1 ? 's' : ''} détecté{duplicateCount > 1 ? 's' : ''} (non sélectionné{duplicateCount > 1 ? 's' : ''})</span>
+                  <span className="text-muted"> · {t.mapping.duplicatesSummary(duplicateCount)}</span>
                 )}
                 {skippedCount > 0 && (
-                  <span className="text-muted"> · {skippedCount} ignorée{skippedCount > 1 ? 's' : ''}</span>
+                  <span className="text-muted"> · {t.mapping.skippedSummary(skippedCount)}</span>
                 )}
               </p>
-              {dedupLoading && <span className="text-xs text-muted">Vérification des doublons...</span>}
+              {dedupLoading && <span className="text-xs text-muted">{t.mapping.checkingDuplicates}</span>}
               <div className="flex gap-2 text-xs">
                 <button
                   type="button"
                   onClick={() => setSelected(new Set(importRows.filter((r) => !r.skipReason).map((r) => r.index)))}
                   className="text-accent hover:text-accent/80"
                 >
-                  Tout sélectionner
+                  {t.mapping.selectAll}
                 </button>
                 <button
                   type="button"
                   onClick={() => setSelected(new Set())}
                   className="text-accent hover:text-accent/80"
                 >
-                  Tout désélectionner
+                  {t.mapping.deselectAll}
                 </button>
               </div>
             </div>
@@ -548,11 +537,11 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
                 <thead className="sticky top-0 bg-surface text-xs text-muted">
                   <tr className="border-b border-overlay/10">
                     <th className="w-10 px-3 py-2"></th>
-                    <th className="px-3 py-2 font-medium">Date</th>
-                    <th className="px-3 py-2 font-medium">Description</th>
-                    <th className="px-3 py-2 font-medium">Catégorie</th>
-                    <th className="px-3 py-2 text-right font-medium">Montant</th>
-                    <th className="px-3 py-2 font-medium">Statut</th>
+                    <th className="px-3 py-2 font-medium">{t.mapping.tableDate}</th>
+                    <th className="px-3 py-2 font-medium">{t.mapping.tableDescription}</th>
+                    <th className="px-3 py-2 font-medium">{t.mapping.tableCategory}</th>
+                    <th className="px-3 py-2 text-right font-medium">{t.mapping.tableAmount}</th>
+                    <th className="px-3 py-2 font-medium">{t.mapping.tableStatus}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -577,23 +566,23 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
                       <td className="px-3 py-2">
                         {!row.skipReason && (
                           <span className="text-ink">
-                            {row.category}
+                            {translateCategoryLabel(row.category, lang)}
                             {row.categoryGuessed && (
-                              <span className="ml-1.5 text-xs text-accent">suggéré</span>
+                              <span className="ml-1.5 text-xs text-accent">{t.mapping.suggestedBadge}</span>
                             )}
                           </span>
                         )}
                       </td>
                       <td className={`px-3 py-2 text-right ${row.skipReason ? 'text-muted' : 'text-ink'}`}>
-                        {row.amount !== null ? formatCurrency(row.amount) : '—'}
+                        {row.amount !== null ? formatMoney(row.amount) : '—'}
                       </td>
                       <td className="px-3 py-2">
                         {row.skipReason ? (
                           <span className="text-xs text-muted">{SKIP_LABELS[row.skipReason]}</span>
                         ) : row.isDuplicate ? (
-                          <span className="text-xs text-accent">doublon possible</span>
+                          <span className="text-xs text-accent">{t.mapping.duplicateBadge}</span>
                         ) : (
-                          <span className="text-xs text-success">✓ prêt</span>
+                          <span className="text-xs text-success">{t.mapping.readyBadge}</span>
                         )}
                       </td>
                     </tr>
@@ -603,8 +592,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
             </div>
             {importRows.length > PREVIEW_LIMIT && (
               <p className="mt-2 text-xs text-muted">
-                Aperçu limité à {PREVIEW_LIMIT} lignes — les {importRows.length - PREVIEW_LIMIT} autres
-                sont incluses dans le total et la sélection ci-dessus.
+                {t.mapping.previewLimited(PREVIEW_LIMIT, importRows.length - PREVIEW_LIMIT)}
               </p>
             )}
           </div>
@@ -615,7 +603,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               onClick={resetAll}
               className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
             >
-              Recommencer
+              {t.mapping.restart}
             </button>
             <button
               type="button"
@@ -623,16 +611,10 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               onClick={handleImport}
               className="ml-auto rounded-lg bg-primary-strong px-5 py-2.5 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
             >
-              {importing
-                ? 'Import en cours...'
-                : `Importer ${selectedCount} transaction${selectedCount > 1 ? 's' : ''}`}
+              {importing ? t.mapping.importing : t.mapping.importButton(selectedCount)}
             </button>
           </div>
-          {!isMappingValid && (
-            <p className="text-xs text-accent">
-              Choisis au moins une colonne Date et une colonne Montant (ou Débit) pour continuer.
-            </p>
-          )}
+          {!isMappingValid && <p className="text-xs text-accent">{t.mapping.invalidHint}</p>}
         </div>
       )}
 
@@ -641,9 +623,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
           {result.error ? (
             <>
               <p className="text-sm text-red-300">
-                {result.imported > 0
-                  ? `${result.imported} transaction${result.imported > 1 ? 's ont' : ' a'} été importée${result.imported > 1 ? 's' : ''} avant qu'une erreur survienne :`
-                  : "L'import a échoué :"}
+                {result.imported > 0 ? t.result.partialError(result.imported) : t.result.failed}
               </p>
               <p className="rounded-lg border border-red-900/50 bg-red-950/50 px-3 py-2 text-sm text-red-300">
                 {result.error}
@@ -651,14 +631,11 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
             </>
           ) : result.imported === 0 ? (
             <p className="rounded-lg border border-red-900/50 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-              Aucune transaction n'a été importée. Réessaie — si ça persiste, reconnecte-toi et
-              recommence l'import.
+              {t.result.zeroImported}
             </p>
           ) : (
             <p className="text-sm text-ink">
-              <span className="text-success">✓</span> {result.imported} transaction
-              {result.imported > 1 ? 's' : ''} importée{result.imported > 1 ? 's' : ''} avec succès,
-              catégorisée{result.imported > 1 ? 's' : ''} automatiquement quand possible.
+              <span className="text-success">✓</span> {t.result.success(result.imported)}
             </p>
           )}
           <div className="flex gap-2">
@@ -667,14 +644,14 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               onClick={resetAll}
               className="rounded-lg border border-overlay/10 px-4 py-2 text-sm text-muted hover:text-ink"
             >
-              Importer un autre fichier
+              {t.result.importAnother}
             </button>
             <button
               type="button"
               onClick={handleClose}
               className="rounded-lg bg-primary-strong px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
             >
-              Fermer
+              {COMMON[lang].app.close}
             </button>
           </div>
         </div>

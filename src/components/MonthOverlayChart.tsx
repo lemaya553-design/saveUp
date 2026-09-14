@@ -1,5 +1,9 @@
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatCurrency } from '../lib/format'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
+import { STATISTIQUES } from '../lib/i18n/statistiques'
+import type { Lang } from '../lib/i18n/language'
 import type { CategoryMomChange } from '../lib/statistics'
 
 // Mirrors BudgetVsActualChart's convention exactly, translated from a
@@ -65,12 +69,14 @@ function TrackTopLabel({
   width,
   index,
   entries,
+  formatMoney,
 }: {
   x?: number | string
   y?: number | string
   width?: number | string
   index?: number
   entries: CategoryMomChange[]
+  formatMoney: (amount: number) => string
 }) {
   if (x === undefined || y === undefined || width === undefined || index === undefined) return null
   const entry = entries[index]
@@ -87,7 +93,7 @@ function TrackTopLabel({
       fontSize={12}
       fontWeight={600}
     >
-      {formatCurrency(entry.lastMonth)}
+      {formatMoney(entry.lastMonth)}
     </text>
   )
 }
@@ -95,18 +101,23 @@ function TrackTopLabel({
 function OverlayTooltip({
   active,
   payload,
+  lang,
+  formatMoney,
 }: {
   active?: boolean
   payload?: { payload: CategoryMomChange }[]
+  lang: Lang
+  formatMoney: (amount: number) => string
 }) {
   if (!active || !payload?.length) return null
   const entry = payload[0].payload
   const over = entry.thisMonth > entry.lastMonth
+  const t = STATISTIQUES[lang].monthOverlayChart
   return (
     <div className="glass rounded-lg px-3 py-2 text-xs shadow-lg shadow-black/40">
-      <p className="font-semibold text-ink">{entry.category}</p>
-      <p className="mt-1 text-muted">Mois dernier : {formatCurrency(entry.lastMonth)}</p>
-      <p className={over ? 'text-red-400' : 'text-ink'}>Ce mois-ci : {formatCurrency(entry.thisMonth)}</p>
+      <p className="font-semibold text-ink">{translateCategoryLabel(entry.category, lang)}</p>
+      <p className="mt-1 text-muted">{t.tooltipLastMonth(formatMoney(entry.lastMonth))}</p>
+      <p className={over ? 'text-red-400' : 'text-ink'}>{t.tooltipThisMonth(formatMoney(entry.thisMonth))}</p>
     </div>
   )
 }
@@ -117,12 +128,12 @@ function OverlayTooltip({
 // sorted by the caller (biggest last-month spend first, per the page's
 // ordering choice).
 export function MonthOverlayChart({ entries }: { entries: CategoryMomChange[] }) {
+  const { lang } = useLanguage()
+  const t = STATISTIQUES[lang].monthOverlayChart
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
+
   if (entries.length === 0) {
-    return (
-      <p className="text-sm text-muted">
-        Pas assez de données du mois dernier pour comparer, pour l'instant.
-      </p>
-    )
+    return <p className="text-sm text-muted">{t.empty}</p>
   }
 
   const chartWidth = Math.max(280, entries.length * MIN_COLUMN_WIDTH)
@@ -136,19 +147,20 @@ export function MonthOverlayChart({ entries }: { entries: CategoryMomChange[] })
               <YAxis hide domain={[0, (dataMax: number) => dataMax * 1.15]} />
               <XAxis
                 dataKey="category"
+                tickFormatter={(v: string) => translateCategoryLabel(v, lang)}
                 tick={{ fill: 'var(--color-ink)', fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
                 interval={0}
               />
               <Tooltip
-                content={<OverlayTooltip />}
+                content={<OverlayTooltip lang={lang} formatMoney={formatMoney} />}
                 cursor={{ fill: 'color-mix(in srgb, var(--color-overlay) 5%, transparent)' }}
               />
               <Bar
                 dataKey="lastMonth"
                 shape={(props: OverlayBarProps) => <OverlayBar {...props} />}
-                label={(props) => <TrackTopLabel {...props} entries={entries} />}
+                label={(props) => <TrackTopLabel {...props} entries={entries} formatMoney={formatMoney} />}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -158,15 +170,15 @@ export function MonthOverlayChart({ entries }: { entries: CategoryMomChange[] })
       <div className="mt-2 flex items-center justify-center gap-4 text-xs text-muted">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: TRACK_COLOR }} />
-          Mois dernier
+          {t.lastMonth}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: FILL_COLOR }} />
-          Ce mois-ci
+          {t.thisMonth}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: OVER_COLOR }} />
-          Ce mois-ci (dépassé)
+          {t.thisMonthOver}
         </span>
       </div>
     </div>

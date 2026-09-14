@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
+import { useLanguage } from './useLanguage'
+import { COMMON } from '../lib/i18n/common'
 
 export interface FixedExpense {
   id: string
@@ -11,6 +13,7 @@ export interface FixedExpense {
 
 export function useFixedExpenses() {
   const { user } = useAuth()
+  const { lang } = useLanguage()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -51,12 +54,12 @@ export function useFixedExpenses() {
         .select()
         .single()
       if (insertError || !data) {
-        setError(insertError?.message ?? 'Insert failed')
+        setError(insertError?.message ?? COMMON[lang].app.saveFailed)
         return
       }
       setFixedExpenses((prev) => [...prev, data])
     },
-    [userId],
+    [userId, lang],
   )
 
   const updateFixedExpense = useCallback(

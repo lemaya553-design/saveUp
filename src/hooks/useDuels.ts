@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Duel, DuelDurationDays, DuelParticipant } from '../lib/duels'
 import { useAuth } from './useAuth'
+import { useLanguage } from './useLanguage'
+import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
 
 interface InvitePreview {
   duelId: string
@@ -28,6 +30,7 @@ function toParticipant(row: {
 
 export function useDuels() {
   const { user } = useAuth()
+  const { lang } = useLanguage()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -139,12 +142,12 @@ export function useDuels() {
         p_display_name: displayName,
       })
       if (rpcError || !data?.[0]) {
-        return { inviteToken: null, error: rpcError?.message ?? 'Impossible de créer le duel.' }
+        return { inviteToken: null, error: rpcError?.message ?? HOOK_ERRORS[lang].duels.createFailed }
       }
       await load()
       return { inviteToken: data[0].invite_token, error: null }
     },
-    [load],
+    [load, lang],
   )
 
   const getInvitePreview = useCallback(
@@ -180,12 +183,12 @@ export function useDuels() {
         p_share_goal_name: shareGoalName,
       })
       if (rpcError || !data?.[0]) {
-        return { duelId: null, error: rpcError?.message ?? "Impossible d'accepter ce duel." }
+        return { duelId: null, error: rpcError?.message ?? HOOK_ERRORS[lang].duels.acceptFailed }
       }
       await load()
       return { duelId: data[0].duel_id, error: null }
     },
-    [load],
+    [load, lang],
   )
 
   const abandonDuel = useCallback(

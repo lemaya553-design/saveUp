@@ -9,8 +9,10 @@ import { useClaimedBadges } from '../hooks/useClaimedBadges'
 import { useLoginStreak } from '../hooks/useLoginStreak'
 import { useIncome } from '../hooks/useIncome'
 import { useSubscription } from '../hooks/useSubscription'
-import { formatCurrency } from '../lib/format'
+import { useLanguage } from '../hooks/useLanguage'
+import { formatCurrency, formatCurrencyEN } from '../lib/format'
 import { isAtLeast, splitByLimit } from '../lib/plans'
+import { STATISTIQUES } from '../lib/i18n/statistiques'
 import { TIER_ICONS, TIER_UNLOCKED_CLASS } from './rewardIcons'
 import {
   REWARD_TIERS,
@@ -38,6 +40,9 @@ export function RecompensesTab() {
   const streak = useLoginStreak()
   const income = useIncome()
   const subscription = useSubscription()
+  const { lang } = useLanguage()
+  const t = STATISTIQUES[lang].recompenses
+  const formatMoney = lang === 'fr' ? formatCurrency : formatCurrencyEN
 
   const loading = goals.loading || contributions.loading || claimedBadges.loading || income.loading
   const error = goals.error || contributions.error || claimedBadges.error
@@ -63,8 +68,8 @@ export function RecompensesTab() {
     [totalCurrentAmount, totalTargetAmount, contributions.contributions],
   )
   const savingsExplanations = useMemo(
-    () => getSavingsScoreExplanations(savingsBreakdown),
-    [savingsBreakdown],
+    () => getSavingsScoreExplanations(savingsBreakdown, lang),
+    [savingsBreakdown, lang],
   )
 
   // A tier the user has earned by progress but whose minPlan they don't have
@@ -110,7 +115,7 @@ export function RecompensesTab() {
   }
 
   if (loading) {
-    return <p className="text-sm text-muted">Chargement...</p>
+    return <p className="text-sm text-muted">{t.loading}</p>
   }
 
   const hasGoal = goals.goals.length > 0
@@ -131,13 +136,9 @@ export function RecompensesTab() {
           🔥
         </div>
         <div>
-          <p className="text-2xl font-bold text-ink">
-            {streak.streak} jour{streak.streak > 1 ? 's' : ''} de suite
-          </p>
+          <p className="text-2xl font-bold text-ink">{t.streak.days(streak.streak)}</p>
           <p className="text-sm text-muted">
-            {streak.streak > 0
-              ? 'Reviens demain pour garder ta série !'
-              : "Reviens demain pour commencer une série."}
+            {streak.streak > 0 ? t.streak.keepGoing : t.streak.startOne}
           </p>
         </div>
       </div>
@@ -159,11 +160,11 @@ export function RecompensesTab() {
             })()}
           </div>
           <div className="flex-1">
-            <p className="font-semibold text-ink">{STARTER_BADGE.name}</p>
+            <p className="font-semibold text-ink">{STARTER_BADGE.name[lang]}</p>
             <p className="text-sm text-muted">
               {starterClaimed || justClaimed.has(STARTER_BADGE.id)
-                ? STARTER_BADGE.description
-                : 'Ton premier badge est prêt.'}
+                ? STARTER_BADGE.description[lang]
+                : t.starterBadge.readyDefault}
             </p>
           </div>
           {!starterClaimed && !justClaimed.has(STARTER_BADGE.id) && (
@@ -172,7 +173,7 @@ export function RecompensesTab() {
               onClick={() => handleClaim(STARTER_BADGE.id)}
               className="shrink-0 rounded-full bg-primary-strong px-4 py-2 text-sm font-semibold text-white transition-all hover:brightness-110"
             >
-              Réclamer
+              {t.starterBadge.claim}
             </button>
           )}
         </div>
@@ -180,30 +181,27 @@ export function RecompensesTab() {
 
       {!hasGoal && (
         <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm">
-          <p className="text-ink">Fixe un objectif d'épargne pour commencer à débloquer des badges.</p>
+          <p className="text-ink">{t.noGoal.text}</p>
           <Link
             to="/epargne/objectifs"
             className="whitespace-nowrap rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
           >
-            Fixer un objectif
+            {t.noGoal.cta}
           </Link>
         </div>
       )}
 
       <div className="grid gap-6">
-        <Card
-          title="Score d'épargne"
-          hint="Basé sur le montant épargné et la régularité de tes contributions."
-        >
+        <Card title={t.savingsScore.title} hint={t.savingsScore.hint}>
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-6">
             <div className="flex flex-col items-center">
-              <ScoreGauge score={savingsBreakdown.score} label="Score d'épargne" />
-              <p className="mt-1 text-xs uppercase tracking-wide text-muted">Total épargné</p>
-              <p className="text-2xl font-bold text-success">{formatCurrency(totalCurrentAmount)}</p>
+              <ScoreGauge score={savingsBreakdown.score} label={t.savingsScore.title} />
+              <p className="mt-1 text-xs uppercase tracking-wide text-muted">{t.savingsScore.totalSaved}</p>
+              <p className="text-2xl font-bold text-success">{formatMoney(totalCurrentAmount)}</p>
               <p className="mt-2 max-w-[180px] text-center text-xs text-muted">
-                Reflète ton montant épargné et ta régularité.{' '}
+                {t.savingsScore.caption}{' '}
                 <Link to="/dashboard" className="text-accent hover:text-accent/80">
-                  Voir ton score de santé →
+                  {t.savingsScore.seeHealthScore}
                 </Link>
               </p>
             </div>
@@ -227,14 +225,14 @@ export function RecompensesTab() {
           <div className="mt-6 border-t border-overlay/10 pt-4">
             {activeGoals.length > 1 && (
               <label className="mb-3 flex items-center justify-end gap-2 text-xs text-muted">
-                Voir :
+                {t.goalSelector.label}
                 <select
                   value={selectedGoalId}
                   onChange={(e) => setSelectedGoalId(e.target.value)}
                   className="rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-1 text-xs text-ink focus:border-primary focus:outline-none"
                 >
                   <option value="" className="bg-surface">
-                    Tous les objectifs
+                    {t.goalSelector.allGoals}
                   </option>
                   {activeGoals.map((g) => (
                     <option key={g.id} value={g.id} className="bg-surface">
@@ -252,53 +250,49 @@ export function RecompensesTab() {
                 const badgeAlreadyUnlocked = unlockedIds.has('goal-complete')
 
                 return goalComplete ? (
-                  <p className="text-sm text-success">🎉 « {selectedGoal.name} » est complété !</p>
+                  <p className="text-sm text-success">{t.goalComplete(selectedGoal.name)}</p>
                 ) : (
                   <>
                     <div className="mb-1 flex items-center justify-between text-sm">
-                      <span className="text-ink">Progression de « {selectedGoal.name} »</span>
+                      <span className="text-ink">{t.goalProgress(selectedGoal.name)}</span>
                       <span className="text-muted">{Math.round(goalRequirement.progressPct)}%</span>
                     </div>
                     <ProgressBar value={goalRequirement.progressPct} colorClass="bg-primary" />
                     <p className="mt-2 text-xs text-muted">
-                      Il te manque {formatCurrency(goalRequirement.missingAmount)} pour compléter «{' '}
-                      {selectedGoal.name} »
-                      {badgeAlreadyUnlocked ? '.' : ' et débloquer « Objectif atteint ».'}
+                      {t.missingToComplete(formatMoney(goalRequirement.missingAmount), selectedGoal.name)}
+                      {badgeAlreadyUnlocked ? '.' : t.andUnlockGoalBadge}
                     </p>
                   </>
                 )
               })()
             ) : allUnlocked ? (
-              <p className="text-sm text-success">🎉 Tous les badges sont débloqués !</p>
+              <p className="text-sm text-success">{t.allUnlocked}</p>
             ) : nextTierProgress ? (
               <>
                 <div className="mb-1 flex items-center justify-between text-sm">
-                  <span className="text-ink">Prochain palier : {nextTierProgress.tier.name}</span>
+                  <span className="text-ink">{t.nextTier(nextTierProgress.tier.name[lang])}</span>
                   <span className="text-muted">{Math.round(nextTierProgress.progressPct)}%</span>
                 </div>
                 <ProgressBar value={nextTierProgress.progressPct} colorClass="bg-primary" />
                 <p className="mt-2 text-xs text-muted">
-                  Il te manque {formatCurrency(nextTierProgress.missingAmount)} pour débloquer «{' '}
-                  {nextTierProgress.tier.name} »
-                  {nextTierProgress.goalName ? ` (sur « ${nextTierProgress.goalName} »)` : ''}.
+                  {t.missingForTier(formatMoney(nextTierProgress.missingAmount), nextTierProgress.tier.name[lang])}
+                  {nextTierProgress.goalName ? t.onGoal(nextTierProgress.goalName) : ''}.
                 </p>
               </>
             ) : (
-              <p className="text-sm text-muted">
-                Fixe un objectif d'épargne pour voir ta progression vers le prochain palier.
-              </p>
+              <p className="text-sm text-muted">{t.setGoalToSeeProgress}</p>
             )}
           </div>
         </Card>
 
         <div>
           <div className="mb-4 flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold text-ink">Tes badges</h2>
+            <h2 className="text-lg font-semibold text-ink">{t.yourBadges}</h2>
             <p className="text-xs text-muted">
-              {claimedCount}/{REWARD_TIERS.length} réclamés
+              {t.claimedCount(claimedCount, REWARD_TIERS.length)}
               {readyToClaimCount > 0 && (
                 <span className="ml-1.5 font-semibold text-accent">
-                  · {readyToClaimCount} à réclamer !
+                  {t.toClaimCount(readyToClaimCount)}
                 </span>
               )}
             </p>
@@ -328,33 +322,33 @@ export function RecompensesTab() {
                     <Icon className="h-8 w-8" />
                   </div>
                   <p className={`text-sm font-semibold ${revealed ? 'text-ink' : 'text-muted'}`}>
-                    {tier.name}
+                    {tier.name[lang]}
                   </p>
                   {revealed ? (
-                    <p className="text-xs text-muted">{tier.description}</p>
+                    <p className="text-xs text-muted">{tier.description[lang]}</p>
                   ) : planLocked ? (
                     <Link to="/tarifs" className="text-xs font-medium text-accent hover:text-accent/80">
-                      Passer à Standard →
+                      {t.goToStandard}
                     </Link>
                   ) : earned ? (
                     <>
-                      <p className="text-xs font-semibold text-accent">Badge mérité !</p>
+                      <p className="text-xs font-semibold text-accent">{t.badgeEarned}</p>
                       <button
                         type="button"
                         onClick={() => handleClaim(tier.id)}
                         className="mt-1 rounded-full bg-primary-strong px-3 py-1 text-xs font-semibold text-white transition-all hover:brightness-110"
                       >
-                        Réclamer
+                        {t.claim}
                       </button>
                     </>
                   ) : requirement ? (
                     <p className="text-xs font-medium text-accent">
-                      Il manque {formatCurrency(requirement.missingAmount)}
+                      {t.missingAmount(formatMoney(requirement.missingAmount))}
                     </p>
                   ) : (
-                    <p className="text-xs text-muted">Complète un objectif actif</p>
+                    <p className="text-xs text-muted">{t.completeActiveGoal}</p>
                   )}
-                  {!earned && <p className="text-xs text-muted">🔒 {planLocked ? 'Standard' : 'Verrouillé'}</p>}
+                  {!earned && <p className="text-xs text-muted">🔒 {planLocked ? t.standard : t.locked}</p>}
                 </div>
               )
             })}
@@ -366,8 +360,8 @@ export function RecompensesTab() {
           className="glass flex items-center justify-between rounded-2xl p-5 shadow-lg shadow-black/30 transition-colors hover:bg-overlay/5"
         >
           <div>
-            <p className="font-semibold text-ink">Continuer d'épargner</p>
-            <p className="text-sm text-muted">Ajoute une contribution pour progresser vers ton prochain badge.</p>
+            <p className="font-semibold text-ink">{t.continueSaving}</p>
+            <p className="text-sm text-muted">{t.continueSavingHint}</p>
           </div>
           <span className="text-accent">→</span>
         </Link>

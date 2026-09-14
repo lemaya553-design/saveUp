@@ -1,4 +1,5 @@
 import { getScoreColorClass } from '../lib/financialHealth'
+import { useLanguage } from '../hooks/useLanguage'
 
 const RADIUS = 80
 const ARC_LENGTH = Math.PI * RADIUS
@@ -6,18 +7,22 @@ const ARC_PATH = `M 20 100 A ${RADIUS} ${RADIUS} 0 0 1 180 100`
 
 export function ScoreGauge({
   score,
-  label = 'Score de santé financière',
+  label,
 }: {
   score: number
   label?: string
 }) {
+  const { lang } = useLanguage()
+  const resolvedLabel = label ?? (lang === 'fr' ? 'Score de santé financière' : 'Financial health score')
   const clamped = Math.min(100, Math.max(0, score))
   const offset = ARC_LENGTH * (1 - clamped / 100)
   const colorClass = getScoreColorClass(clamped)
+  const ariaLabel =
+    lang === 'fr' ? `${resolvedLabel} : ${clamped} sur 100` : `${resolvedLabel}: ${clamped} out of 100`
 
   return (
     <div className="relative mx-auto w-full max-w-[220px]">
-      <svg viewBox="0 0 200 110" className="w-full" role="img" aria-label={`${label} : ${clamped} sur 100`}>
+      <svg viewBox="0 0 200 110" className="w-full" role="img" aria-label={ariaLabel}>
         <path
           d={ARC_PATH}
           fill="none"
