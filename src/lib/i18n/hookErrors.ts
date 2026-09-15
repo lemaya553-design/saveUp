@@ -17,12 +17,19 @@ export interface HookErrorsContent {
     cannotDeleteFallback: (name: string) => string
   }
   duels: {
-    // Only the hardcoded fallbacks used when the RPC itself didn't return an
-    // rpcError.message — most real duel error text comes from Postgres
-    // RAISE EXCEPTION strings server-side and is deliberately left untranslated
-    // (see supabase/schema.sql), passed through as-is.
+    // Generic fallbacks when the RPC error doesn't match one of the known
+    // codes below (or has no message at all).
     createFailed: string
     acceptFailed: string
+    declineFailed: string
+    // Exact matches against the short codes raised by create_duel_invite /
+    // accept_duel_invite_by_id / decline_duel_invite (supabase/schema.sql) —
+    // see lib/duels.ts's mapDuelErrorCode.
+    invalidEmail: string
+    inviteeNotFound: string
+    cannotInviteSelf: string
+    goalNotFound: string
+    inviteNotFound: string
   }
   savingsGoals: {
     notSignedIn: string
@@ -49,6 +56,12 @@ export const HOOK_ERRORS: Record<Lang, HookErrorsContent> = {
     duels: {
       createFailed: 'Impossible de créer le duel.',
       acceptFailed: "Impossible d'accepter ce duel.",
+      declineFailed: "Impossible de refuser cette invitation.",
+      invalidEmail: "Cette adresse courriel n'est pas valide.",
+      inviteeNotFound: 'Aucun compte SaveUp ne correspond à ce courriel.',
+      cannotInviteSelf: "Tu ne peux pas t'inviter toi-même.",
+      goalNotFound: 'Objectif introuvable.',
+      inviteNotFound: 'Cette invitation est introuvable ou a déjà été traitée.',
     },
     savingsGoals: {
       notSignedIn: 'Non connecté.',
@@ -74,6 +87,12 @@ export const HOOK_ERRORS: Record<Lang, HookErrorsContent> = {
     duels: {
       createFailed: "Couldn't create the duel.",
       acceptFailed: "Couldn't accept this duel.",
+      declineFailed: "Couldn't decline this invite.",
+      invalidEmail: "That email address isn't valid.",
+      inviteeNotFound: 'No SaveUp account matches that email.',
+      cannotInviteSelf: "You can't invite yourself.",
+      goalNotFound: 'Goal not found.',
+      inviteNotFound: 'This invite could not be found, or was already handled.',
     },
     savingsGoals: {
       notSignedIn: 'Not signed in.',

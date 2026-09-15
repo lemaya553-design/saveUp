@@ -452,6 +452,7 @@ export interface Database {
           duration_days: number
           invite_token: string
           invite_expires_at: string
+          invited_user_id: string | null
           started_at: string | null
           ends_at: string | null
           ended_reason: string | null
@@ -471,6 +472,7 @@ export interface Database {
           duration_days: number
           invite_token?: string
           invite_expires_at: string
+          invited_user_id?: string | null
           started_at?: string | null
           ends_at?: string | null
           ended_reason?: string | null
@@ -485,6 +487,7 @@ export interface Database {
           duration_days?: number
           invite_token?: string
           invite_expires_at?: string
+          invited_user_id?: string | null
           started_at?: string | null
           ends_at?: string | null
           ended_reason?: string | null
@@ -575,6 +578,28 @@ export interface Database {
           p_share_goal_name?: boolean
         }
         Returns: { duel_id: string }[]
+      }
+      create_duel_invite: {
+        Args: {
+          p_goal_id: string
+          p_duration_days: number
+          p_display_name: string
+          p_invitee_email: string
+        }
+        Returns: { duel_id: string }[]
+      }
+      accept_duel_invite_by_id: {
+        Args: {
+          p_duel_id: string
+          p_goal_id: string
+          p_display_name: string
+          p_share_goal_name?: boolean
+        }
+        Returns: { duel_id: string }[]
+      }
+      decline_duel_invite: {
+        Args: { p_duel_id: string }
+        Returns: undefined
       }
       abandon_duel: {
         Args: { p_duel_id: string }

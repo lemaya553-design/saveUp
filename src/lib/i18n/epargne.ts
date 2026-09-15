@@ -57,7 +57,6 @@ export interface EpargneContent {
     behindTarget: (gap: string) => string
     consistency: (done: number, total: number) => string
     duelActiveLink: string
-    startDuelButton: string
     wonDaysToast: (delta: number) => string
   }
   addGoalCard: {
@@ -191,17 +190,16 @@ export interface EpargneContent {
     interestLabel: string
   }
   duelsTab: {
-    linkCopied: string
     emptyTitle: string
     emptyDescription: string
-    emptyAction: string
+    createDuelButton: string
     activeSection: string
+    receivedSection: string
     pastSection: string
   }
   duelCard: {
     statusLabel: Record<'pending' | 'active' | 'completed' | 'abandoned', string>
-    inviteSent: (days: number) => string
-    copyInviteLink: string
+    inviteSentWaiting: string
     you: string
     leadingSuffix: string
     opponentFallback: string
@@ -214,23 +212,33 @@ export interface EpargneContent {
     abandonDuelButton: string
     timeRemaining: (label: string) => string
     duelOver: string
+    invitedYouFor: (opponentName: string, days: number) => string
+    accept: string
+    decline: string
+    accepting: string
+    declining: string
+    noGoalsToAccept: { before: string; linkText: string; after: string }
   }
   createDuelModal: {
     modalTitle: string
     nameRequired: string
     createFailedFallback: string
-    sendLinkHint: (days: number) => string
-    copied: string
-    copy: string
-    goalLabelPrefix: string
     durationLabel: string
     daysOption: (d: number) => string
     displayNameLabel: string
     namePlaceholder: string
+    emailLabel: string
+    emailPlaceholder: string
+    invalidEmailFormat: string
+    goalLabel: string
+    chooseGoalOption: string
+    noGoalsAtAll: { before: string; linkText: string; after: string }
+    allGoalsBusy: string
     whatOpponentSeesTitle: string
     whatOpponentSeesBody: string
     creating: string
-    generateLink: string
+    sendInvite: string
+    inviteSentTo: (email: string) => string
   }
   goalPhotoPicker: {
     premiumBadge: string
@@ -343,7 +351,6 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
       behindTarget: (gap) => `≈ ${gap} de retard sur ta date visée`,
       consistency: (done, total) => `Régularité (${done}/${total} dernières semaines)`,
       duelActiveLink: '⚔ En duel — voir le résultat',
-      startDuelButton: '⚔ Lancer un duel',
       wonDaysToast: (delta) => `Tu viens de gagner ${delta} jour${delta > 1 ? 's' : ''} !`,
     },
     addGoalCard: {
@@ -493,12 +500,11 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
       interestLabel: 'Intérêts gagnés',
     },
     duelsTab: {
-      linkCopied: 'Lien copié.',
       emptyTitle: 'Aucun duel pour l’instant',
-      emptyDescription:
-        "Lance un duel depuis un de tes objectifs d'épargne, dans l'onglet Objectifs, pour affronter un ami.",
-      emptyAction: 'Voir mes objectifs',
+      emptyDescription: 'Défie un ami sur vos objectifs d’épargne respectifs — chacun sur son propre argent.',
+      createDuelButton: 'Créer un duel',
       activeSection: 'En cours',
+      receivedSection: 'Invitations reçues',
       pastSection: 'Terminés',
     },
     duelCard: {
@@ -508,8 +514,7 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
         completed: 'Terminé',
         abandoned: 'Abandonné',
       },
-      inviteSent: (days) => `Invitation envoyée — dès que ton adversaire l'accepte, le duel de ${days} jours commence.`,
-      copyInviteLink: "Copier le lien d'invitation",
+      inviteSentWaiting: 'Invitation envoyée — en attente de réponse.',
       you: 'Toi',
       leadingSuffix: '— en tête',
       opponentFallback: 'Adversaire',
@@ -522,25 +527,42 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
       abandonDuelButton: 'Abandonner le duel',
       timeRemaining: (label) => `${label} restant`,
       duelOver: 'Terminé',
+      invitedYouFor: (opponentName, days) => `${opponentName} t'invite à un duel de ${days} jours.`,
+      accept: 'Accepter',
+      decline: 'Refuser',
+      accepting: 'Acceptation...',
+      declining: 'Refus...',
+      noGoalsToAccept: {
+        before: "Tu n'as pas encore d'objectif d'épargne — ",
+        linkText: 'crées-en un',
+        after: ' avant d’accepter ce duel.',
+      },
     },
     createDuelModal: {
       modalTitle: "Lancer un duel d'épargne",
       nameRequired: 'Un prénom est requis.',
       createFailedFallback: 'Impossible de créer le duel.',
-      sendLinkHint: (days) =>
-        `Envoie ce lien à ton adversaire — dès qu'il l'ouvre et choisit un de ses objectifs, le duel commence pour ${days} jours.`,
-      copied: 'Copié !',
-      copy: 'Copier',
-      goalLabelPrefix: 'Objectif :',
       durationLabel: 'Durée du duel',
       daysOption: (d) => `${d} jours`,
       displayNameLabel: 'Ton prénom (affiché à ton adversaire)',
       namePlaceholder: 'Ex : Alex',
+      emailLabel: 'Courriel de ton adversaire',
+      emailPlaceholder: 'nom@exemple.com',
+      invalidEmailFormat: "Ce courriel n'est pas valide.",
+      goalLabel: 'Ton objectif',
+      chooseGoalOption: '— Choisir —',
+      noGoalsAtAll: {
+        before: "Tu n'as pas encore d'objectif d'épargne — ",
+        linkText: 'crées-en un',
+        after: ' avant de lancer un duel.',
+      },
+      allGoalsBusy: 'Tous tes objectifs sont déjà engagés dans un autre duel.',
       whatOpponentSeesTitle: 'Ce que voit ton adversaire',
       whatOpponentSeesBody:
         'Seulement ton prénom et ton % de progression. Jamais tes montants en dollars, ni le nom de ton objectif.',
-      creating: 'Création...',
-      generateLink: 'Générer le lien',
+      creating: 'Envoi...',
+      sendInvite: "Envoyer l'invitation",
+      inviteSentTo: (email) => `Invitation envoyée à ${email}.`,
     },
     goalPhotoPicker: {
       premiumBadge: "🔒 Photo de l'objectif — Premium",
@@ -646,7 +668,6 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
       behindTarget: (gap) => `≈ ${gap} behind your target date`,
       consistency: (done, total) => `Consistency (${done}/${total} last weeks)`,
       duelActiveLink: '⚔ In a duel — see the result',
-      startDuelButton: '⚔ Start a duel',
       wonDaysToast: (delta) => `You just gained ${delta} day${delta > 1 ? 's' : ''}!`,
     },
     addGoalCard: {
@@ -790,11 +811,11 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
       interestLabel: 'Interest earned',
     },
     duelsTab: {
-      linkCopied: 'Link copied.',
       emptyTitle: 'No duels yet',
-      emptyDescription: 'Start a duel from one of your savings goals, in the Goals tab, to face off against a friend.',
-      emptyAction: 'See my goals',
+      emptyDescription: 'Challenge a friend on your own separate savings goals — each on your own money.',
+      createDuelButton: 'Create a duel',
       activeSection: 'Ongoing',
+      receivedSection: 'Invites received',
       pastSection: 'Finished',
     },
     duelCard: {
@@ -804,8 +825,7 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
         completed: 'Finished',
         abandoned: 'Abandoned',
       },
-      inviteSent: (days) => `Invite sent — as soon as your opponent accepts, the ${days}-day duel starts.`,
-      copyInviteLink: 'Copy invite link',
+      inviteSentWaiting: 'Invite sent — waiting for a reply.',
       you: 'You',
       leadingSuffix: '— leading',
       opponentFallback: 'Opponent',
@@ -818,24 +838,41 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
       abandonDuelButton: 'Abandon the duel',
       timeRemaining: (label) => `${label} left`,
       duelOver: 'Over',
+      invitedYouFor: (opponentName, days) => `${opponentName} is inviting you to a ${days}-day duel.`,
+      accept: 'Accept',
+      decline: 'Decline',
+      accepting: 'Accepting...',
+      declining: 'Declining...',
+      noGoalsToAccept: {
+        before: "You don't have a savings goal yet — ",
+        linkText: 'create one',
+        after: ' before accepting this duel.',
+      },
     },
     createDuelModal: {
       modalTitle: 'Start a savings duel',
       nameRequired: 'A first name is required.',
       createFailedFallback: 'Could not create the duel.',
-      sendLinkHint: (days) =>
-        `Send this link to your opponent — as soon as they open it and pick one of their goals, the duel starts for ${days} days.`,
-      copied: 'Copied!',
-      copy: 'Copy',
-      goalLabelPrefix: 'Goal:',
       durationLabel: 'Duel length',
       daysOption: (d) => `${d} days`,
       displayNameLabel: 'Your first name (shown to your opponent)',
       namePlaceholder: 'E.g. Alex',
+      emailLabel: "Your opponent's email",
+      emailPlaceholder: 'name@example.com',
+      invalidEmailFormat: "That email isn't valid.",
+      goalLabel: 'Your goal',
+      chooseGoalOption: '— Choose —',
+      noGoalsAtAll: {
+        before: "You don't have a savings goal yet — ",
+        linkText: 'create one',
+        after: ' before starting a duel.',
+      },
+      allGoalsBusy: 'All your goals are already committed to another duel.',
       whatOpponentSeesTitle: 'What your opponent sees',
       whatOpponentSeesBody: 'Only your first name and your % progress. Never your dollar amounts, nor your goal name.',
-      creating: 'Creating...',
-      generateLink: 'Generate link',
+      creating: 'Sending...',
+      sendInvite: 'Send invite',
+      inviteSentTo: (email) => `Invite sent to ${email}.`,
     },
     goalPhotoPicker: {
       premiumBadge: '🔒 Goal photo — Premium',

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Duel, DuelDurationDays, DuelParticipant } from '../lib/duels'
+import { mapDuelErrorCode, type Duel, type DuelDurationDays, type DuelParticipant } from '../lib/duels'
 import { useAuth } from './useAuth'
 import { useLanguage } from './useLanguage'
 import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
@@ -130,22 +130,28 @@ export function useDuels() {
     load()
   }, [load])
 
-  const createDuel = useCallback(
+  // Creates a duel addressed to whichever account owns inviteeEmail — no
+  // more link to share; the recipient sees it directly in their own Duels
+  // tab (see get_duel_invite_preview's replacement, the invited_user_id
+  // column + savings_duels_select RLS policy, supabase/schema.sql).
+  const createDuelInvite = useCallback(
     async (
       goalId: string,
       durationDays: DuelDurationDays,
       displayName: string,
-    ): Promise<{ inviteToken: string | null; error: string | null }> => {
-      const { data, error: rpcError } = await supabase.rpc('create_duel', {
+      inviteeEmail: string,
+    ): Promise<{ error: string | null }> => {
+      const { data, error: rpcError } = await supabase.rpc('create_duel_invite', {
         p_goal_id: goalId,
         p_duration_days: durationDays,
         p_display_name: displayName,
+        p_invitee_email: inviteeEmail,
       })
       if (rpcError || !data?.[0]) {
-        return { inviteToken: null, error: rpcError?.message ?? HOOK_ERRORS[lang].duels.createFailed }
+        return { error: mapDuelErrorCode(rpcError?.message, lang, HOOK_ERRORS[lang].duels.createFailed) }
       }
       await load()
-      return { inviteToken: data[0].invite_token, error: null }
+      return { error: null }
     },
     [load, lang],
   )
@@ -191,6 +197,42 @@ export function useDuels() {
     [load, lang],
   )
 
+  // Accept an invite already visible via RLS (invited_user_id = me) — by
+  // duel id, not a bearer token.
+  const acceptDuelInviteById = useCallback(
+    async (
+      duelId: string,
+      goalId: string,
+      displayName: string,
+      shareGoalName: boolean,
+    ): Promise<{ error: string | null }> => {
+      const { data, error: rpcError } = await supabase.rpc('accept_duel_invite_by_id', {
+        p_duel_id: duelId,
+        p_goal_id: goalId,
+        p_display_name: displayName,
+        p_share_goal_name: shareGoalName,
+      })
+      if (rpcError || !data?.[0]) {
+        return { error: mapDuelErrorCode(rpcError?.message, lang, HOOK_ERRORS[lang].duels.acceptFailed) }
+      }
+      await load()
+      return { error: null }
+    },
+    [load, lang],
+  )
+
+  const declineDuelInvite = useCallback(
+    async (duelId: string): Promise<{ error: string | null }> => {
+      const { error: rpcError } = await supabase.rpc('decline_duel_invite', { p_duel_id: duelId })
+      if (rpcError) {
+        return { error: mapDuelErrorCode(rpcError.message, lang, HOOK_ERRORS[lang].duels.declineFailed) }
+      }
+      await load()
+      return { error: null }
+    },
+    [load, lang],
+  )
+
   const abandonDuel = useCallback(
     async (duelId: string): Promise<{ error: string | null }> => {
       const { error: rpcError } = await supabase.rpc('abandon_duel', { p_duel_id: duelId })
@@ -206,9 +248,11 @@ export function useDuels() {
     error,
     duels,
     busyGoalIds,
-    createDuel,
+    createDuelInvite,
     getInvitePreview,
     acceptInvite,
+    acceptDuelInviteById,
+    declineDuelInvite,
     abandonDuel,
     refresh: load,
   }

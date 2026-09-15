@@ -201,7 +201,6 @@ export function Epargne() {
                   onRemove={goals.removeGoal}
                   onSetPhoto={goals.setGoalPhoto}
                   onRemovePhoto={goals.removeGoalPhoto}
-                  onCreateDuel={duels.createDuel}
                   isDueling={duels.busyGoalIds.has(goal.id)}
                   locked={pausedGoalIds.has(goal.id)}
                 />

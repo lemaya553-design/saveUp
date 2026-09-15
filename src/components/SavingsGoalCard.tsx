@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ProgressBar } from './ProgressBar'
 import { GoalPhotoPicker } from './GoalPhotoPicker'
-import { CreateDuelModal } from './CreateDuelModal'
 import { useToast } from './ToastProvider'
 import { getFarFutureDateString, getTodayDateString } from '../lib/format'
 import {
@@ -14,7 +13,6 @@ import {
   formatMonthsAndDays,
   monthsAndDaysBetween,
 } from '../lib/savingsProjection'
-import type { DuelDurationDays } from '../lib/duels'
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber'
 import { useSubscription } from '../hooks/useSubscription'
 import { useLanguage } from '../hooks/useLanguage'
@@ -67,7 +65,6 @@ export function SavingsGoalCard({
   onRemove,
   onSetPhoto,
   onRemovePhoto,
-  onCreateDuel,
   isDueling = false,
   locked = false,
 }: {
@@ -77,13 +74,10 @@ export function SavingsGoalCard({
   onRemove: (id: string) => void
   onSetPhoto: (goalId: string, file: File) => Promise<{ error: string | null }>
   onRemovePhoto: (goalId: string) => void
-  onCreateDuel: (
-    goalId: string,
-    durationDays: DuelDurationDays,
-    displayName: string,
-  ) => Promise<{ inviteToken: string | null; error: string | null }>
   // True while this goal is already committed to a pending/active duel —
   // a goal can only be in one duel at a time (also enforced server-side).
+  // Duels are now only ever started from the Duels tab, so this card just
+  // reflects that state — no more "start a duel" entry point here.
   isDueling?: boolean
   // True once this goal is beyond the account's current plan limit — data
   // stays visible (nothing is deleted), but editing and new contributions
@@ -97,7 +91,6 @@ export function SavingsGoalCard({
   const formatMoney = useMoneyFormat()
   const { showToast } = useToast()
   const [editing, setEditing] = useState(false)
-  const [duelModalOpen, setDuelModalOpen] = useState(false)
   const [name, setName] = useState(goal.name)
   const [target, setTarget] = useState(String(goal.targetAmount || ''))
   const [targetDate, setTargetDate] = useState(goal.targetDate ?? '')
@@ -389,35 +382,17 @@ export function SavingsGoalCard({
           </div>
         </div>
 
-        {!locked &&
-          (isDueling ? (
-            <Link
-              to="/epargne/duels"
-              className={`mt-3 inline-flex w-fit items-center gap-1.5 text-xs font-medium ${
-                showPhoto ? 'text-white/80 hover:text-white' : 'text-muted hover:text-ink'
-              }`}
-            >
-              {t.duelActiveLink}
-            </Link>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setDuelModalOpen(true)}
-              className={`mt-3 self-start text-xs font-medium ${
-                showPhoto ? 'text-white/80 hover:text-white' : 'text-accent hover:text-accent/80'
-              }`}
-            >
-              {t.startDuelButton}
-            </button>
-          ))}
+        {!locked && isDueling && (
+          <Link
+            to="/epargne/duels"
+            className={`mt-3 inline-flex w-fit items-center gap-1.5 text-xs font-medium ${
+              showPhoto ? 'text-white/80 hover:text-white' : 'text-muted hover:text-ink'
+            }`}
+          >
+            {t.duelActiveLink}
+          </Link>
+        )}
       </div>
-
-      <CreateDuelModal
-        open={duelModalOpen}
-        onClose={() => setDuelModalOpen(false)}
-        goal={goal}
-        onCreate={(durationDays, displayName) => onCreateDuel(goal.id, durationDays, displayName)}
-      />
     </div>
   )
 }
