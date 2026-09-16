@@ -122,7 +122,7 @@ export function Onboarding() {
                 <button
                   type="button"
                   onClick={() => setImportOpen(true)}
-                  className="glass rounded-2xl p-4 text-left transition-colors hover:bg-overlay/5"
+                  className="glass flex flex-col items-stretch justify-start rounded-2xl p-4 text-left transition-colors hover:bg-overlay/5"
                 >
                   <p className="font-semibold text-ink">{t.step0.importCardTitle}</p>
                   <p className="mt-1 text-sm text-muted">
