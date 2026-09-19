@@ -11,6 +11,7 @@ import { AnimatedStats } from '../components/AnimatedStats'
 import { HeroScoreGauge } from '../components/HeroScoreGauge'
 import { SimulatorPreview } from '../components/SimulatorPreview'
 import { ScreenshotCarousel } from '../components/ScreenshotCarousel'
+import { MetaTags } from '../components/MetaTags'
 import { useLanguage } from '../hooks/useLanguage'
 import { HOME } from '../lib/i18n/home'
 import {
@@ -119,6 +120,7 @@ export function Home() {
 
   return (
     <div>
+      <MetaTags />
       <LandingHeader />
 
       {/* Hero — asymmetric, full-bleed, ambient gradient mesh + oversized

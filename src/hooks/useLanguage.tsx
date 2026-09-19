@@ -15,10 +15,8 @@ function readInitialLang(): Lang {
   return detectBrowserLang()
 }
 
-// Mounted once at the app root (like AuthProvider/PreferencesProvider) —
-// harmless anywhere it's not read. Only the public marketing pages
-// (landing, Tarifs when logged out) actually consult it; the signed-in app
-// never calls useLanguage() and stays French regardless of this value.
+// Mounted once at the app root (like AuthProvider/PreferencesProvider).
+// Read by every page (signed-in or marketing) since the full i18n rollout.
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(readInitialLang)
 

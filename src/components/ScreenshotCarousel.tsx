@@ -19,11 +19,11 @@ export interface Screenshot {
 // label/description come from COMMON[lang].carousel.screenshots (same key
 // order); src/path are structural (URLs), not translated.
 const SCREENSHOT_PATHS: Record<string, { src: string; path: string }> = {
-  dashboard: { src: '/screenshots/dashboard.png', path: 'saveup.app/dashboard' },
-  budget: { src: '/screenshots/budget.png', path: 'saveup.app/budget' },
-  epargne: { src: '/screenshots/epargne.png', path: 'saveup.app/epargne' },
-  statistiques: { src: '/screenshots/statistiques.png', path: 'saveup.app/statistiques' },
-  recompenses: { src: '/screenshots/recompenses.png', path: 'saveup.app/recompenses' },
+  dashboard: { src: '/screenshots/dashboard.png', path: 'saveup.store/dashboard' },
+  budget: { src: '/screenshots/budget.png', path: 'saveup.store/budget' },
+  epargne: { src: '/screenshots/epargne.png', path: 'saveup.store/epargne' },
+  statistiques: { src: '/screenshots/statistiques.png', path: 'saveup.store/statistiques' },
+  recompenses: { src: '/screenshots/recompenses.png', path: 'saveup.store/recompenses' },
 }
 
 function ArrowIcon({ className, flip }: { className: string; flip?: boolean }) {

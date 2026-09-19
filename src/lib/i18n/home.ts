@@ -1,6 +1,14 @@
 import type { Lang } from './language'
 
 export interface HomeContent {
+  // <title>/<meta name="description">/og:*/twitter:* — see MetaTags.tsx.
+  // Deliberately separate from hero (below): the hero copy is split into
+  // titleLine1/titleHighlight for the two-tone headline treatment, which
+  // doesn't map to a single plain-text <title> string.
+  meta: {
+    title: string
+    description: string
+  }
   hero: {
     freeBadge: string
     titleLine1: string
@@ -74,6 +82,11 @@ export interface HomeContent {
 
 export const HOME: Record<Lang, HomeContent> = {
   fr: {
+    meta: {
+      title: 'SaveUp — Reprends le contrôle de ton argent, simplement',
+      description:
+        'Budget, épargne et objectifs financiers dans une seule app — sans tableur compliqué. 100% gratuit pour commencer.',
+    },
     hero: {
       freeBadge: '100% gratuit pour commencer',
       titleLine1: 'Tu veux économiser',
@@ -227,6 +240,11 @@ export const HOME: Record<Lang, HomeContent> = {
     },
   },
   en: {
+    meta: {
+      title: 'SaveUp — Take control of your money, simply',
+      description:
+        'Budget, savings, and financial goals in one app — no complicated spreadsheet. 100% free to start.',
+    },
     hero: {
       freeBadge: '100% free to start',
       titleLine1: 'Want to save',

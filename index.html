@@ -37,9 +37,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="SaveUp" />
     <meta name="description" content="Budget, épargne et objectifs financiers, simplement." />
+    <link rel="canonical" href="https://saveup.store/" />
     <title>SaveUp — Reprends le contrôle de ton argent, simplement</title>
 
-    <!-- Open Graph (Facebook, LinkedIn, Slack, Discord, iMessage...) -->
+    <!-- Open Graph (Facebook, LinkedIn, Slack, Discord, iMessage...). This
+         static markup is what a non-JS crawler sees and can only ever be
+         one language — src/components/MetaTags.tsx overwrites title/
+         description/og:*/twitter:* client-side to match the active
+         language (see useLanguage) once the app hydrates, for real
+         visitors and any JS-aware unfurler. og:locale/og:locale:alternate
+         below are kept in sync the same way. -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="SaveUp" />
     <meta property="og:title" content="SaveUp — Reprends le contrôle de ton argent, simplement" />
@@ -47,20 +54,23 @@
       property="og:description"
       content="Budget, épargne et objectifs financiers dans une seule app — sans tableur compliqué. 100% gratuit pour commencer."
     />
-    <!-- TODO: replace with your real production URL once deployed. -->
-    <meta property="og:url" content="https://saveup.app/" />
-    <meta property="og:image" content="https://saveup.app/icon-512.png" />
+    <meta property="og:url" content="https://saveup.store/" />
+    <meta property="og:image" content="https://saveup.store/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="SaveUp — Reprends le contrôle de ton argent, simplement" />
     <meta property="og:locale" content="fr_CA" />
+    <meta property="og:locale:alternate" content="en_CA" />
 
     <!-- Twitter Card — Twitter/X ignores Open Graph image tags and requires
          its own twitter:image, so this is duplicated rather than reused. -->
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="SaveUp — Reprends le contrôle de ton argent, simplement" />
     <meta
       name="twitter:description"
       content="Budget, épargne et objectifs financiers dans une seule app — sans tableur compliqué."
     />
-    <meta name="twitter:image" content="https://saveup.app/icon-512.png" />
+    <meta name="twitter:image" content="https://saveup.store/og-image.png" />
   </head>
   <body>
     <div id="root"></div>
