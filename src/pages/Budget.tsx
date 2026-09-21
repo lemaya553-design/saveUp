@@ -198,7 +198,12 @@ export function Budget() {
 
       <TabBar tabs={TAB_DEFS} active={tab} onChange={(next) => navigate(`/budget/${next}`)} />
 
-      {tab === 'depenses' && error && (
+      {/* `error` combines every hook this page loads, including
+          recurring.error — gating it to 'depenses' only used to leave a
+          failed add/update/remove on the Récurrences tab completely silent
+          (state set, nothing rendered): the button looked like it did
+          nothing. Shown on both tabs that can actually produce it. */}
+      {(tab === 'depenses' || tab === 'recurrences') && error && (
         <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
           {error}
         </div>
