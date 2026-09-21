@@ -56,6 +56,11 @@ export interface ConnexionContent {
     googleContinue: string
     googleSignUp: string
     googleRedirecting: string
+    // Only shown under the Google button in signup mode — addresses the
+    // specific hesitation OAuth triggers for an unfamiliar product (fear of
+    // auto-posting, broad account access) right before the moment someone
+    // decides whether to click through to Google's consent screen at all.
+    googleReassurance: string
     noAccountHint: string
     createAccount: string
     useEmailInstead: string
@@ -123,6 +128,7 @@ export const CONNEXION: Record<Lang, ConnexionContent> = {
       googleContinue: 'Continuer avec Google',
       googleSignUp: "S'inscrire avec Google",
       googleRedirecting: 'Redirection...',
+      googleReassurance: 'On ne demande que ton nom et ton courriel — rien n\'est jamais publié en ton nom.',
       noAccountHint: 'Aucun compte avec ce courriel — tu veux en créer un ?',
       createAccount: 'Créer un compte',
       useEmailInstead: 'ou utiliser un courriel',
@@ -188,6 +194,7 @@ export const CONNEXION: Record<Lang, ConnexionContent> = {
       googleContinue: 'Continue with Google',
       googleSignUp: 'Sign up with Google',
       googleRedirecting: 'Redirecting...',
+      googleReassurance: "We only ask for your name and email — nothing is ever posted on your behalf.",
       noAccountHint: "No account with this email — want to create one?",
       createAccount: 'Create account',
       useEmailInstead: 'or use an email',

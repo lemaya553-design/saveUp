@@ -408,6 +408,14 @@ export function Connexion() {
                   : t.signInUp.googleSignUp}
             </button>
 
+            {/* Only in signup mode — this is the exact moment a stranger to
+                the product decides whether to trust it with a Google
+                account link at all. A returning user in signin mode
+                already made that call once, so it'd just be noise there. */}
+            {mode === 'signup' && (
+              <p className="mt-2 text-center text-xs text-muted">{t.signInUp.googleReassurance}</p>
+            )}
+
             {error && (
               <p className="mt-4 rounded-lg border border-red-900/50 bg-red-950/50 px-3 py-2 text-sm text-red-300">
                 {error}
