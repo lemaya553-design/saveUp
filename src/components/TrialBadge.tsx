@@ -2,7 +2,6 @@ import { useAuth } from '../hooks/useAuth'
 import { useTrialWindow } from '../hooks/useTrialWindow'
 import { formatTrialRemaining } from '../lib/trial'
 import { useLanguage } from '../hooks/useLanguage'
-import { TRIAL_DAYS } from '../lib/plans'
 
 // Marketing-surface badge (landing hero, Tarifs banner, Standard/Premium
 // cards) — unlike Nav's TrialCountdownBadge this also renders for
@@ -19,9 +18,7 @@ export function TrialBadge({ className }: { className: string }) {
     return (
       <span className={className}>
         <span aria-hidden="true">⏳</span>
-        {lang === 'fr'
-          ? `Essai gratuit ${TRIAL_DAYS} jours — inscris-toi maintenant`
-          : `${TRIAL_DAYS}-day free trial — sign up now`}
+        {lang === 'fr' ? 'Essai gratuit 24h — inscris-toi maintenant' : '24h free trial — sign up now'}
       </span>
     )
   }
