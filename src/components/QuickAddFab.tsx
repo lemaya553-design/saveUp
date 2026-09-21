@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Modal } from './Modal'
 import { UpgradePrompt } from './UpgradePrompt'
 import { useToast } from './ToastProvider'
 import { useExpenses } from '../hooks/useExpenses'
 import { useCategories } from '../hooks/useCategories'
+import { useCustomKeywords } from '../hooks/useCustomKeywords'
 import { useRecurringExpenses } from '../hooks/useRecurringExpenses'
 import { useSubscription } from '../hooks/useSubscription'
 import { useLanguage } from '../hooks/useLanguage'
@@ -11,6 +12,12 @@ import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { getTodayDateString } from '../lib/format'
 import { FALLBACK_CATEGORY } from '../lib/categories'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
+import {
+  pickCategory,
+  guessCanonicalCategory,
+  resolveCategoryName,
+  CANONICAL_DISPLAY_NAMES,
+} from '../lib/importParsing'
 import type { RecurringFrequency } from '../lib/recurringExpenses'
 import { MISC } from '../lib/i18n/misc'
 
@@ -54,7 +61,8 @@ function getFrequentExpenses(
 
 export function QuickAddFab() {
   const { expenses, addExpense } = useExpenses()
-  const { categoryNames } = useCategories()
+  const { categoryNames, addCategory } = useCategories()
+  const { keywords: customKeywords } = useCustomKeywords()
   const recurring = useRecurringExpenses()
   const subscription = useSubscription()
   const { showToast } = useToast()
@@ -65,7 +73,46 @@ export function QuickAddFab() {
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState<string>(FALLBACK_CATEGORY)
+  // Stops the auto-suggestion (below) from overwriting a category the user
+  // picked themselves once they've touched the dropdown — the suggestion
+  // stays a starting point, never fights back.
+  const [categoryTouched, setCategoryTouched] = useState(false)
+  const [creatingCategory, setCreatingCategory] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+
+  // Same keyword dictionary CSV import uses (lib/importParsing.ts), plus
+  // this user's own confirmed merchant keywords — a category taught during
+  // an import applies here too. Null (no confidently guessed match) leaves
+  // `category` exactly where the user left it.
+  const suggestedCategory = useMemo(() => {
+    if (!description.trim()) return null
+    const result = pickCategory(undefined, description, categoryNames, FALLBACK_CATEGORY, customKeywords)
+    return result.guessed ? result.category : null
+  }, [description, categoryNames, customKeywords])
+
+  // The dictionary recognizes the merchant (e.g. "Best Buy" -> electronics)
+  // but none of this user's own categories matches that concept yet — offer
+  // to create it instead of silently landing in "Autre" like today.
+  const newCategorySuggestion = useMemo(() => {
+    if (!description.trim() || suggestedCategory) return null
+    const canonical = guessCanonicalCategory(description)
+    if (!canonical || resolveCategoryName(canonical, categoryNames)) return null
+    return CANONICAL_DISPLAY_NAMES[canonical][lang]
+  }, [description, categoryNames, suggestedCategory, lang])
+
+  useEffect(() => {
+    if (categoryTouched || !suggestedCategory) return
+    setCategory(suggestedCategory)
+  }, [suggestedCategory, categoryTouched])
+
+  async function createSuggestedCategory() {
+    if (!newCategorySuggestion) return
+    setCreatingCategory(true)
+    await addCategory(newCategorySuggestion)
+    setCreatingCategory(false)
+    setCategory(newCategorySuggestion)
+    setCategoryTouched(true)
+  }
 
   const [isRecurring, setIsRecurring] = useState(false)
   const [frequency, setFrequency] = useState<RecurringFrequency>('monthly')
@@ -83,6 +130,8 @@ export function QuickAddFab() {
     setOpen(false)
     setDescription('')
     setAmount('')
+    setCategory(FALLBACK_CATEGORY)
+    setCategoryTouched(false)
     setIsRecurring(false)
     setFrequency('monthly')
     setStartDate(getTodayDateString())
@@ -180,7 +229,10 @@ export function QuickAddFab() {
             />
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={(e) => {
+                setCategory(e.target.value)
+                setCategoryTouched(true)
+              }}
               className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
             >
               {categoryNames.map((cat) => (
@@ -190,6 +242,24 @@ export function QuickAddFab() {
               ))}
             </select>
           </div>
+
+          {suggestedCategory && !categoryTouched && (
+            <p className="-mt-1 text-xs text-muted">{t.categorySuggestedHint}</p>
+          )}
+
+          {newCategorySuggestion && !categoryTouched && (
+            <div className="-mt-1 flex items-center justify-between gap-2 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-xs">
+              <span className="text-muted">{t.createCategoryPrompt(newCategorySuggestion)}</span>
+              <button
+                type="button"
+                onClick={createSuggestedCategory}
+                disabled={creatingCategory}
+                className="shrink-0 rounded-md bg-accent/20 px-2.5 py-1 font-medium text-accent hover:bg-accent/30 disabled:opacity-60"
+              >
+                {t.createCategoryButton}
+              </button>
+            </div>
+          )}
 
           {atRecurringLimit && !isRecurring ? (
             <UpgradePrompt
