@@ -108,6 +108,14 @@ export interface CommonContent {
     ariaLabel: (score: number) => string
     caption: string
   }
+  // Display-only currency picker (Nav) — see CurrencySwitcher.tsx. The
+  // confirm step only appears once the account has real data (useHasRealActivity),
+  // so a brand-new user picking their currency up front never sees it.
+  currencySwitcher: {
+    ariaLabel: string
+    confirmTitle: string
+    confirmBody: (from: string, to: string) => string
+  }
 }
 
 export const COMMON: Record<Lang, CommonContent> = {
@@ -210,6 +218,12 @@ export const COMMON: Record<Lang, CommonContent> = {
       ariaLabel: (score) => `Exemple : score de santé financière de ${score} sur 100`,
       caption: 'Score de santé financière · exemple',
     },
+    currencySwitcher: {
+      ariaLabel: 'Choisir la devise',
+      confirmTitle: "Changer la devise d'affichage ?",
+      confirmBody: (from, to) =>
+        `Tes montants ont été saisis en ${from}. Ils seront affichés en ${to} sans conversion.`,
+    },
   },
   en: {
     app: {
@@ -309,6 +323,12 @@ export const COMMON: Record<Lang, CommonContent> = {
     heroGauge: {
       ariaLabel: (score) => `Example: financial health score of ${score} out of 100`,
       caption: 'Financial health score · example',
+    },
+    currencySwitcher: {
+      ariaLabel: 'Choose currency',
+      confirmTitle: 'Change display currency?',
+      confirmBody: (from, to) =>
+        `Your amounts were entered in ${from}. They'll be displayed in ${to} without conversion.`,
     },
   },
 }
