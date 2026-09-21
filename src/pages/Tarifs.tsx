@@ -106,10 +106,6 @@ export function Tarifs() {
                   </span>
                 )}
 
-                {planId !== 'free' && (
-                  <TrialBadge className="mt-2 flex items-center gap-1.5 text-xs text-muted" />
-                )}
-
                 <p className="mt-3 text-3xl font-bold text-ink">
                   {fmt(PLAN_LIMITS[planId].monthlyPrice)}
                   {planId !== 'free' && <span className="text-base font-normal text-muted">{t.perMonth}</span>}
