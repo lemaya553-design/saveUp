@@ -53,16 +53,23 @@ export function LandingHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
-          <div className="hidden sm:block">
-            <LanguageSwitcher />
-          </div>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Visible at every width, not just sm+ — used to be hidden below
+              640px and only reachable at the bottom of the burger menu,
+              which meant an English-speaking visitor on a phone had no
+              visible way to switch language without opening the menu
+              first. */}
+          <LanguageSwitcher />
 
           <Link
             to="/dashboard"
-            className="rounded-lg bg-primary-strong px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
+            className="whitespace-nowrap rounded-lg bg-primary-strong px-3 py-2 text-sm font-medium text-white transition-all hover:brightness-110 sm:px-4"
           >
-            {t.ctaStart}
+            {/* Short label below sm: at 375px, ctaStart's full text
+                ("Commencer gratuitement") wraps to two lines once the
+                switcher above takes its place on the same row. */}
+            <span className="sm:hidden">{t.ctaStartShort}</span>
+            <span className="hidden sm:inline">{t.ctaStart}</span>
           </Link>
 
           <button
@@ -91,9 +98,6 @@ export function LandingHeader() {
                 </Link>
               </li>
             ))}
-            <li className="mt-1 flex items-center px-3 py-2 sm:hidden">
-              <LanguageSwitcher />
-            </li>
           </ul>
         </nav>
       )}

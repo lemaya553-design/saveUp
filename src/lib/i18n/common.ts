@@ -38,6 +38,10 @@ export interface CommonContent {
     navPricing: string
     navFaq: string
     ctaStart: string
+    // Narrow-phone variant of ctaStart (< sm breakpoint) — the full label
+    // wraps to two lines at 375px once the always-visible language switcher
+    // sits on the same row, so this frees the width that needs instead.
+    ctaStartShort: string
     openMenu: string
     closeMenu: string
   }
@@ -142,6 +146,7 @@ export const COMMON: Record<Lang, CommonContent> = {
       navPricing: 'Tarifs',
       navFaq: 'FAQ',
       ctaStart: 'Commencer gratuitement',
+      ctaStartShort: 'Essayer',
       openMenu: 'Ouvrir le menu',
       closeMenu: 'Fermer le menu',
     },
@@ -248,6 +253,7 @@ export const COMMON: Record<Lang, CommonContent> = {
       navPricing: 'Pricing',
       navFaq: 'FAQ',
       ctaStart: 'Start for free',
+      ctaStartShort: 'Try free',
       openMenu: 'Open menu',
       closeMenu: 'Close menu',
     },
