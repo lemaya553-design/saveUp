@@ -150,11 +150,12 @@ export function Tarifs() {
                   </button>
                 ) : (
                   <>
+                    <p className="mt-8 text-center text-xs text-muted">{t.cta.trialTerms(TRIAL_DAYS)}</p>
                     <button
                       type="button"
                       onClick={() => handleChoose(planId as Exclude<Plan, 'free'>)}
                       disabled={isLoadingThis}
-                      className="mt-8 w-full rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                      className="mt-2 w-full rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
                     >
                       {isLoadingThis ? t.cta.redirecting : t.cta.tryFree(plan.name)}
                     </button>

@@ -22,6 +22,7 @@ export interface TarifsContent {
     redirecting: string
     manageSubscription: string
     tryFree: (planName: string) => string
+    trialTerms: (days: number) => string
     cardRequired: string
   }
 }
@@ -87,6 +88,7 @@ export const TARIFS: Record<Lang, TarifsContent> = {
       redirecting: 'Redirection...',
       manageSubscription: 'Gérer mon abonnement',
       tryFree: (planName) => `Essayer ${planName} gratuitement`,
+      trialTerms: (days) => `${days} jours gratuits — annule en un clic, aucun frais avant la fin de l'essai.`,
       cardRequired: "Carte de crédit requise à l'inscription.",
     },
   },
@@ -150,6 +152,7 @@ export const TARIFS: Record<Lang, TarifsContent> = {
       redirecting: 'Redirecting...',
       manageSubscription: 'Manage subscription',
       tryFree: (planName) => `Try ${planName} free`,
+      trialTerms: (days) => `${days}-day free trial — cancel anytime, no charge until it ends.`,
       cardRequired: 'Credit card required to sign up.',
     },
   },
