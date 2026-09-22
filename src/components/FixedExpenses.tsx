@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Card } from './Card'
 import { useCategories } from '../hooks/useCategories'
+import { useCustomKeywords } from '../hooks/useCustomKeywords'
+import { useCategorySuggestion } from '../hooks/useCategorySuggestion'
+import { useSubscription } from '../hooks/useSubscription'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
-import { FALLBACK_CATEGORY } from '../lib/categories'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { BUDGET } from '../lib/i18n/budget'
 import { COMMON } from '../lib/i18n/common'
@@ -97,23 +99,36 @@ export function FixedExpenses({
 }) {
   const { lang } = useLanguage()
   const t = BUDGET[lang].fixedExpenses
+  const ct = COMMON[lang].categorySuggestion
   const formatMoney = useMoneyFormat()
-  const { categoryNames } = useCategories()
+  const { categoryNames, addCategory } = useCategories()
+  const { keywords: customKeywords } = useCustomKeywords()
+  const subscription = useSubscription()
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState<string>(FALLBACK_CATEGORY)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  const categoryField = useCategorySuggestion(
+    name,
+    categoryNames,
+    customKeywords,
+    lang,
+    addCategory,
+    subscription.limits.maxCategories,
+  )
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     const parsed = Number(amount)
     if (!name.trim() || !parsed || parsed <= 0 || submitting) return
     setSubmitting(true)
+    const category = await categoryField.resolveCategoryForSubmit()
     await onAdd(name.trim(), parsed, category)
     setSubmitting(false)
     setName('')
     setAmount('')
+    categoryField.reset()
   }
 
   return (
@@ -172,42 +187,51 @@ export function FixedExpenses({
         )}
       </ul>
 
-      <form onSubmit={submit} className="flex flex-wrap gap-2">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t.namePlaceholder}
-          className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-        />
-        <input
-          type="number"
-          inputMode="decimal"
-          min={0}
-          step="0.01"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder={t.amountPlaceholder}
-          className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-        />
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
-        >
-          {categoryNames.map((cat) => (
-            <option key={cat} value={cat} className="bg-surface">
-              {translateCategoryLabel(cat, lang)}
-            </option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
-        >
-          {submitting ? t.adding : COMMON[lang].app.add}
-        </button>
+      <form onSubmit={submit} className="flex flex-col gap-2">
+        <div className="flex flex-wrap gap-2">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t.namePlaceholder}
+            className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          />
+          <input
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.01"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder={t.amountPlaceholder}
+            className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          />
+          <select
+            value={categoryField.category}
+            onChange={(e) => categoryField.setCategory(e.target.value)}
+            className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+          >
+            {categoryNames.map((cat) => (
+              <option key={cat} value={cat} className="bg-surface">
+                {translateCategoryLabel(cat, lang)}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+          >
+            {submitting ? t.adding : COMMON[lang].app.add}
+          </button>
+        </div>
+
+        {categoryField.suggestedCategory && !categoryField.categoryTouched && (
+          <p className="text-xs text-muted">{ct.suggestedHint}</p>
+        )}
+        {categoryField.newCategorySuggestion && !categoryField.categoryTouched && (
+          <p className="text-xs text-muted">{ct.newCategoryHint(categoryField.newCategorySuggestion.displayName)}</p>
+        )}
       </form>
 
       <p className="mt-4 text-sm text-muted">

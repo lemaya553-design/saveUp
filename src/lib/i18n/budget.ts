@@ -116,6 +116,13 @@ export interface BudgetContent {
     result: (updated: number, checked: number) => string
     previewTitle: string
     noMatch: string
+    recurring: {
+      sectionTitle: string
+      itemLabel: (description: string, category: string) => string
+      applyFutureOnly: string
+      applyAll: string
+      applying: string
+    }
   }
   recentExpenses: {
     cardTitle: string
@@ -387,6 +394,13 @@ export const BUDGET: Record<Lang, BudgetContent> = {
         `${updated} transaction${updated > 1 ? 's' : ''} recatégorisée${updated > 1 ? 's' : ''} sur ${checked}.`,
       previewTitle: 'Aperçu de ce qui a été vérifié',
       noMatch: 'aucune correspondance',
+      recurring: {
+        sectionTitle: 'Dépenses récurrentes',
+        itemLabel: (description, category) => `« ${description} » ressemble à : ${category}`,
+        applyFutureOnly: 'Appliquer aux prochaines seulement',
+        applyAll: 'Appliquer à toutes (passées et futures)',
+        applying: 'Application...',
+      },
     },
     recentExpenses: {
       cardTitle: 'Dépenses récentes',
@@ -666,6 +680,13 @@ export const BUDGET: Record<Lang, BudgetContent> = {
         `${updated} transaction${updated > 1 ? 's' : ''} recategorized out of ${checked}.`,
       previewTitle: 'Preview of what was checked',
       noMatch: 'no match',
+      recurring: {
+        sectionTitle: 'Recurring expenses',
+        itemLabel: (description, category) => `"${description}" looks like: ${category}`,
+        applyFutureOnly: 'Apply to upcoming only',
+        applyAll: 'Apply to all (past and future)',
+        applying: 'Applying...',
+      },
     },
     recentExpenses: {
       cardTitle: 'Recent expenses',

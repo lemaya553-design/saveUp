@@ -3,9 +3,11 @@ import { Card } from './Card'
 import { UpgradePrompt } from './UpgradePrompt'
 import { getTodayDateString } from '../lib/format'
 import { useCategories } from '../hooks/useCategories'
+import { useCustomKeywords } from '../hooks/useCustomKeywords'
+import { useCategorySuggestion } from '../hooks/useCategorySuggestion'
+import { useSubscription } from '../hooks/useSubscription'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
-import { FALLBACK_CATEGORY } from '../lib/categories'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { BUDGET } from '../lib/i18n/budget'
 import { COMMON } from '../lib/i18n/common'
@@ -118,21 +120,33 @@ function AddForm({
   ) => Promise<boolean>
 }) {
   const t = BUDGET[lang].recurringExpenses
-  const { categoryNames } = useCategories()
+  const ct = COMMON[lang].categorySuggestion
+  const { categoryNames, addCategory } = useCategories()
+  const { keywords: customKeywords } = useCustomKeywords()
+  const subscription = useSubscription()
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState<string>(FALLBACK_CATEGORY)
   const [frequency, setFrequency] = useState<RecurringFrequency>('monthly')
   const [startDate, setStartDate] = useState(getTodayDateString())
   const [hasEndDate, setHasEndDate] = useState(false)
   const [endDate, setEndDate] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  const categoryField = useCategorySuggestion(
+    description,
+    categoryNames,
+    customKeywords,
+    lang,
+    addCategory,
+    subscription.limits.maxCategories,
+  )
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     const parsed = Number(amount)
     if (!description.trim() || !parsed || parsed <= 0 || !startDate || submitting) return
     setSubmitting(true)
+    const category = await categoryField.resolveCategoryForSubmit()
     const ok = await onAdd(
       description.trim(),
       parsed,
@@ -147,6 +161,7 @@ function AddForm({
       setAmount('')
       setHasEndDate(false)
       setEndDate('')
+      categoryField.reset()
     }
   }
 
@@ -171,8 +186,8 @@ function AddForm({
           className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
         />
         <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          value={categoryField.category}
+          onChange={(e) => categoryField.setCategory(e.target.value)}
           className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
         >
           {categoryNames.map((cat) => (
@@ -182,6 +197,13 @@ function AddForm({
           ))}
         </select>
       </div>
+
+      {categoryField.suggestedCategory && !categoryField.categoryTouched && (
+        <p className="-mt-1 text-xs text-muted">{ct.suggestedHint}</p>
+      )}
+      {categoryField.newCategorySuggestion && !categoryField.categoryTouched && (
+        <p className="-mt-1 text-xs text-muted">{ct.newCategoryHint(categoryField.newCategorySuggestion.displayName)}</p>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <select

@@ -58,10 +58,14 @@ export function useCategories() {
     return onCategoriesChanged(load)
   }, [load])
 
+  // Returns the created row (or the pre-existing one, see below) so a
+  // caller that needs it immediately — useCategorySuggestion's
+  // resolveCategoryForSubmit — doesn't have to wait for the next render's
+  // `categories` state to catch up.
   const addCategory = useCallback(
-    async (name: string) => {
+    async (name: string): Promise<Category | null> => {
       const trimmed = name.trim()
-      if (!trimmed || !userId) return
+      if (!trimmed || !userId) return null
       const { data, error: insertError } = await supabase
         .from('categories')
         .insert({ user_id: userId, name: trimmed })
@@ -69,10 +73,12 @@ export function useCategories() {
         .single()
       if (insertError || !data) {
         setError(insertError?.message ?? COMMON[lang].app.saveFailed)
-        return
+        return null
       }
-      setCategories((prev) => sortCategories([...prev, fromRow(data)]))
+      const created = fromRow(data)
+      setCategories((prev) => sortCategories([...prev, created]))
       emitCategoriesChanged()
+      return created
     },
     [userId, lang],
   )

@@ -28,12 +28,6 @@ export interface MiscContent {
     submitCreateRecurring: string
     toastRecurringCreated: (label: string, amount: string) => string
     toastExpenseAdded: (label: string, amount: string) => string
-    // Auto-categorization from the description (lib/importParsing.ts's
-    // keyword dictionary, same one CSV import uses) — see categorySuggestedHint
-    // usage in QuickAddFab.tsx.
-    categorySuggestedHint: string
-    createCategoryPrompt: (name: string) => string
-    createCategoryButton: string
   }
   pwaInstallBanner: {
     regionAriaLabel: string
@@ -83,9 +77,6 @@ export const MISC: Record<Lang, MiscContent> = {
       submitCreateRecurring: 'Créer la récurrence',
       toastRecurringCreated: (label, amount) => `Récurrence créée : ${label} — ${amount}`,
       toastExpenseAdded: (label, amount) => `Dépense ajoutée : ${label} — ${amount}`,
-      categorySuggestedHint: 'Catégorie suggérée à partir de la description — modifiable.',
-      createCategoryPrompt: (name) => `Aucune catégorie ne correspond. Créer « ${name} » ?`,
-      createCategoryButton: 'Créer',
     },
     pwaInstallBanner: {
       regionAriaLabel: 'Installer SaveUp',
@@ -133,9 +124,6 @@ export const MISC: Record<Lang, MiscContent> = {
       submitCreateRecurring: 'Create the recurring expense',
       toastRecurringCreated: (label, amount) => `Recurring expense created: ${label} — ${amount}`,
       toastExpenseAdded: (label, amount) => `Expense added: ${label} — ${amount}`,
-      categorySuggestedHint: 'Category suggested from the description — editable.',
-      createCategoryPrompt: (name) => `No category matches. Create "${name}"?`,
-      createCategoryButton: 'Create',
     },
     pwaInstallBanner: {
       regionAriaLabel: 'Install SaveUp',

@@ -120,6 +120,13 @@ export interface CommonContent {
     confirmTitle: string
     confirmBody: (from: string, to: string) => string
   }
+  // Shared by every manual expense-entry form that uses useCategorySuggestion
+  // (QuickAddFab, FixedExpenses, RecurringExpenses' add form) — same two
+  // messages regardless of which form is showing them.
+  categorySuggestion: {
+    suggestedHint: string
+    newCategoryHint: (name: string) => string
+  }
 }
 
 export const COMMON: Record<Lang, CommonContent> = {
@@ -229,6 +236,10 @@ export const COMMON: Record<Lang, CommonContent> = {
       confirmBody: (from, to) =>
         `Tes montants ont été saisis en ${from}. Ils seront affichés en ${to} sans conversion.`,
     },
+    categorySuggestion: {
+      suggestedHint: 'Catégorie suggérée à partir de la description — modifiable.',
+      newCategoryHint: (name) => `Une nouvelle catégorie « ${name} » sera créée automatiquement.`,
+    },
   },
   en: {
     app: {
@@ -335,6 +346,10 @@ export const COMMON: Record<Lang, CommonContent> = {
       confirmTitle: 'Change display currency?',
       confirmBody: (from, to) =>
         `Your amounts were entered in ${from}. They'll be displayed in ${to} without conversion.`,
+    },
+    categorySuggestion: {
+      suggestedHint: 'Category suggested from the description — editable.',
+      newCategoryHint: (name) => `A new category "${name}" will be created automatically.`,
     },
   },
 }

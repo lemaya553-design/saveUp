@@ -22,6 +22,13 @@ const CATEGORY_LABELS_EN: Record<string, string> = {
   Autre: 'Other',
   Épargne: 'Savings',
   Disponible: 'Available',
+  // Auto-created by useCategorySuggestion (QuickAddFab, FixedExpenses,
+  // RecurringExpenses) when a recognized merchant concept has no matching
+  // reserved category above — always stored in this French canonical form
+  // regardless of the active language at creation time, so it translates
+  // correctly forever, the same as the reserved six.
+  Restauration: 'Dining out',
+  Électronique: 'Electronics',
 }
 
 export function translateCategoryLabel(name: string, lang: Lang): string {
