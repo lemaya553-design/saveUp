@@ -121,12 +121,15 @@ export function Tarifs() {
                 </ul>
 
                 {planId === 'free' ? (
-                  <Link
-                    to={user ? '/dashboard' : '/connexion'}
-                    className="mt-8 block rounded-lg bg-primary-strong px-4 py-2 text-center font-medium text-white transition-all hover:brightness-110"
-                  >
-                    {user ? t.cta.goToDashboard : t.cta.startFree}
-                  </Link>
+                  <>
+                    <Link
+                      to={user ? '/dashboard' : '/connexion'}
+                      className="mt-8 block rounded-lg bg-primary-strong px-4 py-2 text-center font-medium text-white transition-all hover:brightness-110"
+                    >
+                      {user ? t.cta.goToDashboard : t.cta.startFree}
+                    </Link>
+                    {!user && <p className="mt-2 text-center text-xs text-muted">{t.cta.startFreeCaption}</p>}
+                  </>
                 ) : isCurrent ? (
                   <button
                     type="button"

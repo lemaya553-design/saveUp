@@ -152,8 +152,8 @@ export const COMMON: Record<Lang, CommonContent> = {
       navResults: 'Résultats',
       navPricing: 'Tarifs',
       navFaq: 'FAQ',
-      ctaStart: 'Commencer gratuitement',
-      ctaStartShort: 'Essayer',
+      ctaStart: 'Créer mon compte gratuit',
+      ctaStartShort: "S'inscrire",
       openMenu: 'Ouvrir le menu',
       closeMenu: 'Fermer le menu',
     },
@@ -177,7 +177,7 @@ export const COMMON: Record<Lang, CommonContent> = {
       terms: "Conditions d'utilisation",
     },
     stickyCta: {
-      cta: 'Commencer gratuitement',
+      cta: 'Créer mon compte gratuit',
       noCard: 'Aucune carte de crédit requise',
     },
     stats: {
@@ -263,8 +263,8 @@ export const COMMON: Record<Lang, CommonContent> = {
       navResults: 'Results',
       navPricing: 'Pricing',
       navFaq: 'FAQ',
-      ctaStart: 'Start for free',
-      ctaStartShort: 'Try free',
+      ctaStart: 'Create my free account',
+      ctaStartShort: 'Sign up',
       openMenu: 'Open menu',
       closeMenu: 'Close menu',
     },
@@ -288,7 +288,7 @@ export const COMMON: Record<Lang, CommonContent> = {
       terms: 'Terms of Service',
     },
     stickyCta: {
-      cta: 'Start for free',
+      cta: 'Create my free account',
       noCard: 'No credit card required',
     },
     stats: {

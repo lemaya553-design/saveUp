@@ -205,7 +205,7 @@ export const HOME: Record<Lang, HomeContent> = {
     },
     finalCta: {
       heading: 'Prêt à voir clair dans tes finances ?',
-      cta: 'Commencer gratuitement',
+      cta: 'Créer mon compte gratuit',
       trustBadges: ['Sans carte requise', 'Configuration en 2 minutes', 'Annule quand tu veux'],
     },
     faq: {
@@ -363,7 +363,7 @@ export const HOME: Record<Lang, HomeContent> = {
     },
     finalCta: {
       heading: 'Ready to see your finances clearly?',
-      cta: 'Start for free',
+      cta: 'Create my free account',
       trustBadges: ['No credit card needed', '2-minute setup', 'Cancel anytime'],
     },
     faq: {

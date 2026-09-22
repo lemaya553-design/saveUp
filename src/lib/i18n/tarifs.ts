@@ -18,6 +18,10 @@ export interface TarifsContent {
   cta: {
     goToDashboard: string
     startFree: string
+    // Shown under startFree only — the Free plan card had no adjacent
+    // no-card messaging (unlike the hero/finalCta/StickyCta CTAs, which
+    // already carry one, just with slightly different existing wording).
+    startFreeCaption: string
     currentPlan: string
     redirecting: string
     manageSubscription: string
@@ -83,7 +87,8 @@ export const TARIFS: Record<Lang, TarifsContent> = {
     },
     cta: {
       goToDashboard: 'Aller au Dashboard',
-      startFree: 'Commencer gratuitement',
+      startFree: 'Créer mon compte gratuit',
+      startFreeCaption: 'Gratuit, sans carte de crédit',
       currentPlan: 'Ton plan actuel',
       redirecting: 'Redirection...',
       manageSubscription: 'Gérer mon abonnement',
@@ -147,7 +152,8 @@ export const TARIFS: Record<Lang, TarifsContent> = {
     },
     cta: {
       goToDashboard: 'Go to Dashboard',
-      startFree: 'Start for free',
+      startFree: 'Create my free account',
+      startFreeCaption: 'Free, no credit card',
       currentPlan: 'Your current plan',
       redirecting: 'Redirecting...',
       manageSubscription: 'Manage subscription',
