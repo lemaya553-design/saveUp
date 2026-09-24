@@ -4,6 +4,7 @@ import { PageHeader } from '../components/PageHeader'
 import { Card } from '../components/Card'
 import { TabBar, type TabDef } from '../components/TabBar'
 import { PersonalizationSettings } from '../components/PersonalizationSettings'
+import { WorkHoursSettings } from '../components/WorkHoursSettings'
 import { IncomeInput } from '../components/IncomeInput'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { useIncome } from '../hooks/useIncome'
@@ -183,6 +184,7 @@ export function Parametres() {
       {tab === 'preferences' && (
         <div className="grid gap-6">
           <PersonalizationSettings />
+          <WorkHoursSettings />
         </div>
       )}
     </div>

@@ -3,6 +3,7 @@ import { Card } from './Card'
 import { useCategories } from '../hooks/useCategories'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
+import { useWorkHours } from '../hooks/useWorkHours'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { BUDGET } from '../lib/i18n/budget'
 import { COMMON } from '../lib/i18n/common'
@@ -89,6 +90,7 @@ export function RecentExpenses({
   const { lang } = useLanguage()
   const t = BUDGET[lang].recentExpenses
   const formatMoney = useMoneyFormat()
+  const workHours = useWorkHours()
   const { categoryNames } = useCategories()
   const [showAll, setShowAll] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -181,8 +183,9 @@ export function RecentExpenses({
             <p className="text-sm text-muted">{t.noMatch}</p>
           ) : (
             <ul className="divide-y divide-overlay/10">
-              {visible.map((expense) =>
-                editingId === expense.id ? (
+              {visible.map((expense) => {
+                const hoursLabel = workHours(expense.amount)
+                return editingId === expense.id ? (
                   <li key={expense.id}>
                     <EditRow
                       expense={expense}
@@ -213,7 +216,10 @@ export function RecentExpenses({
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="mr-2 font-medium text-ink">{formatMoney(expense.amount)}</span>
+                      <div className="mr-2 flex flex-col items-end">
+                        <span className="font-medium text-ink">{formatMoney(expense.amount)}</span>
+                        {hoursLabel && <span className="text-[10px] leading-tight text-muted">{hoursLabel}</span>}
+                      </div>
                       <button
                         type="button"
                         onClick={() => setEditingId(expense.id)}
@@ -231,8 +237,8 @@ export function RecentExpenses({
                       </button>
                     </div>
                   </li>
-                ),
-              )}
+                )
+              })}
             </ul>
           )}
 

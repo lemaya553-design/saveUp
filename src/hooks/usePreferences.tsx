@@ -16,12 +16,21 @@ interface PreferencesContextValue {
   onboardingTriedOtherApp: boolean | null
   onboardingFrequency: TrackingFrequency | null
   csvImportCount: number
+  // "Price in hours worked" (Paramètres > Préférences). Only the final rate
+  // is ever persisted — see WorkHoursSettings.tsx, which derives it from
+  // either a direct hourly rate or an annual-salary + hours/week input, but
+  // never stores the latter two. null/false = feature invisible everywhere
+  // (useWorkHours returns null), matching today's behavior exactly.
+  hourlyRate: number | null
+  workHoursEnabled: boolean
   setAccentColor: (value: AccentColor) => void
   setTheme: (value: Theme) => void
   setAvatarEmoji: (value: string | null) => void
   setCurrency: (value: Currency) => void
   setOnboardingProfile: (mainGoal: MainGoal, triedOtherApp: boolean, frequency: TrackingFrequency) => void
   incrementCsvImportCount: () => void
+  setHourlyRate: (value: number | null) => void
+  setWorkHoursEnabled: (value: boolean) => void
 }
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null)
@@ -43,6 +52,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [onboardingTriedOtherApp, setOnboardingTriedOtherAppState] = useState<boolean | null>(null)
   const [onboardingFrequency, setOnboardingFrequencyState] = useState<TrackingFrequency | null>(null)
   const [csvImportCount, setCsvImportCountState] = useState(0)
+  const [hourlyRate, setHourlyRateState] = useState<number | null>(null)
+  const [workHoursEnabled, setWorkHoursEnabledState] = useState(false)
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -51,7 +62,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     const { data, error: fetchError } = await supabase
       .from('user_preferences')
       .select(
-        'accent_color, theme, avatar_emoji, currency, onboarding_main_goal, onboarding_tried_other_app, onboarding_frequency, csv_import_count',
+        'accent_color, theme, avatar_emoji, currency, onboarding_main_goal, onboarding_tried_other_app, onboarding_frequency, csv_import_count, hourly_rate, work_hours_enabled',
       )
       .eq('user_id', userId)
       .maybeSingle()
@@ -68,6 +79,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setOnboardingTriedOtherAppState(data?.onboarding_tried_other_app ?? null)
       setOnboardingFrequencyState((data?.onboarding_frequency as TrackingFrequency | null) ?? null)
       setCsvImportCountState(data?.csv_import_count ?? 0)
+      setHourlyRateState(data?.hourly_rate ?? null)
+      setWorkHoursEnabledState(data?.work_hours_enabled ?? false)
       // Reconciles with whatever index.html's bootstrap script guessed from
       // localStorage before this fetch resolved — a no-op on the common
       // path where they already matched.
@@ -91,6 +104,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       onboarding_tried_other_app?: boolean
       onboarding_frequency?: TrackingFrequency
       csv_import_count?: number
+      hourly_rate?: number | null
+      work_hours_enabled?: boolean
     }) => {
       if (!userId) return
       const { error: upsertError } = await supabase
@@ -135,6 +150,26 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [upsert],
   )
 
+  // Set together by WorkHoursSettings.tsx (turning the feature on requires
+  // a rate, so it always writes both), but kept as two independent setters
+  // here since the toggle alone also needs to flip off without touching a
+  // rate the user might want to keep around for next time.
+  const setHourlyRate = useCallback(
+    (value: number | null) => {
+      setHourlyRateState(value)
+      upsert({ hourly_rate: value })
+    },
+    [upsert],
+  )
+
+  const setWorkHoursEnabled = useCallback(
+    (value: boolean) => {
+      setWorkHoursEnabledState(value)
+      upsert({ work_hours_enabled: value })
+    },
+    [upsert],
+  )
+
   // Written once, at the end of Onboarding — read back by lib/tips.ts (via
   // Dashboard) to tilt the personalized tips' tone toward the goal the user
   // actually said they cared about.
@@ -174,12 +209,16 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     onboardingTriedOtherApp,
     onboardingFrequency,
     csvImportCount,
+    hourlyRate,
+    workHoursEnabled,
     setAccentColor,
     setTheme,
     setAvatarEmoji,
     setCurrency,
     setOnboardingProfile,
     incrementCsvImportCount,
+    setHourlyRate,
+    setWorkHoursEnabled,
   }
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>

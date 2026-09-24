@@ -10,6 +10,7 @@ import { useRecurringExpenses } from '../hooks/useRecurringExpenses'
 import { useSubscription } from '../hooks/useSubscription'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
+import { useWorkHours } from '../hooks/useWorkHours'
 import { getTodayDateString } from '../lib/format'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import type { RecurringFrequency } from '../lib/recurringExpenses'
@@ -65,6 +66,7 @@ export function QuickAddFab() {
   const t = MISC[lang].quickAddFab
   const ct = COMMON[lang].categorySuggestion
   const formatMoney = useMoneyFormat()
+  const workHours = useWorkHours()
   const [open, setOpen] = useState(false)
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
@@ -142,6 +144,8 @@ export function QuickAddFab() {
     showToast(t.toastExpenseAdded(item.description, formatMoney(item.amount)))
   }
 
+  const amountHours = workHours(Number(amount) || 0)
+
   return (
     <>
       <button
@@ -206,6 +210,8 @@ export function QuickAddFab() {
               ))}
             </select>
           </div>
+
+          {amountHours && <p className="-mt-1 text-xs text-muted">{amountHours}</p>}
 
           {categoryField.suggestedCategory && !categoryField.categoryTouched && (
             <p className="-mt-1 text-xs text-muted">{ct.suggestedHint}</p>

@@ -47,6 +47,21 @@ export interface ParametresContent {
     avatar: string
     avatarAriaLabel: (emoji: string) => string
   }
+  workHours: {
+    cardTitle: string
+    cardHint: string
+    enableLabel: string
+    enableHintNoRate: string
+    modeHourly: string
+    modeAnnual: string
+    hourlyRateLabel: string
+    hourlyRatePlaceholder: string
+    annualSalaryLabel: string
+    annualSalaryPlaceholder: string
+    hoursPerWeekLabel: string
+    hoursPerWeekPlaceholder: string
+    computedRateSentence: (rate: string) => string
+  }
 }
 
 export const PARAMETRES: Record<Lang, ParametresContent> = {
@@ -119,6 +134,22 @@ export const PARAMETRES: Record<Lang, ParametresContent> = {
       avatar: 'Avatar',
       avatarAriaLabel: (emoji) => `Avatar ${emoji}`,
     },
+    workHours: {
+      cardTitle: 'Prix en heures de travail',
+      cardHint:
+        "Affiche, à côté de chaque montant, le temps de travail que ça représente pour toi. Optionnel — tant que rien n'est renseigné, rien ne change.",
+      enableLabel: "Afficher l'équivalent en heures de travail",
+      enableHintNoRate: 'Renseigne ton taux ci-dessous pour activer.',
+      modeHourly: 'Taux horaire',
+      modeAnnual: 'Salaire annuel',
+      hourlyRateLabel: 'Ton taux horaire net',
+      hourlyRatePlaceholder: '0.00',
+      annualSalaryLabel: 'Salaire annuel net',
+      annualSalaryPlaceholder: '0.00',
+      hoursPerWeekLabel: 'Heures travaillées par semaine',
+      hoursPerWeekPlaceholder: '40',
+      computedRateSentence: (rate) => `Ça représente environ ${rate} de l'heure.`,
+    },
   },
   en: {
     pageHeader: {
@@ -188,6 +219,22 @@ export const PARAMETRES: Record<Lang, ParametresContent> = {
       light: 'Light',
       avatar: 'Avatar',
       avatarAriaLabel: (emoji) => `Avatar ${emoji}`,
+    },
+    workHours: {
+      cardTitle: 'Price in hours worked',
+      cardHint:
+        "Shows, next to every amount, how much work time it represents for you. Optional — until you fill this in, nothing changes.",
+      enableLabel: 'Show the hours-worked equivalent',
+      enableHintNoRate: 'Fill in your rate below to turn this on.',
+      modeHourly: 'Hourly rate',
+      modeAnnual: 'Annual salary',
+      hourlyRateLabel: 'Your net hourly rate',
+      hourlyRatePlaceholder: '0.00',
+      annualSalaryLabel: 'Net annual salary',
+      annualSalaryPlaceholder: '0.00',
+      hoursPerWeekLabel: 'Hours worked per week',
+      hoursPerWeekPlaceholder: '40',
+      computedRateSentence: (rate) => `That's about ${rate} an hour.`,
     },
   },
 }

@@ -279,6 +279,8 @@ export interface Database {
           onboarding_tried_other_app: boolean | null
           onboarding_frequency: string | null
           csv_import_count: number
+          hourly_rate: number | null
+          work_hours_enabled: boolean
           updated_at: string
         }
         Insert: {
@@ -291,6 +293,8 @@ export interface Database {
           onboarding_tried_other_app?: boolean | null
           onboarding_frequency?: string | null
           csv_import_count?: number
+          hourly_rate?: number | null
+          work_hours_enabled?: boolean
           updated_at?: string
         }
         Update: {
@@ -303,6 +307,8 @@ export interface Database {
           onboarding_tried_other_app?: boolean | null
           onboarding_frequency?: string | null
           csv_import_count?: number
+          hourly_rate?: number | null
+          work_hours_enabled?: boolean
           updated_at?: string
         }
         Relationships: []

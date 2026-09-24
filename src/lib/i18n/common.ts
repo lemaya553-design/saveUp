@@ -127,6 +127,14 @@ export interface CommonContent {
     suggestedHint: string
     newCategoryHint: (name: string) => string
   }
+  // The "price in hours worked" equivalent shown under an amount, wherever
+  // useWorkHours' caller decides it belongs — never generated centrally, see
+  // lib/workHours.ts for the bucket thresholds (minutes / hours / hours+days).
+  workHours: {
+    minutes: (m: number) => string
+    hours: (h: number) => string
+    hoursAndDays: (h: number, d: number) => string
+  }
 }
 
 export const COMMON: Record<Lang, CommonContent> = {
@@ -240,6 +248,11 @@ export const COMMON: Record<Lang, CommonContent> = {
       suggestedHint: 'Catégorie suggérée à partir de la description — modifiable.',
       newCategoryHint: (name) => `Une nouvelle catégorie « ${name} » sera créée automatiquement.`,
     },
+    workHours: {
+      minutes: (m) => `${m} min de travail`,
+      hours: (h) => `${h} h de travail`,
+      hoursAndDays: (h, d) => `${h} h · ${d} jour${d > 1 ? 's' : ''}`,
+    },
   },
   en: {
     app: {
@@ -350,6 +363,11 @@ export const COMMON: Record<Lang, CommonContent> = {
     categorySuggestion: {
       suggestedHint: 'Category suggested from the description — editable.',
       newCategoryHint: (name) => `A new category "${name}" will be created automatically.`,
+    },
+    workHours: {
+      minutes: (m) => `${m} min of work`,
+      hours: (h) => `${h} h of work`,
+      hoursAndDays: (h, d) => `${h} h · ${d} day${d > 1 ? 's' : ''}`,
     },
   },
 }

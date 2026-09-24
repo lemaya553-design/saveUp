@@ -17,6 +17,7 @@ import { useAnimatedNumber } from '../hooks/useAnimatedNumber'
 import { useSubscription } from '../hooks/useSubscription'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
+import { useWorkHours } from '../hooks/useWorkHours'
 import { EPARGNE } from '../lib/i18n/epargne'
 import { COMMON } from '../lib/i18n/common'
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
@@ -89,6 +90,7 @@ export function SavingsGoalCard({
   const { lang } = useLanguage()
   const t = EPARGNE[lang].goalCard
   const formatMoney = useMoneyFormat()
+  const workHours = useWorkHours()
   const { showToast } = useToast()
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(goal.name)
@@ -102,6 +104,7 @@ export function SavingsGoalCard({
 
   const now = new Date()
   const remaining = Math.max(0, goal.targetAmount - goal.currentAmount)
+  const remainingHours = workHours(remaining)
   const monthlyRate = estimateMonthlyRate(contributionsForGoal, now)
   const weeklyDots = computeWeeklyContributionDots(contributionsForGoal, now)
   const icon = iconStyleForGoal(goal.name)
@@ -348,6 +351,7 @@ export function SavingsGoalCard({
         <p className={`mt-1.5 text-xs ${textSecondary}`}>
           {t.percentReached(Math.round(progress))}
           {remaining > 0 && t.remainingSuffix(formatMoney(remaining))}
+          {remaining > 0 && remainingHours && <span className="text-[10px]"> · {remainingHours}</span>}
         </p>
 
         {remaining <= 0 ? (

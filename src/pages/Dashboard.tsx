@@ -27,6 +27,7 @@ import { useLoginStreak } from '../hooks/useLoginStreak'
 import { useClaimedBadges } from '../hooks/useClaimedBadges'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
+import { useWorkHours } from '../hooks/useWorkHours'
 import { getSpendableBudgetCaption, sumThisMonth } from '../lib/budgetInsights'
 import { getBudgetPaceAlert, getSavingsGoalLateAlert } from '../lib/alerts'
 import { generatePersonalizedTips } from '../lib/tips'
@@ -51,6 +52,7 @@ export function Dashboard() {
   const { lang } = useLanguage()
   const t = DASHBOARD[lang]
   const formatMoney = useMoneyFormat()
+  const workHours = useWorkHours()
   const health = useFinancialHealth()
   const goals = useSavingsGoals()
   const contributions = useSavingsContributions()
@@ -253,6 +255,7 @@ export function Dashboard() {
             label={t.spent.label}
             value={formatMoney(health.spentThisMonth)}
             valueColorClass={isOverBudget ? 'text-red-400' : 'text-ink'}
+            suffix={workHours(health.spentThisMonth) ?? undefined}
             progress={budgetPct}
             progressColorClass={isOverBudget ? 'bg-red-400' : 'bg-primary'}
             caption={getSpendableBudgetCaption(rawSpendableBudget, lang, preferences.currency)}
