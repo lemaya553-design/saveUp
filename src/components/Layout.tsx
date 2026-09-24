@@ -15,6 +15,7 @@ export function Layout() {
   // else here is marketing-only regardless of auth state.
   const isMarketingPage =
     location.pathname === '/' ||
+    location.pathname === '/calculateur' ||
     (location.pathname === '/tarifs' && !user) ||
     location.pathname === '/onboarding' ||
     location.pathname === '/connexion' ||

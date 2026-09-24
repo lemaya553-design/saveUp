@@ -26,6 +26,13 @@ const Statistiques = lazy(() =>
   import('./pages/Statistiques').then((m) => ({ default: m.Statistiques })),
 )
 
+// Public, standalone, meant to be shared and opened cold on a phone —
+// code-split so nobody visiting the rest of the app pays for it, and it
+// pays for nothing else in return.
+const Calculateur = lazy(() =>
+  import('./pages/Calculateur').then((m) => ({ default: m.Calculateur })),
+)
+
 function App() {
   return (
     <AuthProvider>
@@ -37,6 +44,14 @@ function App() {
                 <Routes>
                   <Route element={<Layout />}>
                     <Route index element={<Home />} />
+                    <Route
+                      path="calculateur"
+                      element={
+                        <Suspense fallback={<PageSkeleton cards={2} />}>
+                          <Calculateur />
+                        </Suspense>
+                      }
+                    />
                     <Route path="tarifs" element={<Tarifs />} />
                     <Route path="connexion" element={<Connexion />} />
                     <Route path="confidentialite" element={<Confidentialite />} />
