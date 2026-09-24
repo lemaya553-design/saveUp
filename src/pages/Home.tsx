@@ -12,6 +12,7 @@ import { HeroScoreGauge } from '../components/HeroScoreGauge'
 import { SimulatorPreview } from '../components/SimulatorPreview'
 import { ScreenshotCarousel } from '../components/ScreenshotCarousel'
 import { MetaTags } from '../components/MetaTags'
+import { ProgressCounter } from '../components/ProgressCounter'
 import { useLanguage } from '../hooks/useLanguage'
 import { HOME } from '../lib/i18n/home'
 import {
@@ -460,6 +461,8 @@ export function Home() {
           </div>
         </Reveal>
       </section>
+
+      <ProgressCounter />
 
       {/* CTA final */}
       <section id="cta-final" className="relative isolate overflow-hidden px-4 py-28 text-center sm:px-6">

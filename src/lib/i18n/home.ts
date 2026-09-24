@@ -69,6 +69,14 @@ export interface HomeContent {
     badge: string
     body: string
   }
+  // Public progress counter (ProgressCounter.tsx) — the live count comes
+  // from api/customer-count.ts (paying, non-trial customers only), the
+  // target (10) is a real stated goal, not derived from anything, so it's
+  // fine as a plain constant here.
+  progressCounter: {
+    context: string
+    progress: (count: number, target: number) => string
+  }
   finalCta: {
     heading: string
     cta: string
@@ -202,6 +210,10 @@ export const HOME: Record<Lang, HomeContent> = {
       heading: 'Résultats',
       badge: 'À venir',
       body: "SaveUp est tout jeune — on n'a pas encore de résultats concrets d'utilisateurs à partager, et on ne va pas en inventer. Crée ton compte pour voir l'outil à l'œuvre avec tes propres chiffres.",
+    },
+    progressCounter: {
+      context: "SaveUp est construit par une seule personne. Voici où j'en suis.",
+      progress: (count, target) => `${count} client${count === 1 ? '' : 's'} sur ${target} d'ici Noël`,
     },
     finalCta: {
       heading: 'Prêt à voir clair dans tes finances ?',
@@ -360,6 +372,10 @@ export const HOME: Record<Lang, HomeContent> = {
       heading: 'Results',
       badge: 'Coming soon',
       body: "SaveUp is brand new — we don't have real user results to share yet, and we're not going to make any up. Create your account to see the tool at work with your own numbers.",
+    },
+    progressCounter: {
+      context: "SaveUp is built by one person. Here's where I'm at.",
+      progress: (count, target) => `${count} customer${count === 1 ? '' : 's'} out of ${target} by Christmas`,
     },
     finalCta: {
       heading: 'Ready to see your finances clearly?',
