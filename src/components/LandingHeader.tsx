@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { LogoMark } from './Logo'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { CurrencySwitcher } from './CurrencySwitcher'
 import { useLanguage } from '../hooks/useLanguage'
 import { COMMON } from '../lib/i18n/common'
 
@@ -60,6 +61,12 @@ export function LandingHeader() {
               visible way to switch language without opening the menu
               first. */}
           <LanguageSwitcher />
+          {/* Was only ever wired into Nav.tsx (the signed-in app header) —
+              a logged-out visitor on the public marketing site had no way
+              to see it at all, in any commit, ever. Safe with no session:
+              CurrencySwitcher falls back to CAD and never touches auth
+              state directly. */}
+          <CurrencySwitcher />
 
           <Link
             to="/dashboard"
