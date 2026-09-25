@@ -117,7 +117,7 @@ export function Dashboard() {
   if (isFreshUser) {
     return (
       <div className="mx-auto max-w-3xl px-4 pb-10">
-        <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={t.help} />
+        <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={t.help} compact />
         <EmptyState
           title={t.freshUser.title}
           description={t.freshUser.description}
@@ -168,7 +168,7 @@ export function Dashboard() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={t.help} />
+      <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={t.help} compact />
 
       {/* Streak + starter badge — surfaced here (not just on Récompenses,
           which nothing else points a new user toward) so day one has a
