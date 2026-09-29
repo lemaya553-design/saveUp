@@ -75,7 +75,7 @@ export function CurrencySwitcher() {
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={t.currencySwitcher.ariaLabel}
-        className="inline-flex items-center gap-1 rounded-full border border-overlay/10 bg-overlay/5 px-2.5 py-1 text-xs font-semibold text-muted transition-colors hover:text-ink"
+        className="inline-flex items-center gap-1 rounded-full border border-overlay/10 bg-overlay/5 px-2 py-1 text-xs font-semibold text-muted transition-colors hover:text-ink"
       >
         {currency}
         <span aria-hidden="true" className="text-[9px]">

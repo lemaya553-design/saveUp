@@ -22,7 +22,7 @@ export function LanguageSwitcher() {
           type="button"
           onClick={() => setLang(l.value)}
           aria-pressed={lang === l.value}
-          className={`rounded-full px-2.5 py-1 transition-colors ${
+          className={`rounded-full px-2 py-1 transition-colors ${
             lang === l.value ? 'bg-primary-strong text-white' : 'text-muted hover:text-ink'
           }`}
         >

@@ -37,7 +37,7 @@ export function LandingHeader() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-overlay/10 bg-canvas/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-2 py-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2">
           <LogoMark className="h-7 w-7" />
           <span className="text-xl font-bold">
@@ -54,7 +54,7 @@ export function LandingHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-0.5 sm:gap-2">
           {/* Visible at every width, not just sm+ — used to be hidden below
               640px and only reachable at the bottom of the burger menu,
               which meant an English-speaking visitor on a phone had no
@@ -70,7 +70,7 @@ export function LandingHeader() {
 
           <Link
             to="/dashboard"
-            className="whitespace-nowrap rounded-lg bg-primary-strong px-3 py-2 text-sm font-medium text-white transition-all hover:brightness-110 sm:px-4"
+            className="whitespace-nowrap rounded-lg bg-primary-strong px-2 py-2 text-sm font-medium text-white transition-all hover:brightness-110 sm:px-4"
           >
             {/* Short label below sm: at 375px, ctaStart's full text
                 ("Commencer gratuitement") wraps to two lines once the
