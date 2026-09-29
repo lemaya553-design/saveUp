@@ -73,23 +73,28 @@
   --color-red-300: #b91c1c;
 }
 
-/* Experimental landing-page redesign (Home.tsx only) — white background,
-   minimal, single accent. Scoped to a wrapper class rather than
+/* Landing page (Home.tsx) recolor — same structure/sections/copy as the
+   app's original landing page, just a white/black/orange palette instead
+   of the dark blue/violet default. Scoped to a wrapper class rather than
    :root[data-theme='light'] on purpose: that selector only ever matches
    the actual <html> element (the user's real in-app light/dark
    preference), so it can't be used to theme one route's subtree without
-   also hijacking the global attribute for every other page. Deliberately
-   NOT committed/shipped — see Home.tsx for the toggle back to the current
-   design. --color-accent (violet) is untouched at @theme but never
-   referenced anywhere under this class — the brief calls for exactly one
-   accent color, and --color-primary (SaveUp's existing blue) already is
-   the app's accent, so there's nothing to override there, only to avoid
-   using a second one. */
-.landing-minimal {
+   also hijacking the global attribute for every other page.
+   --color-primary/--color-primary-strong/--color-accent/--color-success
+   all collapse to the same orange here — the app normally uses 3 distinct
+   hues (blue primary, violet accent, green success) across badges,
+   gradients and checkmarks, but the requested palette is a single accent
+   color, so every one of those roles maps to it instead of leaving stray
+   blue/violet/green on an otherwise black-on-white page. */
+.landing-classic {
   --color-canvas: #ffffff;
   --color-surface: #ffffff;
+  --color-primary: #ff6b00;
+  --color-primary-strong: #ff6b00;
+  --color-accent: #ff6b00;
+  --color-success: #ff6b00;
   --color-ink: #111111;
-  --color-muted: #6b7280;
+  --color-muted: #555555;
   --color-overlay: #111111;
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(17, 17, 17, 0.08);

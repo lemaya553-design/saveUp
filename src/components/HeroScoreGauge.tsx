@@ -31,9 +31,9 @@ export function HeroScoreGauge({ score }: { score: number }) {
       <svg viewBox="0 0 320 180" className="w-full" role="img" aria-label={t.ariaLabel(score)}>
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor="#4a6cf7" />
-            <stop offset="0.55" stopColor="#8b5cf6" />
-            <stop offset="1" stopColor="#22c55e" />
+            <stop offset="0" stopColor="#ff6b00" />
+            <stop offset="0.55" stopColor="#ff6b00" />
+            <stop offset="1" stopColor="#ff6b00" />
           </linearGradient>
         </defs>
         <path d={ARC_PATH} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={22} strokeLinecap="round" />

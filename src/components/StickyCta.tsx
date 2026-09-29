@@ -48,7 +48,7 @@ export function StickyCta() {
           <Link
             to="/dashboard"
             tabIndex={visible ? 0 : -1}
-            className="btn-sheen block rounded-xl bg-primary-strong px-8 py-4 text-center text-lg font-bold text-white shadow-[0_0_30px_rgba(74,108,247,0.45)] transition-all hover:brightness-110"
+            className="btn-sheen block rounded-xl bg-primary-strong px-8 py-4 text-center text-lg font-bold text-white shadow-[0_0_30px_rgba(255,107,0,0.45)] transition-all hover:brightness-110"
           >
             {t.cta}
           </Link>
