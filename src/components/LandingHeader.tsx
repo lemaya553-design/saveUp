@@ -27,13 +27,7 @@ export function LandingHeader() {
   const { lang } = useLanguage()
   const t = COMMON[lang].header
 
-  const navLinks = [
-    { to: '/#comment-ca-marche', label: t.navComment },
-    { to: '/#fonctionnalites', label: t.navFeatures },
-    { to: '/#resultats', label: t.navResults },
-    { to: '/tarifs', label: t.navPricing },
-    { to: '/#faq', label: t.navFaq },
-  ]
+  const navLinks = [{ to: '/tarifs', label: t.navPricing }]
 
   return (
     <header className="sticky top-0 z-20 border-b border-overlay/10 bg-canvas/80 backdrop-blur-md">

@@ -9,6 +9,34 @@ export interface HomeContent {
     title: string
     description: string
   }
+  // Experimental white/minimal redesign (Home.tsx, .landing-minimal in
+  // index.css) — a separate, self-contained section rather than editing
+  // the fields above in place, so the current shipped copy stays intact
+  // and this can be toggled back off without losing either version.
+  minimal: {
+    hero: {
+      title: string
+      subtitle: string
+      cta: string
+    }
+    demo: {
+      heading: string
+      screenshotAlt: string
+      testimonialPlaceholder: string
+    }
+    howItWorks: {
+      heading: string
+      steps: { title: string; body: string }[]
+    }
+    repeatedCta: {
+      heading: string
+      cta: string
+    }
+    footer: {
+      contactLabel: string
+      legal: string
+    }
+  }
   hero: {
     freeBadge: string
     titleLine1: string
@@ -94,6 +122,43 @@ export const HOME: Record<Lang, HomeContent> = {
       title: 'SaveUp — Reprends le contrôle de ton argent, simplement',
       description:
         'Budget, épargne et objectifs financiers dans une seule app — sans tableur compliqué. 100% gratuit pour commencer.',
+    },
+    minimal: {
+      hero: {
+        title: 'Le budget qui se fait presque tout seul.',
+        subtitle: "Fixe un objectif d'épargne, et regarde ta progression avancer — sans tableur, sans jonglerie.",
+        cta: 'Créer mon compte gratuit',
+      },
+      demo: {
+        heading: 'Ce que tu vois, une fois connecté.',
+        screenshotAlt: "Aperçu du Dashboard SaveUp : score de santé, dépenses du mois et progression de l'épargne.",
+        testimonialPlaceholder: '[Témoignage à venir]',
+      },
+      howItWorks: {
+        heading: 'En 3 étapes',
+        steps: [
+          {
+            title: "C'est quoi ton revenu mensuel ?",
+            body: 'On calcule tout de suite un aperçu de ton budget hebdomadaire.',
+          },
+          {
+            title: 'Tes dépenses fixes',
+            body: 'Loyer, abonnements — pour affiner ton budget réel.',
+          },
+          {
+            title: 'Ton premier objectif',
+            body: 'Un montant, une date, et une progression à suivre.',
+          },
+        ],
+      },
+      repeatedCta: {
+        heading: "Vois où va ton argent, dès aujourd'hui.",
+        cta: 'Créer mon compte gratuit',
+      },
+      footer: {
+        contactLabel: 'bonjour@saveup.store',
+        legal: 'SaveUp — application de gestion budgétaire personnelle.',
+      },
     },
     hero: {
       freeBadge: '100% gratuit pour commencer',
@@ -256,6 +321,43 @@ export const HOME: Record<Lang, HomeContent> = {
       title: 'SaveUp — Take control of your money, simply',
       description:
         'Budget, savings, and financial goals in one app — no complicated spreadsheet. 100% free to start.',
+    },
+    minimal: {
+      hero: {
+        title: 'The budget that almost runs itself.',
+        subtitle: 'Set a savings goal, and watch your progress move — no spreadsheet, no juggling.',
+        cta: 'Create my free account',
+      },
+      demo: {
+        heading: "What you see, once you're in.",
+        screenshotAlt: "Preview of the SaveUp Dashboard: health score, this month's spending, and savings progress.",
+        testimonialPlaceholder: '[Testimonial coming soon]',
+      },
+      howItWorks: {
+        heading: 'In 3 steps',
+        steps: [
+          {
+            title: "What's your monthly income?",
+            body: "We'll work out a rough weekly budget right away.",
+          },
+          {
+            title: 'Your fixed expenses',
+            body: 'Rent, subscriptions — to fine-tune your real budget.',
+          },
+          {
+            title: 'Your first goal',
+            body: 'An amount, a date, and progress to track.',
+          },
+        ],
+      },
+      repeatedCta: {
+        heading: 'See where your money goes, starting today.',
+        cta: 'Create my free account',
+      },
+      footer: {
+        contactLabel: 'bonjour@saveup.store',
+        legal: 'SaveUp — personal budgeting app.',
+      },
     },
     hero: {
       freeBadge: '100% free to start',

@@ -73,6 +73,31 @@
   --color-red-300: #b91c1c;
 }
 
+/* Experimental landing-page redesign (Home.tsx only) — white background,
+   minimal, single accent. Scoped to a wrapper class rather than
+   :root[data-theme='light'] on purpose: that selector only ever matches
+   the actual <html> element (the user's real in-app light/dark
+   preference), so it can't be used to theme one route's subtree without
+   also hijacking the global attribute for every other page. Deliberately
+   NOT committed/shipped — see Home.tsx for the toggle back to the current
+   design. --color-accent (violet) is untouched at @theme but never
+   referenced anywhere under this class — the brief calls for exactly one
+   accent color, and --color-primary (SaveUp's existing blue) already is
+   the app's accent, so there's nothing to override there, only to avoid
+   using a second one. */
+.landing-minimal {
+  --color-canvas: #ffffff;
+  --color-surface: #ffffff;
+  --color-ink: #111111;
+  --color-muted: #6b7280;
+  --color-overlay: #111111;
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(17, 17, 17, 0.08);
+
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+}
+
 html {
   scroll-behavior: smooth;
 }
