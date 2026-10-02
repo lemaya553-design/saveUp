@@ -68,7 +68,7 @@ export function LandingHeader() {
 
           <Link
             to="/dashboard"
-            className="whitespace-nowrap rounded-lg bg-primary-strong px-2 py-2 text-sm font-medium text-white transition-all hover:brightness-110 sm:px-4"
+            className="whitespace-nowrap rounded-xl bg-primary-strong px-2 py-2 text-sm font-medium text-white transition-all hover:-translate-y-0.5 hover:brightness-110 sm:px-4"
           >
             {/* Short label below sm: at 375px, ctaStart's full text
                 ("Essayer gratuitement") wraps to two lines once the

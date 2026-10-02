@@ -127,31 +127,35 @@ const FLOATING_CARD_ICONS = {
 // only (lg:) — on a ~700px-wide centered hero inside a 1024px+ viewport
 // there's enough side margin for these not to overlap the title/subtitle.
 // Below lg they render inline as a static 2x2 grid instead (see JSX).
-const FLOATING_CARD_POSITIONS = [
-  'left-0 top-4 -rotate-3',
-  'right-0 top-16 rotate-2',
-  'left-4 bottom-8 rotate-2',
-  'right-4 bottom-0 -rotate-2',
+// Varied rotation/offset/size per card on purpose — four identical boxes at
+// uniform angles read as a grid, not a scatter of real notifications.
+const FLOATING_CARD_STYLES = [
+  { position: 'left-0 top-2 -rotate-6', size: 'text-base px-5 py-3.5' },
+  { position: 'right-2 top-20 rotate-3', size: 'text-xs px-3.5 py-2.5' },
+  { position: 'left-10 bottom-4 rotate-2', size: 'text-sm px-4 py-3' },
+  { position: 'right-0 bottom-16 -rotate-[8deg]', size: 'text-xs px-3.5 py-2.5' },
 ]
 
 function FloatingCard({
   icon,
   text,
+  size = 'text-sm px-4 py-3',
   className = '',
 }: {
   icon: keyof typeof FLOATING_CARD_ICONS
   text: string
+  size?: string
   className?: string
 }) {
   const Icon = FLOATING_CARD_ICONS[icon]
   return (
     <div
-      className={`flex items-center gap-2.5 rounded-2xl border border-overlay/10 bg-surface px-4 py-3 shadow-lg shadow-black/5 ${className}`}
+      className={`flex items-center gap-2.5 rounded-3xl border border-overlay/10 bg-surface shadow-lg shadow-black/5 transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-xl ${size} ${className}`}
     >
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
         <Icon className="h-4 w-4" />
       </span>
-      <span className="text-sm font-medium text-ink">{text}</span>
+      <span className="font-medium text-ink">{text}</span>
     </div>
   )
 }
@@ -182,10 +186,16 @@ export function Home() {
           around the content on large screens, collapsing to a static grid
           below lg. */}
       <section className="relative overflow-hidden px-4 pb-20 pt-16 text-center sm:px-6 sm:pb-28 sm:pt-24">
-        {/* Subtle orange glow behind the title. */}
+        {/* Subtle orange glow behind the title — two soft blobs drifting
+            gently (mesh-blob-a/b, defined in index.css) rather than one
+            static circle, for a touch of ambient life. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary/15 blur-[110px]"
+          className="mesh-blob-a pointer-events-none absolute left-1/2 top-0 -z-10 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary/15 blur-[110px]"
+        />
+        <div
+          aria-hidden="true"
+          className="mesh-blob-b pointer-events-none absolute right-[10%] top-1/3 -z-10 h-72 w-72 rounded-full bg-primary/10 blur-[100px]"
         />
 
         <Reveal className="relative mx-auto max-w-2xl">
@@ -212,7 +222,7 @@ export function Home() {
 
           <Link
             to="/dashboard"
-            className="group mx-auto mt-9 flex max-w-xl items-center gap-3 rounded-full border border-overlay/10 bg-surface py-2 pl-5 pr-2 shadow-lg shadow-black/5 transition-shadow hover:shadow-xl"
+            className="group mx-auto mt-9 flex max-w-xl items-center gap-3 rounded-full border border-overlay/10 bg-surface py-2 pl-5 pr-2 shadow-lg shadow-black/5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
           >
             <SearchIcon className="h-5 w-5 shrink-0 text-muted" />
             <span className="flex-1 truncate text-left text-sm text-muted sm:text-base">{t.hero.ctaInputLabel}</span>
@@ -229,9 +239,9 @@ export function Home() {
             <Reveal
               key={card.text}
               delayMs={200 + i * 100}
-              className={`pointer-events-auto absolute ${FLOATING_CARD_POSITIONS[i]}`}
+              className={`pointer-events-auto absolute ${FLOATING_CARD_STYLES[i].position}`}
             >
-              <FloatingCard icon={card.icon} text={card.text} />
+              <FloatingCard icon={card.icon} text={card.text} size={FLOATING_CARD_STYLES[i].size} />
             </Reveal>
           ))}
         </div>
@@ -248,7 +258,7 @@ export function Home() {
       <section id="probleme" className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
         <div className="mx-auto max-w-4xl">
           <Reveal>
-            <h2 className="text-center text-2xl font-bold text-ink sm:text-3xl">{t.problemSolution.heading}</h2>
+            <h2 className="text-center text-2xl font-bold text-ink sm:text-3xl">🤔 {t.problemSolution.heading}</h2>
             <p className="mx-auto mt-3 max-w-md text-center text-muted">{t.problemSolution.subheading}</p>
           </Reveal>
 
@@ -273,7 +283,10 @@ export function Home() {
               </h3>
               <ul className="mt-4 space-y-4">
                 {t.problemSolution.pairs.map((pair) => (
-                  <li key={pair.solution} className="flex items-start gap-3 text-sm font-medium text-ink sm:text-base">
+                  <li
+                    key={pair.solution}
+                    className="flex items-start gap-3 text-sm font-medium text-ink transition-colors duration-200 hover:text-primary sm:text-base"
+                  >
                     <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     {pair.solution}
                   </li>
@@ -285,17 +298,21 @@ export function Home() {
       </section>
 
       {/* 3. Storytelling */}
-      <section id="histoire" className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
+      <section id="histoire" className="relative overflow-hidden border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
+        <div
+          aria-hidden="true"
+          className="mesh-blob-c pointer-events-none absolute -left-20 top-1/2 -z-10 h-80 w-80 -translate-y-1/2 rounded-full bg-primary/10 blur-[110px]"
+        />
         <Reveal className="mx-auto flex max-w-4xl flex-col items-center gap-10 sm:flex-row sm:items-start">
           {/* Placeholder avatar — real founder photo not yet wired in, see
               Home.tsx task notes. Swap the icon block below for an <img>
               once the file exists in the project (e.g. public/founder.jpg). */}
-          <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform duration-300 hover:-translate-y-1 hover:rotate-3">
             <PersonIcon className="h-16 w-16" />
           </div>
 
           <div className="text-center sm:text-left">
-            <h2 className="text-2xl font-bold text-ink sm:text-3xl">{t.story.heading}</h2>
+            <h2 className="text-2xl font-bold text-ink sm:text-3xl">💡 {t.story.heading}</h2>
             <div className="mt-4 space-y-3 text-muted">
               {t.story.body.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
@@ -313,14 +330,14 @@ export function Home() {
       <section id="demo" className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
         <div className="mx-auto max-w-3xl text-center">
           <Reveal>
-            <h2 className="text-2xl font-bold text-ink sm:text-3xl">{t.demo.heading}</h2>
+            <h2 className="text-2xl font-bold text-ink sm:text-3xl">🎬 {t.demo.heading}</h2>
             <p className="mx-auto mt-3 max-w-md text-muted">{t.demo.subheading}</p>
           </Reveal>
 
           <Reveal delayMs={80} className="mt-10">
-            <div className="relative mx-auto flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-ink">
+            <div className="group relative mx-auto flex aspect-video items-center justify-center overflow-hidden rounded-3xl bg-ink transition-shadow duration-300 hover:shadow-2xl hover:shadow-primary/20">
               <div className="flex flex-col items-center gap-3">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white transition-transform duration-300 group-hover:scale-110">
                   <PlayIcon className="h-7 w-7 translate-x-0.5" />
                 </div>
                 <p className="font-medium text-white">{t.demo.placeholderLabel}</p>
@@ -334,19 +351,26 @@ export function Home() {
       </section>
 
       {/* 5. Solution en 3 étapes */}
-      <section id="comment-ca-marche" className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
+      <section
+        id="comment-ca-marche"
+        className="relative overflow-hidden border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28"
+      >
+        <div
+          aria-hidden="true"
+          className="mesh-blob-a pointer-events-none absolute right-[-10%] top-10 -z-10 h-96 w-96 rounded-full bg-primary/10 blur-[120px]"
+        />
         <div className="mx-auto max-w-4xl">
           <Reveal>
-            <h2 className="text-center text-2xl font-bold text-ink sm:text-3xl">{t.solutionSteps.heading}</h2>
+            <h2 className="text-center text-2xl font-bold text-ink sm:text-3xl">⚡ {t.solutionSteps.heading}</h2>
             <p className="mx-auto mt-3 max-w-md text-center text-muted">{t.solutionSteps.subheading}</p>
           </Reveal>
 
-          <div className="mt-12 grid gap-10 sm:grid-cols-3">
+          <div className="mt-12 grid gap-6 sm:grid-cols-3">
             {t.solutionSteps.items.map((step, i) => {
               const Icon = STEP_ICONS[i]
               return (
                 <Reveal key={step.title} delayMs={i * 80}>
-                  <div className="text-center">
+                  <div className="h-full rounded-3xl border border-overlay/10 bg-surface p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/25 hover:shadow-xl">
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <Icon className="h-6 w-6" />
                     </div>
@@ -363,9 +387,13 @@ export function Home() {
       {/* 6. Tarifs — real plans/prices/features, same component and data as
           the standalone /tarifs page (PricingCards.tsx), so there's never a
           second copy of this that can drift. */}
-      <section id="tarifs" className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
+      <section id="tarifs" className="relative overflow-hidden border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
+        <div
+          aria-hidden="true"
+          className="mesh-blob-b pointer-events-none absolute left-1/2 top-0 -z-10 h-[30rem] w-[30rem] -translate-x-1/2 rounded-full bg-primary/8 blur-[130px]"
+        />
         <Reveal>
-          <h2 className="text-center text-2xl font-bold text-ink sm:text-3xl">{tarifs.hero.title}</h2>
+          <h2 className="text-center text-2xl font-bold text-ink sm:text-3xl">💰 {tarifs.hero.title}</h2>
           <p className="mx-auto mt-3 max-w-md text-center text-muted">{tarifs.hero.subtitle}</p>
         </Reveal>
         <Reveal delayMs={80} className="mt-12">
@@ -375,13 +403,20 @@ export function Home() {
 
       {/* 7. Preuve sociale honnête — communauté Discord, pas de témoignage
           inventé. */}
-      <section id="communaute" className="border-t border-overlay/10 px-4 py-20 text-center sm:px-6 sm:py-28">
+      <section
+        id="communaute"
+        className="relative overflow-hidden border-t border-overlay/10 px-4 py-20 text-center sm:px-6 sm:py-28"
+      >
+        <div
+          aria-hidden="true"
+          className="mesh-blob-c pointer-events-none absolute right-[-8%] bottom-[-10%] -z-10 h-80 w-80 rounded-full bg-primary/10 blur-[110px]"
+        />
         <Reveal>
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform duration-300 hover:-translate-y-1">
             <ChatIcon className="h-7 w-7" />
           </div>
           <h2 className="mx-auto mt-5 max-w-lg text-balance text-2xl font-bold text-ink sm:text-3xl">
-            {t.community.heading}
+            💬 {t.community.heading}
           </h2>
           <p className="mx-auto mt-3 max-w-md text-muted">{t.community.body}</p>
 
@@ -390,12 +425,12 @@ export function Home() {
               href={DISCORD_URL}
               target="_blank"
               rel="noreferrer"
-              className="mt-7 inline-block rounded-lg bg-primary-strong px-7 py-3 font-semibold text-white transition-all hover:brightness-110"
+              className="mt-7 inline-block rounded-xl bg-primary-strong px-7 py-3 font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/30 hover:brightness-110"
             >
               {t.community.discordCta}
             </a>
           ) : (
-            <p className="mt-7 inline-block rounded-lg border border-dashed border-overlay/20 px-5 py-2.5 text-sm text-muted">
+            <p className="mt-7 inline-block rounded-xl border border-dashed border-overlay/20 px-5 py-2.5 text-sm text-muted">
               {t.community.discordComingSoon}
             </p>
           )}
@@ -406,13 +441,13 @@ export function Home() {
       <section id="faq" className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
         <div className="mx-auto max-w-2xl">
           <Reveal>
-            <h2 className="text-center text-2xl font-bold text-ink sm:text-3xl">{t.faq.heading}</h2>
+            <h2 className="text-center text-2xl font-bold text-ink sm:text-3xl">❓ {t.faq.heading}</h2>
           </Reveal>
 
           <div className="mt-10 space-y-3">
             {t.faq.items.map((item, i) => (
               <Reveal key={item.question} delayMs={i * 40}>
-                <details className="group rounded-xl border border-overlay/10 px-5 py-4">
+                <details className="group rounded-2xl border border-overlay/10 px-5 py-4 transition-all duration-300 hover:border-primary/25 hover:shadow-md">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-ink">
                     {item.question}
                     <span aria-hidden="true" className="shrink-0 text-muted transition-transform group-open:rotate-45">

@@ -64,7 +64,7 @@ export function PricingCards() {
           return (
             <div
               key={planId}
-              className={`glass relative rounded-2xl p-6 shadow-lg shadow-black/30 ${
+              className={`glass relative rounded-3xl p-6 shadow-lg shadow-black/30 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${
                 highlight ? 'border-accent/40' : ''
               }`}
             >
@@ -101,7 +101,7 @@ export function PricingCards() {
                 <>
                   <Link
                     to={user ? '/dashboard' : '/connexion'}
-                    className="mt-8 block rounded-lg bg-primary-strong px-4 py-2 text-center font-medium text-white transition-all hover:brightness-110"
+                    className="mt-8 block rounded-xl bg-primary-strong px-4 py-2 text-center font-medium text-white transition-all hover:-translate-y-0.5 hover:brightness-110"
                   >
                     {user ? t.cta.goToDashboard : t.cta.startFree}
                   </Link>
@@ -111,7 +111,7 @@ export function PricingCards() {
                 <button
                   type="button"
                   disabled
-                  className="mt-8 w-full cursor-not-allowed rounded-lg border border-overlay/10 px-4 py-2 font-medium text-muted"
+                  className="mt-8 w-full cursor-not-allowed rounded-xl border border-overlay/10 px-4 py-2 font-medium text-muted"
                 >
                   {t.cta.currentPlan}
                 </button>
@@ -120,7 +120,7 @@ export function PricingCards() {
                   type="button"
                   onClick={handleManage}
                   disabled={isLoadingThis}
-                  className="mt-8 w-full rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
+                  className="mt-8 w-full rounded-xl border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
                 >
                   {isLoadingThis ? t.cta.redirecting : t.cta.manageSubscription}
                 </button>
@@ -131,7 +131,7 @@ export function PricingCards() {
                     type="button"
                     onClick={() => handleChoose(planId as Exclude<Plan, 'free'>)}
                     disabled={isLoadingThis}
-                    className="mt-2 w-full rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                    className="mt-2 w-full rounded-xl bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-60"
                   >
                     {isLoadingThis ? t.cta.redirecting : t.cta.tryFree(plan.name)}
                   </button>
