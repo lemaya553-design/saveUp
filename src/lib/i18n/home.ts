@@ -7,11 +7,15 @@ export interface HomeContent {
     description: string
   }
   hero: {
-    title: string
+    trustBadge: string
+    titleStart: string
+    titleHighlight: string
     subtitle: string
-    benefits: string[]
-    cta: string
-    trustLine: string
+    ctaInputLabel: string
+    ctaButton: string
+    // Icon key resolved to a component in Home.tsx — real app behavior
+    // only (no invented metrics), see the task that introduced this.
+    floatingCards: { icon: 'goal' | 'trend' | 'import' | 'budget'; text: string }[]
   }
   problemSolution: {
     heading: string
@@ -64,16 +68,19 @@ export const HOME: Record<Lang, HomeContent> = {
         'Importe ton relevé bancaire, budgète et épargne au même endroit — sans tableur compliqué. 100% gratuit pour commencer.',
     },
     hero: {
-      title: 'Gère ton budget en 3 clics',
+      trustBadge: 'Rejoins les premiers utilisateurs de SaveUp',
+      titleStart: 'Gère ton budget,',
+      titleHighlight: 'Enfin simplement.',
       subtitle:
-        "Importe ton relevé bancaire (CSV) et laisse SaveUp catégoriser tes dépenses automatiquement — budget, épargne et objectifs, enfin réunis au même endroit.",
-      benefits: [
-        'Import CSV de ton relevé bancaire',
-        'Catégorisation automatique en un clic',
-        "Suivi de tes objectifs d'épargne et de ta santé financière",
+        'SaveUp importe ton relevé bancaire et organise tes finances en 3 clics — budget, épargne et stats, automatiquement.',
+      ctaInputLabel: 'Commencer gratuitement, sans carte requise',
+      ctaButton: 'Essayer SaveUp →',
+      floatingCards: [
+        { icon: 'goal', text: "Objectif d'épargne atteint ✅" },
+        { icon: 'trend', text: 'Santé financière : Bonne' },
+        { icon: 'import', text: 'Import en 3 clics' },
+        { icon: 'budget', text: '5 catégories suivies' },
       ],
-      cta: 'Commencer gratuitement, sans carte requise',
-      trustLine: 'Rejoins les premiers utilisateurs de SaveUp',
     },
     problemSolution: {
       heading: 'Tu te reconnais ?',
@@ -188,16 +195,19 @@ export const HOME: Record<Lang, HomeContent> = {
         'Import your bank statement, budget and save in one place — no complicated spreadsheet. 100% free to start.',
     },
     hero: {
-      title: 'Manage your budget in 3 clicks',
+      trustBadge: 'Join the first SaveUp users',
+      titleStart: 'Manage your budget,',
+      titleHighlight: 'Finally simple.',
       subtitle:
-        'Import your bank statement (CSV) and let SaveUp categorize your spending automatically — budget, savings, and goals, finally in one place.',
-      benefits: [
-        'CSV import of your bank statement',
-        'Automatic categorization in one click',
-        'Track your savings goals and your financial health',
+        'SaveUp imports your bank statement and organizes your finances in 3 clicks — budget, savings, and stats, automatically.',
+      ctaInputLabel: 'Get started free, no card required',
+      ctaButton: 'Try SaveUp →',
+      floatingCards: [
+        { icon: 'goal', text: 'Savings goal reached ✅' },
+        { icon: 'trend', text: 'Financial health: Good' },
+        { icon: 'import', text: 'Import in 3 clicks' },
+        { icon: 'budget', text: '5 categories tracked' },
       ],
-      cta: 'Get started free, no card required',
-      trustLine: 'Join the first SaveUp users',
     },
     problemSolution: {
       heading: 'Sound familiar?',

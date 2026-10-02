@@ -32,9 +32,9 @@ export interface CommonContent {
     saveFailed: string
   }
   header: {
-    navTestimonials: string
-    navPricing: string
-    navFaq: string
+    navFeatures: string
+    navFounder: string
+    navConnexion: string
     ctaStart: string
     // Narrow-phone variant of ctaStart (< sm breakpoint) — the full label
     // wraps to two lines at 375px once the always-visible language switcher
@@ -154,9 +154,9 @@ export const COMMON: Record<Lang, CommonContent> = {
       saveFailed: "Impossible d'enregistrer — réessaie.",
     },
     header: {
-      navTestimonials: 'Témoignages',
-      navPricing: 'Tarifs',
-      navFaq: 'FAQ',
+      navFeatures: 'Fonctionnalités',
+      navFounder: 'Fondateur',
+      navConnexion: 'Connexion',
       ctaStart: 'Essayer gratuitement',
       ctaStartShort: 'Essayer',
       openMenu: 'Ouvrir le menu',
@@ -269,9 +269,9 @@ export const COMMON: Record<Lang, CommonContent> = {
       saveFailed: "Couldn't save — try again.",
     },
     header: {
-      navTestimonials: 'Testimonials',
-      navPricing: 'Pricing',
-      navFaq: 'FAQ',
+      navFeatures: 'Features',
+      navFounder: 'Founder',
+      navConnexion: 'Log in',
       ctaStart: 'Try it for free',
       ctaStartShort: 'Try it',
       openMenu: 'Open menu',

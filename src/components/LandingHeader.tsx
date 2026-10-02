@@ -28,15 +28,15 @@ export function LandingHeader() {
   const t = COMMON[lang].header
 
   const navLinks = [
-    { to: '/#communaute', label: t.navTestimonials },
-    { to: '/#tarifs', label: t.navPricing },
-    { to: '/#faq', label: t.navFaq },
+    { to: '/#comment-ca-marche', label: t.navFeatures },
+    { to: '/#histoire', label: t.navFounder },
+    { to: '/connexion', label: t.navConnexion },
   ]
 
   return (
     <header className="sticky top-0 z-20 border-b border-overlay/10 bg-canvas/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-2 py-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2">
+      <div className="mx-auto grid max-w-6xl grid-cols-[auto_1fr_auto] items-center gap-4 px-2 py-4 sm:px-6">
+        <Link to="/" className="flex items-center gap-2 justify-self-start">
           <LogoMark className="h-7 w-7" />
           <span className="text-xl font-bold">
             <span className="text-ink">save</span>
@@ -44,7 +44,7 @@ export function LandingHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-6 text-sm font-medium text-muted lg:flex">
+        <nav className="hidden items-center justify-self-center gap-8 text-sm font-medium text-muted lg:flex">
           {navLinks.map((link) => (
             <Link key={link.label} to={link.to} className="whitespace-nowrap transition-colors hover:text-ink">
               {link.label}
@@ -52,7 +52,7 @@ export function LandingHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-0.5 sm:gap-2">
+        <div className="flex items-center justify-self-end gap-0.5 sm:gap-2">
           {/* Visible at every width, not just sm+ — used to be hidden below
               640px and only reachable at the bottom of the burger menu,
               which meant an English-speaking visitor on a phone had no
@@ -71,7 +71,7 @@ export function LandingHeader() {
             className="whitespace-nowrap rounded-lg bg-primary-strong px-2 py-2 text-sm font-medium text-white transition-all hover:brightness-110 sm:px-4"
           >
             {/* Short label below sm: at 375px, ctaStart's full text
-                ("Commencer gratuitement") wraps to two lines once the
+                ("Essayer gratuitement") wraps to two lines once the
                 switcher above takes its place on the same row. */}
             <span className="sm:hidden">{t.ctaStartShort}</span>
             <span className="hidden sm:inline">{t.ctaStart}</span>

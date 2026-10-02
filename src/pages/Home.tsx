@@ -59,6 +59,34 @@ function GoalIcon({ className }: { className: string }) {
   )
 }
 
+function TrendIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 17l6-6 4 4 8-8" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 7h6v6" />
+    </svg>
+  )
+}
+
+function BudgetIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
+      <rect x="3" y="4" width="18" height="3.5" rx="1" />
+      <rect x="3" y="10.25" width="12" height="3.5" rx="1" />
+      <rect x="3" y="16.5" width="15" height="3.5" rx="1" />
+    </svg>
+  )
+}
+
+function SearchIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>
+      <circle cx="11" cy="11" r="7" />
+      <path strokeLinecap="round" d="M21 21l-4.3-4.3" />
+    </svg>
+  )
+}
+
 function PlayIcon({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -86,6 +114,48 @@ function PersonIcon({ className }: { className: string }) {
 
 const STEP_ICONS = [ImportIcon, TagIcon, GoalIcon] as const
 
+// Keyed to HomeContent['hero']['floatingCards'][number]['icon'] — real app
+// behavior only, see the task that introduced the new hero.
+const FLOATING_CARD_ICONS = {
+  goal: GoalIcon,
+  trend: TrendIcon,
+  import: ImportIcon,
+  budget: BudgetIcon,
+}
+
+// Positions for the 4 floating cards around the hero content, large screens
+// only (lg:) — on a ~700px-wide centered hero inside a 1024px+ viewport
+// there's enough side margin for these not to overlap the title/subtitle.
+// Below lg they render inline as a static 2x2 grid instead (see JSX).
+const FLOATING_CARD_POSITIONS = [
+  'left-0 top-4 -rotate-3',
+  'right-0 top-16 rotate-2',
+  'left-4 bottom-8 rotate-2',
+  'right-4 bottom-0 -rotate-2',
+]
+
+function FloatingCard({
+  icon,
+  text,
+  className = '',
+}: {
+  icon: keyof typeof FLOATING_CARD_ICONS
+  text: string
+  className?: string
+}) {
+  const Icon = FLOATING_CARD_ICONS[icon]
+  return (
+    <div
+      className={`flex items-center gap-2.5 rounded-2xl border border-overlay/10 bg-surface px-4 py-3 shadow-lg shadow-black/5 ${className}`}
+    >
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="text-sm font-medium text-ink">{text}</span>
+    </div>
+  )
+}
+
 // No real Discord invite exists yet (see Footer.tsx) — null keeps the CTA
 // visibly disabled instead of pointing at a fabricated server.
 const DISCORD_URL: string | null = null
@@ -107,30 +177,70 @@ export function Home() {
       <MetaTags />
       <LandingHeader />
 
-      {/* 1. Hero */}
-      <section className="px-4 pb-20 pt-16 text-center sm:px-6 sm:pb-28 sm:pt-24">
-        <Reveal>
-          <h1 className="mx-auto max-w-3xl text-balance text-[clamp(2.25rem,6vw,3.75rem)] font-extrabold leading-[1.08] tracking-tight text-ink">
-            {t.hero.title}
+      {/* 1. Hero — badge, two-tone title, search-bar-style CTA, and 4
+          floating "real feature" cards (no invented metrics) scattered
+          around the content on large screens, collapsing to a static grid
+          below lg. */}
+      <section className="relative overflow-hidden px-4 pb-20 pt-16 text-center sm:px-6 sm:pb-28 sm:pt-24">
+        {/* Subtle orange glow behind the title. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary/15 blur-[110px]"
+        />
+
+        <Reveal className="relative mx-auto max-w-2xl">
+          <div className="mx-auto inline-flex items-center gap-2.5 rounded-full border border-overlay/10 bg-surface px-4 py-1.5 shadow-sm">
+            <div className="flex -space-x-2" aria-hidden="true">
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-surface bg-primary/15 text-primary"
+                >
+                  <PersonIcon className="h-3 w-3" />
+                </span>
+              ))}
+            </div>
+            <span className="text-xs font-medium text-muted">{t.hero.trustBadge}</span>
+          </div>
+
+          <h1 className="mx-auto mt-6 text-balance text-[clamp(2.25rem,6vw,3.75rem)] font-extrabold leading-[1.08] tracking-tight text-ink">
+            {t.hero.titleStart}
+            <br />
+            <span className="text-primary">{t.hero.titleHighlight}</span>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-lg text-muted">{t.hero.subtitle}</p>
 
-          <ul className="mx-auto mt-8 flex max-w-xl flex-col items-start gap-2.5 sm:items-center">
-            {t.hero.benefits.map((benefit) => (
-              <li key={benefit} className="flex items-center gap-2.5 text-sm font-medium text-ink sm:text-base">
-                <CheckIcon className="h-5 w-5 shrink-0 text-primary" />
-                {benefit}
-              </li>
-            ))}
-          </ul>
-
           <Link
             to="/dashboard"
-            className="mt-9 inline-block rounded-lg bg-primary-strong px-8 py-3.5 font-semibold text-white transition-all hover:brightness-110"
+            className="group mx-auto mt-9 flex max-w-xl items-center gap-3 rounded-full border border-overlay/10 bg-surface py-2 pl-5 pr-2 shadow-lg shadow-black/5 transition-shadow hover:shadow-xl"
           >
-            {t.hero.cta}
+            <SearchIcon className="h-5 w-5 shrink-0 text-muted" />
+            <span className="flex-1 truncate text-left text-sm text-muted sm:text-base">{t.hero.ctaInputLabel}</span>
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-primary-strong px-5 py-2.5 text-sm font-semibold text-white transition-all group-hover:brightness-110">
+              {t.hero.ctaButton}
+            </span>
           </Link>
-          <p className="mt-4 text-sm text-muted">{t.hero.trustLine}</p>
+        </Reveal>
+
+        {/* Floating cards — large screens only, absolutely positioned
+            around the hero content. */}
+        <div className="pointer-events-none absolute inset-0 z-0 mx-auto hidden max-w-5xl lg:block">
+          {t.hero.floatingCards.map((card, i) => (
+            <Reveal
+              key={card.text}
+              delayMs={200 + i * 100}
+              className={`pointer-events-auto absolute ${FLOATING_CARD_POSITIONS[i]}`}
+            >
+              <FloatingCard icon={card.icon} text={card.text} />
+            </Reveal>
+          ))}
+        </div>
+
+        {/* Same cards, static 2x2 grid below lg. */}
+        <Reveal delayMs={160} className="mx-auto mt-10 grid max-w-md grid-cols-2 gap-3 lg:hidden">
+          {t.hero.floatingCards.map((card) => (
+            <FloatingCard key={card.text} icon={card.icon} text={card.text} className="text-left" />
+          ))}
         </Reveal>
       </section>
 
