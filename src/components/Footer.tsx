@@ -2,6 +2,11 @@ import { Link } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
 import { COMMON } from '../lib/i18n/common'
 
+// Placeholder — no real Discord invite exists yet. Swap for the real
+// invite URL as soon as there is one; this link is left visibly inert
+// (no href) rather than pointing at a fabricated server.
+const DISCORD_URL: string | null = null
+
 export function Footer() {
   const { lang } = useLanguage()
   const t = COMMON[lang].footer
@@ -20,6 +25,11 @@ export function Footer() {
           <Link to="/conditions" className="transition-colors hover:text-ink">
             {t.terms}
           </Link>
+          {DISCORD_URL && (
+            <a href={DISCORD_URL} target="_blank" rel="noreferrer" className="transition-colors hover:text-ink">
+              {t.discord}
+            </a>
+          )}
         </div>
       </div>
     </footer>

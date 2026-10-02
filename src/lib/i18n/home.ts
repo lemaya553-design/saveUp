@@ -2,85 +2,53 @@ import type { Lang } from './language'
 
 export interface HomeContent {
   // <title>/<meta name="description">/og:*/twitter:* — see MetaTags.tsx.
-  // Deliberately separate from hero (below): the hero copy is split into
-  // titleLine1/titleHighlight for the two-tone headline treatment, which
-  // doesn't map to a single plain-text <title> string.
   meta: {
     title: string
     description: string
   }
   hero: {
-    freeBadge: string
-    titleLine1: string
-    titleHighlight: string
-    subtitle: string
-    ctaPrimary: string
-    ctaSecondary: string
-    trustBadges: string[]
-  }
-  whySaveupSection: {
-    heading: string
-    subheading: string
-  }
-  whySaveup: { key: string; title: string; description: string }[]
-  features: {
-    heading: string
-    subheading: string
-    simBadge: string
-    simTitle: string
-    simBody: string
-    scoreBadge: string
-    scoreBody: string
-    budgetBadge: string
-    budgetTitle: string
-    statsBadge: string
-    statsTitle: string
-    rewardsBadge: string
-    rewardsTitle: string
-  }
-  screenshots: {
-    heading: string
-    subheading: string
-  }
-  midCta: {
     title: string
     subtitle: string
+    benefits: string[]
     cta: string
+    trustLine: string
   }
-  howItWorks: {
+  problemSolution: {
     heading: string
     subheading: string
+    pairs: { problem: string; solution: string }[]
   }
-  comparison: {
+  story: {
+    heading: string
+    body: string[]
+    founderName: string
+    founderRole: string
+    photoAlt: string
+  }
+  demo: {
     heading: string
     subheading: string
-    colSaveup: string
-    colChatbot: string
-    colExcel: string
-    rows: { label: string; saveup: string; chatbot: string; excel: string }[]
+    placeholderLabel: string
+    placeholderDuration: string
   }
-  privacy: {
+  solutionSteps: {
     heading: string
     subheading: string
-    points: string[]
+    items: { title: string; body: string }[]
   }
-  results: {
+  community: {
     heading: string
-    badge: string
     body: string
+    discordCta: string
+    discordComingSoon: string
   }
   // Public progress counter (ProgressCounter.tsx) — the live count comes
-  // from api/customer-count.ts (paying, non-trial customers only), the
-  // target (10) is a real stated goal, not derived from anything, so it's
-  // fine as a plain constant here.
+  // from api/customer-count.ts (paying, non-trial customers only). Not
+  // currently placed on the page (see Home.tsx), kept so the component
+  // and its real data stay wired and ready to drop back in.
   progressCounter: {
     context: string
     progress: (count: number, target: number) => string
-  }
-  finalCta: {
-    heading: string
-    cta: string
-    trustBadges: string[]
   }
   faq: {
     heading: string
@@ -93,132 +61,89 @@ export const HOME: Record<Lang, HomeContent> = {
     meta: {
       title: 'SaveUp — Reprends le contrôle de ton argent, simplement',
       description:
-        'Budget, épargne et objectifs financiers dans une seule app — sans tableur compliqué. 100% gratuit pour commencer.',
+        'Importe ton relevé bancaire, budgète et épargne au même endroit — sans tableur compliqué. 100% gratuit pour commencer.',
     },
     hero: {
-      freeBadge: '100% gratuit pour commencer',
-      titleLine1: 'Tu veux économiser',
-      titleHighlight: 'plus facilement',
+      title: 'Gère ton budget en 3 clics',
       subtitle:
-        "SaveUp t'aide à suivre tes dépenses, ton budget et tes objectifs d'épargne — au même endroit, sans compliqué.",
-      ctaPrimary: 'Essayer gratuitement',
-      ctaSecondary: 'Voir ce que ça donne',
-      trustBadges: ['Sans carte requise', 'Configuration en 2 min', '100% en français'],
+        "Importe ton relevé bancaire (CSV) et laisse SaveUp catégoriser tes dépenses automatiquement — budget, épargne et objectifs, enfin réunis au même endroit.",
+      benefits: [
+        'Import CSV de ton relevé bancaire',
+        'Catégorisation automatique en un clic',
+        "Suivi de tes objectifs d'épargne et de ta santé financière",
+      ],
+      cta: 'Commencer gratuitement, sans carte requise',
+      trustLine: 'Rejoins les premiers utilisateurs de SaveUp',
     },
-    whySaveupSection: {
-      heading: 'Pourquoi SaveUp ?',
-      subheading: "Il existe déjà plein d'apps de budget. Voici ce qui change avec celle-ci.",
-    },
-    whySaveup: [
-      {
-        key: 'simple',
-        title: 'Pensé pour rester simple',
-        description:
-          "Une interface pensée pour ne pas te prendre la tête — pas de jargon financier, pas d'écrans interminables.",
-      },
-      {
-        key: 'made-for-you',
-        title: 'Fait en français, pas traduit',
-        description:
-          "SaveUp est écrit en français dès le départ, pour des francophones — pas une traduction ajoutée après coup.",
-      },
-      {
-        key: 'real-plan',
-        title: 'Un vrai plan, pas juste un suivi',
-        description:
-          "Pas juste un suivi de dépenses : un vrai plan pour atteindre tes objectifs d'épargne, avec un rythme calculé pour toi.",
-      },
-    ],
-    features: {
-      heading: 'Un outil, pas cinq onglets Excel.',
-      subheading: "Ce que tu vois dans l'app, dès les premières minutes.",
-      simBadge: 'Simulateur « et si »',
-      simTitle: 'Teste avant de trancher',
-      simBody: "Coupe une dépense, avance une échéance — vois l'impact avant de le faire pour de vrai.",
-      scoreBadge: 'Score de santé',
-      scoreBody: 'Un chiffre qui résume tout, et qui bouge avec toi chaque semaine.',
-      budgetBadge: 'Budget',
-      budgetTitle: 'Par catégorie',
-      statsBadge: 'Statistiques',
-      statsTitle: 'Tes tendances',
-      rewardsBadge: 'Récompenses',
-      rewardsTitle: 'Des badges mérités',
-    },
-    screenshots: {
-      heading: "L'app, telle quelle.",
-      subheading: "Pas des maquettes — l'interface que tu utilises vraiment, page par page.",
-    },
-    midCta: {
-      title: 'Convaincu jusqu’ici ?',
-      subtitle: 'Ton premier budget est prêt en 2 minutes.',
-      cta: 'Essayer gratuitement',
-    },
-    howItWorks: {
-      heading: 'En 3 étapes, ton budget est prêt',
-      subheading: "Teste la première étape tout de suite — les deux autres t'attendent dans l'app.",
-    },
-    comparison: {
-      heading: 'SaveUp vs les alternatives',
-      subheading:
-        'Un chatbot répond bien à une question ponctuelle, et un tableur peut tout calculer — mais aucun des deux ne suit ton argent pour toi, jour après jour.',
-      colSaveup: 'SaveUp',
-      colChatbot: 'Chatbot gratuit',
-      colExcel: 'Tableur Excel',
-      rows: [
+    problemSolution: {
+      heading: 'Tu te reconnais ?',
+      subheading: 'SaveUp existe pour régler exactement ces problèmes-là.',
+      pairs: [
         {
-          label: 'Suivi dans le temps',
-          saveup: 'Historique et tendances calculés automatiquement',
-          chatbot: "Aucune mémoire d'une conversation à l'autre",
-          excel: 'Aucun suivi automatique dans le temps',
+          problem: 'Gérer ton budget dans un tableur que tu abandonnes après deux semaines.',
+          solution: 'Une interface simple, pensée pour durer plus de deux semaines.',
         },
         {
-          label: 'Mise à jour',
-          saveup: 'Automatique, dès que tu ajoutes une dépense',
-          chatbot: 'Il faut tout réexpliquer à chaque fois',
-          excel: 'Calculs manuels à refaire',
+          problem: 'Tu ne sais jamais vraiment où va ton argent chaque mois.',
+          solution: 'Un dashboard qui montre tes dépenses par catégorie, en un coup d’œil.',
         },
         {
-          label: 'Alertes',
-          saveup: 'Alertes automatiques avant que ça dérape',
-          chatbot: 'Il faut penser à demander à chaque fois',
-          excel: 'Aucune alerte',
+          problem: "Tu as déjà essayé d'épargner, sans jamais vraiment y arriver.",
+          solution: "Des objectifs d'épargne concrets, avec une progression que tu peux suivre.",
         },
         {
-          label: 'Visualisation',
-          saveup: 'Graphiques, jauges et barres de progression',
-          chatbot: 'Pas de visuel, tout est en texte',
-          excel: 'Des chiffres dans des cellules',
+          problem: 'Entrer chaque dépense à la main te décourage avant même de commencer.',
+          solution: 'Importe ton relevé bancaire — SaveUp catégorise pour toi.',
         },
         {
-          label: 'Motivation',
-          saveup: 'Badges de progression qui évoluent',
-          chatbot: 'Rien qui suit ta progression',
-          excel: 'Rien qui suit ta progression',
+          problem: 'Les apps de budget existantes sont trop compliquées, ou pas en français.',
+          solution: 'SaveUp est pensé pour rester simple, et écrit en français dès le départ.',
         },
       ],
     },
-    privacy: {
-      heading: 'Tes données, ta confidentialité',
-      subheading: 'Simple à expliquer : voici exactement ce que SaveUp sait sur toi, et ce qu’il en fait.',
-      points: [
-        "Seulement les données que tu entres toi-même — tes dépenses, tes objectifs — ou que tu importes depuis un fichier CSV.",
-        "Aucune connexion directe à ton compte bancaire : SaveUp ne se branche sur rien, tu gardes le contrôle de ce qui entre dans l'app.",
-        'Ces données servent uniquement à te montrer tes propres statistiques. Elles ne sont jamais vendues ni partagées.',
+    story: {
+      heading: 'Pourquoi SaveUp',
+      body: [
+        "J'ai créé SaveUp parce que les autres applications de budget me semblaient toujours trop compliquées — trop d'onglets, trop de jargon financier, pour finalement les abandonner après une semaine.",
+        "SaveUp, c'est l'application que j'aurais aimé avoir : simple, honnête, et qui va droit au but.",
+      ],
+      founderName: 'Alex',
+      founderRole: 'Fondateur de SaveUp',
+      photoAlt: "Photo d'Alex, fondateur de SaveUp",
+    },
+    demo: {
+      heading: 'Vois SaveUp en action',
+      subheading: "Une démo complète de l'application, en un peu moins de 3 minutes.",
+      placeholderLabel: 'Vidéo à venir',
+      placeholderDuration: '~3 min',
+    },
+    solutionSteps: {
+      heading: 'Comment ça marche',
+      subheading: 'Trois étapes, et ton budget tourne presque tout seul.',
+      items: [
+        {
+          title: 'Importer ton relevé bancaire',
+          body: "Télécharge le CSV de ta banque — SaveUp s'occupe du reste.",
+        },
+        {
+          title: 'Recatégoriser en un clic',
+          body: 'Ajuste une catégorie une fois, SaveUp la retient pour la prochaine fois.',
+        },
+        {
+          title: 'Suivre tes objectifs et ta santé financière',
+          body: 'Un score qui évolue avec toi, et une progression claire vers chaque objectif.',
+        },
       ],
     },
-    results: {
-      heading: 'Résultats',
-      badge: 'À venir',
-      body: "SaveUp est tout jeune — on n'a pas encore de résultats concrets d'utilisateurs à partager, et on ne va pas en inventer. Crée ton compte pour voir l'outil à l'œuvre avec tes propres chiffres.",
+    community: {
+      heading: 'Rejoins la communauté SaveUp',
+      body: "SaveUp est en phase de lancement. Rejoins le Discord pour échanger avec les premiers utilisateurs, proposer des idées, ou simplement suivre l'évolution du projet.",
+      discordCta: 'Rejoindre le Discord',
+      discordComingSoon: 'Le lien du Discord arrive bientôt.',
     },
     progressCounter: {
       context: "SaveUp est construit par une seule personne. Voici où j'en suis.",
       progress: (count, target) => `${count} client${count === 1 ? '' : 's'} sur ${target} d'ici Noël`,
-    },
-    finalCta: {
-      heading: 'Prêt à voir clair dans tes finances ?',
-      cta: 'Créer mon compte gratuit',
-      trustBadges: ['Sans carte requise', 'Configuration en 2 minutes', 'Annule quand tu veux'],
     },
     faq: {
       heading: 'Questions fréquentes',
@@ -229,9 +154,14 @@ export const HOME: Record<Lang, HomeContent> = {
             "Un outil de budget simple qui suit ton revenu, tes dépenses fixes et tes objectifs d'épargne, et qui te donne un score de santé financière qui évolue avec toi.",
         },
         {
-          question: 'Combien ça coûte ?',
+          question: 'Quelles sont les limites du plan gratuit ?',
           answer:
-            "Le plan Gratuit est gratuit pour toujours, sans limite de temps. Standard (7,99 $/mois) et Premium (14,99 $/mois) débloquent les catégories et objectifs illimités, l'import CSV, les statistiques complètes et plus — voir la page Tarifs pour le détail.",
+            "Le plan Gratuit te donne un Dashboard complet, jusqu'à 5 catégories de budget, 1 objectif d'épargne actif, 2 dépenses récurrentes et jusqu'à 2 imports CSV — sans aucune limite de temps. Standard et Premium débloquent les catégories, objectifs et imports illimités.",
+        },
+        {
+          question: 'Puis-je importer mon relevé bancaire ?',
+          answer:
+            "Oui — exporte le CSV depuis le site de ta banque et importe-le dans SaveUp, qui catégorise automatiquement tes transactions. Le plan Gratuit inclut 2 imports ; Standard et Premium sont illimités.",
         },
         {
           question: 'Mes données sont-elles sécurisées ?',
@@ -255,132 +185,89 @@ export const HOME: Record<Lang, HomeContent> = {
     meta: {
       title: 'SaveUp — Take control of your money, simply',
       description:
-        'Budget, savings, and financial goals in one app — no complicated spreadsheet. 100% free to start.',
+        'Import your bank statement, budget and save in one place — no complicated spreadsheet. 100% free to start.',
     },
     hero: {
-      freeBadge: '100% free to start',
-      titleLine1: 'Want to save',
-      titleHighlight: 'more easily',
+      title: 'Manage your budget in 3 clicks',
       subtitle:
-        "SaveUp helps you track your spending, your budget, and your savings goals — all in one place, with none of the hassle.",
-      ctaPrimary: 'Try it for free',
-      ctaSecondary: 'See what it looks like',
-      trustBadges: ['No credit card needed', '2-minute setup', 'Your money stays in CAD'],
+        'Import your bank statement (CSV) and let SaveUp categorize your spending automatically — budget, savings, and goals, finally in one place.',
+      benefits: [
+        'CSV import of your bank statement',
+        'Automatic categorization in one click',
+        'Track your savings goals and your financial health',
+      ],
+      cta: 'Get started free, no card required',
+      trustLine: 'Join the first SaveUp users',
     },
-    whySaveupSection: {
-      heading: 'Why SaveUp?',
-      subheading: "Plenty of budgeting apps already exist. Here's what's different about this one.",
-    },
-    whySaveup: [
-      {
-        key: 'simple',
-        title: 'Built to stay simple',
-        description:
-          "An interface built to not give you a headache — no finance jargon, no endless screens to click through.",
-      },
-      {
-        key: 'made-for-you',
-        title: 'Built for Canada, not ported over',
-        description:
-          "SaveUp speaks your language and keeps every dollar in CAD from the start — not a US app with the wrong currency bolted on after the fact.",
-      },
-      {
-        key: 'real-plan',
-        title: 'An actual plan, not just tracking',
-        description:
-          "Not just an expense tracker: a real plan to hit your savings goals, with a pace that's calculated for you.",
-      },
-    ],
-    features: {
-      heading: 'One tool, not five Excel tabs.',
-      subheading: "What you'll see in the app, from the first few minutes.",
-      simBadge: '"What if" simulator',
-      simTitle: 'Test it before you commit',
-      simBody: 'Cut an expense, move up a deadline — see the impact before you actually do it.',
-      scoreBadge: 'Health score',
-      scoreBody: 'One number that sums it all up, and moves with you every week.',
-      budgetBadge: 'Budget',
-      budgetTitle: 'By category',
-      statsBadge: 'Statistics',
-      statsTitle: 'Your trends',
-      rewardsBadge: 'Rewards',
-      rewardsTitle: 'Badges you actually earn',
-    },
-    screenshots: {
-      heading: 'The app, as it really is.',
-      subheading: 'No mockups — the actual interface you use, page by page.',
-    },
-    midCta: {
-      title: 'Convinced so far?',
-      subtitle: 'Your first budget is ready in 2 minutes.',
-      cta: 'Try it for free',
-    },
-    howItWorks: {
-      heading: '3 steps to a ready-to-go budget',
-      subheading: 'Try the first step right now — the other two are waiting for you in the app.',
-    },
-    comparison: {
-      heading: 'SaveUp vs. the alternatives',
-      subheading:
-        'A free chatbot answers a one-off question fine, and a spreadsheet can calculate anything — but neither one actually tracks your money for you, day after day.',
-      colSaveup: 'SaveUp',
-      colChatbot: 'Free chatbot',
-      colExcel: 'Excel spreadsheet',
-      rows: [
+    problemSolution: {
+      heading: 'Sound familiar?',
+      subheading: 'SaveUp exists to fix exactly these problems.',
+      pairs: [
         {
-          label: 'Tracking over time',
-          saveup: 'History and trends calculated automatically',
-          chatbot: 'No memory from one conversation to the next',
-          excel: 'No automatic tracking over time',
+          problem: 'Managing your budget in a spreadsheet you abandon after two weeks.',
+          solution: 'A simple interface, built to last longer than two weeks.',
         },
         {
-          label: 'Updating',
-          saveup: 'Automatic, the moment you log an expense',
-          chatbot: 'You have to re-explain everything every time',
-          excel: 'Manual calculations to redo',
+          problem: "You never really know where your money goes each month.",
+          solution: 'A dashboard that shows your spending by category, at a glance.',
         },
         {
-          label: 'Alerts',
-          saveup: 'Automatic alerts before things get out of hand',
-          chatbot: 'You have to remember to ask every time',
-          excel: 'No alerts at all',
+          problem: "You've tried to save before, without ever really getting there.",
+          solution: 'Concrete savings goals, with progress you can actually track.',
         },
         {
-          label: 'Visualization',
-          saveup: 'Charts, gauges, and progress bars',
-          chatbot: 'No visuals, everything is text',
-          excel: 'Numbers stuck in cells',
+          problem: 'Entering every expense by hand discourages you before you even start.',
+          solution: 'Import your bank statement — SaveUp categorizes it for you.',
         },
         {
-          label: 'Motivation',
-          saveup: 'Progress badges that actually evolve',
-          chatbot: "Nothing that tracks your progress",
-          excel: "Nothing that tracks your progress",
+          problem: 'Existing budget apps are either too complicated, or not in French.',
+          solution: 'SaveUp is built to stay simple — and written in French from day one.',
         },
       ],
     },
-    privacy: {
-      heading: 'Your data, your privacy',
-      subheading: "Simple to explain: here's exactly what SaveUp knows about you, and what it does with it.",
-      points: [
-        'Only the data you enter yourself — your expenses, your goals — or import from a CSV file.',
-        "No direct connection to your bank account: SaveUp doesn't plug into anything, so you stay in control of what goes into the app.",
-        'That data is used only to show you your own statistics. It is never sold or shared.',
+    story: {
+      heading: 'Why SaveUp',
+      body: [
+        "I built SaveUp because every other budget app felt too complicated — too many tabs, too much financial jargon, until I'd abandon it within a week.",
+        'SaveUp is the app I wish I had: simple, honest, and to the point.',
+      ],
+      founderName: 'Alex',
+      founderRole: 'Founder of SaveUp',
+      photoAlt: 'Photo of Alex, founder of SaveUp',
+    },
+    demo: {
+      heading: 'See SaveUp in action',
+      subheading: 'A full walkthrough of the app, in just under 3 minutes.',
+      placeholderLabel: 'Video coming soon',
+      placeholderDuration: '~3 min',
+    },
+    solutionSteps: {
+      heading: 'How it works',
+      subheading: 'Three steps, and your budget runs almost on its own.',
+      items: [
+        {
+          title: 'Import your bank statement',
+          body: "Download the CSV from your bank — SaveUp takes care of the rest.",
+        },
+        {
+          title: 'Recategorize in one click',
+          body: 'Adjust a category once, SaveUp remembers it next time.',
+        },
+        {
+          title: 'Track your goals and your financial health',
+          body: 'A score that evolves with you, and clear progress toward every goal.',
+        },
       ],
     },
-    results: {
-      heading: 'Results',
-      badge: 'Coming soon',
-      body: "SaveUp is brand new — we don't have real user results to share yet, and we're not going to make any up. Create your account to see the tool at work with your own numbers.",
+    community: {
+      heading: 'Join the SaveUp community',
+      body: "SaveUp is in launch phase. Join the Discord to talk with the first users, suggest ideas, or just follow along as the project grows.",
+      discordCta: 'Join the Discord',
+      discordComingSoon: 'The Discord link is coming soon.',
     },
     progressCounter: {
       context: "SaveUp is built by one person. Here's where I'm at.",
       progress: (count, target) => `${count} customer${count === 1 ? '' : 's'} out of ${target} by Christmas`,
-    },
-    finalCta: {
-      heading: 'Ready to see your finances clearly?',
-      cta: 'Create my free account',
-      trustBadges: ['No credit card needed', '2-minute setup', 'Cancel anytime'],
     },
     faq: {
       heading: 'Frequently asked questions',
@@ -388,22 +275,27 @@ export const HOME: Record<Lang, HomeContent> = {
         {
           question: 'What is SaveUp?',
           answer:
-            'A simple budgeting tool that tracks your income, fixed expenses, and savings goals, and gives you a financial health score that evolves along with you.',
+            'A simple budgeting tool that tracks your income, fixed expenses, and savings goals, and gives you a financial health score that evolves with you.',
         },
         {
-          question: 'How much does it cost?',
+          question: "What are the Free plan's limits?",
           answer:
-            'The Free plan is free forever, no time limit. Standard ($7.99 CAD/month) and Premium ($14.99 CAD/month) unlock unlimited categories and goals, CSV import, full statistics, and more — see the Pricing page for details.',
+            "The Free plan gives you a full Dashboard, up to 5 budget categories, 1 active savings goal, 2 recurring expenses, and up to 2 CSV imports — with no time limit at all. Standard and Premium unlock unlimited categories, goals, and imports.",
+        },
+        {
+          question: 'Can I import my bank statement?',
+          answer:
+            "Yes — export the CSV from your bank's website and import it into SaveUp, which categorizes your transactions automatically. The Free plan includes 2 imports; Standard and Premium are unlimited.",
         },
         {
           question: 'Is my data secure?',
           answer:
-            "Yes — every account is protected by a real authentication system, and your data is isolated: no one else can access it, no matter who else uses SaveUp. It's hosted on a secure database (Supabase).",
+            "Yes — every account is protected by real authentication, and your data is isolated: no one else can access it, no matter who else uses SaveUp. It's hosted on a secure database (Supabase).",
         },
         {
           question: 'Do I need to create an account?',
           answer:
-            'Yes, a free account is needed so your data stays private and tied to you alone — it takes less than 2 minutes, no card required.',
+            'Yes, a free account is required so your data stays private and tied to you alone — it takes less than 2 minutes, no card required.',
         },
         {
           question: 'Can I cancel?',

@@ -32,9 +32,7 @@ export interface CommonContent {
     saveFailed: string
   }
   header: {
-    navComment: string
-    navFeatures: string
-    navResults: string
+    navTestimonials: string
     navPricing: string
     navFaq: string
     ctaStart: string
@@ -67,6 +65,7 @@ export interface CommonContent {
     pricing: string
     privacy: string
     terms: string
+    discord: string
   }
   stickyCta: {
     cta: string
@@ -155,13 +154,11 @@ export const COMMON: Record<Lang, CommonContent> = {
       saveFailed: "Impossible d'enregistrer — réessaie.",
     },
     header: {
-      navComment: 'Comment ça marche',
-      navFeatures: 'Fonctionnalités',
-      navResults: 'Résultats',
+      navTestimonials: 'Témoignages',
       navPricing: 'Tarifs',
       navFaq: 'FAQ',
-      ctaStart: 'Créer mon compte gratuit',
-      ctaStartShort: "S'inscrire",
+      ctaStart: 'Essayer gratuitement',
+      ctaStartShort: 'Essayer',
       openMenu: 'Ouvrir le menu',
       closeMenu: 'Fermer le menu',
     },
@@ -183,6 +180,7 @@ export const COMMON: Record<Lang, CommonContent> = {
       pricing: 'Tarifs',
       privacy: 'Confidentialité',
       terms: "Conditions d'utilisation",
+      discord: 'Discord',
     },
     stickyCta: {
       cta: 'Créer mon compte gratuit',
@@ -271,13 +269,11 @@ export const COMMON: Record<Lang, CommonContent> = {
       saveFailed: "Couldn't save — try again.",
     },
     header: {
-      navComment: 'How it works',
-      navFeatures: 'Features',
-      navResults: 'Results',
+      navTestimonials: 'Testimonials',
       navPricing: 'Pricing',
       navFaq: 'FAQ',
-      ctaStart: 'Create my free account',
-      ctaStartShort: 'Sign up',
+      ctaStart: 'Try it for free',
+      ctaStartShort: 'Try it',
       openMenu: 'Open menu',
       closeMenu: 'Close menu',
     },
@@ -299,6 +295,7 @@ export const COMMON: Record<Lang, CommonContent> = {
       pricing: 'Pricing',
       privacy: 'Privacy',
       terms: 'Terms of Service',
+      discord: 'Discord',
     },
     stickyCta: {
       cta: 'Create my free account',

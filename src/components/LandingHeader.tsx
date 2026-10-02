@@ -28,10 +28,8 @@ export function LandingHeader() {
   const t = COMMON[lang].header
 
   const navLinks = [
-    { to: '/#comment-ca-marche', label: t.navComment },
-    { to: '/#fonctionnalites', label: t.navFeatures },
-    { to: '/#resultats', label: t.navResults },
-    { to: '/tarifs', label: t.navPricing },
+    { to: '/#communaute', label: t.navTestimonials },
+    { to: '/#tarifs', label: t.navPricing },
     { to: '/#faq', label: t.navFaq },
   ]
 
