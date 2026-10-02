@@ -304,12 +304,11 @@ export function Home() {
           className="mesh-blob-c pointer-events-none absolute -left-20 top-1/2 -z-10 h-80 w-80 -translate-y-1/2 rounded-full bg-primary/10 blur-[110px]"
         />
         <Reveal className="mx-auto flex max-w-4xl flex-col items-center gap-10 sm:flex-row sm:items-start">
-          {/* Placeholder avatar — real founder photo not yet wired in, see
-              Home.tsx task notes. Swap the icon block below for an <img>
-              once the file exists in the project (e.g. public/founder.jpg). */}
-          <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform duration-300 hover:-translate-y-1 hover:rotate-3">
-            <PersonIcon className="h-16 w-16" />
-          </div>
+          <img
+            src="/founder.jpg"
+            alt={t.story.photoAlt}
+            className="h-36 w-36 shrink-0 rounded-full object-cover shadow-lg shadow-black/15 transition-transform duration-300 hover:-translate-y-1 hover:rotate-3"
+          />
 
           <div className="text-center sm:text-left">
             <h2 className="text-2xl font-bold text-ink sm:text-3xl">💡 {t.story.heading}</h2>
