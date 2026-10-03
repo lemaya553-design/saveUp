@@ -202,20 +202,18 @@ const FLOATING_LABEL_ICONS = {
   budget: BudgetIcon,
 }
 
-// Positions for the showcase section's 4 scattered labels — top/bottom
-// anchored rather than beside the phone+cards row, since that row's
-// cluster (~970px fixed) leaves almost no side margin even at the lg
-// breakpoint (1024px). Sitting in the section's vertical padding above/
-// below the row (which is itself taller than the cards, centered within
-// it) keeps them clear of both the cards and the phone at every width
-// from lg up — verified by measuring actual bounding boxes at 1024px, the
-// tightest case. Alternating rotation so they don't read as a uniform
-// grid.
+// Positioned relative to the phone's own wrapper (not the section) so
+// "close to the phone" stays true regardless of the cards beside it.
+// Offsets are large enough (~220-230px) to clear the phone's own screen
+// content entirely — a first pass at ~65-80px overlapped straight onto the
+// screenshot itself, covering real content, which measuring/screenshotting
+// caught. Top/bottom values dodge the notification pill above and the CTA
+// button below.
 const FLOATING_LABEL_STYLES = [
-  'pointer-events-auto absolute left-6 top-12 -rotate-4',
-  'pointer-events-auto absolute right-8 top-28 rotate-3',
-  'pointer-events-auto absolute left-10 bottom-10 rotate-4',
-  'pointer-events-auto absolute right-14 bottom-20 -rotate-3',
+  'pointer-events-auto absolute -left-[230px] top-20 -rotate-4',
+  'pointer-events-auto absolute -right-[220px] top-44 rotate-3',
+  'pointer-events-auto absolute -left-[220px] bottom-32 rotate-4',
+  'pointer-events-auto absolute -right-[230px] bottom-16 -rotate-3',
 ]
 
 function FloatingLabel({
@@ -232,13 +230,13 @@ function FloatingLabel({
   const Icon = FLOATING_LABEL_ICONS[icon]
   return (
     <div
-      className={`label-loop flex items-center gap-2 rounded-full bg-white px-4 py-2.5 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.18)] ${className}`}
+      className={`label-loop flex items-center gap-2.5 rounded-full bg-white px-5 py-3 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.2)] ${className}`}
       style={{ animationDelay: `${delayS}s` }}
     >
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <Icon className="h-3.5 w-3.5" />
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Icon className="h-[18px] w-[18px]" />
       </span>
-      <span className="whitespace-nowrap text-xs font-semibold text-ink">{children}</span>
+      <span className="whitespace-nowrap text-sm font-semibold text-ink">{children}</span>
     </div>
   )
 }
@@ -408,24 +406,21 @@ export function Home() {
         </div>
       </section>
 
-      {/* 4. Showcase — phone mockup centered (real Dashboard screenshot,
-          object-contain so the whole thing is always visible — no text
-          ever gets cropped, even partially. object-cover was tried and
-          rejected: on this landscape-ish source image, filling a portrait
-          phone edge-to-edge meant cropping into card text ("Comment tu
-          t'en so...", amounts cut mid-digit). This trades that for a
-          little empty space below the content on tall screens — centered
-          vertically, which also keeps the content clear of the floating
-          notification above it, and matched to the screenshot's own dark
-          background so it reads as "more app below the fold," not a gap.
-          Phone is tilted in CSS 3D (perspective + rotateY/rotateX) for a
-          dynamic, non-flat look), a floating iOS-style notification
-          peeking above it, and two narrative cards flanking it that
-          overlap its edges on large screens (negative margins) and drop
-          below it on mobile (flex `order`, same markup both breakpoints).
-          Pure white, no background shapes, nothing else around the phone
-          — deliberately the one section on this page without a blob, per
-          this section's own brief. */}
+      {/* 4. Showcase — realistic iPhone-style mockup (gradient metal edge,
+          inner bezel ring, dynamic island, side buttons, diagonal glass
+          reflection) showing a real Statistiques screenshot whose own
+          aspect ratio (790x1628) is already near-identical to a real
+          phone's, so object-cover shows virtually the whole thing with no
+          meaningful crop — none of the previous dashboard.png's
+          letterbox/crop trade-off applies here. Tilted in CSS 3D
+          (perspective + rotateY/rotateX). A floating iOS-style
+          notification peeks above it; 4 bigger floating labels hug its
+          left/right edges (positioned relative to the phone itself, clear
+          of the cards vertically); the 2 narrative cards sit at
+          deliberately uneven heights for a less grid-like, more organic
+          composition. Pure white, no background shapes, nothing else
+          around the phone — deliberately the one section on this page
+          without a blob, per this section's own brief. */}
       <section className="relative overflow-hidden bg-gradient-to-b from-white via-[#FAFAFA] to-white px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
         {/* Very faint orange glow for depth — static (no drift animation
             like other sections' blobs), kept at 2-3% opacity specifically
@@ -435,34 +430,10 @@ export function Home() {
           className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_55%_at_50%_30%,rgba(255,107,0,0.03),transparent_70%)]"
         />
 
-        {/* Scattered floating labels — real feature callouts, desktop only
-            (xl+): the phone + its 2 flanking cards already fill most of
-            the row's width below that, leaving no safe margin to scatter
-            these without overlapping. The "goal" one counts 1 -> amount on
-            a continuous 10s loop (useLoopingCountUp, called once above so
-            all 4 labels share the same render). */}
-        <div className="pointer-events-none absolute inset-0 z-0 hidden lg:block">
-          <FloatingLabel icon="goal" className={FLOATING_LABEL_STYLES[0]} delayS={0}>
-            {t.showcase.floatingLabels.goal.before}
-            {goalCount}
-            {t.showcase.floatingLabels.goal.after}
-          </FloatingLabel>
-          {t.showcase.floatingLabels.items.map((label, i) => (
-            <FloatingLabel
-              key={label.text}
-              icon={label.icon}
-              className={FLOATING_LABEL_STYLES[i + 1]}
-              delayS={(i + 1) * 0.6}
-            >
-              {label.text}
-            </FloatingLabel>
-          ))}
-        </div>
-
-        <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-10 lg:flex-row lg:items-center lg:justify-center lg:gap-10">
+        <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-10 lg:flex-row lg:items-center lg:justify-center lg:gap-14">
           <Reveal
             delayMs={60}
-            className="order-2 w-full max-w-[320px] rounded-2xl bg-white p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.08)] sm:p-10 lg:order-1"
+            className="order-2 w-full max-w-[320px] rounded-2xl bg-white p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.08)] sm:p-10 lg:order-1 lg:-translate-y-7"
           >
             <h3 className="text-[26px] font-extrabold leading-snug text-ink">
               {t.showcase.cardLeft.before}
@@ -472,23 +443,62 @@ export function Home() {
             <p className="mt-3 font-normal text-[#666]">{t.showcase.cardLeft.body}</p>
           </Reveal>
 
-          <Reveal className="relative z-10 order-1 w-[220px] shrink-0 sm:w-[250px] lg:order-2">
+          <Reveal className="relative z-10 order-1 w-[280px] shrink-0 sm:w-[320px] lg:order-2">
             {/* iOS-style floating notification — true pill shape, crisp-but-
                 soft layered shadow, text centered both axes. */}
             <div className="absolute -top-5 left-1/2 z-20 inline-flex -translate-x-1/2 items-center justify-center whitespace-nowrap rounded-full bg-white px-5 py-3 shadow-[0_2px_6px_rgba(0,0,0,0.08),0_10px_20px_-4px_rgba(0,0,0,0.18)] ring-1 ring-black/[0.04]">
               <span className="text-sm font-semibold leading-none text-ink">{t.showcase.notification}</span>
             </div>
 
+            {/* Scattered floating labels — hug the phone's own edges
+                (large screens only — the cards sit right beside the phone
+                below lg, leaving no room). The "goal" one counts 1 ->
+                amount on a continuous 10s loop. */}
+            <div className="pointer-events-none absolute inset-0 z-30 hidden lg:block">
+              <FloatingLabel icon="goal" className={FLOATING_LABEL_STYLES[0]} delayS={0}>
+                {t.showcase.floatingLabels.goal.before}
+                {goalCount}
+                {t.showcase.floatingLabels.goal.after}
+              </FloatingLabel>
+              {t.showcase.floatingLabels.items.map((label, i) => (
+                <FloatingLabel
+                  key={label.text}
+                  icon={label.icon}
+                  className={FLOATING_LABEL_STYLES[i + 1]}
+                  delayS={(i + 1) * 0.6}
+                >
+                  {label.text}
+                </FloatingLabel>
+              ))}
+            </div>
+
             <div
-              className="rounded-[2.75rem] border-[10px] border-ink bg-ink shadow-[0_15px_35px_-15px_rgba(0,0,0,0.25),0_40px_80px_-20px_rgba(0,0,0,0.35)] [transform:perspective(1200px)_rotateY(-9deg)_rotateX(3deg)]"
+              className="relative [transform:perspective(1200px)_rotateY(-10deg)_rotateX(3deg)]"
               style={{ transformStyle: 'preserve-3d' }}
             >
-              <div className="relative aspect-[9/16] overflow-hidden rounded-[2.25rem] bg-[#0b0b12]">
-                <img
-                  src="/screenshots/dashboard.png"
-                  alt={t.showcase.phoneAlt}
-                  className="h-full w-full object-contain object-center"
-                />
+              {/* Side buttons — mute switch + volume rocker (left), power
+                  button (right), matching real iPhone placement. */}
+              <div className="absolute -left-[3px] top-[14%] h-9 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+              <div className="absolute -left-[3px] top-[22%] h-14 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+              <div className="absolute -left-[3px] top-[32%] h-14 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+              <div className="absolute -right-[3px] top-[20%] h-20 w-[3px] rounded-r-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+
+              {/* Outer "metal" edge. */}
+              <div className="rounded-[2.75rem] bg-gradient-to-br from-[#46464c] via-[#1d1d20] to-[#08080a] p-[3px] shadow-[0_15px_35px_-15px_rgba(0,0,0,0.25),0_40px_80px_-20px_rgba(0,0,0,0.35)]">
+                {/* Inner bezel ring. */}
+                <div className="rounded-[2.6rem] bg-black p-[7px]">
+                  <div className="relative aspect-[790/1628] overflow-hidden rounded-[2.2rem] bg-[#0b0b12]">
+                    <img
+                      src="/screenshots/phone-mockup.jpg"
+                      alt={t.showcase.phoneAlt}
+                      className="h-full w-full object-cover object-top"
+                    />
+                    {/* Dynamic island. */}
+                    <div className="absolute left-1/2 top-[2.2%] z-20 h-[22px] w-[86px] -translate-x-1/2 rounded-full bg-black" />
+                    {/* Diagonal glass reflection. */}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.12] via-white/[0.02] to-transparent" />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -502,7 +512,7 @@ export function Home() {
 
           <Reveal
             delayMs={120}
-            className="order-3 w-full max-w-[320px] rounded-2xl bg-white p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.08)] sm:p-10"
+            className="order-3 w-full max-w-[320px] rounded-2xl bg-white p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.08)] sm:p-10 lg:translate-y-7"
           >
             <h3 className="text-[26px] font-extrabold leading-snug text-ink">
               {t.showcase.cardRight.before}
