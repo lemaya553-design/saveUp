@@ -524,29 +524,42 @@ export function Home() {
         </div>
       </section>
 
-      {/* 5. Storytelling */}
-      <section id="histoire" className="relative overflow-hidden border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
+      {/* 5. Storytelling — black section (the rest of the page is white),
+          with the same "blurred glow + diagonal glass sheen" texture
+          technique used on the phone mockup's dark screen. Text switches to
+          explicit white/opacity shades here since the shared ink/muted
+          tokens are tuned for light backgrounds everywhere else on this
+          page. */}
+      <section id="histoire" className="relative overflow-hidden bg-[#0a0a0c] px-4 py-28 sm:px-6 sm:py-40">
         <div
           aria-hidden="true"
-          className="mesh-blob-c pointer-events-none absolute -left-20 top-1/2 -z-10 h-80 w-80 -translate-y-1/2 rounded-full bg-primary/10 blur-[110px]"
+          className="mesh-blob-c pointer-events-none absolute -left-24 top-0 h-96 w-96 rounded-full bg-primary/15 blur-[120px]"
         />
-        <Reveal className="mx-auto flex max-w-4xl flex-col items-center gap-10 sm:flex-row sm:items-start">
+        <div
+          aria-hidden="true"
+          className="mesh-blob-b pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-primary/10 blur-[120px]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent"
+        />
+        <Reveal className="relative mx-auto flex max-w-4xl flex-col items-center gap-10 sm:flex-row sm:items-start">
           <img
             src="/founder.jpg"
             alt={t.story.photoAlt}
-            className="h-36 w-36 shrink-0 rounded-full object-cover shadow-lg shadow-black/15 transition-transform duration-300 hover:-translate-y-1 hover:rotate-3"
+            className="h-36 w-36 shrink-0 rounded-full object-cover shadow-lg shadow-black/40 ring-4 ring-white/10 transition-transform duration-300 hover:-translate-y-1 hover:rotate-3"
           />
 
           <div className="text-center sm:text-left">
-            <h2 className="text-2xl font-bold text-ink sm:text-3xl">💡 {t.story.heading}</h2>
-            <div className="mt-4 space-y-3 text-muted">
+            <h2 className="text-2xl font-bold text-white sm:text-3xl">💡 {t.story.heading}</h2>
+            <div className="mt-5 space-y-4 text-white/70">
               {t.story.body.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
               ))}
             </div>
-            <p className="mt-4 font-semibold text-ink">
+            <p className="mt-5 font-semibold text-white">
               {t.story.founderName}
-              <span className="font-normal text-muted"> — {t.story.founderRole}</span>
+              <span className="font-normal text-white/60"> — {t.story.founderRole}</span>
             </p>
           </div>
         </Reveal>

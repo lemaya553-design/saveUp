@@ -158,8 +158,10 @@ export const HOME: Record<Lang, HomeContent> = {
     story: {
       heading: 'Pourquoi SaveUp',
       body: [
-        "J'ai créé SaveUp parce que les autres applications de budget me semblaient toujours trop compliquées — trop d'onglets, trop de jargon financier, pour finalement les abandonner après une semaine.",
-        "SaveUp, c'est l'application que j'aurais aimé avoir : simple, honnête, et qui va droit au but.",
+        "J'ai commencé à essayer de gérer mon budget avec un fichier Excel que je mettais à jour... genre une fois par mois, si j'étais motivé. La plupart du temps, j'oubliais, ou je me tannais après deux semaines.",
+        "J'ai essayé d'autres applications — certaines avaient 15 menus différents pour juste voir combien j'avais dépensé en épicerie. D'autres étaient full en anglais ou pleines de termes financiers que je comprenais même pas.",
+        "Alors j'ai décidé de construire ce que j'aurais vraiment utilisé moi-même : quelque chose qui prend 2 minutes à comprendre, qui parle en vrai français, et qui me dit clairement où va mon argent sans que j'aie à fouiller.",
+        "SaveUp, c'est ça — pas une app de banque compliquée, juste un outil simple qui fait le travail.",
       ],
       founderName: 'Alex',
       founderRole: 'Fondateur de SaveUp',
@@ -308,8 +310,10 @@ export const HOME: Record<Lang, HomeContent> = {
     story: {
       heading: 'Why SaveUp',
       body: [
-        "I built SaveUp because every other budget app felt too complicated — too many tabs, too much financial jargon, until I'd abandon it within a week.",
-        'SaveUp is the app I wish I had: simple, honest, and to the point.',
+        "I started out trying to manage my budget with an Excel file I'd update... maybe once a month, if I was motivated. Most of the time I'd forget, or just give up after two weeks.",
+        "I tried other apps — some had 15 different menus just to see how much I'd spent on groceries. Others were entirely in English with no French option, or full of financial jargon I didn't even understand.",
+        "So I decided to build what I would have actually used myself: something that takes 2 minutes to understand, speaks plain language, and clearly tells me where my money's going without having to dig for it.",
+        "That's SaveUp — not a complicated banking app, just a simple tool that does the job.",
       ],
       founderName: 'Alex',
       founderRole: 'Founder of SaveUp',
