@@ -354,39 +354,57 @@ export function Home() {
             <h2 className="text-center text-2xl font-bold text-ink sm:text-3xl">🤔 {t.problemSolution.heading}</h2>
             <p className="mx-auto mt-3 max-w-md text-center text-muted">{t.problemSolution.subheading}</p>
           </Reveal>
+        </div>
 
-          <div className="mt-12 grid gap-10 sm:grid-cols-2">
-            <Reveal delayMs={60}>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
-                {lang === 'fr' ? 'Avant' : 'Before'}
-              </h3>
-              <ul className="mt-4 space-y-4">
-                {t.problemSolution.pairs.map((pair) => (
-                  <li key={pair.problem} className="flex items-start gap-3 text-sm text-muted sm:text-base">
-                    <CrossIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
-                    {pair.problem}
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
+        {/* Each column as its own card — thin dark outline + pale-gray
+            background with a soft blurred blob inside (contained by
+            overflow-hidden) so the content reads as sitting on a distinct
+            surface rather than floating on the page's plain white. */}
+        <div className="mx-auto mt-12 grid max-w-5xl gap-6 sm:grid-cols-2">
+          <Reveal
+            delayMs={60}
+            className="relative overflow-hidden rounded-2xl border border-ink/20 bg-[#FAFAFA] p-8 sm:p-10"
+          >
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -left-12 -top-12 h-48 w-48 rounded-full bg-ink/[0.04] blur-3xl"
+            />
+            <h3 className="relative text-sm font-semibold uppercase tracking-wide text-muted">
+              {lang === 'fr' ? 'Avant' : 'Before'}
+            </h3>
+            <ul className="relative mt-5 space-y-4">
+              {t.problemSolution.pairs.map((pair) => (
+                <li key={pair.problem} className="flex items-start gap-3 text-sm text-muted sm:text-base">
+                  <CrossIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
+                  {pair.problem}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
 
-            <Reveal delayMs={120}>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-primary">
-                {lang === 'fr' ? 'Avec SaveUp' : 'With SaveUp'}
-              </h3>
-              <ul className="mt-4 space-y-4">
-                {t.problemSolution.pairs.map((pair) => (
-                  <li
-                    key={pair.solution}
-                    className="flex items-start gap-3 text-sm font-medium text-ink transition-colors duration-200 hover:text-primary sm:text-base"
-                  >
-                    <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    {pair.solution}
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          </div>
+          <Reveal
+            delayMs={120}
+            className="relative overflow-hidden rounded-2xl border border-ink/20 bg-[#FAFAFA] p-8 sm:p-10"
+          >
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-primary/[0.07] blur-3xl"
+            />
+            <h3 className="relative text-sm font-semibold uppercase tracking-wide text-primary">
+              {lang === 'fr' ? 'Avec SaveUp' : 'With SaveUp'}
+            </h3>
+            <ul className="relative mt-5 space-y-4">
+              {t.problemSolution.pairs.map((pair) => (
+                <li
+                  key={pair.solution}
+                  className="flex items-start gap-3 text-sm font-medium text-ink transition-colors duration-200 hover:text-primary sm:text-base"
+                >
+                  <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  {pair.solution}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
         </div>
       </section>
 
