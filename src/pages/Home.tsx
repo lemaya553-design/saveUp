@@ -201,12 +201,15 @@ const FLOATING_LABEL_ICONS = {
   budget: BudgetIcon,
 }
 
-// Positions for the showcase section's 4 scattered labels — the phone +
-// its 2 flanking cards already fill most of the max-w-5xl row, so these
-// are positioned relative to the full section width (generous side
-// gutters at typical desktop widths) and shown only at xl+ to keep a
-// comfortable margin from that central cluster. Alternating rotation so
-// they don't read as a uniform grid.
+// Positions for the showcase section's 4 scattered labels — top/bottom
+// anchored rather than beside the phone+cards row, since that row's
+// cluster (~970px fixed) leaves almost no side margin even at the lg
+// breakpoint (1024px). Sitting in the section's vertical padding above/
+// below the row (which is itself taller than the cards, centered within
+// it) keeps them clear of both the cards and the phone at every width
+// from lg up — verified by measuring actual bounding boxes at 1024px, the
+// tightest case. Alternating rotation so they don't read as a uniform
+// grid.
 const FLOATING_LABEL_STYLES = [
   'pointer-events-auto absolute left-6 top-12 -rotate-4',
   'pointer-events-auto absolute right-8 top-28 rotate-3',
@@ -404,7 +407,7 @@ export function Home() {
             these without overlapping. The "goal" one counts 1 -> amount on
             a continuous 10s loop (useLoopingCountUp, called once above so
             all 4 labels share the same render). */}
-        <div className="pointer-events-none absolute inset-0 z-0 hidden xl:block">
+        <div className="pointer-events-none absolute inset-0 z-0 hidden lg:block">
           <FloatingLabel icon="goal" className={FLOATING_LABEL_STYLES[0]} delayS={0}>
             {t.showcase.floatingLabels.goal.before}
             {goalCount}
