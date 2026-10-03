@@ -7,6 +7,21 @@ export interface HomeContent {
     description: string
   }
   hero: {
+    trustBadge: string
+    titleStart: string
+    titleHighlight: string
+    subtitle: string
+    ctaInputLabel: string
+    ctaButton: string
+    // Icon key resolved to a component in Home.tsx — real app behavior
+    // only (no invented metrics), see the task that introduced this.
+    floatingCards: { icon: 'goal' | 'trend' | 'import' | 'budget'; text: string }[]
+  }
+  // Section 2 — phone mockup + 2 narrative cards + CTA, directly below the
+  // title hero above (not a replacement for it — see the task that added
+  // this section back as #2 after an earlier pass mistakenly swapped it in
+  // as #1).
+  showcase: {
     // Floating iOS-style notification peeking above the phone mockup —
     // a real app outcome (reaching a savings goal), not an invented stat.
     notification: string
@@ -67,6 +82,21 @@ export const HOME: Record<Lang, HomeContent> = {
         'Importe ton relevé bancaire, budgète et épargne au même endroit — sans tableur compliqué. 100% gratuit pour commencer.',
     },
     hero: {
+      trustBadge: 'Rejoins les premiers utilisateurs de SaveUp',
+      titleStart: 'Gère ton budget,',
+      titleHighlight: 'Enfin simplement.',
+      subtitle:
+        'SaveUp importe ton relevé bancaire et organise tes finances en 3 clics — budget, épargne et stats, automatiquement.',
+      ctaInputLabel: 'Commencer gratuitement, sans carte requise',
+      ctaButton: 'Essayer SaveUp →',
+      floatingCards: [
+        { icon: 'goal', text: "Objectif d'épargne atteint ✅" },
+        { icon: 'trend', text: 'Santé financière : Bonne' },
+        { icon: 'import', text: 'Import en 3 clics' },
+        { icon: 'budget', text: '5 catégories suivies' },
+      ],
+    },
+    showcase: {
       notification: 'Objectif atteint 🎉 +50 $',
       phoneAlt: 'Aperçu du Dashboard SaveUp',
       cardLeft: {
@@ -195,6 +225,21 @@ export const HOME: Record<Lang, HomeContent> = {
         'Import your bank statement, budget and save in one place — no complicated spreadsheet. 100% free to start.',
     },
     hero: {
+      trustBadge: 'Join the first SaveUp users',
+      titleStart: 'Manage your budget,',
+      titleHighlight: 'Finally simple.',
+      subtitle:
+        'SaveUp imports your bank statement and organizes your finances in 3 clicks — budget, savings, and stats, automatically.',
+      ctaInputLabel: 'Get started free, no card required',
+      ctaButton: 'Try SaveUp →',
+      floatingCards: [
+        { icon: 'goal', text: 'Savings goal reached ✅' },
+        { icon: 'trend', text: 'Financial health: Good' },
+        { icon: 'import', text: 'Import in 3 clicks' },
+        { icon: 'budget', text: '5 categories tracked' },
+      ],
+    },
+    showcase: {
       notification: 'Goal reached 🎉 +$50',
       phoneAlt: 'Preview of the SaveUp Dashboard',
       cardLeft: {
