@@ -11,11 +11,11 @@ export interface HomeContent {
     titleStart: string
     titleHighlight: string
     subtitle: string
-    ctaInputLabel: string
-    ctaButton: string
     // Icon key resolved to a component in Home.tsx — real app behavior
-    // only (no invented metrics), see the task that introduced this.
-    floatingCards: { icon: 'goal' | 'trend' | 'import' | 'budget'; text: string }[]
+    // only (no invented metrics), see the task that introduced this. Only
+    // 2 entries (not 4) — the other 2, plus this section's own CTA, were
+    // removed for sitting too close to the showcase section's phone below.
+    floatingCards: { icon: 'goal' | 'trend'; text: string }[]
   }
   // Section 2 — phone mockup + 2 narrative cards + CTA, directly below the
   // title hero above (not a replacement for it — see the task that added
@@ -87,13 +87,9 @@ export const HOME: Record<Lang, HomeContent> = {
       titleHighlight: 'Enfin simplement.',
       subtitle:
         'SaveUp importe ton relevé bancaire et organise tes finances en 3 clics — budget, épargne et stats, automatiquement.',
-      ctaInputLabel: 'Commencer gratuitement, sans carte requise',
-      ctaButton: 'Essayer SaveUp →',
       floatingCards: [
         { icon: 'goal', text: "Objectif d'épargne atteint ✅" },
         { icon: 'trend', text: 'Santé financière : Bonne' },
-        { icon: 'import', text: 'Import en 3 clics' },
-        { icon: 'budget', text: '5 catégories suivies' },
       ],
     },
     showcase: {
@@ -230,13 +226,9 @@ export const HOME: Record<Lang, HomeContent> = {
       titleHighlight: 'Finally simple.',
       subtitle:
         'SaveUp imports your bank statement and organizes your finances in 3 clicks — budget, savings, and stats, automatically.',
-      ctaInputLabel: 'Get started free, no card required',
-      ctaButton: 'Try SaveUp →',
       floatingCards: [
         { icon: 'goal', text: 'Savings goal reached ✅' },
         { icon: 'trend', text: 'Financial health: Good' },
-        { icon: 'import', text: 'Import in 3 clicks' },
-        { icon: 'budget', text: '5 categories tracked' },
       ],
     },
     showcase: {

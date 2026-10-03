@@ -79,15 +79,6 @@ function BudgetIcon({ className }: { className: string }) {
   )
 }
 
-function SearchIcon({ className }: { className: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>
-      <circle cx="11" cy="11" r="7" />
-      <path strokeLinecap="round" d="M21 21l-4.3-4.3" />
-    </svg>
-  )
-}
-
 function PlayIcon({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -131,8 +122,6 @@ const FLOATING_CARD_ICONS = {
 const FLOATING_CARD_STYLES = [
   { position: 'left-0 top-2 -rotate-6', size: 'text-base px-5 py-3.5' },
   { position: 'right-2 top-20 rotate-3', size: 'text-xs px-3.5 py-2.5' },
-  { position: 'left-10 bottom-4 rotate-2', size: 'text-sm px-4 py-3' },
-  { position: 'right-0 bottom-16 -rotate-[8deg]', size: 'text-xs px-3.5 py-2.5' },
 ]
 
 function FloatingCard({
@@ -219,21 +208,14 @@ export function Home() {
             <span className="text-primary">{t.hero.titleHighlight}</span>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-lg text-muted">{t.hero.subtitle}</p>
-
-          <Link
-            to="/dashboard"
-            className="group mx-auto mt-9 flex max-w-xl items-center gap-3 rounded-full border border-overlay/10 bg-surface py-2 pl-5 pr-2 shadow-lg shadow-black/5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
-          >
-            <SearchIcon className="h-5 w-5 shrink-0 text-muted" />
-            <span className="flex-1 truncate text-left text-sm text-muted sm:text-base">{t.hero.ctaInputLabel}</span>
-            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-primary-strong px-5 py-2.5 text-sm font-semibold text-white transition-all group-hover:brightness-110">
-              {t.hero.ctaButton}
-            </span>
-          </Link>
         </Reveal>
 
         {/* Floating cards — large screens only, absolutely positioned
-            around the hero content. */}
+            around the hero content. Only the top 2 (of the original 4) —
+            the bottom 2 plus the search-bar CTA were removed (see the task
+            that trimmed this): they sat low enough in this section to
+            visually crowd the showcase section's phone mockup right below,
+            reading as clutter rather than two distinct sections. */}
         <div className="pointer-events-none absolute inset-0 z-0 mx-auto hidden max-w-5xl lg:block">
           {t.hero.floatingCards.map((card, i) => (
             <Reveal
@@ -246,7 +228,7 @@ export function Home() {
           ))}
         </div>
 
-        {/* Same cards, static 2x2 grid below lg. */}
+        {/* Same cards, static row below lg. */}
         <Reveal delayMs={160} className="mx-auto mt-10 grid max-w-md grid-cols-2 gap-3 lg:hidden">
           {t.hero.floatingCards.map((card) => (
             <FloatingCard key={card.text} icon={card.icon} text={card.text} className="text-left" />
@@ -255,42 +237,61 @@ export function Home() {
       </section>
 
       {/* 2. Showcase — phone mockup centered (real Dashboard screenshot,
-          object-cover filling the frame edge-to-edge per this section's
-          brief — the source screenshot is landscape-ish, so this crops
-          some side content rather than showing the whole image; the
-          alternative (object-contain) left visible black letterboxing,
-          which was explicitly rejected), a floating iOS-style notification
+          object-contain so the whole thing is always visible — no text
+          ever gets cropped, even partially. object-cover was tried and
+          rejected: on this landscape-ish source image, filling a portrait
+          phone edge-to-edge meant cropping into card text ("Comment tu
+          t'en so...", amounts cut mid-digit). This trades that for a
+          little empty space below the content on tall screens — centered
+          vertically, which also keeps the content clear of the floating
+          notification above it, and matched to the screenshot's own dark
+          background so it reads as "more app below the fold," not a gap.
+          Phone is tilted in CSS 3D (perspective + rotateY/rotateX) for a
+          dynamic, non-flat look), a floating iOS-style notification
           peeking above it, and two narrative cards flanking it that
           overlap its edges on large screens (negative margins) and drop
           below it on mobile (flex `order`, same markup both breakpoints).
-          Pure white, no background shapes — deliberately the one section
-          on this page without a blob, per this section's own brief. */}
-      <section className="bg-white px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
-        <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-10 lg:flex-row lg:items-center lg:justify-center lg:gap-0">
+          Pure white, no background shapes, nothing else around the phone
+          — deliberately the one section on this page without a blob, per
+          this section's own brief. */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-[#FAFAFA] to-white px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
+        {/* Very faint orange glow for depth — static (no drift animation
+            like other sections' blobs), kept at 2-3% opacity specifically
+            so it reads as "a little depth," not a distraction. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_55%_at_50%_30%,rgba(255,107,0,0.03),transparent_70%)]"
+        />
+
+        <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-10 lg:flex-row lg:items-center lg:justify-center lg:gap-10">
           <Reveal
             delayMs={60}
-            className="order-2 z-0 w-full max-w-[320px] rounded-2xl bg-white p-7 shadow-[0_25px_60px_-20px_rgba(0,0,0,0.18)] lg:order-1 lg:-mr-3"
+            className="order-2 w-full max-w-[320px] rounded-2xl bg-white p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.08)] sm:p-10 lg:order-1"
           >
-            <h3 className="text-xl font-extrabold leading-snug text-ink">
+            <h3 className="text-[26px] font-extrabold leading-snug text-ink">
               {t.showcase.cardLeft.before}
               <span className="text-primary">{t.showcase.cardLeft.highlight}</span>
               {t.showcase.cardLeft.after}
             </h3>
-            <p className="mt-2.5 text-sm text-muted">{t.showcase.cardLeft.body}</p>
+            <p className="mt-3 font-normal text-[#666]">{t.showcase.cardLeft.body}</p>
           </Reveal>
 
           <Reveal className="relative z-10 order-1 w-[220px] shrink-0 sm:w-[250px] lg:order-2">
-            {/* iOS-style floating notification, peeking above the frame. */}
-            <div className="absolute -top-5 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-2xl bg-white px-4 py-2.5 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.2)] ring-1 ring-black/[0.04]">
-              <span className="text-sm font-semibold text-ink">{t.showcase.notification}</span>
+            {/* iOS-style floating notification — true pill shape, crisp-but-
+                soft layered shadow, text centered both axes. */}
+            <div className="absolute -top-5 left-1/2 z-20 inline-flex -translate-x-1/2 items-center justify-center whitespace-nowrap rounded-full bg-white px-5 py-3 shadow-[0_2px_6px_rgba(0,0,0,0.08),0_10px_20px_-4px_rgba(0,0,0,0.18)] ring-1 ring-black/[0.04]">
+              <span className="text-sm font-semibold leading-none text-ink">{t.showcase.notification}</span>
             </div>
 
-            <div className="rounded-[2.75rem] border-[10px] border-ink bg-ink shadow-2xl shadow-black/25">
-              <div className="relative aspect-[9/19.5] overflow-hidden rounded-[2.25rem] bg-[#0b0b12]">
+            <div
+              className="rounded-[2.75rem] border-[10px] border-ink bg-ink shadow-[0_15px_35px_-15px_rgba(0,0,0,0.25),0_40px_80px_-20px_rgba(0,0,0,0.35)] [transform:perspective(1200px)_rotateY(-9deg)_rotateX(3deg)]"
+              style={{ transformStyle: 'preserve-3d' }}
+            >
+              <div className="relative aspect-[9/16] overflow-hidden rounded-[2.25rem] bg-[#0b0b12]">
                 <img
                   src="/screenshots/dashboard.png"
                   alt={t.showcase.phoneAlt}
-                  className="h-full w-full object-cover object-left-top"
+                  className="h-full w-full object-contain object-center"
                 />
               </div>
             </div>
@@ -305,14 +306,14 @@ export function Home() {
 
           <Reveal
             delayMs={120}
-            className="order-3 z-0 w-full max-w-[320px] rounded-2xl bg-white p-7 shadow-[0_25px_60px_-20px_rgba(0,0,0,0.18)] lg:-ml-3"
+            className="order-3 w-full max-w-[320px] rounded-2xl bg-white p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.08)] sm:p-10"
           >
-            <h3 className="text-xl font-extrabold leading-snug text-ink">
+            <h3 className="text-[26px] font-extrabold leading-snug text-ink">
               {t.showcase.cardRight.before}
               <span className="text-primary">{t.showcase.cardRight.highlight}</span>
               {t.showcase.cardRight.after}
             </h3>
-            <p className="mt-2.5 text-sm text-muted">{t.showcase.cardRight.body}</p>
+            <p className="mt-3 font-normal text-[#666]">{t.showcase.cardRight.body}</p>
           </Reveal>
         </div>
       </section>
