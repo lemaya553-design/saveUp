@@ -467,3 +467,40 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Showcase section's scattered floating labels (Home.tsx) — a continuous
+   10s loop (not scroll-triggered) so the labels, and the $ counter inside
+   one of them, replay periodically even if the visitor never scrolls away
+   and back. Brief fade-out/in at the loop boundary reads as a quiet
+   "refresh pulse" rather than the content disappearing — most of the 10s
+   is spent fully visible and still. */
+@keyframes label-loop {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.92);
+  }
+  8% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  92% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.92);
+  }
+}
+
+.label-loop {
+  animation: label-loop 10s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .label-loop {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

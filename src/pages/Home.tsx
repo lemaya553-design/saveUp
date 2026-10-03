@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { LandingHeader } from '../components/LandingHeader'
 import { Footer } from '../components/Footer'
@@ -104,6 +104,15 @@ function PersonIcon({ className }: { className: string }) {
   )
 }
 
+function BadgeCheckIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l2.2 1.3 2.5-.3 1 2.3 2.3 1-.3 2.5L21 12l-1.3 2.2.3 2.5-2.3 1-1 2.3-2.5-.3L12 21l-2.2-1.3-2.5.3-1-2.3-2.3-1 .3-2.5L3 12l1.3-2.2-.3-2.5 2.3-1 1-2.3 2.5.3L12 3z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.5l2 2 4-4.5" />
+    </svg>
+  )
+}
+
 const STEP_ICONS = [ImportIcon, TagIcon, GoalIcon] as const
 
 // Keyed to HomeContent['hero']['floatingCards'][number]['icon'].
@@ -148,6 +157,88 @@ function FloatingCard({
   )
 }
 
+// Counts 1 -> target on mount, then repeats every `cycleMs` in sync with
+// the `.label-loop` CSS animation (same 10s cadence) so the number re-ticks
+// right as its label fades back in. Skips the animation under
+// prefers-reduced-motion — jumps straight to the final value instead.
+function useLoopingCountUp(target: number, cycleMs = 10000, durationMs = 1300) {
+  const [value, setValue] = useState(1)
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setValue(target)
+      return
+    }
+
+    let rafId = 0
+
+    function animateUp() {
+      const start = performance.now()
+      const step = (now: number) => {
+        const progress = Math.min((now - start) / durationMs, 1)
+        const eased = 1 - (1 - progress) ** 3
+        setValue(Math.max(1, Math.round(eased * target)))
+        if (progress < 1) rafId = requestAnimationFrame(step)
+      }
+      rafId = requestAnimationFrame(step)
+    }
+
+    animateUp()
+    const interval = setInterval(animateUp, cycleMs)
+    return () => {
+      cancelAnimationFrame(rafId)
+      clearInterval(interval)
+    }
+  }, [target, cycleMs, durationMs])
+
+  return value
+}
+
+const FLOATING_LABEL_ICONS = {
+  goal: GoalIcon,
+  trend: TrendIcon,
+  badge: BadgeCheckIcon,
+  budget: BudgetIcon,
+}
+
+// Positions for the showcase section's 4 scattered labels — the phone +
+// its 2 flanking cards already fill most of the max-w-5xl row, so these
+// are positioned relative to the full section width (generous side
+// gutters at typical desktop widths) and shown only at xl+ to keep a
+// comfortable margin from that central cluster. Alternating rotation so
+// they don't read as a uniform grid.
+const FLOATING_LABEL_STYLES = [
+  'pointer-events-auto absolute left-6 top-12 -rotate-4',
+  'pointer-events-auto absolute right-8 top-28 rotate-3',
+  'pointer-events-auto absolute left-10 bottom-10 rotate-4',
+  'pointer-events-auto absolute right-14 bottom-20 -rotate-3',
+]
+
+function FloatingLabel({
+  icon,
+  children,
+  className = '',
+  delayS = 0,
+}: {
+  icon: keyof typeof FLOATING_LABEL_ICONS
+  children: ReactNode
+  className?: string
+  delayS?: number
+}) {
+  const Icon = FLOATING_LABEL_ICONS[icon]
+  return (
+    <div
+      className={`label-loop flex items-center gap-2 rounded-full bg-white px-4 py-2.5 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.18)] ${className}`}
+      style={{ animationDelay: `${delayS}s` }}
+    >
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Icon className="h-3.5 w-3.5" />
+      </span>
+      <span className="whitespace-nowrap text-xs font-semibold text-ink">{children}</span>
+    </div>
+  )
+}
+
 // No real Discord invite exists yet (see Footer.tsx) — null keeps the CTA
 // visibly disabled instead of pointing at a fabricated server.
 const DISCORD_URL: string | null = null
@@ -158,6 +249,7 @@ export function Home() {
   const t = HOME[lang]
   const tarifs = TARIFS[lang]
   const header = COMMON[lang].header
+  const goalCount = useLoopingCountUp(t.showcase.floatingLabels.goal.amount)
 
   useEffect(() => {
     if (!location.hash) return
@@ -236,7 +328,50 @@ export function Home() {
         </Reveal>
       </section>
 
-      {/* 2. Showcase — phone mockup centered (real Dashboard screenshot,
+      {/* 2. Problème / Solution */}
+      <section id="probleme" className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
+        <div className="mx-auto max-w-4xl">
+          <Reveal>
+            <h2 className="text-center text-2xl font-bold text-ink sm:text-3xl">🤔 {t.problemSolution.heading}</h2>
+            <p className="mx-auto mt-3 max-w-md text-center text-muted">{t.problemSolution.subheading}</p>
+          </Reveal>
+
+          <div className="mt-12 grid gap-10 sm:grid-cols-2">
+            <Reveal delayMs={60}>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+                {lang === 'fr' ? 'Avant' : 'Before'}
+              </h3>
+              <ul className="mt-4 space-y-4">
+                {t.problemSolution.pairs.map((pair) => (
+                  <li key={pair.problem} className="flex items-start gap-3 text-sm text-muted sm:text-base">
+                    <CrossIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
+                    {pair.problem}
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+
+            <Reveal delayMs={120}>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-primary">
+                {lang === 'fr' ? 'Avec SaveUp' : 'With SaveUp'}
+              </h3>
+              <ul className="mt-4 space-y-4">
+                {t.problemSolution.pairs.map((pair) => (
+                  <li
+                    key={pair.solution}
+                    className="flex items-start gap-3 text-sm font-medium text-ink transition-colors duration-200 hover:text-primary sm:text-base"
+                  >
+                    <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    {pair.solution}
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Showcase — phone mockup centered (real Dashboard screenshot,
           object-contain so the whole thing is always visible — no text
           ever gets cropped, even partially. object-cover was tried and
           rejected: on this landscape-ish source image, filling a portrait
@@ -262,6 +397,30 @@ export function Home() {
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_55%_at_50%_30%,rgba(255,107,0,0.03),transparent_70%)]"
         />
+
+        {/* Scattered floating labels — real feature callouts, desktop only
+            (xl+): the phone + its 2 flanking cards already fill most of
+            the row's width below that, leaving no safe margin to scatter
+            these without overlapping. The "goal" one counts 1 -> amount on
+            a continuous 10s loop (useLoopingCountUp, called once above so
+            all 4 labels share the same render). */}
+        <div className="pointer-events-none absolute inset-0 z-0 hidden xl:block">
+          <FloatingLabel icon="goal" className={FLOATING_LABEL_STYLES[0]} delayS={0}>
+            {t.showcase.floatingLabels.goal.before}
+            {goalCount}
+            {t.showcase.floatingLabels.goal.after}
+          </FloatingLabel>
+          {t.showcase.floatingLabels.items.map((label, i) => (
+            <FloatingLabel
+              key={label.text}
+              icon={label.icon}
+              className={FLOATING_LABEL_STYLES[i + 1]}
+              delayS={(i + 1) * 0.6}
+            >
+              {label.text}
+            </FloatingLabel>
+          ))}
+        </div>
 
         <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-10 lg:flex-row lg:items-center lg:justify-center lg:gap-10">
           <Reveal
@@ -315,49 +474,6 @@ export function Home() {
             </h3>
             <p className="mt-3 font-normal text-[#666]">{t.showcase.cardRight.body}</p>
           </Reveal>
-        </div>
-      </section>
-
-      {/* 3. Problème / Solution */}
-      <section id="probleme" className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
-        <div className="mx-auto max-w-4xl">
-          <Reveal>
-            <h2 className="text-center text-2xl font-bold text-ink sm:text-3xl">🤔 {t.problemSolution.heading}</h2>
-            <p className="mx-auto mt-3 max-w-md text-center text-muted">{t.problemSolution.subheading}</p>
-          </Reveal>
-
-          <div className="mt-12 grid gap-10 sm:grid-cols-2">
-            <Reveal delayMs={60}>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
-                {lang === 'fr' ? 'Avant' : 'Before'}
-              </h3>
-              <ul className="mt-4 space-y-4">
-                {t.problemSolution.pairs.map((pair) => (
-                  <li key={pair.problem} className="flex items-start gap-3 text-sm text-muted sm:text-base">
-                    <CrossIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
-                    {pair.problem}
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-
-            <Reveal delayMs={120}>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-primary">
-                {lang === 'fr' ? 'Avec SaveUp' : 'With SaveUp'}
-              </h3>
-              <ul className="mt-4 space-y-4">
-                {t.problemSolution.pairs.map((pair) => (
-                  <li
-                    key={pair.solution}
-                    className="flex items-start gap-3 text-sm font-medium text-ink transition-colors duration-200 hover:text-primary sm:text-base"
-                  >
-                    <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    {pair.solution}
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          </div>
         </div>
       </section>
 

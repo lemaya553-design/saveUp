@@ -30,6 +30,13 @@ export interface HomeContent {
     // the accent color while the rest stays black — see Home.tsx.
     cardLeft: { before: string; highlight: string; after: string; body: string }
     cardRight: { before: string; highlight: string; after: string; body: string }
+    // 4 small scattered labels around the phone, desktop only (see
+    // Home.tsx) — the "goal" one counts 1 -> amount on a loop, the rest
+    // are static text. All real app behavior, no invented metrics.
+    floatingLabels: {
+      goal: { before: string; amount: number; after: string }
+      items: { icon: 'trend' | 'badge' | 'budget'; text: string }[]
+    }
   }
   problemSolution: {
     heading: string
@@ -106,6 +113,14 @@ export const HOME: Record<Lang, HomeContent> = {
         highlight: 'ton argent',
         after: '.',
         body: 'Un dashboard clair, mis à jour en temps réel.',
+      },
+      floatingLabels: {
+        goal: { before: 'Objectif atteint : ', amount: 500, after: ' $ 🎉' },
+        items: [
+          { icon: 'trend', text: 'Santé financière : Bonne 📈' },
+          { icon: 'badge', text: 'Budget respecté ce mois-ci 💪' },
+          { icon: 'budget', text: '5 catégories suivies' },
+        ],
       },
     },
     problemSolution: {
@@ -245,6 +260,14 @@ export const HOME: Record<Lang, HomeContent> = {
         highlight: 'your money goes',
         after: '.',
         body: 'A clear dashboard, updated in real time.',
+      },
+      floatingLabels: {
+        goal: { before: 'Goal reached: $', amount: 500, after: ' 🎉' },
+        items: [
+          { icon: 'trend', text: 'Financial health: Good 📈' },
+          { icon: 'badge', text: 'On budget this month 💪' },
+          { icon: 'budget', text: '5 categories tracked' },
+        ],
       },
     },
     problemSolution: {
