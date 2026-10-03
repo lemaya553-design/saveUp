@@ -50,11 +50,18 @@ export interface HomeContent {
     founderRole: string
     photoAlt: string
   }
-  demo: {
+  // Replaces the old video-placeholder section — title + numbered steps on
+  // one side, an illustrative (not a real screenshot) phone mockup on the
+  // other. The mockup's own on-screen text lives here too since it's
+  // real UI copy for the diagram, not placeholder/fake data.
+  actionSteps: {
     heading: string
-    subheading: string
-    placeholderLabel: string
-    placeholderDuration: string
+    steps: { title: string; body: string }[]
+    mockup: {
+      importLabel: string
+      transactions: { label: string; amount: string }[]
+      recategorizeLabel: string
+    }
   }
   solutionSteps: {
     heading: string
@@ -167,11 +174,31 @@ export const HOME: Record<Lang, HomeContent> = {
       founderRole: 'Fondateur de SaveUp',
       photoAlt: "Photo d'Alex, fondateur de SaveUp",
     },
-    demo: {
-      heading: 'Vois SaveUp en action',
-      subheading: "Une démo complète de l'application, en un peu moins de 3 minutes.",
-      placeholderLabel: 'Vidéo à venir',
-      placeholderDuration: '~3 min',
+    actionSteps: {
+      heading: 'Passe à l’action en 3 étapes simples',
+      steps: [
+        {
+          title: 'Crée ton compte gratuitement',
+          body: 'Inscription en moins d’une minute, aucune carte requise pour commencer.',
+        },
+        {
+          title: 'Importe ton relevé bancaire en 3 clics',
+          body: 'Télécharge le CSV de ta banque et importe-le dans SaveUp — toutes tes transactions apparaissent automatiquement.',
+        },
+        {
+          title: 'Recatégorise tes dépenses et suis ton budget',
+          body: 'Assigne chaque dépense à une catégorie et vois tes statistiques, ton budget et tes objectifs d’épargne se mettre à jour en temps réel.',
+        },
+      ],
+      mockup: {
+        importLabel: 'Importer un relevé bancaire (CSV)',
+        transactions: [
+          { label: 'Épicerie', amount: '84,32 $' },
+          { label: 'Essence', amount: '62,00 $' },
+          { label: 'Abonnement streaming', amount: '15,99 $' },
+        ],
+        recategorizeLabel: 'Recatégoriser mes dépenses',
+      },
     },
     solutionSteps: {
       heading: 'Comment ça marche',
@@ -319,11 +346,31 @@ export const HOME: Record<Lang, HomeContent> = {
       founderRole: 'Founder of SaveUp',
       photoAlt: 'Photo of Alex, founder of SaveUp',
     },
-    demo: {
-      heading: 'See SaveUp in action',
-      subheading: 'A full walkthrough of the app, in just under 3 minutes.',
-      placeholderLabel: 'Video coming soon',
-      placeholderDuration: '~3 min',
+    actionSteps: {
+      heading: 'Get started in 3 simple steps',
+      steps: [
+        {
+          title: 'Create your free account',
+          body: 'Sign up in under a minute, no card required to get started.',
+        },
+        {
+          title: 'Import your bank statement in 3 clicks',
+          body: "Download the CSV from your bank and import it into SaveUp — all your transactions show up automatically.",
+        },
+        {
+          title: 'Recategorize your spending and track your budget',
+          body: 'Assign each expense to a category and watch your stats, budget, and savings goals update in real time.',
+        },
+      ],
+      mockup: {
+        importLabel: 'Import a bank statement (CSV)',
+        transactions: [
+          { label: 'Groceries', amount: '$84.32' },
+          { label: 'Gas', amount: '$62.00' },
+          { label: 'Streaming subscription', amount: '$15.99' },
+        ],
+        recategorizeLabel: 'Recategorize my spending',
+      },
     },
     solutionSteps: {
       heading: 'How it works',

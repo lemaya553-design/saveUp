@@ -80,14 +80,6 @@ function BudgetIcon({ className }: { className: string }) {
   )
 }
 
-function PlayIcon({ className }: { className: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M8 5v14l11-7-11-7z" />
-    </svg>
-  )
-}
-
 function ChatIcon({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
@@ -565,25 +557,76 @@ export function Home() {
         </Reveal>
       </section>
 
-      {/* 6. Vidéo démo */}
-      <section id="demo" className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
-        <div className="mx-auto max-w-3xl text-center">
+      {/* 6. Comment ça marche — title + numbered steps on one side, an
+          illustrative phone mockup on the other (NOT a real screenshot —
+          hand-built UI showing the import/recategorize concept, in the
+          same realistic bezel/notch/button/reflection style as the hero
+          showcase's phone). Replaces the old video placeholder. */}
+      <section className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
+        <div className="mx-auto grid max-w-5xl items-center gap-14 lg:grid-cols-2 lg:gap-20">
           <Reveal>
-            <h2 className="text-2xl font-bold text-ink sm:text-3xl">🎬 {t.demo.heading}</h2>
-            <p className="mx-auto mt-3 max-w-md text-muted">{t.demo.subheading}</p>
+            <h2 className="text-2xl font-bold text-ink sm:text-3xl">{t.actionSteps.heading}</h2>
+            <ol className="mt-9 space-y-7">
+              {t.actionSteps.steps.map((step, i) => (
+                <li key={step.title} className="flex gap-4">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <h3 className="font-semibold text-ink">{step.title}</h3>
+                    <p className="mt-1 text-sm text-muted">{step.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <Link
+              to="/dashboard"
+              className="mt-9 inline-block rounded-xl bg-primary-strong px-7 py-3.5 font-semibold text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110"
+            >
+              {header.ctaStart}
+            </Link>
           </Reveal>
 
-          <Reveal delayMs={80} className="mt-10">
-            <div className="group relative mx-auto flex aspect-video items-center justify-center overflow-hidden rounded-3xl bg-ink transition-shadow duration-300 hover:shadow-2xl hover:shadow-primary/20">
-              <div className="flex flex-col items-center gap-3">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white transition-transform duration-300 group-hover:scale-110">
-                  <PlayIcon className="h-7 w-7 translate-x-0.5" />
+          <Reveal delayMs={100} className="mx-auto w-[260px] sm:w-[300px]">
+            <div
+              className="relative [transform:perspective(1200px)_rotateY(9deg)_rotateX(3deg)]"
+              style={{ transformStyle: 'preserve-3d' }}
+            >
+              <div className="absolute -left-[3px] top-[14%] h-9 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+              <div className="absolute -left-[3px] top-[22%] h-14 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+              <div className="absolute -left-[3px] top-[32%] h-14 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+              <div className="absolute -right-[3px] top-[20%] h-20 w-[3px] rounded-r-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+
+              <div className="rounded-[2.75rem] bg-gradient-to-br from-[#46464c] via-[#1d1d20] to-[#08080a] p-[3px] shadow-[0_15px_35px_-15px_rgba(0,0,0,0.25),0_40px_80px_-20px_rgba(0,0,0,0.35)]">
+                <div className="rounded-[2.6rem] bg-black p-[7px]">
+                  <div className="relative aspect-[9/19] overflow-hidden rounded-[2.2rem] bg-[#0b0b12] px-5 pb-6 pt-11">
+                    <div className="absolute left-1/2 top-[10px] z-20 h-[20px] w-[78px] -translate-x-1/2 rounded-full bg-black" />
+
+                    <p className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <ImportIcon className="h-4 w-4 shrink-0 text-primary" />
+                      {t.actionSteps.mockup.importLabel}
+                    </p>
+
+                    <div className="mt-6 space-y-2.5">
+                      {t.actionSteps.mockup.transactions.map((tx) => (
+                        <div
+                          key={tx.label}
+                          className="flex items-center justify-between rounded-xl bg-white/[0.06] px-3.5 py-3"
+                        >
+                          <span className="text-xs text-white/70">{tx.label}</span>
+                          <span className="text-xs font-semibold text-white">{tx.amount}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-6 rounded-xl bg-primary py-3 text-center text-xs font-semibold text-white">
+                      {t.actionSteps.mockup.recategorizeLabel}
+                    </div>
+
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.1] via-white/[0.02] to-transparent" />
+                  </div>
                 </div>
-                <p className="font-medium text-white">{t.demo.placeholderLabel}</p>
               </div>
-              <span className="absolute right-4 top-4 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white">
-                {t.demo.placeholderDuration}
-              </span>
             </div>
           </Reveal>
         </div>
