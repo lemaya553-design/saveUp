@@ -504,3 +504,34 @@ body {
     transform: none;
   }
 }
+
+/* Testimonial carousel (TestimonialCarousel.tsx) — continuous auto-scroll,
+   no nav buttons. The track renders the testimonial list twice back to
+   back; animating exactly one set-width (-50% -> 0%, i.e. left-to-right
+   drift) loops seamlessly since both halves are identical. Pure CSS, no
+   JS/IntersectionObserver needed since it should run regardless of scroll
+   position once mounted. */
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0%);
+  }
+}
+
+.marquee-track {
+  width: max-content;
+  animation: marquee-scroll 36s linear infinite;
+}
+
+.marquee-fade {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}

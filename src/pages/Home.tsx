@@ -5,6 +5,7 @@ import { Footer } from '../components/Footer'
 import { Reveal } from '../components/Reveal'
 import { MetaTags } from '../components/MetaTags'
 import { PricingCards } from '../components/PricingCards'
+import { TestimonialCarousel } from '../components/TestimonialCarousel'
 import { useLanguage } from '../hooks/useLanguage'
 import { HOME } from '../lib/i18n/home'
 import { TARIFS } from '../lib/i18n/tarifs'
@@ -331,7 +332,22 @@ export function Home() {
         </Reveal>
       </section>
 
-      {/* 2. Problème / Solution */}
+      {/* 2. Témoignages — real customer reviews (lib/testimonials.ts), used
+          with permission. Auto-scrolling marquee, no nav controls. Shown
+          again near the bottom (section 10) — same 5 reviews both times,
+          repeating is expected per the task that added this. */}
+      <section className="border-t border-overlay/10 py-16 sm:py-20">
+        <Reveal>
+          <h2 className="px-4 text-center text-2xl font-bold text-ink sm:px-6 sm:text-3xl">
+            ⭐ {t.testimonials.heading}
+          </h2>
+        </Reveal>
+        <Reveal delayMs={80} className="mt-10">
+          <TestimonialCarousel />
+        </Reveal>
+      </section>
+
+      {/* 3. Problème / Solution */}
       <section id="probleme" className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
         <div className="mx-auto max-w-4xl">
           <Reveal>
@@ -374,7 +390,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* 3. Showcase — phone mockup centered (real Dashboard screenshot,
+      {/* 4. Showcase — phone mockup centered (real Dashboard screenshot,
           object-contain so the whole thing is always visible — no text
           ever gets cropped, even partially. object-cover was tried and
           rejected: on this landscape-ish source image, filling a portrait
@@ -480,7 +496,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* 4. Storytelling */}
+      {/* 5. Storytelling */}
       <section id="histoire" className="relative overflow-hidden border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
         <div
           aria-hidden="true"
@@ -508,7 +524,7 @@ export function Home() {
         </Reveal>
       </section>
 
-      {/* 5. Vidéo démo */}
+      {/* 6. Vidéo démo */}
       <section id="demo" className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
         <div className="mx-auto max-w-3xl text-center">
           <Reveal>
@@ -532,7 +548,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* 6. Solution en 3 étapes */}
+      {/* 7. Solution en 3 étapes */}
       <section
         id="comment-ca-marche"
         className="relative overflow-hidden border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28"
@@ -566,7 +582,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* 7. Tarifs — real plans/prices/features, same component and data as
+      {/* 8. Tarifs — real plans/prices/features, same component and data as
           the standalone /tarifs page (PricingCards.tsx), so there's never a
           second copy of this that can drift. */}
       <section id="tarifs" className="relative overflow-hidden border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
@@ -583,7 +599,7 @@ export function Home() {
         </Reveal>
       </section>
 
-      {/* 8. Preuve sociale honnête — communauté Discord, pas de témoignage
+      {/* 9. Preuve sociale honnête — communauté Discord, pas de témoignage
           inventé. */}
       <section
         id="communaute"
@@ -619,7 +635,20 @@ export function Home() {
         </Reveal>
       </section>
 
-      {/* 9. FAQ en accordéon — natif <details>/<summary>, pas de JS requis. */}
+      {/* 10. Témoignages — same carousel and same 5 real reviews as
+          section 2, repeated near the bottom of the page on purpose. */}
+      <section className="border-t border-overlay/10 py-16 sm:py-20">
+        <Reveal>
+          <h2 className="px-4 text-center text-2xl font-bold text-ink sm:px-6 sm:text-3xl">
+            ⭐ {t.testimonials.heading}
+          </h2>
+        </Reveal>
+        <Reveal delayMs={80} className="mt-10">
+          <TestimonialCarousel />
+        </Reveal>
+      </section>
+
+      {/* 11. FAQ en accordéon — natif <details>/<summary>, pas de JS requis. */}
       <section id="faq" className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
         <div className="mx-auto max-w-2xl">
           <Reveal>

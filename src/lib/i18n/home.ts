@@ -79,6 +79,12 @@ export interface HomeContent {
     heading: string
     items: { question: string; answer: string }[]
   }
+  // Heading only — the actual quotes (lib/testimonials.ts) are real
+  // customer reviews, used with permission, and deliberately NOT
+  // translated (see that file for why).
+  testimonials: {
+    heading: string
+  }
 }
 
 export const HOME: Record<Lang, HomeContent> = {
@@ -228,6 +234,9 @@ export const HOME: Record<Lang, HomeContent> = {
         },
       ],
     },
+    testimonials: {
+      heading: 'Ce que nos utilisateurs en pensent',
+    },
   },
   en: {
     meta: {
@@ -374,6 +383,9 @@ export const HOME: Record<Lang, HomeContent> = {
             "Yes, anytime, no commitment. The Free plan stays free with no limit; for Standard or Premium, cancel whenever you want from Settings → Manage subscription — you keep access until the end of the period you already paid for.",
         },
       ],
+    },
+    testimonials: {
+      heading: 'What our users are saying',
     },
   },
 }
