@@ -52,8 +52,8 @@ export function SavingsIllustration({ variant = 'card' }: { variant?: 'card' | '
 
   if (variant === 'icon') {
     return (
-      <div className={`${ICON_TILE} bg-success/15`}>
-        <svg viewBox="0 0 24 24" className="h-5 w-5 text-success" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+      <div className={`${ICON_TILE} bg-primary/15`}>
+        <svg viewBox="0 0 24 24" className="h-5 w-5 text-primary" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
           <circle cx="12" cy="12" r="9" />
           <path strokeLinecap="round" d="M12 7v5l3 2" />
         </svg>
@@ -67,10 +67,10 @@ export function SavingsIllustration({ variant = 'card' }: { variant?: 'card' | '
     <div aria-hidden="true">
       <div className="flex items-baseline justify-between">
         <span className="text-xs text-muted">{COMMON[lang].illustrations.savingsGoalLabel}</span>
-        <span className="text-sm font-semibold text-success">54 %</span>
+        <span className="text-sm font-semibold text-primary-strong">54 %</span>
       </div>
       <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-overlay/10">
-        <div className="h-full rounded-full bg-success" style={{ width: '54%' }} />
+        <div className="h-full rounded-full bg-primary" style={{ width: '54%' }} />
       </div>
       <p className="mt-3 text-2xl font-bold text-ink">
         {fmt(1620)}

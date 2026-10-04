@@ -1,7 +1,7 @@
 import type { ScoreTrend } from '../hooks/useFinancialHealth'
 
 const CONFIG: Record<Exclude<ScoreTrend, null>, { icon: string; label: string; className: string }> = {
-  up: { icon: '↑', label: 'en hausse', className: 'text-success' },
+  up: { icon: '↑', label: 'en hausse', className: 'text-primary-strong' },
   down: { icon: '↓', label: 'en baisse', className: 'text-red-400' },
   flat: { icon: '→', label: 'stable', className: 'text-muted' },
 }
