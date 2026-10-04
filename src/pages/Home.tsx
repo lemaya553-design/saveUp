@@ -546,89 +546,15 @@ export function Home() {
         </Reveal>
       </section>
 
-      {/* 6. Comment ça marche — title + numbered steps on one side, an
-          illustrative phone mockup on the other (NOT a real screenshot —
-          hand-built UI showing the import/recategorize concept, in the
-          same realistic bezel/notch/button/reflection style as the hero
-          showcase's phone). Replaces the old video placeholder. */}
-      <section className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
-        <div className="mx-auto grid max-w-5xl items-center gap-14 lg:grid-cols-2 lg:gap-20">
-          <Reveal>
-            <h2 className="text-2xl font-bold text-ink sm:text-3xl">{t.actionSteps.heading}</h2>
-            <ol className="mt-9 space-y-7">
-              {t.actionSteps.steps.map((step, i) => (
-                <li key={step.title} className="flex gap-4">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
-                    {i + 1}
-                  </span>
-                  <div>
-                    <h3 className="font-semibold text-ink">{step.title}</h3>
-                    <p className="mt-1 text-sm text-muted">{step.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <Link
-              to="/dashboard"
-              className="mt-9 inline-block rounded-xl bg-primary-strong px-7 py-3.5 font-semibold text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110"
-            >
-              {header.ctaStart}
-            </Link>
-          </Reveal>
-
-          <Reveal delayMs={100} className="mx-auto w-[260px] sm:w-[300px]">
-            <div
-              className="relative [transform:perspective(1200px)_rotateY(9deg)_rotateX(3deg)]"
-              style={{ transformStyle: 'preserve-3d' }}
-            >
-              <div className="absolute -left-[3px] top-[14%] h-9 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
-              <div className="absolute -left-[3px] top-[22%] h-14 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
-              <div className="absolute -left-[3px] top-[32%] h-14 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
-              <div className="absolute -right-[3px] top-[20%] h-20 w-[3px] rounded-r-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
-
-              <div className="rounded-[2.75rem] bg-gradient-to-br from-[#46464c] via-[#1d1d20] to-[#08080a] p-[3px] shadow-[0_15px_35px_-15px_rgba(0,0,0,0.25),0_40px_80px_-20px_rgba(0,0,0,0.35)]">
-                <div className="rounded-[2.6rem] bg-black p-[7px]">
-                  <div className="relative aspect-[9/19] overflow-hidden rounded-[2.2rem] bg-[#0b0b12] px-5 pb-6 pt-11">
-                    <div className="absolute left-1/2 top-[10px] z-20 h-[20px] w-[78px] -translate-x-1/2 rounded-full bg-black" />
-
-                    <p className="flex items-center gap-2 text-sm font-semibold text-white">
-                      <ImportIcon className="h-4 w-4 shrink-0 text-primary" />
-                      {t.actionSteps.mockup.importLabel}
-                    </p>
-
-                    <div className="mt-6 space-y-2.5">
-                      {t.actionSteps.mockup.transactions.map((tx) => (
-                        <div
-                          key={tx.label}
-                          className="flex items-center justify-between rounded-xl bg-white/[0.06] px-3.5 py-3"
-                        >
-                          <span className="text-xs text-white/70">{tx.label}</span>
-                          <span className="text-xs font-semibold text-white">{tx.amount}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-6 rounded-xl bg-primary py-3 text-center text-xs font-semibold text-white">
-                      {t.actionSteps.mockup.recategorizeLabel}
-                    </div>
-
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.1] via-white/[0.02] to-transparent" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* 7. Solution en 3 étapes — same black-background + blurred-texture
-          treatment as the Storytelling section ("Pourquoi SaveUp"), and the
-          same two-column title/numbered-list + phone-mockup layout as the
-          action-steps section above it, so this reads as polished rather
-          than a generic "3 icon cards" SaaS template. Big orange numerals
-          instead of icon badges; same illustrative mockup content
-          (t.actionSteps.mockup) as the section above, reused rather than
-          duplicated as separate copy. */}
+      {/* 6. Solution en 3 étapes — black-background + blurred-texture
+          treatment matching the Storytelling section ("Pourquoi SaveUp"),
+          two-column title/numbered-list + phone-mockup layout, big orange
+          numerals instead of icon badges. Reuses t.actionSteps.mockup for
+          the illustrative phone content (import CSV / recategorize) —
+          there used to be a second, near-duplicate white-background
+          section built from the same content right above this one; it was
+          removed as redundant, this is now the only "how it works" phone
+          mockup section on the page. */}
       <section id="comment-ca-marche" className="relative overflow-hidden bg-[#0a0a0c] px-4 py-20 sm:px-6 sm:py-28">
         <div
           aria-hidden="true"
@@ -706,7 +632,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* 8. Tarifs — real plans/prices/features, same component and data as
+      {/* 7. Tarifs — real plans/prices/features, same component and data as
           the standalone /tarifs page (PricingCards.tsx), so there's never a
           second copy of this that can drift. */}
       <section id="tarifs" className="relative overflow-hidden border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
@@ -723,7 +649,7 @@ export function Home() {
         </Reveal>
       </section>
 
-      {/* 9. Preuve sociale honnête — communauté Discord, pas de témoignage
+      {/* 8. Preuve sociale honnête — communauté Discord, pas de témoignage
           inventé. */}
       <section
         id="communaute"
@@ -759,7 +685,7 @@ export function Home() {
         </Reveal>
       </section>
 
-      {/* 10. Témoignages — same carousel and same 5 real reviews as
+      {/* 9. Témoignages — same carousel and same 5 real reviews as
           section 2, repeated near the bottom of the page on purpose. */}
       <section className="border-t border-overlay/10 py-16 sm:py-20">
         <Reveal>
@@ -772,7 +698,7 @@ export function Home() {
         </Reveal>
       </section>
 
-      {/* 11. FAQ en accordéon — natif <details>/<summary>, pas de JS requis. */}
+      {/* 10. FAQ en accordéon — natif <details>/<summary>, pas de JS requis. */}
       <section id="faq" className="border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28">
         <div className="mx-auto max-w-2xl">
           <Reveal>
