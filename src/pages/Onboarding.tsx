@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
 import { useOnboardingQuiz } from '../hooks/useOnboardingQuiz'
@@ -53,22 +53,47 @@ export function Onboarding() {
   const [sharing, setSharing] = useState(false)
   const [shareState, setShareState] = useState<'idle' | 'copied' | 'downloaded' | 'error'>('idle')
   const [pendingPlan, setPendingPlan] = useState<Plan | null>(null)
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
+  const [exiting, setExiting] = useState(false)
+  const [transitioning, setTransitioning] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
+
+  // "Already completed" is checked ONCE, when loading first resolves, and
+  // locked into a ref rather than read reactively from quiz.completed —
+  // completing the quiz THIS session also flips quiz.completed to true
+  // (saveResult sets it optimistically before its own network write
+  // finishes), and reading it reactively here used to fire this exact
+  // redirect right after the last question, before setPhase('result') ever
+  // ran. That sent the page to /dashboard while the result row was still
+  // being written; Dashboard's own fresh completion check would sometimes
+  // race ahead of that write, see nothing yet, and bounce back to
+  // /onboarding — which remounted with all state reset, i.e. "the quiz
+  // restarts from question 1". Locking the check to initial load only
+  // means finishing the quiz never re-triggers it.
+  const [initialCheckDone, setInitialCheckDone] = useState(false)
+  const alreadyCompletedRef = useRef(false)
+
+  useEffect(() => {
+    if (!quiz.loading && !initialCheckDone) {
+      alreadyCompletedRef.current = quiz.completed
+      setInitialCheckDone(true)
+    }
+  }, [quiz.loading, quiz.completed, initialCheckDone])
+
+  if (!initialCheckDone) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0c]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-[#ff6b00]" />
+      </div>
+    )
+  }
 
   // Already done this before (revisited the URL, or came back after
   // abandoning before picking a plan) — the quiz/result moment doesn't
   // replay, straight to the app. They can always upgrade later from
   // /tarifs.
-  if (!quiz.loading && quiz.completed) {
+  if (alreadyCompletedRef.current) {
     return <Navigate to="/dashboard" replace />
-  }
-
-  if (quiz.loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-[#ff6b00]" />
-      </div>
-    )
   }
 
   async function finishQuiz(finalAnswers: QuizAnswers) {
@@ -80,15 +105,30 @@ export function Onboarding() {
     setPhase('result')
   }
 
+  // Selecting an answer pulses the clicked button orange and slides/fades
+  // the question out before the next one slides/fades in (CSS classes
+  // .answer-pulse / .question-exit / .question-enter in index.css) — the
+  // actual data update and advance are deliberately delayed until that
+  // plays out, skipped entirely under prefers-reduced-motion.
   async function selectAnswer(optionId: string) {
+    if (transitioning) return
+    setTransitioning(true)
+    setSelectedOptionId(optionId)
+    setExiting(true)
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      await new Promise((resolve) => setTimeout(resolve, 340))
+    }
     const questionId = QUIZ_QUESTION_IDS[questionIndex]
     const nextAnswers = { ...answers, [questionId]: optionId }
     setAnswers(nextAnswers)
     if (questionIndex < QUIZ_QUESTION_IDS.length - 1) {
-      setQuestionIndex(questionIndex + 1)
+      setQuestionIndex((i) => i + 1)
     } else {
       await finishQuiz(nextAnswers)
     }
+    setSelectedOptionId(null)
+    setExiting(false)
+    setTransitioning(false)
   }
 
   function goBack() {
@@ -160,9 +200,29 @@ export function Onboarding() {
   const archetypeContent = result ? t.result.archetypes[result.archetype] : null
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="relative min-h-screen overflow-hidden bg-[#0a0a0c]">
+      {/* Same black-gradient/blur texture as the landing page's "Pourquoi
+          SaveUp" / "Comment ça marche" sections — one diagonal sheen plus
+          two blurred glow blobs on this single outer wrapper so there's no
+          seam between phases (see Home.tsx's own fix for exactly that bug:
+          two separately-painted black sections each clipping their own glow
+          at their own edge produces a visible line even with identical base
+          colors — one shared wrapper owning the texture avoids it). */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent"
+      />
+      <div
+        aria-hidden="true"
+        className="mesh-blob-c pointer-events-none absolute -left-24 top-0 h-96 w-96 rounded-full bg-[#ff6b00]/15 blur-[120px]"
+      />
+      <div
+        aria-hidden="true"
+        className="mesh-blob-b pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-[#ff6b00]/10 blur-[120px]"
+      />
+
       {phase === 'quiz' && (
-        <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-10">
+        <div className="relative mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-10">
           <div className="mb-8">
             <div className="mb-2 flex items-center justify-between text-xs text-white/50">
               <span>{t.progressLabel(questionIndex + 1, QUIZ_QUESTION_IDS.length)}</span>
@@ -172,20 +232,30 @@ export function Onboarding() {
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
               <div
-                className="h-full rounded-full bg-[#ff6b00] transition-all duration-300"
+                className="h-full rounded-full bg-[#ff6b00] transition-[width] duration-500 ease-out"
                 style={{ width: `${((questionIndex + 1) / QUIZ_QUESTION_IDS.length) * 100}%` }}
               />
             </div>
           </div>
 
-          <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{question.text}</h1>
+          <div key={questionIndex} className={exiting ? 'question-exit' : 'question-enter'}>
+            <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{question.text}</h1>
 
-          <div className="mt-8 grid gap-3">
-            {question.options.map((option) => (
-              <button key={option.id} type="button" onClick={() => selectAnswer(option.id)} className={inputCardClass}>
-                {option.label}
-              </button>
-            ))}
+            <div className="mt-8 grid gap-3">
+              {question.options.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => selectAnswer(option.id)}
+                  disabled={transitioning}
+                  className={`${inputCardClass} disabled:cursor-default ${
+                    selectedOptionId === option.id ? 'answer-pulse' : ''
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {questionIndex > 0 && (
@@ -201,7 +271,7 @@ export function Onboarding() {
       )}
 
       {phase === 'result' && result && archetypeContent && (
-        <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-6 py-10 text-center">
+        <div className="relative mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-6 py-10 text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#ff6b00]">{t.result.badge}</p>
 
           <div className="mt-6 w-full rounded-3xl border border-white/10 bg-white/5 p-8">
@@ -238,7 +308,7 @@ export function Onboarding() {
       )}
 
       {phase === 'plans' && (
-        <div className="mx-auto min-h-screen max-w-5xl px-6 py-10 sm:py-16">
+        <div className="relative mx-auto min-h-screen max-w-5xl px-6 py-10 sm:py-16">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-white sm:text-4xl">{t.plans.heading}</h1>
             <p className="mt-2 text-white/60">{t.plans.subtitle}</p>
