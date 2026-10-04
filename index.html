@@ -12,39 +12,29 @@
  <meta charset="UTF-8" />
     <script>
       // Applies the last-known theme/accent from localStorage before first
-      // paint, so a returning user with dark mode or a custom accent never
-      // sees a flash of the light/orange default while React boots and the
+      // paint, so a returning user with light mode or a custom accent never
+      // sees a flash of the dark/blue default while React boots and the
       // real preference loads from Supabase (usePreferences reconciles
       // once that resolves — see src/hooks/usePreferences.ts).
       (function () {
         try {
           var theme = localStorage.getItem('saveup-theme');
-          if (theme === 'dark') document.documentElement.dataset.theme = 'dark';
+          if (theme === 'light') document.documentElement.dataset.theme = 'light';
           var accent = localStorage.getItem('saveup-accent');
           if (accent && accent !== 'bleu') document.documentElement.dataset.accent = accent;
         } catch (e) {}
       })();
     </script>
-    <!-- Inter, the app-wide typeface (SaveUp Minimaliste design system) —
-         loaded via Google Fonts rather than self-hosted: public/fonts/
-         already holds Fraunces/Work Sans woff2 files from unrelated,
-         unfinished work, not Inter. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#fafafa" />
+    <meta name="theme-color" content="#0b0b12" />
 
     <!-- iOS ignores the manifest's display/name fields for "Add to Home
          Screen" — these are the meta tags Safari actually reads for
          standalone mode, the status bar look, and the name under the icon. -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="SaveUp" />
     <meta name="description" content="Budget, épargne et objectifs financiers, simplement." />
     <link rel="canonical" href="https://saveup.store/" />

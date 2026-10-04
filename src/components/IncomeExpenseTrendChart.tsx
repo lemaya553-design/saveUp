@@ -4,10 +4,10 @@ import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { IncomeExpenseTrendPoint } from '../lib/statistics'
 
-const EXPENSE_COLOR = 'var(--color-primary)'
+const EXPENSE_COLOR = '#4a6cf7'
 // Status color (a month spent more than the current income), not a second
 // categorical hue — reserved separately from the donut's category palette.
-const OVER_INCOME_COLOR = 'var(--color-error)'
+const OVER_INCOME_COLOR = '#f87171'
 
 function SavingsRateLabel({
   x,
@@ -29,14 +29,7 @@ function SavingsRateLabel({
   const numY = Number(y) - 8
   const rate = Math.round(point.savingsRatePct)
   return (
-    <text
-      x={numX}
-      y={numY}
-      textAnchor="middle"
-      fontSize={12}
-      fontWeight={600}
-      fill={rate >= 0 ? 'var(--color-success)' : 'var(--color-error)'}
-    >
+    <text x={numX} y={numY} textAnchor="middle" fontSize={12} fontWeight={600} fill={rate >= 0 ? '#22c55e' : '#f87171'}>
       {rate >= 0 ? `+${rate}%` : `${rate}%`}
     </text>
   )

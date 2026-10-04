@@ -67,7 +67,7 @@ export function AddExpenseForm({
         <button
           type="submit"
           disabled={submitting}
-          className="flex items-center gap-2 rounded-lg bg-primary-strong px-6 py-3 text-base font-semibold text-white shadow-[0_4px_14px_-4px_color-mix(in_srgb,var(--color-primary)_45%,transparent)] transition-all hover:brightness-110 disabled:opacity-60"
+          className="flex items-center gap-2 rounded-lg bg-primary-strong px-6 py-3 text-base font-semibold text-white shadow-[0_0_20px_rgba(74,108,247,0.35)] transition-all hover:brightness-110 disabled:opacity-60"
         >
           <PlusIcon className="h-5 w-5" />
           {submitting ? 'Ajout...' : 'Ajouter'}

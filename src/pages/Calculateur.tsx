@@ -172,12 +172,16 @@ export function Calculateur() {
         <div
           ref={cardRef}
           className="flex h-[1080px] w-[1080px] flex-col items-center justify-center gap-8 bg-canvas p-20"
+          style={{
+            backgroundImage:
+              'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74, 108, 247, 0.22), transparent 70%), radial-gradient(ellipse 60% 50% at 100% 0%, rgba(139, 92, 246, 0.16), transparent 70%)',
+          }}
         >
           <LogoMark className="h-24 w-24" />
-          <p className="text-4xl font-medium text-muted">{t.shareCard.tagline}</p>
-          <p className="text-8xl font-black text-ink">{formattedAmount}</p>
-          <p className="text-6xl font-bold text-primary">{resultLabel}</p>
-          <p className="mt-8 text-3xl text-muted">saveup.store</p>
+          <p className="text-4xl font-medium text-[#9ca3af]">{t.shareCard.tagline}</p>
+          <p className="text-8xl font-black text-[#f5f5f7]">{formattedAmount}</p>
+          <p className="text-6xl font-bold text-[#8b5cf6]">{resultLabel}</p>
+          <p className="mt-8 text-3xl text-[#9ca3af]">saveup.store</p>
         </div>
       </div>
     </div>

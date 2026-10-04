@@ -13,7 +13,7 @@ import type { CategoryMomChange } from '../lib/statistics'
 // the ceiling, red when it exceeds it.
 const TRACK_COLOR = 'color-mix(in srgb, var(--color-accent) 30%, transparent)' // "last month"
 const FILL_COLOR = 'var(--color-primary)' // "this month", under last month — follows the chosen accent
-const OVER_COLOR = 'var(--color-error)' // "this month" exceeds last month (semantic, theme-aware)
+const OVER_COLOR = '#f87171' // red-400 — "this month" exceeds last month (fixed semantic color)
 
 const MIN_COLUMN_WIDTH = 76
 const CHART_HEIGHT = 220
