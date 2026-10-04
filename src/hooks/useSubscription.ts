@@ -101,10 +101,17 @@ export function useSubscription() {
 
   const startCheckout = useCallback(
     // `promo`: the onboarding quiz's "first month at $7.99" Premium offer —
-    // ignored server-side for any plan other than premium, see
-    // api/create-checkout-session.ts.
-    (targetPlan: 'standard' | 'premium', options?: { promo?: boolean }) =>
-      callBillingApi('/api/create-checkout-session', { plan: targetPlan, promo: options?.promo ?? false }),
+    // ignored server-side for any plan other than premium. `cancelPath`:
+    // where Stripe sends the user back if they cancel without paying —
+    // defaults server-side to /tarifs, the onboarding flow passes
+    // '/onboarding' instead so cancelling doesn't skip "Configure ton
+    // compte". See api/create-checkout-session.ts for both.
+    (targetPlan: 'standard' | 'premium', options?: { promo?: boolean; cancelPath?: string }) =>
+      callBillingApi('/api/create-checkout-session', {
+        plan: targetPlan,
+        promo: options?.promo ?? false,
+        cancelPath: options?.cancelPath,
+      }),
     [session, lang],
   )
 

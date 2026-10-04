@@ -102,30 +102,38 @@ export function Dashboard() {
   // Data-driven, not a localStorage flag: a flag would be scoped to this
   // browser, not this account, and would wrongly skip onboarding for a
   // brand-new account that happens to share a browser with an old one.
-  // "Fresh" means the new onboarding quiz hasn't been completed yet — NOT
-  // whether any financial data exists. The quiz-based onboarding never
-  // collects income/expenses/goals, so a real account can legitimately
-  // reach the Dashboard with all of those still at zero; Budget/Épargne's
-  // own empty states pick up from there instead of forcing it up front.
-  // `!quiz.error` matters here: if the quiz-completion read itself failed
-  // (e.g. a real backend problem), treating that the same as "genuinely
-  // not completed" would redirect to /onboarding, which can't succeed any
-  // better there and would just bounce back here again — an invisible
-  // loop. Falling through to the normal Dashboard with the error banner
-  // below is more honest about what's actually wrong.
-  const isFreshUser = !loading && !quiz.completed && !quiz.error
+  // Two things send someone back to /onboarding, not just one:
+  //  - the quiz was never completed (brand-new account), or
+  //  - the quiz WAS completed but account setup (income/goal/categories)
+  //    never happened — most commonly someone who picked Standard/Premium,
+  //    cancelled on Stripe's page before finishing the "Configure ton
+  //    compte" step, and landed here with an account that exists but was
+  //    never actually set up. hasIncomeRecord is the signal for that (the
+  //    one field the setup step requires; see Onboarding.tsx) — same
+  //    convention the old wizard used for exactly this purpose.
+  // Onboarding.tsx's own initial-load check resumes directly on the right
+  // step in either case, so this never replays the quiz for someone who
+  // already finished it.
+  // `!quiz.error`/`!health.error` matter here: if the read itself failed
+  // (a real backend problem), treating that the same as "genuinely not
+  // done" would redirect to /onboarding, which can't succeed any better
+  // there and would just bounce back here again — an invisible loop.
+  // Falling through to the normal Dashboard with the error banner below is
+  // more honest about what's actually wrong.
+  const needsOnboarding =
+    !loading && !quiz.error && !health.error && (!quiz.completed || !health.hasIncomeRecord)
 
   useEffect(() => {
-    if (!loading && isFreshUser) {
+    if (!loading && needsOnboarding) {
       navigate('/onboarding', { replace: true })
     }
-  }, [loading, isFreshUser, navigate])
+  }, [loading, needsOnboarding, navigate])
 
   if (loading) {
     return <PageSkeleton cards={4} />
   }
 
-  if (isFreshUser) {
+  if (needsOnboarding) {
     return (
       <div className="mx-auto max-w-3xl px-4 pb-10">
         <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={t.help} compact />

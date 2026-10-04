@@ -109,27 +109,34 @@ export function Onboarding() {
     setGoalAmount(savingsValue > 0 ? String(savingsValue * 3) : '')
   }, [savingsDraft, goalAmountTouched])
 
-  // "Already completed" is checked ONCE, when loading first resolves, and
-  // locked into a ref rather than read reactively from quiz.completed —
-  // completing the quiz THIS session also flips quiz.completed to true
-  // (saveResult sets it optimistically before its own network write
-  // finishes), and reading it reactively here used to fire this exact
-  // redirect right after the last question, before setPhase('result') ever
-  // ran. That sent the page to /dashboard while the result row was still
-  // being written; Dashboard's own fresh completion check would sometimes
-  // race ahead of that write, see nothing yet, and bounce back to
-  // /onboarding — which remounted with all state reset, i.e. "the quiz
-  // restarts from question 1". Locking the check to initial load only
-  // means finishing the quiz never re-triggers it.
+  // Where to land is checked ONCE, when loading first resolves, and locked
+  // into a ref/one-time phase jump rather than read reactively off
+  // quiz.completed — completing the quiz THIS session also flips
+  // quiz.completed to true (saveResult sets it before its own network
+  // write finishes), and reading it reactively here used to fire the
+  // "already done" redirect right after the last question, before
+  // setPhase('result') ever ran. Three outcomes once both quiz and income
+  // have loaded:
+  //  - quiz not completed: normal flow, starts at the quiz (default state).
+  //  - quiz completed, no income on file yet: they have an account but
+  //    never finished "Configure ton compte" — most commonly because they
+  //    picked Standard/Premium, cancelled on Stripe's page, and Stripe's
+  //    cancel_url sent them back to /onboarding (see handleChoosePlan).
+  //    Resume directly on the setup step instead of replaying the
+  //    already-seen quiz/result.
+  //  - quiz completed AND income on file: fully done, straight to the app.
   const [initialCheckDone, setInitialCheckDone] = useState(false)
   const alreadyCompletedRef = useRef(false)
 
   useEffect(() => {
-    if (!quiz.loading && !initialCheckDone) {
-      alreadyCompletedRef.current = quiz.completed
-      setInitialCheckDone(true)
+    if (quiz.loading || income.loading || initialCheckDone) return
+    if (quiz.completed && income.hasIncomeRecord) {
+      alreadyCompletedRef.current = true
+    } else if (quiz.completed && !income.hasIncomeRecord) {
+      setPhase('setup')
     }
-  }, [quiz.loading, quiz.completed, initialCheckDone])
+    setInitialCheckDone(true)
+  }, [quiz.loading, quiz.completed, income.loading, income.hasIncomeRecord, initialCheckDone])
 
   if (!initialCheckDone) {
     return (
@@ -208,7 +215,12 @@ export function Onboarding() {
   async function handleChoosePlan(planId: Exclude<Plan, 'free'>) {
     setPendingPlan(planId)
     try {
-      const url = await subscription.startCheckout(planId, planId === 'premium' ? { promo: true } : undefined)
+      // cancelPath: '/onboarding' so cancelling on Stripe's page comes back
+      // here (not /tarifs) — this account already exists at this point, and
+      // the initial-load check above resumes it directly on the setup step
+      // rather than stranding it on a page with no path back to finishing
+      // account setup.
+      const url = await subscription.startCheckout(planId, { promo: planId === 'premium', cancelPath: '/onboarding' })
       if (url) {
         window.location.href = url
       } else {

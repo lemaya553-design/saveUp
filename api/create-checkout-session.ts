@@ -9,6 +9,19 @@ function getOrigin(req: VercelRequest): string {
   return `${proto}://${req.headers.host}`
 }
 
+// Where Stripe sends the user back if they cancel/close Checkout without
+// paying — defaults to /tarifs (the standalone pricing page), but the
+// onboarding quiz's plan-selection step passes '/onboarding' instead, so
+// cancelling doesn't strand someone who already has an account but never
+// finished the "Configure ton compte" step. An allow-list, not a raw
+// passthrough of whatever the client sends, since this value gets built
+// straight into a URL Stripe will redirect the browser to.
+const ALLOWED_CANCEL_PATHS = ['/tarifs', '/onboarding']
+
+function resolveCancelPath(value: unknown): string {
+  return typeof value === 'string' && ALLOWED_CANCEL_PATHS.includes(value) ? value : '/tarifs'
+}
+
 // Every early-return AND every awaited call below is inside this one
 // try/catch — a missing env var (SUPABASE_SERVICE_ROLE_KEY,
 // STRIPE_PRICE_STANDARD/PREMIUM) throws synchronously from a helper, and
@@ -30,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return
     }
 
-    const { plan, promo } = (req.body ?? {}) as { plan?: unknown; promo?: unknown }
+    const { plan, promo, cancelPath } = (req.body ?? {}) as { plan?: unknown; promo?: unknown; cancelPath?: unknown }
     if (!isPayablePlan(plan)) {
       res.status(400).json({ error: 'Plan invalide.' })
       return
@@ -47,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       client_reference_id: user.id,
       customer_email: user.email,
       success_url: `${origin}/parametres/abonnement?checkout=success`,
-      cancel_url: `${origin}/tarifs?checkout=cancelled`,
+      cancel_url: `${origin}${resolveCancelPath(cancelPath)}?checkout=cancelled`,
       // Managed Payments (Stripe acting as merchant of record, with
       // automatic tax) is on by default for new accounts and requires a
       // tax_code on every product — ours don't have one set. Disabling it
