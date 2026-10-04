@@ -79,6 +79,14 @@ function ChatIcon({ className }: { className: string }) {
   )
 }
 
+function DiscordIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .077-.01c3.927 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.01c.12.099.246.198.373.292a.077.077 0 0 1-.006.127c-.598.35-1.22.645-1.873.892a.076.076 0 0 0-.04.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.029 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.673-3.549-13.66a.061.061 0 0 0-.03-.028ZM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.955 2.418-2.157 2.418Zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418Z" />
+    </svg>
+  )
+}
+
 function PersonIcon({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
@@ -222,9 +230,7 @@ function FloatingLabel({
   )
 }
 
-// No real Discord invite exists yet (see Footer.tsx) — null keeps the CTA
-// visibly disabled instead of pointing at a fabricated server.
-const DISCORD_URL: string | null = null
+const DISCORD_URL: string | null = 'https://discord.gg/bhqXVF5a8'
 
 export function Home() {
   const location = useLocation()
@@ -650,18 +656,19 @@ export function Home() {
       </section>
 
       {/* 8. Preuve sociale honnête — communauté Discord, pas de témoignage
-          inventé. */}
+          inventé. Subtle warm-tinted background (distinct from the plain
+          white sections around it) plus the existing blob for depth. */}
       <section
         id="communaute"
-        className="relative overflow-hidden border-t border-overlay/10 px-4 py-20 text-center sm:px-6 sm:py-28"
+        className="relative overflow-hidden border-t border-overlay/10 bg-gradient-to-b from-white via-[#FFF8F2] to-white px-4 py-20 text-center sm:px-6 sm:py-28"
       >
         <div
           aria-hidden="true"
           className="mesh-blob-c pointer-events-none absolute right-[-8%] bottom-[-10%] -z-10 h-80 w-80 rounded-full bg-primary/10 blur-[110px]"
         />
         <Reveal>
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform duration-300 hover:-translate-y-1">
-            <ChatIcon className="h-7 w-7" />
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform duration-300 hover:-translate-y-1">
+            <ChatIcon className="h-10 w-10" />
           </div>
           <h2 className="mx-auto mt-5 max-w-lg text-balance text-2xl font-bold text-ink sm:text-3xl">
             💬 {t.community.heading}
@@ -673,8 +680,9 @@ export function Home() {
               href={DISCORD_URL}
               target="_blank"
               rel="noreferrer"
-              className="mt-7 inline-block rounded-xl bg-primary-strong px-7 py-3 font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/30 hover:brightness-110"
+              className="mt-7 inline-flex items-center gap-2.5 rounded-xl bg-primary-strong px-7 py-3 font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/30 hover:brightness-110"
             >
+              <DiscordIcon className="h-5 w-5" />
               {t.community.discordCta}
             </a>
           ) : (

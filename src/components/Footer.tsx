@@ -2,10 +2,7 @@ import { Link } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
 import { COMMON } from '../lib/i18n/common'
 
-// Placeholder — no real Discord invite exists yet. Swap for the real
-// invite URL as soon as there is one; this link is left visibly inert
-// (no href) rather than pointing at a fabricated server.
-const DISCORD_URL: string | null = null
+const DISCORD_URL: string | null = 'https://discord.gg/bhqXVF5a8'
 
 export function Footer() {
   const { lang } = useLanguage()
