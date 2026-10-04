@@ -30,6 +30,21 @@ function GoogleIcon({ className }: { className: string }) {
   )
 }
 
+// Flat-orange ascending-bars mark — same silhouette as the shared LogoMark
+// (components/Logo.tsx), but that one is a hardcoded blue-to-mauve
+// gradient (not CSS-var driven), which would put indigo on an otherwise
+// strictly black/orange/white page. A local, solid-orange variant instead
+// of touching the shared component's branding used everywhere else.
+function OrangeLogoMark({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 465 465" className={className} aria-hidden="true">
+      <rect x="70" y="260" width="85" height="180" rx="32" fill="#ff6b00" />
+      <rect x="195" y="165" width="85" height="275" rx="32" fill="#ff6b00" />
+      <rect x="320" y="70" width="85" height="370" rx="32" fill="#ff6b00" />
+    </svg>
+  )
+}
+
 // Supabase puts recovery-link problems (expired, already used) directly in
 // the redirect URL rather than as a catchable JS error, since there's no
 // session yet to attach an error to — read it straight from the URL. This
@@ -44,6 +59,38 @@ function readLinkError(lang: Lang): string | null {
   const t = CONNEXION[lang]
   return code === 'otp_expired' ? t.errors.linkExpired : t.errors.linkInvalid
 }
+
+// Realistic phone mockup for the right-hand visual column — same
+// bezel/island/reflection construction as the landing page's showcase and
+// "comment ça marche" phones (Home.tsx), reused here enlarged to fill a
+// full-height panel. Screen content is the real statistiques screenshot
+// already used on the landing page, not a fabricated one.
+function PhoneVisual({ alt }: { alt: string }) {
+  return (
+    <div
+      className="relative w-[320px] sm:w-[380px] xl:w-[430px] [transform:perspective(1400px)_rotateY(-8deg)_rotateX(2deg)]"
+      style={{ transformStyle: 'preserve-3d' }}
+    >
+      <div className="absolute -left-[3px] top-[14%] h-9 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+      <div className="absolute -left-[3px] top-[22%] h-14 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+      <div className="absolute -left-[3px] top-[32%] h-14 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+      <div className="absolute -right-[3px] top-[20%] h-20 w-[3px] rounded-r-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+
+      <div className="rounded-[2.75rem] bg-gradient-to-br from-[#46464c] via-[#1d1d20] to-[#08080a] p-[3px] shadow-[0_25px_60px_-20px_rgba(0,0,0,0.5),0_50px_100px_-30px_rgba(0,0,0,0.6)]">
+        <div className="rounded-[2.6rem] bg-black p-[7px]">
+          <div className="relative aspect-[790/1628] overflow-hidden rounded-[2.2rem] bg-[#0b0b12]">
+            <img src="/screenshots/phone-mockup.jpg" alt={alt} className="h-full w-full object-cover object-top" />
+            <div className="absolute left-1/2 top-[2.2%] z-20 h-[22px] w-[86px] -translate-x-1/2 rounded-full bg-black" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.12] via-white/[0.02] to-transparent" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const inputClasses =
+  'rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-white/35 focus:border-[#ff6b00] focus:outline-none'
 
 export function Connexion() {
   const {
@@ -230,128 +277,78 @@ export function Connexion() {
     navigate('/dashboard', { replace: true })
   }
 
+  // The pill toggle only makes sense for the main signin/signup choice —
+  // forgot-password, password-recovery and confirmation-sent are all
+  // single-purpose sub-screens reached FROM that choice, not alternatives
+  // to it.
+  const showModeToggle = !passwordRecovery && !confirmationSent && mode !== 'forgot'
+
   return (
-    <div className="hero-gradient flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="glass w-full max-w-md rounded-2xl p-8 shadow-2xl shadow-black/40">
-        <Link
-          className="bg-gradient-to-r from-primary to-accent bg-clip-text text-lg font-bold text-transparent"
-          to="/"
-        >
-          SaveUp
-        </Link>
+    <div className="flex min-h-screen bg-black">
+      <div className="flex w-full flex-col justify-center px-6 py-10 sm:px-10 lg:w-[43%] lg:px-14 lg:py-12 xl:px-20">
+        <div className="mx-auto w-full max-w-sm">
+          <Link to="/" className="inline-flex items-center gap-2">
+            <OrangeLogoMark className="h-7 w-7" />
+            <span className="text-xl font-bold">
+              <span className="text-white">save</span>
+              <span className="text-[#ff6b00]">Up</span>
+            </span>
+          </Link>
 
-        {passwordRecovery ? (
-          <>
-            <h1 className="mt-6 text-2xl font-bold text-ink">{t.recovery.title}</h1>
-            <p className="mt-2 text-sm text-muted">{t.recovery.subtitle}</p>
-
-            <form onSubmit={handleSetNewPassword} className="mt-6 flex flex-col gap-3">
-              <label className="flex flex-col gap-1 text-sm text-muted">
-                {t.common.newPasswordLabel}
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  autoFocus
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm text-muted">
-                {t.common.confirmPasswordLabel}
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-                />
-              </label>
-
-              {error && (
-                <p className="rounded-lg border border-red-900/50 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-                  {error}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="mt-2 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
-              >
-                {submitting ? t.common.submitting : t.recovery.submit}
-              </button>
-            </form>
-          </>
-        ) : confirmationSent ? (
-          <div className="mt-6">
-            <h1 className="text-2xl font-bold text-ink">{t.common.checkYourEmail}</h1>
-            <p className="mt-2 text-sm text-muted">
-              {t.confirmationSent.bodyPrefix}
-              <span className="text-ink">{email}</span>
-              {t.confirmationSent.bodySuffix}
-            </p>
-            <p className="mt-3 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2.5 text-xs text-ink">
-              {t.confirmationSent.spamPrefix}
-              <span className="font-medium">{t.confirmationSent.spamBold}</span>
-              {t.confirmationSent.spamSuffix}
-            </p>
-
-            {resendMessage && (
-              <p className="mt-3 text-sm text-muted">{resendMessage}</p>
-            )}
-
-            <button
-              type="button"
-              onClick={handleResendConfirmation}
-              disabled={resending}
-              className="mt-4 w-full rounded-lg border border-overlay/10 px-5 py-3 font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
-            >
-              {resending ? t.confirmationSent.resendBusy : t.confirmationSent.resendIdle}
-            </button>
-            <button
-              type="button"
-              onClick={() => switchMode('signin')}
-              className="mt-2 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110"
-            >
-              {t.common.backToSignIn}
-            </button>
-          </div>
-        ) : mode === 'forgot' ? (
-          resetLinkSent ? (
-            <div className="mt-6">
-              <h1 className="text-2xl font-bold text-ink">{t.common.checkYourEmail}</h1>
-              <p className="mt-2 text-sm text-muted">
-                {t.forgot.linkSentPrefix}
-                <span className="text-ink">{email}</span>
-                {t.forgot.linkSentSuffix}
-              </p>
+          {showModeToggle && (
+            <div className="mt-9 flex gap-3">
               <button
                 type="button"
                 onClick={() => switchMode('signin')}
-                className="mt-6 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110"
+                className={`flex-1 rounded-full px-4 py-2.5 text-sm font-semibold transition-all ${
+                  mode === 'signin'
+                    ? 'bg-[#ff6b00] text-white shadow-lg shadow-[#ff6b00]/20'
+                    : 'border border-white/20 text-white/60 hover:border-white/40 hover:text-white'
+                }`}
               >
-                {t.common.backToSignIn}
+                {t.signInUp.toggleSignIn}
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode('signup')}
+                className={`flex-1 rounded-full px-4 py-2.5 text-sm font-semibold transition-all ${
+                  mode === 'signup'
+                    ? 'bg-[#ff6b00] text-white shadow-lg shadow-[#ff6b00]/20'
+                    : 'border border-white/20 text-white/60 hover:border-white/40 hover:text-white'
+                }`}
+              >
+                {t.signInUp.toggleSignUp}
               </button>
             </div>
-          ) : (
-            <>
-              <h1 className="mt-6 text-2xl font-bold text-ink">{t.forgot.title}</h1>
-              <p className="mt-2 text-sm text-muted">{t.forgot.subtitle}</p>
+          )}
 
-              <form onSubmit={handleForgotPassword} className="mt-6 flex flex-col gap-3">
-                <label className="flex flex-col gap-1 text-sm text-muted">
-                  {t.common.emailLabel}
+          {passwordRecovery ? (
+            <>
+              <h1 className="mt-8 text-2xl font-bold text-white">{t.recovery.title}</h1>
+              <p className="mt-2 text-sm text-white/60">{t.recovery.subtitle}</p>
+
+              <form onSubmit={handleSetNewPassword} className="mt-6 flex flex-col gap-3">
+                <label className="flex flex-col gap-1 text-sm text-white/60">
+                  {t.common.newPasswordLabel}
                   <input
-                    type="email"
-                    autoComplete="email"
+                    type="password"
+                    autoComplete="new-password"
                     autoFocus
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={t.common.emailPlaceholder}
-                    className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={inputClasses}
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm text-white/60">
+                  {t.common.confirmPasswordLabel}
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={inputClasses}
                   />
                 </label>
 
@@ -364,98 +361,68 @@ export function Connexion() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="mt-2 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                  className="mt-2 w-full rounded-lg bg-[#ff6b00] px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
                 >
-                  {submitting ? t.common.submitting : t.forgot.submit}
+                  {submitting ? t.common.submitting : t.recovery.submit}
                 </button>
               </form>
+            </>
+          ) : confirmationSent ? (
+            <div className="mt-8">
+              <h1 className="text-2xl font-bold text-white">{t.common.checkYourEmail}</h1>
+              <p className="mt-2 text-sm text-white/60">
+                {t.confirmationSent.bodyPrefix}
+                <span className="text-white">{email}</span>
+                {t.confirmationSent.bodySuffix}
+              </p>
+              <p className="mt-3 rounded-lg border border-[#ff6b00]/30 bg-[#ff6b00]/10 px-3 py-2.5 text-xs text-white/90">
+                {t.confirmationSent.spamPrefix}
+                <span className="font-medium">{t.confirmationSent.spamBold}</span>
+                {t.confirmationSent.spamSuffix}
+              </p>
 
-              <p className="mt-6 text-center text-sm text-muted">
+              {resendMessage && <p className="mt-3 text-sm text-white/60">{resendMessage}</p>}
+
+              <button
+                type="button"
+                onClick={handleResendConfirmation}
+                disabled={resending}
+                className="mt-4 w-full rounded-lg border border-white/15 px-5 py-3 font-medium text-white transition-colors hover:bg-white/5 disabled:opacity-60"
+              >
+                {resending ? t.confirmationSent.resendBusy : t.confirmationSent.resendIdle}
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode('signin')}
+                className="mt-2 w-full rounded-lg bg-[#ff6b00] px-5 py-3 font-medium text-white transition-all hover:brightness-110"
+              >
+                {t.common.backToSignIn}
+              </button>
+            </div>
+          ) : mode === 'forgot' ? (
+            resetLinkSent ? (
+              <div className="mt-8">
+                <h1 className="text-2xl font-bold text-white">{t.common.checkYourEmail}</h1>
+                <p className="mt-2 text-sm text-white/60">
+                  {t.forgot.linkSentPrefix}
+                  <span className="text-white">{email}</span>
+                  {t.forgot.linkSentSuffix}
+                </p>
                 <button
                   type="button"
                   onClick={() => switchMode('signin')}
-                  className="text-accent hover:text-accent/80"
+                  className="mt-6 w-full rounded-lg bg-[#ff6b00] px-5 py-3 font-medium text-white transition-all hover:brightness-110"
                 >
                   {t.common.backToSignIn}
                 </button>
-              </p>
-            </>
-          )
-        ) : (
-          <>
-            <h1 className="mt-6 text-2xl font-bold text-ink">
-              {mode === 'signin' ? t.signInUp.signInTitle : t.signInUp.signUpTitle}
-            </h1>
-            <p className="mt-2 text-sm text-muted">
-              {mode === 'signin' ? t.signInUp.signInSubtitle : t.signInUp.signUpSubtitle}
-            </p>
-
-            {/* Google is the recommended, prominent path — full-size, high
-                contrast against the dark card, first thing after the
-                heading. Email/password is a real fallback, not hidden, but
-                deliberately secondary (see the discreet link below). */}
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={googleSubmitting}
-              className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl bg-white px-5 py-4 text-base font-semibold text-gray-900 shadow-lg shadow-black/20 transition-all hover:brightness-95 disabled:opacity-60"
-            >
-              <GoogleIcon className="h-6 w-6" />
-              {googleSubmitting
-                ? t.signInUp.googleRedirecting
-                : mode === 'signin'
-                  ? t.signInUp.googleContinue
-                  : t.signInUp.googleSignUp}
-            </button>
-
-            {/* Only in signup mode — this is the exact moment a stranger to
-                the product decides whether to trust it with a Google
-                account link at all. A returning user in signin mode
-                already made that call once, so it'd just be noise there. */}
-            {mode === 'signup' && (
-              <p className="mt-2 text-center text-xs text-muted">{t.signInUp.googleReassurance}</p>
-            )}
-
-            {error && (
-              <p className="mt-4 rounded-lg border border-red-900/50 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-                {error}
-              </p>
-            )}
-
-            {noAccountHint && (
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2.5 text-sm text-ink">
-                <span>{t.signInUp.noAccountHint}</span>
-                <button
-                  type="button"
-                  onClick={() => switchMode('signup')}
-                  className="whitespace-nowrap rounded-lg bg-primary-strong px-3 py-1.5 text-xs font-medium text-white transition-all hover:brightness-110"
-                >
-                  {t.signInUp.createAccount}
-                </button>
               </div>
-            )}
-
-            {!showEmailForm ? (
-              <button
-                type="button"
-                onClick={() => setShowEmailForm(true)}
-                className="mx-auto mt-5 block text-center text-sm text-muted hover:text-ink"
-              >
-                {t.signInUp.useEmailInstead}
-              </button>
             ) : (
               <>
-                <div className="my-6 flex items-center gap-3 text-xs text-muted">
-                  <div className="h-px flex-1 bg-overlay/10" />
-                  {t.signInUp.orWithEmail}
-                  <div className="h-px flex-1 bg-overlay/10" />
-                </div>
+                <h1 className="mt-8 text-2xl font-bold text-white">{t.forgot.title}</h1>
+                <p className="mt-2 text-sm text-white/60">{t.forgot.subtitle}</p>
 
-                <form
-                  onSubmit={mode === 'signin' ? handleSignIn : handleSignUp}
-                  className="flex flex-col gap-3"
-                >
-                  <label className="flex flex-col gap-1 text-sm text-muted">
+                <form onSubmit={handleForgotPassword} className="mt-6 flex flex-col gap-3">
+                  <label className="flex flex-col gap-1 text-sm text-white/60">
                     {t.common.emailLabel}
                     <input
                       type="email"
@@ -464,89 +431,209 @@ export function Connexion() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder={t.common.emailPlaceholder}
-                      className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+                      className={inputClasses}
                     />
                   </label>
 
-                  <label className="flex flex-col gap-1 text-sm text-muted">
-                    <span className="flex items-center justify-between">
-                      {t.common.passwordLabel}
-                      {mode === 'signin' && (
-                        <button
-                          type="button"
-                          onClick={() => switchMode('forgot')}
-                          className="text-xs font-normal text-accent hover:text-accent/80"
-                        >
-                          {t.signInUp.forgotPasswordLink}
-                        </button>
-                      )}
-                    </span>
-                    <input
-                      type="password"
-                      autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-                    />
-                  </label>
-
-                  {mode === 'signup' && (
-                    <label className="flex flex-col gap-1 text-sm text-muted">
-                      {t.common.confirmPasswordLabel}
-                      <input
-                        type="password"
-                        autoComplete="new-password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-                      />
-                    </label>
+                  {error && (
+                    <p className="rounded-lg border border-red-900/50 bg-red-950/50 px-3 py-2 text-sm text-red-300">
+                      {error}
+                    </p>
                   )}
 
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="mt-2 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                    className="mt-2 w-full rounded-lg bg-[#ff6b00] px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
                   >
-                    {submitting
-                      ? t.common.submitting
-                      : mode === 'signin'
-                        ? t.signInUp.signInSubmit
-                        : t.signInUp.signUpSubmit}
+                    {submitting ? t.common.submitting : t.forgot.submit}
                   </button>
                 </form>
-              </>
-            )}
 
-            <p className="mt-6 text-center text-sm text-muted">
-              {mode === 'signin' ? (
-                <>
-                  {t.signInUp.noAccountYet}{' '}
+                <p className="mt-6 text-center text-sm text-white/60">
+                  <button type="button" onClick={() => switchMode('signin')} className="text-[#ff6b00] hover:text-[#ff6b00]/80">
+                    {t.common.backToSignIn}
+                  </button>
+                </p>
+              </>
+            )
+          ) : (
+            <>
+              <h1 className="mt-8 text-2xl font-bold text-white">
+                {mode === 'signin' ? t.signInUp.signInTitle : t.signInUp.signUpTitle}
+              </h1>
+              <p className="mt-2 text-sm text-white/60">
+                {mode === 'signin' ? t.signInUp.signInSubtitle : t.signInUp.signUpSubtitle}
+              </p>
+
+              {/* Google is the recommended, prominent path — full-size, high
+                  contrast against the black panel, right after the heading.
+                  Email/password is a real fallback, not hidden, but
+                  deliberately secondary (see the discreet link below). */}
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={googleSubmitting}
+                className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl bg-white px-5 py-4 text-base font-semibold text-gray-900 shadow-lg shadow-black/40 transition-all hover:brightness-95 disabled:opacity-60"
+              >
+                <GoogleIcon className="h-6 w-6" />
+                {googleSubmitting
+                  ? t.signInUp.googleRedirecting
+                  : mode === 'signin'
+                    ? t.signInUp.googleContinue
+                    : t.signInUp.googleSignUp}
+              </button>
+
+              {/* Only in signup mode — this is the exact moment a stranger to
+                  the product decides whether to trust it with a Google
+                  account link at all. A returning user in signin mode
+                  already made that call once, so it'd just be noise there. */}
+              {mode === 'signup' && (
+                <p className="mt-2 text-center text-xs text-white/40">{t.signInUp.googleReassurance}</p>
+              )}
+
+              {error && (
+                <p className="mt-4 rounded-lg border border-red-900/50 bg-red-950/50 px-3 py-2 text-sm text-red-300">
+                  {error}
+                </p>
+              )}
+
+              {noAccountHint && (
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#ff6b00]/30 bg-[#ff6b00]/10 px-3 py-2.5 text-sm text-white">
+                  <span>{t.signInUp.noAccountHint}</span>
                   <button
                     type="button"
                     onClick={() => switchMode('signup')}
-                    className="text-accent hover:text-accent/80"
+                    className="whitespace-nowrap rounded-lg bg-[#ff6b00] px-3 py-1.5 text-xs font-medium text-white transition-all hover:brightness-110"
                   >
-                    {t.signInUp.signUpLink}
+                    {t.signInUp.createAccount}
                   </button>
-                </>
+                </div>
+              )}
+
+              {!showEmailForm ? (
+                <button
+                  type="button"
+                  onClick={() => setShowEmailForm(true)}
+                  className="mx-auto mt-5 block text-center text-sm text-white/50 hover:text-white"
+                >
+                  {t.signInUp.useEmailInstead}
+                </button>
               ) : (
                 <>
-                  {t.signInUp.alreadyAccount}{' '}
-                  <button
-                    type="button"
-                    onClick={() => switchMode('signin')}
-                    className="text-accent hover:text-accent/80"
-                  >
-                    {t.signInUp.signInLink}
-                  </button>
+                  <div className="my-6 flex items-center gap-3 text-xs text-white/40">
+                    <div className="h-px flex-1 bg-white/15" />
+                    {t.signInUp.orWithEmail}
+                    <div className="h-px flex-1 bg-white/15" />
+                  </div>
+
+                  <form onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} className="flex flex-col gap-3">
+                    <label className="flex flex-col gap-1 text-sm text-white/60">
+                      {t.common.emailLabel}
+                      <input
+                        type="email"
+                        autoComplete="email"
+                        autoFocus
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder={t.common.emailPlaceholder}
+                        className={inputClasses}
+                      />
+                    </label>
+
+                    <label className="flex flex-col gap-1 text-sm text-white/60">
+                      <span className="flex items-center justify-between">
+                        {t.common.passwordLabel}
+                        {mode === 'signin' && (
+                          <button
+                            type="button"
+                            onClick={() => switchMode('forgot')}
+                            className="text-xs font-normal text-[#ff6b00] hover:text-[#ff6b00]/80"
+                          >
+                            {t.signInUp.forgotPasswordLink}
+                          </button>
+                        )}
+                      </span>
+                      <input
+                        type="password"
+                        autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className={inputClasses}
+                      />
+                    </label>
+
+                    {mode === 'signup' && (
+                      <label className="flex flex-col gap-1 text-sm text-white/60">
+                        {t.common.confirmPasswordLabel}
+                        <input
+                          type="password"
+                          autoComplete="new-password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className={inputClasses}
+                        />
+                      </label>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="mt-2 w-full rounded-lg bg-[#ff6b00] px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                    >
+                      {submitting
+                        ? t.common.submitting
+                        : mode === 'signin'
+                          ? t.signInUp.signInSubmit
+                          : t.signInUp.signUpSubmit}
+                    </button>
+                  </form>
                 </>
               )}
-            </p>
-          </>
-        )}
+
+              <p className="mt-6 text-center text-sm text-white/60">
+                {mode === 'signin' ? (
+                  <>
+                    {t.signInUp.noAccountYet}{' '}
+                    <button type="button" onClick={() => switchMode('signup')} className="text-[#ff6b00] hover:text-[#ff6b00]/80">
+                      {t.signInUp.signUpLink}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {t.signInUp.alreadyAccount}{' '}
+                    <button type="button" onClick={() => switchMode('signin')} className="text-[#ff6b00] hover:text-[#ff6b00]/80">
+                      {t.signInUp.signInLink}
+                    </button>
+                  </>
+                )}
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Right visual column — full height, real app screenshot inside the
+          same realistic phone mockup used on the landing page. Hidden below
+          lg: a split-screen auth layout on a narrow viewport just pushes the
+          form below a huge image, so the visual drops out entirely on
+          mobile rather than stacking. */}
+      <div className="relative hidden flex-1 items-center justify-center overflow-hidden bg-gradient-to-br from-[#0a0a0c] via-black to-[#0a0a0c] lg:flex">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-24 top-0 h-[32rem] w-[32rem] rounded-full bg-[#ff6b00]/15 blur-[140px]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-24 bottom-0 h-[28rem] w-[28rem] rounded-full bg-[#ff6b00]/10 blur-[120px]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent"
+        />
+        <PhoneVisual alt={t.visual.phoneAlt} />
       </div>
     </div>
   )

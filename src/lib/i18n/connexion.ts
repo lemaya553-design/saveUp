@@ -72,6 +72,14 @@ export interface ConnexionContent {
     signUpLink: string
     alreadyAccount: string
     signInLink: string
+    // Top-of-form pill toggle (signin/signup) — distinct from signInSubmit/
+    // signUpSubmit, which label the big CTA button at the bottom of the
+    // form and use longer phrasing ("Créer mon compte").
+    toggleSignIn: string
+    toggleSignUp: string
+  }
+  visual: {
+    phoneAlt: string
   }
 }
 
@@ -140,6 +148,11 @@ export const CONNEXION: Record<Lang, ConnexionContent> = {
       signUpLink: 'Inscris-toi',
       alreadyAccount: 'Déjà un compte ?',
       signInLink: 'Connecte-toi',
+      toggleSignIn: 'Se connecter',
+      toggleSignUp: "S'inscrire",
+    },
+    visual: {
+      phoneAlt: "Aperçu de l'application SaveUp",
     },
   },
   en: {
@@ -206,6 +219,11 @@ export const CONNEXION: Record<Lang, ConnexionContent> = {
       signUpLink: 'Sign up',
       alreadyAccount: 'Already have an account?',
       signInLink: 'Sign in',
+      toggleSignIn: 'Sign in',
+      toggleSignUp: 'Sign up',
+    },
+    visual: {
+      phoneAlt: 'Preview of the SaveUp app',
     },
   },
 }
