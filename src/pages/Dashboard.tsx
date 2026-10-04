@@ -264,9 +264,9 @@ export function Dashboard() {
           <DashboardStat
             label={t.saved.label}
             value={formatMoney(totalCurrentAmount)}
-            valueColorClass="text-success"
+            valueColorClass="text-primary-strong"
             progress={totalTargetAmount > 0 ? goalProgress : undefined}
-            progressColorClass="bg-success"
+            progressColorClass="bg-primary"
             caption={
               <Link to="/epargne" className="hover:text-accent">
                 {goals.goals.length === 0
@@ -282,7 +282,7 @@ export function Dashboard() {
 
       <div className="grid gap-6">
         <Card title={t.accumulated.title} hint={t.accumulated.hint}>
-          <p className="text-3xl font-bold text-success sm:text-4xl">
+          <p className="text-3xl font-bold text-primary-strong sm:text-4xl">
             {formatMoney(totalCurrentAmount + investmentBalance.currentAmount)}
           </p>
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm">

@@ -1,10 +1,19 @@
-import { getScoreColorClass } from '../lib/financialHealth'
 import { useLanguage } from '../hooks/useLanguage'
 
 const RADIUS = 80
 const ARC_LENGTH = Math.PI * RADIUS
 const ARC_PATH = `M 20 100 A ${RADIUS} ${RADIUS} 0 0 1 180 100`
 
+// Always brand orange + a high-contrast number, regardless of score tier —
+// the gauge used to shift red/orange/green by score (via
+// getScoreColorClass, still used elsewhere for score explanation rows),
+// but that put green on the dashboard's single most prominent number,
+// which SaveUp Minimaliste reserves orange for exclusively. The arc's fill
+// LENGTH still encodes the score; only the color stopped doing double duty
+// as a second signal. text-ink (not a literal white) so the number stays
+// readable if the card ever sits on the light theme's white surface —
+// it resolves to white on the app's dark default, matching the requested
+// look there.
 export function ScoreGauge({
   score,
   label,
@@ -16,7 +25,6 @@ export function ScoreGauge({
   const resolvedLabel = label ?? (lang === 'fr' ? 'Score de santé financière' : 'Financial health score')
   const clamped = Math.min(100, Math.max(0, score))
   const offset = ARC_LENGTH * (1 - clamped / 100)
-  const colorClass = getScoreColorClass(clamped)
   const ariaLabel =
     lang === 'fr' ? `${resolvedLabel} : ${clamped} sur 100` : `${resolvedLabel}: ${clamped} out of 100`
 
@@ -39,11 +47,11 @@ export function ScoreGauge({
           strokeLinecap="round"
           strokeDasharray={ARC_LENGTH}
           strokeDashoffset={offset}
-          className={`transition-all duration-500 ${colorClass}`}
+          className="text-primary transition-all duration-500"
         />
       </svg>
       <div className="absolute inset-x-0 bottom-1 flex flex-col items-center">
-        <span className={`text-4xl font-bold ${colorClass}`}>{clamped}</span>
+        <span className="text-4xl font-bold text-ink">{clamped}</span>
         <span className="text-xs text-muted">/100</span>
       </div>
     </div>
