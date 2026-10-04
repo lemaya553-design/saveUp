@@ -44,7 +44,7 @@ export function PersonalizationSettings() {
         <div>
           <p className="mb-2 text-sm font-medium text-ink">{t.theme}</p>
           <div className="glass inline-flex gap-1 rounded-full p-1">
-            {(['dark', 'light'] as Theme[]).map((option) => (
+            {(['light', 'dark'] as Theme[]).map((option) => (
               <button
                 key={option}
                 type="button"

@@ -2,8 +2,10 @@
 
 /* "SaveUp Minimaliste" design system — epured, whitespace-led, orange used
    only as a strategic accent (CTAs, key indicators, interactive elements),
-   never decoratively. Dark is the app's default (no data-theme attribute);
-   [data-theme="light"] below holds the light variant of the same system.
+   never decoratively. LIGHT is the app's default (no data-theme attribute)
+   — matching the landing page's white/black/orange identity;
+   [data-theme="dark"] below holds the dark variant of the same system as
+   an explicit opt-in (Paramètres > Personnalisation).
    --color-primary is the literal spec accent (#ff8533 light / #ffaa55
    dark) — used for icons, borders, and fills that pair with dark text.
    --color-primary-strong is a derived, deliberately darker shade used for
@@ -14,28 +16,27 @@
    values (same split the app's previous blue primary/primary-strong pair
    already relied on). */
 @theme {
-  --color-canvas: #0f0f0f;
-  --color-surface: #1a1a1a;
-  --color-surface-2: #252525;
-  --color-primary: #ffaa55;
+  --color-canvas: #fafafa;
+  --color-surface: #ffffff;
+  --color-surface-2: #f3f3f3;
+  --color-primary: #ff8533;
   --color-primary-strong: #c2410c;
-  --color-accent: #ffaa55;
-  --color-success: #4ade80;
-  --color-warning: #fdba74;
-  --color-error: #fca5a5;
-  --color-ink: #ffffff;
-  --color-muted: #cccccc;
+  --color-accent: #ff8533;
+  --color-success: #16a34a;
+  --color-warning: #ea580c;
+  --color-error: #dc2626;
+  --color-ink: #1a1a1a;
+  --color-muted: #666666;
   /* Every former `white/N` border/hover-overlay in the app now reads
      `overlay/N` instead (bulk find/replace, see git history) — a single
-     token so light mode can flip every one of those at once instead of
-     touching each usage. Dark mode's default is white, matching the
-     original literal exactly. */
-  --color-overlay: #ffffff;
+     token so dark mode can flip every one of those at once instead of
+     touching each usage. Light mode's default is ink-black. */
+  --color-overlay: #1a1a1a;
 }
 
 :root {
-  color-scheme: dark;
-  --slider-track-bg: rgba(255, 255, 255, 0.1);
+  color-scheme: light;
+  --slider-track-bg: rgba(26, 26, 26, 0.1);
 }
 
 /* Accent color presets (Paramètres > Personnalisation) — independent of
@@ -59,30 +60,38 @@
   --color-accent: #8b5cf6;
 }
 
-/* Light theme (Paramètres > Personnalisation). */
-:root[data-theme='light'] {
-  color-scheme: light;
-  --color-canvas: #f9f9f9;
-  --color-surface: #ffffff;
-  --color-surface-2: #f3f3f3;
-  --color-primary: #ff8533;
-  --color-accent: #ff8533;
-  --color-success: #16a34a;
-  --color-warning: #ea580c;
-  --color-error: #dc2626;
-  --color-ink: #1a1a1a;
-  --color-muted: #666666;
-  --color-overlay: #1a1a1a;
-  --slider-track-bg: rgba(26, 26, 26, 0.1);
-  /* red-200/red-300 are used ONLY as text color inside the app's
-     "border-red-900/N bg-red-950/N text-red-{200,300}" error/warning
-     banner pattern (AlertBanner, PersonalizedTips, every inline form
-     error) — those pale reds are legible on the near-black bg they were
-     designed for, but unreadable on the pale pink that same bg tint
-     becomes once the underlying surface is light. Darkened here instead
-     of touching every banner instance. */
+/* Dark theme (Paramètres > Personnalisation) — now the explicit opt-in. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-canvas: #0f0f0f;
+  --color-surface: #1a1a1a;
+  --color-surface-2: #252525;
+  --color-primary: #ffaa55;
+  --color-accent: #ffaa55;
+  --color-success: #4ade80;
+  --color-warning: #fdba74;
+  --color-error: #fca5a5;
+  --color-ink: #ffffff;
+  --color-muted: #cccccc;
+  --color-overlay: #ffffff;
+  --slider-track-bg: rgba(255, 255, 255, 0.1);
+}
+
+/* red-200/red-300 are used ONLY as text color inside the app's
+   "border-red-900/N bg-red-950/N text-red-{200,300}" error/warning banner
+   pattern (AlertBanner, PersonalizedTips, every inline form error) — those
+   pale Tailwind reds are legible on the near-black bg they were designed
+   for, but unreadable on the pale pink that same bg tint becomes once the
+   underlying surface is light, which is now the unconditional default.
+   Darkened unconditionally here instead of touching every banner instance;
+   dark mode below restores Tailwind's own original values. */
+:root {
   --color-red-200: #b91c1c;
   --color-red-300: #b91c1c;
+}
+:root[data-theme='dark'] {
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
 }
 
 /* Landing page (Home.tsx) recolor — same structure/sections/copy as the

@@ -25,13 +25,14 @@ export const THEME_STORAGE_KEY = 'saveup-theme'
 export const ACCENT_STORAGE_KEY = 'saveup-accent'
 
 // `data-theme`/`data-accent` attributes are what index.css actually reads
-// (see the `:root[data-theme='light']` / `:root[data-accent='...']` blocks)
-// — "dark"/"bleu" are the no-attribute defaults, so they're removed rather
-// than written, keeping the DOM state consistent with what a first-ever
-// visit (no preference saved anywhere yet) already renders.
+// (see the `:root[data-theme='dark']` / `:root[data-accent='...']` blocks)
+// — "light"/"bleu" are the no-attribute defaults (SaveUp Minimaliste's
+// white/black/orange identity, matching the landing page), so they're
+// removed rather than written, keeping the DOM state consistent with what
+// a first-ever visit (no preference saved anywhere yet) already renders.
 export function applyTheme(theme: Theme) {
-  if (theme === 'light') {
-    document.documentElement.dataset.theme = 'light'
+  if (theme === 'dark') {
+    document.documentElement.dataset.theme = 'dark'
   } else {
     delete document.documentElement.dataset.theme
   }

@@ -45,7 +45,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [accentColor, setAccentColorState] = useState<AccentColor>('bleu')
-  const [theme, setThemeState] = useState<Theme>('dark')
+  const [theme, setThemeState] = useState<Theme>('light')
   const [avatarEmoji, setAvatarEmojiState] = useState<string | null>(null)
   const [currency, setCurrencyState] = useState<Currency>('CAD')
   const [onboardingMainGoal, setOnboardingMainGoalState] = useState<MainGoal | null>(null)
@@ -70,7 +70,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setError(fetchError.message)
     } else {
       const nextAccent = (data?.accent_color as AccentColor | undefined) ?? 'bleu'
-      const nextTheme = (data?.theme as Theme | undefined) ?? 'dark'
+      const nextTheme = (data?.theme as Theme | undefined) ?? 'light'
       setAccentColorState(nextAccent)
       setThemeState(nextTheme)
       setAvatarEmojiState(data?.avatar_emoji ?? null)
