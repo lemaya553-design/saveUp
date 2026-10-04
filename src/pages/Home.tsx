@@ -511,13 +511,30 @@ export function Home() {
         </div>
       </section>
 
-      {/* 5. Storytelling — black section (the rest of the page is white),
-          with the same "blurred glow + diagonal glass sheen" texture
-          technique used on the phone mockup's dark screen. Text switches to
-          explicit white/opacity shades here since the shared ink/muted
-          tokens are tuned for light backgrounds everywhere else on this
-          page. */}
-      <section id="histoire" className="relative overflow-hidden bg-[#0a0a0c] px-4 py-28 sm:px-6 sm:py-40">
+      {/* 5+6. Storytelling and Solution-en-3-étapes share ONE continuous
+          black background (wrapper div below) instead of each having its
+          own bg-[#0a0a0c] — two separate elements painting the identical
+          hex still produced a visible seam at the boundary, because each
+          section's glow blobs were clipped by ITS OWN overflow-hidden
+          edge, so the glow brightness didn't match right at the seam even
+          though the base color did. One wrapper = no boundary to seam. */}
+      <div className="relative overflow-hidden bg-[#0a0a0c]">
+        {/* Single diagonal glass-sheen gradient spanning BOTH sections below.
+            Previously each section had its own `absolute inset-0` sheen, so
+            the gradient restarted fresh at the top of the second section —
+            that restart (not the base bg color, which already matched) was
+            the real cause of the visible seam at the old boundary. One
+            gradient anchored to this wrapper flows continuously across the
+            full combined height instead. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent"
+        />
+        {/* Storytelling — "blurred glow" texture matching the phone
+            mockup's dark screen. Text switches to explicit white/opacity
+            shades since the shared ink/muted tokens are tuned for light
+            backgrounds everywhere else on this page. */}
+        <section id="histoire" className="relative px-4 py-28 sm:px-6 sm:py-40">
         <div
           aria-hidden="true"
           className="mesh-blob-c pointer-events-none absolute -left-24 top-0 h-96 w-96 rounded-full bg-primary/15 blur-[120px]"
@@ -525,10 +542,6 @@ export function Home() {
         <div
           aria-hidden="true"
           className="mesh-blob-b pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-primary/10 blur-[120px]"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent"
         />
         <Reveal className="relative mx-auto flex max-w-4xl flex-col items-center gap-10 sm:flex-row sm:items-start">
           <img
@@ -552,16 +565,15 @@ export function Home() {
         </Reveal>
       </section>
 
-      {/* 6. Solution en 3 étapes — black-background + blurred-texture
-          treatment matching the Storytelling section ("Pourquoi SaveUp"),
-          two-column title/numbered-list + phone-mockup layout, big orange
-          numerals instead of icon badges. Reuses t.actionSteps.mockup for
-          the illustrative phone content (import CSV / recategorize) —
-          there used to be a second, near-duplicate white-background
-          section built from the same content right above this one; it was
-          removed as redundant, this is now the only "how it works" phone
-          mockup section on the page. */}
-      <section id="comment-ca-marche" className="relative overflow-hidden bg-[#0a0a0c] px-4 py-20 sm:px-6 sm:py-28">
+        {/* Solution en 3 étapes — two-column title/numbered-list +
+            phone-mockup layout, big orange numerals instead of icon
+            badges. Reuses t.actionSteps.mockup for the illustrative phone
+            content (import CSV / recategorize) — there used to be a
+            second, near-duplicate white-background section built from the
+            same content right above this one; it was removed as
+            redundant, this is now the only "how it works" phone mockup
+            section on the page. */}
+        <section id="comment-ca-marche" className="relative px-4 py-20 sm:px-6 sm:py-28">
         <div
           aria-hidden="true"
           className="mesh-blob-a pointer-events-none absolute right-[-10%] top-10 -z-10 h-96 w-96 rounded-full bg-primary/15 blur-[120px]"
@@ -569,10 +581,6 @@ export function Home() {
         <div
           aria-hidden="true"
           className="mesh-blob-c pointer-events-none absolute -left-20 bottom-0 -z-10 h-80 w-80 rounded-full bg-primary/10 blur-[110px]"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent"
         />
 
         <div className="relative mx-auto grid max-w-5xl items-center gap-14 lg:grid-cols-2 lg:gap-20">
@@ -636,7 +644,8 @@ export function Home() {
             </div>
           </Reveal>
         </div>
-      </section>
+        </section>
+      </div>
 
       {/* 7. Tarifs — real plans/prices/features, same component and data as
           the standalone /tarifs page (PricingCards.tsx), so there's never a
