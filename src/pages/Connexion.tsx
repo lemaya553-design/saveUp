@@ -296,14 +296,18 @@ export function Connexion() {
           </Link>
 
           {showModeToggle && (
-            <div className="mt-9 flex gap-3">
+            // Frosted-glass tray (same blur/translucent-white/subtle-border
+            // texture as the "Pourquoi SaveUp" / "Comment ça marche"
+            // sections on the landing page) instead of the pills floating
+            // directly on the flat black panel.
+            <div className="mt-9 flex gap-2 rounded-2xl border border-white/10 bg-white/[0.06] p-1.5 backdrop-blur-xl">
               <button
                 type="button"
                 onClick={() => switchMode('signin')}
                 className={`flex-1 rounded-full px-4 py-2.5 text-sm font-semibold transition-all ${
                   mode === 'signin'
                     ? 'bg-[#ff6b00] text-white shadow-lg shadow-[#ff6b00]/20'
-                    : 'border border-white/20 text-white/60 hover:border-white/40 hover:text-white'
+                    : 'text-white/60 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 {t.signInUp.toggleSignIn}
@@ -314,7 +318,7 @@ export function Connexion() {
                 className={`flex-1 rounded-full px-4 py-2.5 text-sm font-semibold transition-all ${
                   mode === 'signup'
                     ? 'bg-[#ff6b00] text-white shadow-lg shadow-[#ff6b00]/20'
-                    : 'border border-white/20 text-white/60 hover:border-white/40 hover:text-white'
+                    : 'text-white/60 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 {t.signInUp.toggleSignUp}
@@ -620,7 +624,7 @@ export function Connexion() {
           lg: a split-screen auth layout on a narrow viewport just pushes the
           form below a huge image, so the visual drops out entirely on
           mobile rather than stacking. */}
-      <div className="relative hidden flex-1 items-center justify-center overflow-hidden bg-gradient-to-br from-[#0a0a0c] via-black to-[#0a0a0c] lg:flex">
+      <div className="relative hidden flex-1 items-start justify-center overflow-hidden border-l border-white/10 bg-gradient-to-br from-[#0a0a0c] via-black to-[#0a0a0c] pt-14 lg:flex xl:pt-20">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -right-24 top-0 h-[32rem] w-[32rem] rounded-full bg-[#ff6b00]/15 blur-[140px]"
