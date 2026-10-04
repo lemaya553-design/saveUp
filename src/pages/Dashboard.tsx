@@ -74,7 +74,7 @@ export function Dashboard() {
     investmentBalance.loading ||
     expenseHistory.loading
   const error =
-    health.error || goals.error || contributions.error || investmentBalance.error || expenseHistory.error
+    health.error || quiz.error || goals.error || contributions.error || investmentBalance.error || expenseHistory.error
 
   const starterEarned = isStarterBadgeUnlocked(health.hasIncomeRecord)
   const starterClaimed = claimedBadges.claimedIds.has(STARTER_BADGE.id)
@@ -107,7 +107,13 @@ export function Dashboard() {
   // collects income/expenses/goals, so a real account can legitimately
   // reach the Dashboard with all of those still at zero; Budget/Épargne's
   // own empty states pick up from there instead of forcing it up front.
-  const isFreshUser = !loading && !quiz.completed
+  // `!quiz.error` matters here: if the quiz-completion read itself failed
+  // (e.g. a real backend problem), treating that the same as "genuinely
+  // not completed" would redirect to /onboarding, which can't succeed any
+  // better there and would just bounce back here again — an invisible
+  // loop. Falling through to the normal Dashboard with the error banner
+  // below is more honest about what's actually wrong.
+  const isFreshUser = !loading && !quiz.completed && !quiz.error
 
   useEffect(() => {
     if (!loading && isFreshUser) {

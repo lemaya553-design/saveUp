@@ -45,12 +45,18 @@ export function useOnboardingQuiz() {
     }
   }, [userId])
 
+  // Returns whether the write actually succeeded — `completed`/`score`/
+  // `archetype` only update AFTER that's confirmed, never optimistically.
+  // An optimistic update here used to mean this hook's own `completed`
+  // could read true even when the row was never actually written (e.g. the
+  // table/migration missing, or an RLS rejection): Onboarding.tsx would
+  // happily move on to the result/plans screens, but Dashboard's own
+  // separate useOnboardingQuiz instance — which only ever reads the real
+  // DB state — would correctly see "not completed" and redirect back to
+  // /onboarding, which looked like "the quiz won't let me finish."
   const saveResult = useCallback(
-    async (result: { score: number; archetype: Archetype; answers: QuizAnswers }) => {
-      if (!userId) return
-      setCompleted(true)
-      setScore(result.score)
-      setArchetype(result.archetype)
+    async (result: { score: number; archetype: Archetype; answers: QuizAnswers }): Promise<boolean> => {
+      if (!userId) return false
       const { error: upsertError } = await supabase.from('onboarding_quiz_results').upsert(
         {
           user_id: userId,
@@ -60,7 +66,14 @@ export function useOnboardingQuiz() {
         },
         { onConflict: 'user_id' },
       )
-      if (upsertError) setError(upsertError.message)
+      if (upsertError) {
+        setError(upsertError.message)
+        return false
+      }
+      setCompleted(true)
+      setScore(result.score)
+      setArchetype(result.archetype)
+      return true
     },
     [userId],
   )

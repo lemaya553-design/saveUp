@@ -105,6 +105,84 @@ export function computeQuizResult(answers: QuizAnswers): QuizResult {
   return { score, archetype }
 }
 
+// "Why this score" insights for the result page — 2-3 concrete, specific
+// reasons pulled straight from the answers, not just a generic line about
+// the archetype. Organized into categories (stress, tracking, savings,
+// spending, goal, emergency) with a positive and a constructive phrasing
+// per category; at most ONE insight per category, so the 3 shown cover 3
+// different themes instead of circling the same one. Text lives in
+// lib/i18n/onboardingQuiz.ts, keyed by these ids.
+export type InsightId =
+  | 'stress-high'
+  | 'stress-low'
+  | 'tracking-none'
+  | 'tracking-good'
+  | 'savings-strong'
+  | 'savings-weak'
+  | 'impulsive-high'
+  | 'impulsive-low'
+  | 'goal-none'
+  | 'goal-clear'
+  | 'emergency-ready'
+  | 'emergency-not-ready'
+
+export const INSIGHT_POLARITY: Record<InsightId, 'positive' | 'constructive'> = {
+  'stress-high': 'constructive',
+  'stress-low': 'positive',
+  'tracking-none': 'constructive',
+  'tracking-good': 'positive',
+  'savings-strong': 'positive',
+  'savings-weak': 'constructive',
+  'impulsive-high': 'constructive',
+  'impulsive-low': 'positive',
+  'goal-none': 'constructive',
+  'goal-clear': 'positive',
+  'emergency-ready': 'positive',
+  'emergency-not-ready': 'constructive',
+}
+
+interface InsightCheck {
+  id: InsightId
+  matches: (a: QuizAnswers) => boolean
+}
+
+const INSIGHT_CATEGORIES: InsightCheck[][] = [
+  [
+    { id: 'stress-high', matches: (a) => a.q9 === 'c' || a.q9 === 'd' || a.q11 === 'c' },
+    { id: 'stress-low', matches: (a) => a.q9 === 'a' },
+  ],
+  [
+    { id: 'tracking-none', matches: (a) => a.q13 === 'c' },
+    { id: 'tracking-good', matches: (a) => a.q13 === 'a' },
+  ],
+  [
+    { id: 'savings-strong', matches: (a) => a.q8 === 'a' || a.q5 === 'a' },
+    { id: 'savings-weak', matches: (a) => a.q8 === 'd' || a.q5 === 'c' },
+  ],
+  [
+    { id: 'impulsive-high', matches: (a) => a.q3 === 'c' || a.q3 === 'd' },
+    { id: 'impulsive-low', matches: (a) => a.q3 === 'a' },
+  ],
+  [
+    { id: 'goal-none', matches: (a) => a.q6 === 'c' },
+    { id: 'goal-clear', matches: (a) => a.q6 === 'a' },
+  ],
+  [
+    { id: 'emergency-not-ready', matches: (a) => a.q7 === 'c' || a.q7 === 'd' },
+    { id: 'emergency-ready', matches: (a) => a.q7 === 'a' },
+  ],
+]
+
+export function computeQuizInsights(answers: QuizAnswers): InsightId[] {
+  const insights: InsightId[] = []
+  for (const category of INSIGHT_CATEGORIES) {
+    const match = category.find((check) => check.matches(answers))
+    if (match) insights.push(match.id)
+    if (insights.length >= 3) break
+  }
+  return insights
+}
+
 // Q15 ("what's your main goal right now") doubles as the same signal the
 // old onboarding's dedicated question captured — mapped onto the existing
 // MainGoal type so lib/tips.ts keeps tailoring Dashboard tips without any

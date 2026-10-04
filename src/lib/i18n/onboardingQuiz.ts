@@ -1,5 +1,5 @@
 import type { Lang } from './language'
-import type { Archetype } from '../onboardingQuiz'
+import type { Archetype, InsightId } from '../onboardingQuiz'
 
 export interface QuizQuestionContent {
   text: string
@@ -15,14 +15,10 @@ export interface OnboardingQuizContent {
   result: {
     badge: string
     scoreSuffix: string
-    shareButton: string
-    shareGenerating: string
-    sharedConfirmation: string
-    downloadedConfirmation: string
-    shareError: string
+    insightsHeading: string
+    insights: Record<InsightId, string>
     continueButton: string
-    shareCardFooter: string
-    archetypes: Record<Archetype, { name: string; description: string; shareTagline: string }>
+    archetypes: Record<Archetype, { name: string; description: string }>
   }
   plans: {
     heading: string
@@ -178,37 +174,48 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
     result: {
       badge: 'Ton profil financier',
       scoreSuffix: '/100',
-      shareButton: 'Partager mon résultat',
-      shareGenerating: 'Génération...',
-      sharedConfirmation: 'Image copiée !',
-      downloadedConfirmation: 'Image téléchargée !',
-      shareError: "Le partage n'a pas fonctionné — réessaie.",
+      insightsHeading: 'Pourquoi ce score',
+      insights: {
+        'stress-high':
+          'Ton stress financier est élevé en ce moment — une vue claire sur tes finances peut vraiment t’aider à y voir plus clair.',
+        'stress-low': 'Tu gères ton argent sans trop de stress — un vrai atout.',
+        'tracking-none':
+          'Tu n’as pas d’outil de suivi en place actuellement — c’est exactement ce que SaveUp vient régler.',
+        'tracking-good': 'Tu suis déjà ton budget avec discipline — impressionnant.',
+        'savings-strong': 'Tu épargnes régulièrement, ce qui est excellent.',
+        'savings-weak':
+          'Tu n’as pas encore de coussin d’épargne — SaveUp peut t’aider à en bâtir un, petit à petit.',
+        'impulsive-high':
+          'Les achats impulsifs reviennent souvent dans ton quotidien — un peu de structure peut faire une grosse différence.',
+        'impulsive-low': 'Tu résistes bien aux achats impulsifs — beau contrôle.',
+        'goal-none':
+          'Tu n’as pas encore d’objectif précis en tête — s’en fixer un rend l’épargne beaucoup plus motivante.',
+        'goal-clear': 'Tu as un objectif clair en tête, ça aide énormément à rester motivé·e.',
+        'emergency-ready': 'Tu peux absorber une dépense imprévue sans problème.',
+        'emergency-not-ready':
+          'Une dépense imprévue te mettrait en difficulté — se bâtir un coussin de sécurité devrait être une priorité.',
+      },
       continueButton: 'Voir les plans',
-      shareCardFooter: 'saveup.store',
       archetypes: {
         stressed: {
           name: 'Le Stressé',
           description:
             "L'argent occupe beaucoup de place dans ta tête ces temps-ci. La bonne nouvelle : une vue claire sur tes finances suffit souvent à faire retomber la pression.",
-          shareTagline: "Mon argent me stresse — mais j'apprends à reprendre le contrôle.",
         },
         impulsive: {
           name: "L'Impulsif",
           description:
             "Tu dépenses au gré de tes envies, sans trop suivre où ça va. Un peu de structure, sans te priver de tout, peut changer beaucoup de choses.",
-          shareTagline: "Je dépense sur un coup de tête — je travaille à mieux suivre mon argent.",
         },
         cautious: {
           name: 'Le Prudent',
           description:
             "Tu as déjà de bonnes habitudes, mais il te manque les bons outils pour vraiment voir où tu t'en vas.",
-          shareTagline: "J'ai de bonnes habitudes — maintenant je veux une vraie structure.",
         },
         master: {
           name: 'Le Maître',
           description:
             "Tu gères déjà ton argent avec discipline et une vue claire sur tes objectifs. SaveUp t'aide à aller encore plus loin.",
-          shareTagline: 'Je gère déjà bien mon argent — et je vise encore plus loin.',
         },
       },
     },
@@ -365,37 +372,46 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
     result: {
       badge: 'Your financial profile',
       scoreSuffix: '/100',
-      shareButton: 'Share my result',
-      shareGenerating: 'Generating...',
-      sharedConfirmation: 'Image copied!',
-      downloadedConfirmation: 'Image downloaded!',
-      shareError: "Sharing didn't work — try again.",
+      insightsHeading: 'Why this score',
+      insights: {
+        'stress-high':
+          'Your financial stress is high right now — a clear view of your finances can really help ease that.',
+        'stress-low': 'You manage your money without much stress — a real asset.',
+        'tracking-none': "You don't have a tracking tool in place right now — that's exactly what SaveUp fixes.",
+        'tracking-good': 'You already track your budget with discipline — impressive.',
+        'savings-strong': 'You save regularly, which is excellent.',
+        'savings-weak':
+          "You don't have a savings cushion yet — SaveUp can help you build one, little by little.",
+        'impulsive-high': 'Impulse purchases come up often — a bit of structure can make a big difference.',
+        'impulsive-low': 'You resist impulse purchases well — great control.',
+        'goal-none':
+          "You don't have a specific goal in mind yet — setting one makes saving a lot more motivating.",
+        'goal-clear': 'You have a clear goal in mind, which helps a lot with staying motivated.',
+        'emergency-ready': 'You can absorb an unexpected expense without trouble.',
+        'emergency-not-ready':
+          'An unexpected expense would put you in a tough spot — building a safety cushion should be a priority.',
+      },
       continueButton: 'See the plans',
-      shareCardFooter: 'saveup.store',
       archetypes: {
         stressed: {
           name: 'The Stressed',
           description:
             "Money is taking up a lot of headspace right now. The good news: a clear view of your finances is often enough to take the pressure off.",
-          shareTagline: "My money stresses me out — but I'm learning to take control.",
         },
         impulsive: {
           name: 'The Impulsive',
           description:
             "You spend on a whim without really tracking where it goes. A bit of structure, without giving up everything, can change a lot.",
-          shareTagline: "I spend on impulse — working on tracking my money better.",
         },
         cautious: {
           name: 'The Cautious',
           description:
             "You already have good habits, but you're missing the right tools to really see where you stand.",
-          shareTagline: "I have good habits — now I want real structure.",
         },
         master: {
           name: 'The Master',
           description:
             "You already manage your money with discipline and a clear view of your goals. SaveUp helps you go even further.",
-          shareTagline: "I already manage my money well — aiming even higher.",
         },
       },
     },

@@ -8,6 +8,8 @@ import { ONBOARDING_QUIZ } from '../lib/i18n/onboardingQuiz'
 import { TARIFS } from '../lib/i18n/tarifs'
 import {
   QUIZ_QUESTION_IDS,
+  INSIGHT_POLARITY,
+  computeQuizInsights,
   computeQuizResult,
   mainGoalFromQuiz,
   type QuizAnswers,
@@ -50,13 +52,10 @@ export function Onboarding() {
   const [questionIndex, setQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<QuizAnswers>({})
   const [result, setResult] = useState<QuizResult | null>(null)
-  const [sharing, setSharing] = useState(false)
-  const [shareState, setShareState] = useState<'idle' | 'copied' | 'downloaded' | 'error'>('idle')
   const [pendingPlan, setPendingPlan] = useState<Plan | null>(null)
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
   const [exiting, setExiting] = useState(false)
   const [transitioning, setTransitioning] = useState(false)
-  const cardRef = useRef<HTMLDivElement>(null)
 
   // "Already completed" is checked ONCE, when loading first resolves, and
   // locked into a ref rather than read reactively from quiz.completed —
@@ -99,6 +98,10 @@ export function Onboarding() {
   async function finishQuiz(finalAnswers: QuizAnswers) {
     const computed = computeQuizResult(finalAnswers)
     setResult(computed)
+    // Still shows the result/plans screens even if this fails (the score
+    // and archetype are computed client-side, not dependent on the write)
+    // — if it really did fail, quiz.error now surfaces on Dashboard instead
+    // of silently bouncing back here, see useOnboardingQuiz.ts.
     await quiz.saveResult({ ...computed, answers: finalAnswers })
     const mainGoal = mainGoalFromQuiz(finalAnswers)
     if (mainGoal) preferences.setOnboardingProfile(mainGoal, false, 'hebdomadaire')
@@ -150,42 +153,6 @@ export function Onboarding() {
     await finishQuiz(filled)
   }
 
-  async function handleShare() {
-    if (!result || !cardRef.current) return
-    setSharing(true)
-    setShareState('idle')
-    try {
-      const { default: html2canvas } = await import('html2canvas')
-      const canvas = await html2canvas(cardRef.current, { backgroundColor: null, scale: 2 })
-      const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
-      if (!blob) throw new Error('canvas produced no blob')
-      const file = new File([blob], 'saveup-profil-financier.png', { type: 'image/png' })
-
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'SaveUp' })
-        setShareState('idle')
-      } else if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-        setShareState('copied')
-      } else {
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'saveup-profil-financier.png'
-        a.click()
-        URL.revokeObjectURL(url)
-        setShareState('downloaded')
-      }
-    } catch {
-      // A cancelled native share sheet also lands here (AbortError) —
-      // indistinguishable from a real failure without over-parsing every
-      // browser's own error shape, so this stays a quiet no-op.
-      setShareState('idle')
-    } finally {
-      setSharing(false)
-    }
-  }
-
   async function handleChoosePlan(planId: Exclude<Plan, 'free'>) {
     setPendingPlan(planId)
     try {
@@ -198,6 +165,7 @@ export function Onboarding() {
 
   const question = t.questions[questionIndex]
   const archetypeContent = result ? t.result.archetypes[result.archetype] : null
+  const insights = result ? computeQuizInsights(answers) : []
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0a0a0c]">
@@ -271,39 +239,45 @@ export function Onboarding() {
       )}
 
       {phase === 'result' && result && archetypeContent && (
-        <div className="relative mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-6 py-10 text-center">
+        <div className="relative mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-6 py-14 text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#ff6b00]">{t.result.badge}</p>
 
-          <div className="mt-6 w-full rounded-3xl border border-white/10 bg-white/5 p-8">
-            <p className="text-6xl font-black leading-none text-[#ff6b00]">
-              {result.score}
-              <span className="text-2xl font-bold text-white/40">{t.result.scoreSuffix}</span>
-            </p>
-            <h1 className="mt-4 text-3xl font-bold text-white">{archetypeContent.name}</h1>
-            <p className="mt-3 text-white/70">{archetypeContent.description}</p>
+          {/* The score is the focal point of the page — big enough that
+              everything else (archetype name, insights, CTA) reads as
+              supporting detail underneath it. */}
+          <p className="mt-4 text-[clamp(5.5rem,22vw,9rem)] font-black leading-none text-[#ff6b00]">
+            {result.score}
+            <span className="text-3xl font-bold text-white/40">{t.result.scoreSuffix}</span>
+          </p>
+          <h1 className="mt-2 text-3xl font-bold text-white">{archetypeContent.name}</h1>
+          <p className="mt-3 text-white/70">{archetypeContent.description}</p>
+
+          <div className="mt-8 w-full rounded-3xl border border-white/10 bg-white/5 p-6 text-left">
+            <p className="text-xs font-semibold uppercase tracking-wide text-white/50">{t.result.insightsHeading}</p>
+            <ul className="mt-4 flex flex-col gap-3">
+              {insights.map((insightId) => (
+                <li key={insightId} className="flex items-start gap-3 text-sm text-white/80">
+                  <span
+                    aria-hidden="true"
+                    className={`mt-0.5 font-bold ${
+                      INSIGHT_POLARITY[insightId] === 'positive' ? 'text-[#ff6b00]' : 'text-white/40'
+                    }`}
+                  >
+                    {INSIGHT_POLARITY[insightId] === 'positive' ? '✓' : '→'}
+                  </span>
+                  {t.result.insights[insightId]}
+                </li>
+              ))}
+            </ul>
           </div>
 
-          <div className="mt-6 flex w-full flex-col items-center gap-3">
-            <button
-              type="button"
-              onClick={handleShare}
-              disabled={sharing}
-              className="w-full rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110 disabled:opacity-60"
-            >
-              {sharing ? t.result.shareGenerating : t.result.shareButton}
-            </button>
-            {shareState === 'copied' && <p className="text-xs text-[#ff6b00]">{t.result.sharedConfirmation}</p>}
-            {shareState === 'downloaded' && <p className="text-xs text-[#ff6b00]">{t.result.downloadedConfirmation}</p>}
-            {shareState === 'error' && <p className="text-xs text-red-400">{t.result.shareError}</p>}
-
-            <button
-              type="button"
-              onClick={() => setPhase('plans')}
-              className="w-full rounded-xl border border-white/15 px-5 py-3 font-medium text-white transition-colors hover:bg-white/5"
-            >
-              {t.result.continueButton}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setPhase('plans')}
+            className="mt-8 w-full rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110"
+          >
+            {t.result.continueButton}
+          </button>
         </div>
       )}
 
@@ -402,27 +376,6 @@ export function Onboarding() {
         </div>
       )}
 
-      {/* Off-screen share card — html2canvas renders this exact node into the
-          shared/downloaded image; same 1080×1080 square pattern as
-          Calculateur.tsx's share card, never shown to the visitor directly. */}
-      {result && archetypeContent && (
-        <div className="pointer-events-none fixed left-0 top-0 -z-50 opacity-0" aria-hidden="true">
-          <div
-            ref={cardRef}
-            className="flex h-[1080px] w-[1080px] flex-col items-center justify-center gap-6 bg-black p-24 text-center"
-          >
-            <span className="text-5xl font-bold">
-              <span className="text-white">save</span>
-              <span className="text-[#ff6b00]">Up</span>
-            </span>
-            <p className="mt-6 text-4xl font-medium text-white/50">{t.result.badge}</p>
-            <p className="text-[200px] font-black leading-none text-[#ff6b00]">{result.score}</p>
-            <p className="text-5xl font-bold text-white">{archetypeContent.name}</p>
-            <p className="max-w-4xl text-3xl text-white/70">{archetypeContent.shareTagline}</p>
-            <p className="mt-10 text-3xl text-white/40">{t.result.shareCardFooter}</p>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
