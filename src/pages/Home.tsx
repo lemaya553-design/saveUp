@@ -42,15 +42,6 @@ function ImportIcon({ className }: { className: string }) {
   )
 }
 
-function TagIcon({ className }: { className: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M11 3h6a2 2 0 0 1 2 2v6l-9 9-8-8 9-9z" />
-      <circle cx="15.5" cy="8.5" r="1.25" fill="currentColor" stroke="none" />
-    </svg>
-  )
-}
-
 function GoalIcon({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
@@ -105,8 +96,6 @@ function BadgeCheckIcon({ className }: { className: string }) {
     </svg>
   )
 }
-
-const STEP_ICONS = [ImportIcon, TagIcon, GoalIcon] as const
 
 // Keyed to HomeContent['hero']['floatingCards'][number]['icon'].
 const FLOATING_CARD_ICONS = {
@@ -632,37 +621,88 @@ export function Home() {
         </div>
       </section>
 
-      {/* 7. Solution en 3 étapes */}
-      <section
-        id="comment-ca-marche"
-        className="relative overflow-hidden border-t border-overlay/10 px-4 py-20 sm:px-6 sm:py-28"
-      >
+      {/* 7. Solution en 3 étapes — same black-background + blurred-texture
+          treatment as the Storytelling section ("Pourquoi SaveUp"), and the
+          same two-column title/numbered-list + phone-mockup layout as the
+          action-steps section above it, so this reads as polished rather
+          than a generic "3 icon cards" SaaS template. Big orange numerals
+          instead of icon badges; same illustrative mockup content
+          (t.actionSteps.mockup) as the section above, reused rather than
+          duplicated as separate copy. */}
+      <section id="comment-ca-marche" className="relative overflow-hidden bg-[#0a0a0c] px-4 py-20 sm:px-6 sm:py-28">
         <div
           aria-hidden="true"
-          className="mesh-blob-a pointer-events-none absolute right-[-10%] top-10 -z-10 h-96 w-96 rounded-full bg-primary/10 blur-[120px]"
+          className="mesh-blob-a pointer-events-none absolute right-[-10%] top-10 -z-10 h-96 w-96 rounded-full bg-primary/15 blur-[120px]"
         />
-        <div className="mx-auto max-w-4xl">
+        <div
+          aria-hidden="true"
+          className="mesh-blob-c pointer-events-none absolute -left-20 bottom-0 -z-10 h-80 w-80 rounded-full bg-primary/10 blur-[110px]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent"
+        />
+
+        <div className="relative mx-auto grid max-w-5xl items-center gap-14 lg:grid-cols-2 lg:gap-20">
           <Reveal>
-            <h2 className="text-center text-2xl font-bold text-ink sm:text-3xl">⚡ {t.solutionSteps.heading}</h2>
-            <p className="mx-auto mt-3 max-w-md text-center text-muted">{t.solutionSteps.subheading}</p>
+            <h2 className="text-2xl font-bold text-white sm:text-3xl">⚡ {t.solutionSteps.heading}</h2>
+            <p className="mt-3 max-w-md text-white/70">{t.solutionSteps.subheading}</p>
+
+            <ol className="mt-9 space-y-7">
+              {t.solutionSteps.items.map((step, i) => (
+                <li key={step.title} className="flex gap-5">
+                  <span className="shrink-0 text-4xl font-extrabold leading-none text-primary">{i + 1}</span>
+                  <div>
+                    <h3 className="font-semibold text-white">{step.title}</h3>
+                    <p className="mt-1 text-sm text-white/60">{step.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </Reveal>
 
-          <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            {t.solutionSteps.items.map((step, i) => {
-              const Icon = STEP_ICONS[i]
-              return (
-                <Reveal key={step.title} delayMs={i * 80}>
-                  <div className="h-full rounded-3xl border border-overlay/10 bg-surface p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/25 hover:shadow-xl">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <Icon className="h-6 w-6" />
+          <Reveal delayMs={100} className="mx-auto w-[260px] sm:w-[300px]">
+            <div
+              className="relative [transform:perspective(1200px)_rotateY(9deg)_rotateX(3deg)]"
+              style={{ transformStyle: 'preserve-3d' }}
+            >
+              <div className="absolute -left-[3px] top-[14%] h-9 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+              <div className="absolute -left-[3px] top-[22%] h-14 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+              <div className="absolute -left-[3px] top-[32%] h-14 w-[3px] rounded-l-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+              <div className="absolute -right-[3px] top-[20%] h-20 w-[3px] rounded-r-sm bg-gradient-to-b from-[#45454a] to-[#19191c]" />
+
+              <div className="rounded-[2.75rem] bg-gradient-to-br from-[#46464c] via-[#1d1d20] to-[#08080a] p-[3px] shadow-[0_15px_35px_-15px_rgba(0,0,0,0.25),0_40px_80px_-20px_rgba(0,0,0,0.35)]">
+                <div className="rounded-[2.6rem] bg-black p-[7px]">
+                  <div className="relative aspect-[9/19] overflow-hidden rounded-[2.2rem] bg-[#0b0b12] px-5 pb-6 pt-11">
+                    <div className="absolute left-1/2 top-[10px] z-20 h-[20px] w-[78px] -translate-x-1/2 rounded-full bg-black" />
+
+                    <p className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <ImportIcon className="h-4 w-4 shrink-0 text-primary" />
+                      {t.actionSteps.mockup.importLabel}
+                    </p>
+
+                    <div className="mt-6 space-y-2.5">
+                      {t.actionSteps.mockup.transactions.map((tx) => (
+                        <div
+                          key={tx.label}
+                          className="flex items-center justify-between rounded-xl bg-white/[0.06] px-3.5 py-3"
+                        >
+                          <span className="text-xs text-white/70">{tx.label}</span>
+                          <span className="text-xs font-semibold text-white">{tx.amount}</span>
+                        </div>
+                      ))}
                     </div>
-                    <h3 className="mt-4 font-semibold text-ink">{step.title}</h3>
-                    <p className="mt-2 text-sm text-muted">{step.body}</p>
+
+                    <div className="mt-6 rounded-xl bg-primary py-3 text-center text-xs font-semibold text-white">
+                      {t.actionSteps.mockup.recategorizeLabel}
+                    </div>
+
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.1] via-white/[0.02] to-transparent" />
                   </div>
-                </Reveal>
-              )
-            })}
-          </div>
+                </div>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
