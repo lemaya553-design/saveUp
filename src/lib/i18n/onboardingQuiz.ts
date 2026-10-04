@@ -1,5 +1,5 @@
 import type { Lang } from './language'
-import type { Archetype, InsightId } from '../onboardingQuiz'
+import type { Archetype, InsightId, SetupCategoryId } from '../onboardingQuiz'
 
 export interface QuizQuestionContent {
   text: string
@@ -20,6 +20,24 @@ export interface OnboardingQuizContent {
     continueButton: string
     archetypes: Record<Archetype, { name: string; description: string }>
   }
+  setup: {
+    heading: string
+    subtitle: string
+    incomeLabel: string
+    incomePlaceholder: string
+    savingsLabel: string
+    savingsHint: string
+    goalHeading: string
+    goalNameLabel: string
+    goalNamePlaceholder: string
+    defaultGoalName: string
+    goalAmountLabel: string
+    categoriesHeading: string
+    categoriesHint: string
+    categories: Record<SetupCategoryId, string>
+    continueButton: string
+    savingButton: string
+  }
   plans: {
     heading: string
     subtitle: string
@@ -32,6 +50,7 @@ export interface OnboardingQuizContent {
     standardCta: string
     redirecting: string
     freeLink: string
+    checkoutFailed: string
   }
 }
 
@@ -195,7 +214,7 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
         'emergency-not-ready':
           'Une dépense imprévue te mettrait en difficulté — se bâtir un coussin de sécurité devrait être une priorité.',
       },
-      continueButton: 'Voir les plans',
+      continueButton: 'Configurer mon compte',
       archetypes: {
         stressed: {
           name: 'Le Stressé',
@@ -219,6 +238,31 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
         },
       },
     },
+    setup: {
+      heading: 'Configure ton compte',
+      subtitle: 'Quelques infos de base pour que ton Dashboard affiche déjà quelque chose de concret.',
+      incomeLabel: 'Revenu mensuel approximatif',
+      incomePlaceholder: '0.00',
+      savingsLabel: 'Combien aimerais-tu épargner par mois ?',
+      savingsHint: 'Pré-rempli selon tes réponses — ajuste si tu veux.',
+      goalHeading: 'Ton premier objectif d’épargne',
+      goalNameLabel: 'Nom de l’objectif',
+      goalNamePlaceholder: 'Ex : Fonds d’urgence, Voyage',
+      defaultGoalName: 'Fonds d’urgence',
+      goalAmountLabel: 'Montant cible',
+      categoriesHeading: 'Catégories à suivre en priorité',
+      categoriesHint: 'Choisis 2 à 3 catégories',
+      categories: {
+        epicerie: 'Épicerie',
+        transport: 'Transport',
+        loisirs: 'Loisirs',
+        logement: 'Logement',
+        sante: 'Santé',
+        abonnements: 'Abonnements',
+      },
+      continueButton: 'Continuer',
+      savingButton: 'Un instant...',
+    },
     plans: {
       heading: 'Choisis ton plan',
       subtitle: 'Commence gratuitement, ou débloque tout dès maintenant.',
@@ -232,6 +276,7 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
       standardCta: 'Choisir Standard — 7,99 $/mois',
       redirecting: 'Redirection...',
       freeLink: 'Continuer avec le plan gratuit',
+      checkoutFailed: "Impossible de démarrer le paiement — réessaie dans un instant.",
     },
   },
   en: {
@@ -391,7 +436,7 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
         'emergency-not-ready':
           'An unexpected expense would put you in a tough spot — building a safety cushion should be a priority.',
       },
-      continueButton: 'See the plans',
+      continueButton: 'Set up my account',
       archetypes: {
         stressed: {
           name: 'The Stressed',
@@ -415,6 +460,31 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
         },
       },
     },
+    setup: {
+      heading: 'Set up your account',
+      subtitle: 'A few basics so your Dashboard already shows something real.',
+      incomeLabel: 'Approximate monthly income',
+      incomePlaceholder: '0.00',
+      savingsLabel: 'How much would you like to save per month?',
+      savingsHint: 'Pre-filled from your answers — adjust as you like.',
+      goalHeading: 'Your first savings goal',
+      goalNameLabel: 'Goal name',
+      goalNamePlaceholder: 'E.g. Emergency fund, Trip',
+      defaultGoalName: 'Emergency fund',
+      goalAmountLabel: 'Target amount',
+      categoriesHeading: 'Categories to track first',
+      categoriesHint: 'Pick 2 to 3 categories',
+      categories: {
+        epicerie: 'Groceries',
+        transport: 'Transport',
+        loisirs: 'Entertainment',
+        logement: 'Housing',
+        sante: 'Health',
+        abonnements: 'Subscriptions',
+      },
+      continueButton: 'Continue',
+      savingButton: 'One sec...',
+    },
     plans: {
       heading: 'Choose your plan',
       subtitle: 'Start for free, or unlock everything right now.',
@@ -428,6 +498,7 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
       standardCta: 'Choose Standard — $7.99/mo',
       redirecting: 'Redirecting...',
       freeLink: 'Continue with the free plan',
+      checkoutFailed: "Couldn't start checkout — try again in a moment.",
     },
   },
 }

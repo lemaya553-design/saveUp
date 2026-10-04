@@ -1,19 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { useCategories } from '../hooks/useCategories'
+import { useIncome } from '../hooks/useIncome'
 import { useLanguage } from '../hooks/useLanguage'
 import { useOnboardingQuiz } from '../hooks/useOnboardingQuiz'
 import { usePreferences } from '../hooks/usePreferences'
+import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSubscription } from '../hooks/useSubscription'
+import { useToast } from '../components/ToastProvider'
 import { ONBOARDING_QUIZ } from '../lib/i18n/onboardingQuiz'
 import { TARIFS } from '../lib/i18n/tarifs'
 import {
   QUIZ_QUESTION_IDS,
   INSIGHT_POLARITY,
+  SETUP_CATEGORY_IDS,
+  SETUP_CATEGORY_INCOME_PCT,
   computeQuizInsights,
   computeQuizResult,
   mainGoalFromQuiz,
+  suggestedSavingsPct,
   type QuizAnswers,
   type QuizResult,
+  type SetupCategoryId,
 } from '../lib/onboardingQuiz'
 import { PLAN_LIMITS, TRIAL_DAYS, type Plan } from '../lib/plans'
 import { formatBillingAmount } from '../lib/format'
@@ -33,10 +41,20 @@ import { formatBillingAmount } from '../lib/format'
 // Dashboard straight after choosing a plan. Budget/Épargne's own empty
 // states pick up from there organically.
 
-type Phase = 'quiz' | 'result' | 'plans'
+type Phase = 'quiz' | 'result' | 'setup' | 'plans'
+
+// 2 of the 6 come pre-checked so even someone who blitzes through without
+// touching anything still ends up with real, budgeted categories instead
+// of none at all — matches the "dashboard shows something concrete, not
+// zeros" goal driving this whole step.
+const DEFAULT_SETUP_CATEGORIES: SetupCategoryId[] = ['epicerie', 'transport']
+const MAX_SETUP_CATEGORIES = 3
 
 const inputCardClass =
   'rounded-2xl border border-white/15 bg-white/5 p-4 text-left font-medium text-white transition-all hover:border-[#ff6b00]/50 hover:bg-white/10'
+
+const fieldClass =
+  'rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-white placeholder-white/35 focus:border-[#ff6b00] focus:outline-none'
 
 export function Onboarding() {
   const navigate = useNavigate()
@@ -46,6 +64,10 @@ export function Onboarding() {
   const quiz = useOnboardingQuiz()
   const preferences = usePreferences()
   const subscription = useSubscription()
+  const income = useIncome()
+  const goals = useSavingsGoals()
+  const categories = useCategories()
+  const { showToast } = useToast()
   const fmt = (amount: number) => formatBillingAmount(amount, lang)
 
   const [phase, setPhase] = useState<Phase>('quiz')
@@ -56,6 +78,36 @@ export function Onboarding() {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
   const [exiting, setExiting] = useState(false)
   const [transitioning, setTransitioning] = useState(false)
+
+  // Setup step (between result and plans) — income drives the savings
+  // suggestion, which drives the goal-amount suggestion, each only
+  // auto-updating until the user actually edits that specific field
+  // themselves (the *Touched flags), so typing an income doesn't stomp on
+  // a goal amount someone already customized.
+  const [incomeDraft, setIncomeDraft] = useState('')
+  const [savingsDraft, setSavingsDraft] = useState('')
+  const [savingsTouched, setSavingsTouched] = useState(false)
+  const [goalName, setGoalName] = useState(t.setup.defaultGoalName)
+  const [goalAmount, setGoalAmount] = useState('')
+  const [goalAmountTouched, setGoalAmountTouched] = useState(false)
+  const [setupCategories, setSetupCategories] = useState<SetupCategoryId[]>(DEFAULT_SETUP_CATEGORIES)
+  const [submittingSetup, setSubmittingSetup] = useState(false)
+
+  useEffect(() => {
+    if (savingsTouched) return
+    const incomeValue = Number(incomeDraft) || 0
+    setSavingsDraft(incomeValue > 0 ? String(Math.round(incomeValue * suggestedSavingsPct(answers))) : '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomeDraft, savingsTouched])
+
+  useEffect(() => {
+    if (goalAmountTouched) return
+    const savingsValue = Number(savingsDraft) || 0
+    // A modest, concrete starter goal — roughly 3 months of the savings
+    // rate just suggested, not a specific real-world target (the user
+    // renames/retargets this immediately on the Épargne page if they want).
+    setGoalAmount(savingsValue > 0 ? String(savingsValue * 3) : '')
+  }, [savingsDraft, goalAmountTouched])
 
   // "Already completed" is checked ONCE, when loading first resolves, and
   // locked into a ref rather than read reactively from quiz.completed —
@@ -157,9 +209,59 @@ export function Onboarding() {
     setPendingPlan(planId)
     try {
       const url = await subscription.startCheckout(planId, planId === 'premium' ? { promo: true } : undefined)
-      if (url) window.location.href = url
+      if (url) {
+        window.location.href = url
+      } else {
+        // startCheckout already set subscription.error (rendered inline
+        // below) — the toast is a second, harder-to-miss signal that the
+        // click genuinely failed rather than just doing nothing, since
+        // "disabled button + no page change" alone reads as unresponsive.
+        console.error('startCheckout returned no url', { planId, error: subscription.error })
+        showToast(subscription.error ?? t.plans.checkoutFailed)
+      }
     } finally {
       setPendingPlan(null)
+    }
+  }
+
+  function toggleSetupCategory(categoryId: SetupCategoryId) {
+    setSetupCategories((prev) => {
+      if (prev.includes(categoryId)) return prev.filter((id) => id !== categoryId)
+      if (prev.length >= MAX_SETUP_CATEGORIES) return prev
+      return [...prev, categoryId]
+    })
+  }
+
+  // Creates the real records the rest of the app reads from — an active
+  // savings goal and budgeted categories — so Dashboard/Budget/Épargne show
+  // actual numbers on first visit instead of empty states everywhere. Income
+  // is the only hard requirement (everything else here derives from it);
+  // goal/categories are skipped individually if left empty rather than
+  // blocking the whole step on them.
+  async function handleSetupSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const incomeValue = Math.max(0, Number(incomeDraft) || 0)
+    if (incomeValue <= 0 || submittingSetup) return
+    setSubmittingSetup(true)
+    try {
+      await income.setMonthlyIncome(incomeValue)
+
+      const targetAmount = Math.max(0, Number(goalAmount) || 0)
+      if (goalName.trim() && targetAmount > 0) {
+        await goals.addGoal(goalName.trim(), targetAmount, null)
+      }
+
+      for (const categoryId of setupCategories) {
+        const created = await categories.addCategory(t.setup.categories[categoryId])
+        if (created) {
+          const allocated = Math.round(incomeValue * SETUP_CATEGORY_INCOME_PCT[categoryId])
+          await categories.setCategoryBudget(created.id, allocated)
+        }
+      }
+
+      setPhase('plans')
+    } finally {
+      setSubmittingSetup(false)
     }
   }
 
@@ -273,11 +375,120 @@ export function Onboarding() {
 
           <button
             type="button"
-            onClick={() => setPhase('plans')}
+            onClick={() => setPhase('setup')}
             className="mt-8 w-full rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110"
           >
             {t.result.continueButton}
           </button>
+        </div>
+      )}
+
+      {phase === 'setup' && (
+        <div className="relative mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-14">
+          <h1 className="text-2xl font-bold text-white sm:text-3xl">{t.setup.heading}</h1>
+          <p className="mt-2 text-white/60">{t.setup.subtitle}</p>
+
+          <form onSubmit={handleSetupSubmit} className="mt-8 flex flex-col gap-6">
+            <label className="flex flex-col gap-1.5 text-sm text-white/60">
+              {t.setup.incomeLabel}
+              <input
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="0.01"
+                autoFocus
+                required
+                value={incomeDraft}
+                onChange={(e) => setIncomeDraft(e.target.value)}
+                placeholder={t.setup.incomePlaceholder}
+                className={fieldClass}
+              />
+            </label>
+
+            <label className="flex flex-col gap-1.5 text-sm text-white/60">
+              {t.setup.savingsLabel}
+              <input
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="0.01"
+                value={savingsDraft}
+                onChange={(e) => {
+                  setSavingsDraft(e.target.value)
+                  setSavingsTouched(true)
+                }}
+                className={fieldClass}
+              />
+              <span className="text-xs text-white/40">{t.setup.savingsHint}</span>
+            </label>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-sm font-semibold text-white">{t.setup.goalHeading}</p>
+              <div className="mt-4 flex flex-col gap-4">
+                <label className="flex flex-col gap-1.5 text-sm text-white/60">
+                  {t.setup.goalNameLabel}
+                  <input
+                    type="text"
+                    value={goalName}
+                    onChange={(e) => setGoalName(e.target.value)}
+                    placeholder={t.setup.goalNamePlaceholder}
+                    className={fieldClass}
+                  />
+                </label>
+                <label className="flex flex-col gap-1.5 text-sm text-white/60">
+                  {t.setup.goalAmountLabel}
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    step="0.01"
+                    value={goalAmount}
+                    onChange={(e) => {
+                      setGoalAmount(e.target.value)
+                      setGoalAmountTouched(true)
+                    }}
+                    className={fieldClass}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-white">{t.setup.categoriesHeading}</p>
+              <p className="mt-1 text-xs text-white/40">{t.setup.categoriesHint}</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {SETUP_CATEGORY_IDS.map((categoryId) => {
+                  const checked = setupCategories.includes(categoryId)
+                  const disabled = !checked && setupCategories.length >= MAX_SETUP_CATEGORIES
+                  return (
+                    <button
+                      key={categoryId}
+                      type="button"
+                      onClick={() => toggleSetupCategory(categoryId)}
+                      disabled={disabled}
+                      aria-pressed={checked}
+                      className={`rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+                        checked
+                          ? 'border-[#ff6b00] bg-[#ff6b00]/15 text-white'
+                          : 'border-white/15 bg-white/5 text-white/70 hover:bg-white/10'
+                      }`}
+                    >
+                      {checked ? '✓ ' : ''}
+                      {t.setup.categories[categoryId]}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={submittingSetup || Number(incomeDraft) <= 0}
+              className="rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110 disabled:opacity-60"
+            >
+              {submittingSetup ? t.setup.savingButton : t.setup.continueButton}
+            </button>
+          </form>
         </div>
       )}
 
@@ -328,8 +539,11 @@ export function Onboarding() {
                 type="button"
                 onClick={() => handleChoosePlan('standard')}
                 disabled={pendingPlan === 'standard'}
-                className="mt-6 w-full rounded-xl border border-white/20 px-4 py-2.5 font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-60"
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 px-4 py-2.5 font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-60"
               >
+                {pendingPlan === 'standard' && (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                )}
                 {pendingPlan === 'standard' ? t.plans.redirecting : t.plans.standardCta}
               </button>
             </div>
@@ -361,8 +575,11 @@ export function Onboarding() {
                 type="button"
                 onClick={() => handleChoosePlan('premium')}
                 disabled={pendingPlan === 'premium'}
-                className="mt-4 w-full rounded-xl bg-[#ff6b00] px-4 py-3 font-semibold text-white shadow-lg shadow-[#ff6b00]/30 transition-all hover:brightness-110 disabled:opacity-60"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff6b00] px-4 py-3 font-semibold text-white shadow-lg shadow-[#ff6b00]/30 transition-all hover:brightness-110 disabled:opacity-60"
               >
+                {pendingPlan === 'premium' && (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                )}
                 {pendingPlan === 'premium' ? t.plans.redirecting : t.plans.premiumCta}
               </button>
             </div>

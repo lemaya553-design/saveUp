@@ -3,9 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
 import { useLanguage } from '../hooks/useLanguage'
+import { useToast } from './ToastProvider'
 import { PLAN_LIMITS, PLAN_ORDER, TRIAL_DAYS, type Plan } from '../lib/plans'
 import { formatBillingAmount } from '../lib/format'
 import { TARIFS } from '../lib/i18n/tarifs'
+import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
 
 // The 3-card plan grid, extracted out of Tarifs.tsx so the landing page's
 // pricing section and the standalone /tarifs page render from the exact
@@ -17,9 +19,18 @@ export function PricingCards() {
   const subscription = useSubscription()
   const [pendingPlan, setPendingPlan] = useState<Plan | null>(null)
   const { lang } = useLanguage()
+  const { showToast } = useToast()
   const t = TARIFS[lang]
   const fmt = (amount: number) => formatBillingAmount(amount, lang)
 
+  // Both handlers below used to leave a click looking like it did nothing
+  // whenever startCheckout/openBillingPortal resolved to null without
+  // throwing (every real failure path already sets subscription.error,
+  // rendered in the banner above, but a banner above the fold is easy to
+  // miss when the only visible change was a button going back to its
+  // normal label) — the toast is a second, harder-to-miss signal, and the
+  // console.error gives an exact reason to check without needing to
+  // reproduce it live.
   async function handleChoose(planId: Exclude<Plan, 'free'>) {
     if (!user) {
       navigate('/connexion', { state: { from: '/tarifs' } })
@@ -28,7 +39,12 @@ export function PricingCards() {
     setPendingPlan(planId)
     try {
       const url = await subscription.startCheckout(planId)
-      if (url) window.location.href = url
+      if (url) {
+        window.location.href = url
+      } else {
+        console.error('startCheckout returned no url', { planId, error: subscription.error })
+        showToast(subscription.error ?? HOOK_ERRORS[lang].subscription.genericError)
+      }
     } finally {
       setPendingPlan(null)
     }
@@ -38,7 +54,12 @@ export function PricingCards() {
     setPendingPlan(subscription.plan)
     try {
       const url = await subscription.openBillingPortal()
-      if (url) window.location.href = url
+      if (url) {
+        window.location.href = url
+      } else {
+        console.error('openBillingPortal returned no url', { error: subscription.error })
+        showToast(subscription.error ?? HOOK_ERRORS[lang].subscription.genericError)
+      }
     } finally {
       setPendingPlan(null)
     }
@@ -120,8 +141,11 @@ export function PricingCards() {
                   type="button"
                   onClick={handleManage}
                   disabled={isLoadingThis}
-                  className="mt-8 w-full rounded-xl border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
+                  className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
                 >
+                  {isLoadingThis && (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink/20 border-t-ink" />
+                  )}
                   {isLoadingThis ? t.cta.redirecting : t.cta.manageSubscription}
                 </button>
               ) : (
@@ -131,8 +155,11 @@ export function PricingCards() {
                     type="button"
                     onClick={() => handleChoose(planId as Exclude<Plan, 'free'>)}
                     disabled={isLoadingThis}
-                    className="mt-2 w-full rounded-xl bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-60"
+                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-60"
                   >
+                    {isLoadingThis && (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    )}
                     {isLoadingThis ? t.cta.redirecting : t.cta.tryFree(plan.name)}
                   </button>
                   <p className="mt-2 text-center text-xs text-muted">{t.cta.cardRequired}</p>

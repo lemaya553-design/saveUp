@@ -183,6 +183,44 @@ export function computeQuizInsights(answers: QuizAnswers): InsightId[] {
   return insights
 }
 
+// Pre-fills the "how much do you want to save per month" field on the
+// post-result setup step — Q8 already asked roughly what fraction of
+// income they currently save, so reuse it as a starting suggestion rather
+// than defaulting everyone to the same flat number. Someone who already
+// saves nothing (d) or skipped the question still gets a modest, non-zero
+// suggestion (10%) rather than $0, which would just read as "there's no
+// point."
+const Q8_TO_SUGGESTED_SAVINGS_PCT: Record<string, number> = {
+  a: 0.2,
+  b: 0.15,
+  c: 0.1,
+  d: 0.1,
+}
+const DEFAULT_SUGGESTED_SAVINGS_PCT = 0.1
+
+export function suggestedSavingsPct(answers: QuizAnswers): number {
+  const answer = answers.q8
+  return (answer && Q8_TO_SUGGESTED_SAVINGS_PCT[answer]) || DEFAULT_SUGGESTED_SAVINGS_PCT
+}
+
+// Default monthly budget per category, as a fraction of monthly income —
+// rough, common-sense splits (used to pre-fill the setup step's category
+// allocations so a brand-new account's Budget page shows real numbers
+// instead of $0 everywhere). Deliberately NOT exhaustive or
+// authoritative — just a reasonable starting point the user can change
+// immediately from Budget once they land there.
+export const SETUP_CATEGORY_IDS = ['epicerie', 'transport', 'loisirs', 'logement', 'sante', 'abonnements'] as const
+export type SetupCategoryId = (typeof SETUP_CATEGORY_IDS)[number]
+
+export const SETUP_CATEGORY_INCOME_PCT: Record<SetupCategoryId, number> = {
+  epicerie: 0.1,
+  transport: 0.08,
+  loisirs: 0.05,
+  logement: 0.25,
+  sante: 0.04,
+  abonnements: 0.03,
+}
+
 // Q15 ("what's your main goal right now") doubles as the same signal the
 // old onboarding's dedicated question captured — mapped onto the existing
 // MainGoal type so lib/tips.ts keeps tailoring Dashboard tips without any
