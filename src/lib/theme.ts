@@ -3,11 +3,20 @@ import type { Lang } from './i18n/language'
 export type AccentColor = 'bleu' | 'vert' | 'violet' | 'orange'
 export type Theme = 'dark' | 'light'
 
+// value is the internal id stored in localStorage/data-accent — NOT the
+// display label. 'bleu' is the sentinel for "no data-accent attribute" (see
+// applyAccentColor below), and the app's default palette is now orange
+// (SaveUp Minimaliste), so 'bleu' now carries the "Orange" label/swatch;
+// the slot that used to be the literal "Orange" preset carries "Bleu"
+// instead, pointing at a :root[data-accent='orange'] override in index.css
+// that now holds the old blue values. Renaming the ids themselves would
+// touch the stored preference of every existing user — relabeling what's
+// shown is the same outcome without that migration.
 export const ACCENT_COLORS: { value: AccentColor; label: Record<Lang, string>; swatch: string }[] = [
-  { value: 'bleu', label: { fr: 'Bleu', en: 'Blue' }, swatch: '#4a6cf7' },
+  { value: 'bleu', label: { fr: 'Orange', en: 'Orange' }, swatch: '#ff8533' },
   { value: 'vert', label: { fr: 'Vert', en: 'Green' }, swatch: '#22c55e' },
   { value: 'violet', label: { fr: 'Violet', en: 'Purple' }, swatch: '#8b5cf6' },
-  { value: 'orange', label: { fr: 'Orange', en: 'Orange' }, swatch: '#f97316' },
+  { value: 'orange', label: { fr: 'Bleu', en: 'Blue' }, swatch: '#4a6cf7' },
 ]
 
 export const AVATAR_EMOJIS = ['😊', '💰', '🚀', '🎯', '🌟', '🐱', '🦊', '🌈', '🐢', '🍀', '⭐', '🐙']

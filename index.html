@@ -25,10 +25,20 @@
         } catch (e) {}
       })();
     </script>
+    <!-- Inter, the app-wide typeface (SaveUp Minimaliste design system) —
+         loaded via Google Fonts rather than self-hosted: public/fonts/
+         already holds Fraunces/Work Sans woff2 files from unrelated,
+         unfinished work, not Inter. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0b0b12" />
+    <meta name="theme-color" content="#0f0f0f" />
 
     <!-- iOS ignores the manifest's display/name fields for "Add to Home
          Screen" — these are the meta tags Safari actually reads for

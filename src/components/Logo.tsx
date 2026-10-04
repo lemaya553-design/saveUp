@@ -1,11 +1,17 @@
 import { useId } from 'react'
 
-// The app's bar-chart mark — three ascending bars, blue-to-mauve gradient
-// (same stops as public/icon.svg, the favicon/PWA icon source). Rendered
-// inline as SVG rather than an <img> so it stays crisp at any size/DPI and
-// needs no separate asset request, consistent with every other icon in
-// this app. useId keeps the gradient's id collision-free if this ever
-// renders more than once on the same page (e.g. two instances at once).
+// The app's bar-chart mark — three ascending bars, a primary-to-accent
+// gradient driven by the live theme tokens (not hardcoded hex) so it
+// automatically follows whichever palette is active: the app's orange
+// default, a custom accent preset, or the landing page's own orange
+// (.landing-classic collapses primary/accent to the same value, so there
+// it renders as solid orange). The static public/icon.svg favicon can't
+// do this — it's a plain file, not CSS-aware — so it keeps its own fixed
+// stops. Rendered inline as SVG rather than an <img> so it stays crisp at
+// any size/DPI and needs no separate asset request, consistent with every
+// other icon in this app. useId keeps the gradient's id collision-free if
+// this ever renders more than once on the same page (e.g. two instances
+// at once).
 // animated: bars grow up from the baseline on mount, staggered (see
 // .bar-grow-in in index.css) — used once, for the landing hero's opening
 // moment. Off by default: the header/nav marks should just be there, not
@@ -26,8 +32,8 @@ export function LogoMark({
     >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#4A6CF7" />
-          <stop offset="1" stopColor="#8B5CF6" />
+          <stop offset="0" style={{ stopColor: 'var(--color-primary)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--color-accent)' }} />
         </linearGradient>
       </defs>
       <rect x="70" y="260" width="85" height="180" rx="32" fill={`url(#${gradientId})`} />

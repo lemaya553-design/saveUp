@@ -15,20 +15,23 @@ export function PageHeader({
   help?: { title?: string; purpose: string; actions: string[] }
 }) {
   return (
-    <div className="hero-gradient relative -mx-4 mb-8 rounded-b-3xl px-4 pb-8 pt-10 sm:mx-0 sm:rounded-3xl sm:px-8">
+    // Flat, no card/gradient treatment — the minimalist system's headers
+    // are plain title + subtitle on the page canvas, generous whitespace
+    // doing the work a colored hero block used to.
+    <div className="relative mb-8 pb-2 pt-8 sm:pt-10">
       {help && (
-        <div className="absolute right-4 top-4 sm:right-6 sm:top-6">
+        <div className="absolute right-0 top-8 sm:top-10">
           <HelpButton title={help.title ?? title} purpose={help.purpose} actions={help.actions} />
         </div>
       )}
       <h1
-        className={`max-w-[calc(100%-2.5rem)] font-extrabold tracking-tight text-ink ${
-          compact ? 'text-2xl sm:text-3xl' : 'text-4xl sm:text-5xl'
+        className={`max-w-[calc(100%-2.5rem)] font-bold tracking-tight text-ink ${
+          compact ? 'text-2xl' : 'text-[32px]'
         }`}
       >
         {title}
       </h1>
-      <p className="mt-1 text-muted">{subtitle}</p>
+      <p className="mt-1.5 text-muted">{subtitle}</p>
     </div>
   )
 }

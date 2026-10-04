@@ -1,17 +1,20 @@
-// Blue / mauve — the app's palette — at three lightnesses each, so there's
-// enough spread for more than 3-4 categories without leaving that family.
-// Shared by every category chart on Statistiques (bar chart, donut) so the
-// same category always renders the same color everywhere on the page.
-// Green and gray are deliberately excluded here — reserved below for
-// "Épargne" and "Disponible" respectively, so neither can ever collide with
-// a real spending category by coincidence of the hash.
+// Quiet, muted multi-hue set — NOT built from the brand orange: the
+// minimalist system treats orange as a strategic accent reserved for CTAs
+// and key indicators ("jamais plus d'un orange accentué par zone"), so a
+// chart showing 6 simultaneous category colors shouldn't be 6 shades of
+// the same accent competing with every real button on the page. Shared by
+// every category chart on Statistiques (bar chart, donut) so the same
+// category always renders the same color everywhere on the page. Green and
+// gray are deliberately excluded here — reserved below for "Épargne" and
+// "Disponible" respectively, so neither can ever collide with a real
+// spending category by coincidence of the hash.
 export const CATEGORY_COLORS = [
-  '#4a6cf7', // primary blue
-  '#8b5cf6', // accent mauve
-  '#3e5fe0', // deep blue (primary-strong)
-  '#7c3aed', // deep mauve
-  '#93c5fd', // light blue
-  '#c4b5fd', // light mauve
+  '#64748b', // slate
+  '#a16207', // ochre
+  '#7c6f64', // taupe
+  '#475569', // deep slate
+  '#b45309', // clay
+  '#94a3b8', // light slate
 ]
 
 // Matches the 'Épargne' → success-green convention already established on

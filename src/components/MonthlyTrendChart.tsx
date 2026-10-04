@@ -4,7 +4,7 @@ import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { MonthlySpendingPoint } from '../lib/statistics'
 
-const LINE_COLOR = '#4a6cf7'
+const LINE_COLOR = 'var(--color-primary)'
 
 function TrendTooltip({
   active,
