@@ -1,3 +1,5 @@
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
 export interface Database {
   public: {
     Tables: {
@@ -238,6 +240,30 @@ export interface Database {
           status?: string | null
           current_period_end?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      onboarding_quiz_results: {
+        Row: {
+          user_id: string
+          score: number
+          archetype: string
+          answers: Json
+          created_at: string
+        }
+        Insert: {
+          user_id: string
+          score: number
+          archetype: string
+          answers: Json
+          created_at?: string
+        }
+        Update: {
+          user_id?: string
+          score?: number
+          archetype?: string
+          answers?: Json
+          created_at?: string
         }
         Relationships: []
       }

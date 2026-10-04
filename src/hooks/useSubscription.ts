@@ -100,7 +100,11 @@ export function useSubscription() {
   }
 
   const startCheckout = useCallback(
-    (targetPlan: 'standard' | 'premium') => callBillingApi('/api/create-checkout-session', { plan: targetPlan }),
+    // `promo`: the onboarding quiz's "first month at $7.99" Premium offer —
+    // ignored server-side for any plan other than premium, see
+    // api/create-checkout-session.ts.
+    (targetPlan: 'standard' | 'premium', options?: { promo?: boolean }) =>
+      callBillingApi('/api/create-checkout-session', { plan: targetPlan, promo: options?.promo ?? false }),
     [session, lang],
   )
 

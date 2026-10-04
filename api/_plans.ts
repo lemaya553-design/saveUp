@@ -18,3 +18,13 @@ export function planForPriceId(priceId: string): PayablePlan | null {
 export function isPayablePlan(value: unknown): value is PayablePlan {
   return value === 'standard' || value === 'premium'
 }
+
+// Stripe Coupon ID for the onboarding quiz's Premium "first month at
+// $7.99" offer (duration: 'once' — Stripe reverts to full price starting
+// the 2nd invoice on its own). Created once via
+// scripts/create-onboarding-promo-coupon.mjs.
+export function premiumPromoCouponId(): string {
+  const value = process.env.STRIPE_PREMIUM_PROMO_COUPON
+  if (!value) throw new Error('Missing required env var: STRIPE_PREMIUM_PROMO_COUPON')
+  return value
+}

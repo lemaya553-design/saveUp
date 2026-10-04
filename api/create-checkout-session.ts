@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import type Stripe from 'stripe'
 import { getStripe, getUserFromAuthHeader } from './_stripe.js'
-import { isPayablePlan, priceIdForPlan } from './_plans.js'
+import { isPayablePlan, premiumPromoCouponId, priceIdForPlan } from './_plans.js'
 
 function getOrigin(req: VercelRequest): string {
   if (typeof req.headers.origin === 'string') return req.headers.origin
@@ -29,27 +30,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return
     }
 
-    const { plan } = (req.body ?? {}) as { plan?: unknown }
+    const { plan, promo } = (req.body ?? {}) as { plan?: unknown; promo?: unknown }
     if (!isPayablePlan(plan)) {
       res.status(400).json({ error: 'Plan invalide.' })
       return
     }
+    // The discounted-first-month offer only ever applies to Premium (see
+    // the onboarding quiz's plan-selection step) — Standard keeps the
+    // normal 7-day-trial checkout regardless of this flag.
+    const usePromo = promo === true && plan === 'premium'
 
     const origin = getOrigin(req)
-    const session = await getStripe().checkout.sessions.create({
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
       line_items: [{ price: priceIdForPlan(plan), quantity: 1 }],
       client_reference_id: user.id,
       customer_email: user.email,
       success_url: `${origin}/parametres/abonnement?checkout=success`,
       cancel_url: `${origin}/tarifs?checkout=cancelled`,
-      // 7-day free trial on both paid plans, card required up front (this
-      // is Checkout's default — the card is collected and validated at
-      // signup, just not charged until the trial ends). Cancelling before
-      // day 7 never triggers a charge; see stripe-webhook.ts for how
-      // 'trialing' is treated as full plan access, and 'canceled' before
-      // the trial ends resets the account to free without ever billing it.
-      subscription_data: { trial_period_days: 7 },
       // Managed Payments (Stripe acting as merchant of record, with
       // automatic tax) is on by default for new accounts and requires a
       // tax_code on every product — ours don't have one set. Disabling it
@@ -57,7 +55,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // switching back on later just means setting a tax_code on the
       // Standard/Premium products in the dashboard first.
       managed_payments: { enabled: false },
-    })
+    }
+
+    if (usePromo) {
+      // No trial here — the card is charged immediately at the discounted
+      // first-invoice rate. `duration: 'once'` on the coupon (set when it
+      // was created, see scripts/create-onboarding-promo-coupon.mjs) means
+      // Stripe automatically bills the full Premium price from the 2nd
+      // invoice on, with no further code needed.
+      sessionParams.discounts = [{ coupon: premiumPromoCouponId() }]
+    } else {
+      // 7-day free trial on both paid plans, card required up front (this
+      // is Checkout's default — the card is collected and validated at
+      // signup, just not charged until the trial ends). Cancelling before
+      // day 7 never triggers a charge; see stripe-webhook.ts for how
+      // 'trialing' is treated as full plan access, and 'canceled' before
+      // the trial ends resets the account to free without ever billing it.
+      sessionParams.subscription_data = { trial_period_days: 7 }
+    }
+
+    const session = await getStripe().checkout.sessions.create(sessionParams)
     res.status(200).json({ url: session.url })
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : 'Erreur serveur inattendue.' })

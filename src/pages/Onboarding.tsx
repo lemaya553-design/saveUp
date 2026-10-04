@@ -1,469 +1,358 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ProgressBar } from '../components/ProgressBar'
-import { ImportTransactionsModal } from '../components/ImportTransactionsModal'
-import { UpgradePrompt } from '../components/UpgradePrompt'
-import { getFarFutureDateString, getTodayDateString, getCurrencySymbol } from '../lib/format'
-import { useIncome } from '../hooks/useIncome'
-import { useFixedExpenses } from '../hooks/useFixedExpenses'
-import { useSavingsGoals } from '../hooks/useSavingsGoals'
-import { useSubscription } from '../hooks/useSubscription'
-import { usePreferences } from '../hooks/usePreferences'
+import { useRef, useState } from 'react'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
-import { useMoneyFormat } from '../hooks/useMoneyFormat'
-import { COMMON } from '../lib/i18n/common'
-import { ONBOARDING } from '../lib/i18n/onboarding'
-import { canImportCsv, FREE_CSV_IMPORT_LIMIT } from '../lib/plans'
+import { useOnboardingQuiz } from '../hooks/useOnboardingQuiz'
+import { usePreferences } from '../hooks/usePreferences'
+import { useSubscription } from '../hooks/useSubscription'
+import { ONBOARDING_QUIZ } from '../lib/i18n/onboardingQuiz'
+import { TARIFS } from '../lib/i18n/tarifs'
 import {
-  getMainGoalOptions,
-  getFrequencyOptions,
-  computeOnboardingProfile,
-  type MainGoal,
-  type TrackingFrequency,
-} from '../lib/onboardingProfile'
+  QUIZ_QUESTION_IDS,
+  computeQuizResult,
+  mainGoalFromQuiz,
+  type QuizAnswers,
+  type QuizResult,
+} from '../lib/onboardingQuiz'
+import { PLAN_LIMITS, TRIAL_DAYS, type Plan } from '../lib/plans'
+import { formatBillingAmount } from '../lib/format'
+
+// Three-phase flow replacing the old income/expenses/goal wizard: a
+// 15-question quiz, a scored archetype result (shareable as an image), then
+// plan selection with Premium's "first month at $7.99" launch offer. Styled
+// black/orange throughout, independent of the app's own theme tokens — the
+// same literal-color approach Connexion.tsx uses, so this reads as a
+// continuation of the landing page / connexion visual identity rather than
+// switching to the app's internal (currently dark-blue) chrome right after
+// signup.
+//
+// Unlike the old flow, this one never collects income/expenses/goals — the
+// app's "fresh user" gate (Dashboard.tsx) now reads useOnboardingQuiz's
+// `completed` instead, so an account can reach a real, if mostly empty,
+// Dashboard straight after choosing a plan. Budget/Épargne's own empty
+// states pick up from there organically.
+
+type Phase = 'quiz' | 'result' | 'plans'
+
+const inputCardClass =
+  'rounded-2xl border border-white/15 bg-white/5 p-4 text-left font-medium text-white transition-all hover:border-[#ff6b00]/50 hover:bg-white/10'
 
 export function Onboarding() {
   const navigate = useNavigate()
   const { lang } = useLanguage()
-  const t = ONBOARDING[lang]
-  const common = COMMON[lang]
-  const income = useIncome()
-  const fixed = useFixedExpenses()
-  const goals = useSavingsGoals()
-  const subscription = useSubscription()
+  const t = ONBOARDING_QUIZ[lang]
+  const tarifs = TARIFS[lang]
+  const quiz = useOnboardingQuiz()
   const preferences = usePreferences()
-  const mainGoalOptions = getMainGoalOptions(lang)
-  const frequencyOptions = getFrequencyOptions(lang)
-  const formatMoney = useMoneyFormat()
+  const subscription = useSubscription()
+  const fmt = (amount: number) => formatBillingAmount(amount, lang)
 
-  const [step, setStep] = useState(0)
-  const [importOpen, setImportOpen] = useState(false)
-  const [incomeDraft, setIncomeDraft] = useState('')
-  const [expenseName, setExpenseName] = useState('')
-  const [expenseAmount, setExpenseAmount] = useState('')
-  const [goalName, setGoalName] = useState('')
-  const [goalAmount, setGoalAmount] = useState('')
-  const [goalDate, setGoalDate] = useState('')
-  const [mainGoal, setMainGoal] = useState<MainGoal | null>(null)
-  const [triedOtherApp, setTriedOtherApp] = useState<boolean | null>(null)
-  const [frequency, setFrequency] = useState<TrackingFrequency | null>(null)
+  const [phase, setPhase] = useState<Phase>('quiz')
+  const [questionIndex, setQuestionIndex] = useState(0)
+  const [answers, setAnswers] = useState<QuizAnswers>({})
+  const [result, setResult] = useState<QuizResult | null>(null)
+  const [sharing, setSharing] = useState(false)
+  const [shareState, setShareState] = useState<'idle' | 'copied' | 'downloaded' | 'error'>('idle')
+  const [pendingPlan, setPendingPlan] = useState<Plan | null>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
 
-  // Whether "fresh account" is decided by real data now (see Dashboard's
-  // isFreshUser), not a flag. Leaving onboarding via skip means no
-  // budget_settings row exists yet, which would look identical to "never
-  // seen onboarding" and bounce them right back here — so explicitly
-  // persist the (possibly still-0) income value on every path that actually
-  // leaves onboarding, to create that row and mark the account as touched.
-  async function finish() {
-    await income.setMonthlyIncome(income.monthlyIncome)
-    navigate('/dashboard')
+  // Already done this before (revisited the URL, or came back after
+  // abandoning before picking a plan) — the quiz/result moment doesn't
+  // replay, straight to the app. They can always upgrade later from
+  // /tarifs.
+  if (!quiz.loading && quiz.completed) {
+    return <Navigate to="/dashboard" replace />
   }
 
-  // "Configurer plus tard" abandons the whole flow in one click, from any
-  // step — it used to only advance one step at a time, which meant
-  // skipping everything took up to 7 clicks. Every step already has its
-  // own way to move forward without this (a form to fill, a choice to
-  // tap, or step 0's own "Continuer sans importer"), so this link only
-  // needs to cover "I don't want to do any of this right now."
-  async function skipAll() {
-    await finish()
+  if (quiz.loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-[#ff6b00]" />
+      </div>
+    )
   }
 
-  async function handleIncomeSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const value = Math.max(0, Number(incomeDraft) || 0)
-    await income.setMonthlyIncome(value)
-    setStep(2)
+  async function finishQuiz(finalAnswers: QuizAnswers) {
+    const computed = computeQuizResult(finalAnswers)
+    setResult(computed)
+    await quiz.saveResult({ ...computed, answers: finalAnswers })
+    const mainGoal = mainGoalFromQuiz(finalAnswers)
+    if (mainGoal) preferences.setOnboardingProfile(mainGoal, false, 'hebdomadaire')
+    setPhase('result')
   }
 
-  async function handleAddExpense(e: React.FormEvent) {
-    e.preventDefault()
-    const parsed = Number(expenseAmount)
-    if (!expenseName.trim() || !parsed || parsed <= 0) return
-    await fixed.addFixedExpense(expenseName.trim(), parsed)
-    setExpenseName('')
-    setExpenseAmount('')
-  }
-
-  async function handleGoalSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const parsed = Math.max(0, Number(goalAmount) || 0)
-    if (!goalName.trim() || parsed <= 0) return
-    await goals.addGoal(goalName.trim(), parsed, goalDate || null)
-    setStep(4)
-  }
-
-  async function handleFinishProfile() {
-    if (mainGoal && frequency && triedOtherApp !== null) {
-      preferences.setOnboardingProfile(mainGoal, triedOtherApp, frequency)
+  async function selectAnswer(optionId: string) {
+    const questionId = QUIZ_QUESTION_IDS[questionIndex]
+    const nextAnswers = { ...answers, [questionId]: optionId }
+    setAnswers(nextAnswers)
+    if (questionIndex < QUIZ_QUESTION_IDS.length - 1) {
+      setQuestionIndex(questionIndex + 1)
+    } else {
+      await finishQuiz(nextAnswers)
     }
-    await finish()
   }
+
+  function goBack() {
+    setQuestionIndex((i) => Math.max(0, i - 1))
+  }
+
+  // Escape hatch for anyone who doesn't want to answer 15 questions —
+  // unanswered questions default to their 2nd option (a middling, neither
+  // best-nor-worst answer) so the score isn't artificially tanked by
+  // treating "skipped" as "worst possible", then the normal result/plans
+  // phases still play out instead of dumping them straight on the
+  // (currently empty) Dashboard.
+  async function skipQuiz() {
+    const filled: QuizAnswers = { ...answers }
+    for (const id of QUIZ_QUESTION_IDS) {
+      if (!filled[id]) filled[id] = 'b'
+    }
+    setAnswers(filled)
+    await finishQuiz(filled)
+  }
+
+  async function handleShare() {
+    if (!result || !cardRef.current) return
+    setSharing(true)
+    setShareState('idle')
+    try {
+      const { default: html2canvas } = await import('html2canvas')
+      const canvas = await html2canvas(cardRef.current, { backgroundColor: null, scale: 2 })
+      const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
+      if (!blob) throw new Error('canvas produced no blob')
+      const file = new File([blob], 'saveup-profil-financier.png', { type: 'image/png' })
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'SaveUp' })
+        setShareState('idle')
+      } else if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+        setShareState('copied')
+      } else {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'saveup-profil-financier.png'
+        a.click()
+        URL.revokeObjectURL(url)
+        setShareState('downloaded')
+      }
+    } catch {
+      // A cancelled native share sheet also lands here (AbortError) —
+      // indistinguishable from a real failure without over-parsing every
+      // browser's own error shape, so this stays a quiet no-op.
+      setShareState('idle')
+    } finally {
+      setSharing(false)
+    }
+  }
+
+  async function handleChoosePlan(planId: Exclude<Plan, 'free'>) {
+    setPendingPlan(planId)
+    try {
+      const url = await subscription.startCheckout(planId, planId === 'premium' ? { promo: true } : undefined)
+      if (url) window.location.href = url
+    } finally {
+      setPendingPlan(null)
+    }
+  }
+
+  const question = t.questions[questionIndex]
+  const archetypeContent = result ? t.result.archetypes[result.archetype] : null
 
   return (
-    <div className="hero-gradient flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="glass w-full max-w-lg rounded-2xl p-8 shadow-2xl shadow-black/40">
-        <div className="mb-6">
-          <div className="mb-2 flex items-center justify-between text-xs text-muted">
-            <span>{t.stepIndicator(step + 1, t.steps.length, t.steps[step])}</span>
-            <button type="button" onClick={skipAll} className="text-muted hover:text-ink">
-              {t.skipLater}
-            </button>
-          </div>
-          <ProgressBar value={((step + 1) / t.steps.length) * 100} colorClass="bg-primary" />
-        </div>
-
-        {step === 0 && (
-          <div>
-            <h1 className="text-2xl font-bold text-ink">{t.step0.title}</h1>
-
-            <div className="mt-6 grid gap-3">
-              {canImportCsv(subscription.plan, preferences.csvImportCount) ? (
-                <button
-                  type="button"
-                  onClick={() => setImportOpen(true)}
-                  className="glass flex flex-col items-stretch justify-start rounded-2xl p-4 text-left transition-colors hover:bg-overlay/5"
-                >
-                  <p className="font-semibold text-ink">{t.step0.importCardTitle}</p>
-                  <p className="mt-1 text-sm text-muted">
-                    {t.step0.importCardDesc}
-                    {subscription.plan === 'free' &&
-                      t.step0.importsRemaining(FREE_CSV_IMPORT_LIMIT - preferences.csvImportCount)}
-                  </p>
-                </button>
-              ) : (
-                <UpgradePrompt
-                  title={t.step0.upgradeTitle}
-                  description={
-                    subscription.plan === 'free'
-                      ? t.step0.upgradeDescUsedLimit(FREE_CSV_IMPORT_LIMIT)
-                      : t.step0.upgradeDescFreePlan
-                  }
-                  minPlan="standard"
-                />
-              )}
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="rounded-lg border border-overlay/10 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-overlay/5"
-              >
-                {t.step0.continueWithoutImport}
+    <div className="min-h-screen bg-black">
+      {phase === 'quiz' && (
+        <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-10">
+          <div className="mb-8">
+            <div className="mb-2 flex items-center justify-between text-xs text-white/50">
+              <span>{t.progressLabel(questionIndex + 1, QUIZ_QUESTION_IDS.length)}</span>
+              <button type="button" onClick={skipQuiz} className="text-white/50 transition-colors hover:text-white">
+                {t.skipLater}
               </button>
             </div>
-          </div>
-        )}
-
-        {step === 1 && (
-          <form onSubmit={handleIncomeSubmit}>
-            <h1 className="text-2xl font-bold text-ink">{t.step1.title}</h1>
-            <p className="mt-2 text-sm text-muted">{t.step1.subtitle}</p>
-            <label className="mt-6 flex items-center gap-2">
-              <span className="text-muted">{getCurrencySymbol(preferences.currency, lang)}</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="0.01"
-                autoFocus
-                value={incomeDraft}
-                onChange={(e) => setIncomeDraft(e.target.value)}
-                placeholder={t.step1.amountPlaceholder}
-                className="w-full rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-lg text-ink placeholder-muted focus:border-primary focus:outline-none"
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-[#ff6b00] transition-all duration-300"
+                style={{ width: `${((questionIndex + 1) / QUIZ_QUESTION_IDS.length) * 100}%` }}
               />
-            </label>
+            </div>
+          </div>
+
+          <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{question.text}</h1>
+
+          <div className="mt-8 grid gap-3">
+            {question.options.map((option) => (
+              <button key={option.id} type="button" onClick={() => selectAnswer(option.id)} className={inputCardClass}>
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {questionIndex > 0 && (
             <button
-              type="submit"
-              className="mt-6 w-full rounded-lg bg-primary-strong px-5 py-3 font-medium text-white transition-all hover:brightness-110"
+              type="button"
+              onClick={goBack}
+              className="mt-6 self-start text-sm text-white/50 transition-colors hover:text-white"
             >
-              {common.app.continueAction}
+              ← {t.back}
             </button>
-          </form>
-        )}
+          )}
+        </div>
+      )}
 
-        {step === 2 && (
-          <div>
-            <h1 className="text-2xl font-bold text-ink">{t.step2.title}</h1>
-            <p className="mt-2 text-sm text-muted">{t.step2.subtitle}</p>
+      {phase === 'result' && result && archetypeContent && (
+        <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-6 py-10 text-center">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#ff6b00]">{t.result.badge}</p>
 
-            <form onSubmit={handleAddExpense} className="mt-6 flex flex-wrap gap-2">
-              <input
-                type="text"
-                value={expenseName}
-                onChange={(e) => setExpenseName(e.target.value)}
-                placeholder={t.step2.namePlaceholder}
-                className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-              />
-              <input
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="0.01"
-                value={expenseAmount}
-                onChange={(e) => setExpenseAmount(e.target.value)}
-                placeholder={t.step2.amountPlaceholder}
-                className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110"
-              >
-                {common.app.add}
-              </button>
-            </form>
+          <div className="mt-6 w-full rounded-3xl border border-white/10 bg-white/5 p-8">
+            <p className="text-6xl font-black leading-none text-[#ff6b00]">
+              {result.score}
+              <span className="text-2xl font-bold text-white/40">{t.result.scoreSuffix}</span>
+            </p>
+            <h1 className="mt-4 text-3xl font-bold text-white">{archetypeContent.name}</h1>
+            <p className="mt-3 text-white/70">{archetypeContent.description}</p>
+          </div>
 
-            {fixed.fixedExpenses.length > 0 && (
-              <ul className="mt-4 divide-y divide-overlay/10">
-                {fixed.fixedExpenses.map((expense) => (
-                  <li key={expense.id} className="flex items-center justify-between py-2 text-sm">
-                    <span className="text-ink">{expense.name}</span>
-                    <span className="text-muted">{formatMoney(expense.amount)}</span>
+          <div className="mt-6 flex w-full flex-col items-center gap-3">
+            <button
+              type="button"
+              onClick={handleShare}
+              disabled={sharing}
+              className="w-full rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110 disabled:opacity-60"
+            >
+              {sharing ? t.result.shareGenerating : t.result.shareButton}
+            </button>
+            {shareState === 'copied' && <p className="text-xs text-[#ff6b00]">{t.result.sharedConfirmation}</p>}
+            {shareState === 'downloaded' && <p className="text-xs text-[#ff6b00]">{t.result.downloadedConfirmation}</p>}
+            {shareState === 'error' && <p className="text-xs text-red-400">{t.result.shareError}</p>}
+
+            <button
+              type="button"
+              onClick={() => setPhase('plans')}
+              className="w-full rounded-xl border border-white/15 px-5 py-3 font-medium text-white transition-colors hover:bg-white/5"
+            >
+              {t.result.continueButton}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {phase === 'plans' && (
+        <div className="mx-auto min-h-screen max-w-5xl px-6 py-10 sm:py-16">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-white sm:text-4xl">{t.plans.heading}</h1>
+            <p className="mt-2 text-white/60">{t.plans.subtitle}</p>
+          </div>
+
+          <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-3">
+            {/* Free — shown for comparison, its only real CTA is the
+                discreet link below, not a button on this card. */}
+            <div className="flex flex-col rounded-3xl border border-white/10 bg-white/5 p-6">
+              <h3 className="font-semibold text-white">{tarifs.plans.free.name}</h3>
+              <p className="mt-1 text-sm text-white/60">{tarifs.plans.free.description}</p>
+              <p className="mt-4 text-3xl font-bold text-white">{fmt(0)}</p>
+              <ul className="mt-6 flex-1 space-y-2">
+                {tarifs.plans.free.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-2 text-sm text-white/60">
+                    <span className="mt-0.5 text-white/40">✓</span>
+                    {feature}
                   </li>
                 ))}
               </ul>
-            )}
+            </div>
 
-            <div className="mt-6 flex gap-2">
+            {/* Standard */}
+            <div className="flex flex-col rounded-3xl border border-white/10 bg-white/5 p-6">
+              <h3 className="font-semibold text-white">{tarifs.plans.standard.name}</h3>
+              <p className="mt-1 text-sm text-white/60">{tarifs.plans.standard.description}</p>
+              <span className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-[#ff6b00]/15 px-3 py-1 text-xs font-semibold text-[#ff6b00]">
+                {tarifs.trialBadge(TRIAL_DAYS)}
+              </span>
+              <p className="mt-3 text-3xl font-bold text-white">
+                {fmt(PLAN_LIMITS.standard.monthlyPrice)}
+                <span className="text-base font-normal text-white/50">{tarifs.perMonth}</span>
+              </p>
+              <ul className="mt-6 flex-1 space-y-2">
+                {tarifs.plans.standard.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-2 text-sm text-white/60">
+                    <span className="mt-0.5 text-[#ff6b00]">✓</span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
               <button
                 type="button"
-                onClick={() => setStep(1)}
-                className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
+                onClick={() => handleChoosePlan('standard')}
+                disabled={pendingPlan === 'standard'}
+                className="mt-6 w-full rounded-xl border border-white/20 px-4 py-2.5 font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-60"
               >
-                {common.app.back}
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep(3)}
-                className="flex-1 rounded-lg bg-primary-strong px-5 py-2 font-medium text-white transition-all hover:brightness-110"
-              >
-                {common.app.continueAction}
+                {pendingPlan === 'standard' ? t.plans.redirecting : t.plans.standardCta}
               </button>
             </div>
-          </div>
-        )}
 
-        {step === 3 && (
-          <form onSubmit={handleGoalSubmit}>
-            <h1 className="text-2xl font-bold text-ink">{t.step3.title}</h1>
-            <p className="mt-2 text-sm text-muted">{t.step3.subtitle}</p>
-
-            <div className="mt-6 flex flex-col gap-3">
-              <input
-                type="text"
-                value={goalName}
-                onChange={(e) => setGoalName(e.target.value)}
-                placeholder={t.step3.namePlaceholder}
-                className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-              />
-              <input
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="0.01"
-                value={goalAmount}
-                onChange={(e) => setGoalAmount(e.target.value)}
-                placeholder={t.step3.amountPlaceholder}
-                className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
-              />
-              <label className="flex flex-col gap-1 text-xs text-muted">
-                {t.step3.dueDateLabel}
-                <input
-                  type="date"
-                  value={goalDate}
-                  onChange={(e) => setGoalDate(e.target.value)}
-                  min={getTodayDateString()}
-                  max={getFarFutureDateString()}
-                  className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
-                />
-              </label>
-            </div>
-
-            <div className="mt-6 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
-              >
-                {common.app.back}
-              </button>
-              <button
-                type="submit"
-                className="flex-1 rounded-lg bg-primary-strong px-5 py-2 font-medium text-white transition-all hover:brightness-110"
-              >
-                {common.app.continueAction}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {step === 4 && (
-          <div>
-            <h1 className="text-2xl font-bold text-ink">{t.step4.title}</h1>
-            <p className="mt-2 text-sm text-muted">{t.step4.subtitle}</p>
-
-            <div className="mt-6 grid gap-3">
-              {mainGoalOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    setMainGoal(option.value)
-                    setStep(5)
-                  }}
-                  className={`glass rounded-2xl p-4 text-left font-medium text-ink transition-colors hover:bg-overlay/5 ${
-                    mainGoal === option.value ? 'border border-primary' : ''
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-6 flex justify-start">
-              <button
-                type="button"
-                onClick={() => setStep(3)}
-                className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
-              >
-                {common.app.back}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 5 && (
-          <div>
-            <h1 className="text-2xl font-bold text-ink">{t.step5.title}</h1>
-            <p className="mt-2 text-sm text-muted">{t.step5.subtitle}</p>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              {[
-                { value: true, label: t.step5.yes },
-                { value: false, label: t.step5.no },
-              ].map((option) => (
-                <button
-                  key={String(option.value)}
-                  type="button"
-                  onClick={() => {
-                    setTriedOtherApp(option.value)
-                    setStep(6)
-                  }}
-                  className={`glass rounded-2xl p-4 text-center font-medium text-ink transition-colors hover:bg-overlay/5 ${
-                    triedOtherApp === option.value ? 'border border-primary' : ''
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-6 flex justify-start">
-              <button
-                type="button"
-                onClick={() => setStep(4)}
-                className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
-              >
-                {common.app.back}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 6 && (
-          <div>
-            <h1 className="text-2xl font-bold text-ink">{t.step6.title}</h1>
-            <p className="mt-2 text-sm text-muted">{t.step6.subtitle}</p>
-
-            <div className="mt-6 grid gap-3">
-              {frequencyOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    setFrequency(option.value)
-                    setStep(7)
-                  }}
-                  className={`glass rounded-2xl p-4 text-left font-medium text-ink transition-colors hover:bg-overlay/5 ${
-                    frequency === option.value ? 'border border-primary' : ''
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-6 flex justify-start">
-              <button
-                type="button"
-                onClick={() => setStep(5)}
-                className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
-              >
-                {common.app.back}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 7 &&
-          (() => {
-            const profile = computeOnboardingProfile(
-              mainGoal ?? 'autre',
-              triedOtherApp ?? false,
-              frequency ?? 'hebdomadaire',
-              lang,
-            )
-            return (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-accent">{t.step7.badge}</p>
-                <h1 className="mt-1 text-2xl font-bold text-ink">{profile.name}</h1>
-                <p className="mt-3 text-sm text-muted">{profile.description}</p>
-
-                <div className="mt-6">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted">
-                    {t.step7.previewTitle}
-                  </p>
-                  <ul className="mt-2 flex flex-col gap-2">
-                    {profile.previewPoints.map((point) => (
-                      <li key={point} className="flex items-start gap-2 text-sm text-ink">
-                        <span aria-hidden="true" className="mt-0.5 text-success">
-                          ✓
-                        </span>
-                        {point}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="mt-6 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setStep(6)}
-                    className="rounded-lg border border-overlay/10 px-4 py-2 font-medium text-ink transition-colors hover:bg-overlay/5"
-                  >
-                    {common.app.back}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleFinishProfile}
-                    className="flex-1 rounded-lg bg-success px-5 py-2 font-semibold text-canvas transition-all hover:brightness-110"
-                  >
-                    {t.step7.dashboardCta}
-                  </button>
-                </div>
+            {/* Premium — visually emphasized with the launch-offer promo. */}
+            <div className="relative flex flex-col rounded-3xl border-2 border-[#ff6b00] bg-white/5 p-6 shadow-[0_0_40px_-10px_rgba(255,107,0,0.5)] sm:-translate-y-2">
+              <span className="absolute -top-3 left-6 rounded-full bg-[#ff6b00] px-3 py-1 text-xs font-bold text-white">
+                {t.plans.promoBadge}
+              </span>
+              <h3 className="font-semibold text-white">{tarifs.plans.premium.name}</h3>
+              <p className="mt-1 text-sm text-white/60">{tarifs.plans.premium.description}</p>
+              <div className="mt-4 flex items-baseline gap-2">
+                <p className="text-3xl font-bold text-white">
+                  {fmt(7.99)}
+                  <span className="text-base font-normal text-white/50">{t.plans.promoPerMonth}</span>
+                </p>
+                <span className="text-sm text-white/40 line-through">{t.plans.promoWasPrice}</span>
               </div>
-            )
-          })()}
-      </div>
+              <ul className="mt-6 flex-1 space-y-2">
+                {tarifs.plans.premium.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-2 text-sm text-white/60">
+                    <span className="mt-0.5 text-[#ff6b00]">✓</span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-xs text-white/40">{t.plans.promoDisclaimer}</p>
+              <button
+                type="button"
+                onClick={() => handleChoosePlan('premium')}
+                disabled={pendingPlan === 'premium'}
+                className="mt-4 w-full rounded-xl bg-[#ff6b00] px-4 py-3 font-semibold text-white shadow-lg shadow-[#ff6b00]/30 transition-all hover:brightness-110 disabled:opacity-60"
+              >
+                {pendingPlan === 'premium' ? t.plans.redirecting : t.plans.premiumCta}
+              </button>
+            </div>
+          </div>
 
-      <ImportTransactionsModal
-        open={importOpen}
-        onClose={() => {
-          setImportOpen(false)
-          setStep(1)
-        }}
-      />
+          <p className="mt-10 text-center text-sm text-white/50">
+            <button type="button" onClick={() => navigate('/dashboard')} className="underline hover:text-white">
+              {t.plans.freeLink}
+            </button>
+          </p>
+        </div>
+      )}
+
+      {/* Off-screen share card — html2canvas renders this exact node into the
+          shared/downloaded image; same 1080×1080 square pattern as
+          Calculateur.tsx's share card, never shown to the visitor directly. */}
+      {result && archetypeContent && (
+        <div className="pointer-events-none fixed left-0 top-0 -z-50 opacity-0" aria-hidden="true">
+          <div
+            ref={cardRef}
+            className="flex h-[1080px] w-[1080px] flex-col items-center justify-center gap-6 bg-black p-24 text-center"
+          >
+            <span className="text-5xl font-bold">
+              <span className="text-white">save</span>
+              <span className="text-[#ff6b00]">Up</span>
+            </span>
+            <p className="mt-6 text-4xl font-medium text-white/50">{t.result.badge}</p>
+            <p className="text-[200px] font-black leading-none text-[#ff6b00]">{result.score}</p>
+            <p className="text-5xl font-bold text-white">{archetypeContent.name}</p>
+            <p className="max-w-4xl text-3xl text-white/70">{archetypeContent.shareTagline}</p>
+            <p className="mt-10 text-3xl text-white/40">{t.result.shareCardFooter}</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

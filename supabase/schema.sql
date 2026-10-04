@@ -621,6 +621,30 @@ alter table user_preferences add column if not exists onboarding_tried_other_app
 alter table user_preferences add column if not exists onboarding_frequency text
   check (onboarding_frequency in ('quotidien', 'hebdomadaire', 'mensuel'));
 
+-- Onboarding quiz results (Onboarding.tsx — 15-question quiz) ----------------
+-- No row = quiz not completed yet — Dashboard.tsx's fresh-user redirect
+-- reads this (not income/expenses/goals presence anymore) to decide whether
+-- to send someone to /onboarding. `answers` keeps every raw response (jsonb
+-- map of question id -> option id) for future tuning of the scoring rubric
+-- without needing to re-run the quiz; `score`/`archetype` are the computed
+-- result actually shown and acted on.
+
+create table if not exists onboarding_quiz_results (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  score integer not null check (score >= 0 and score <= 100),
+  archetype text not null check (archetype in ('stressed', 'impulsive', 'cautious', 'master')),
+  answers jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+alter table onboarding_quiz_results enable row level security;
+
+drop policy if exists "onboarding_quiz_results_all" on onboarding_quiz_results;
+create policy "onboarding_quiz_results_all" on onboarding_quiz_results
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+grant select, insert, update, delete on onboarding_quiz_results to authenticated;
+
 -- Free plan's 2-import CSV exception (Onboarding.tsx, Statistiques.tsx) ------
 -- Standard/Premium have unlimited CSV import (PLAN_LIMITS) and never touch
 -- this column; Free gets up to FREE_CSV_IMPORT_LIMIT (src/lib/plans.ts)

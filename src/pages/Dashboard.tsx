@@ -17,6 +17,7 @@ import {
   BadgesIllustration,
 } from '../components/FeatureIllustrations'
 import { useFinancialHealth } from '../hooks/useFinancialHealth'
+import { useOnboardingQuiz } from '../hooks/useOnboardingQuiz'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useInvestmentBalance } from '../hooks/useInvestmentBalance'
@@ -54,6 +55,7 @@ export function Dashboard() {
   const formatMoney = useMoneyFormat()
   const workHours = useWorkHours()
   const health = useFinancialHealth()
+  const quiz = useOnboardingQuiz()
   const goals = useSavingsGoals()
   const contributions = useSavingsContributions()
   const investmentBalance = useInvestmentBalance()
@@ -65,7 +67,12 @@ export function Dashboard() {
   const [justClaimedStarter, setJustClaimedStarter] = useState(false)
 
   const loading =
-    health.loading || goals.loading || contributions.loading || investmentBalance.loading || expenseHistory.loading
+    health.loading ||
+    quiz.loading ||
+    goals.loading ||
+    contributions.loading ||
+    investmentBalance.loading ||
+    expenseHistory.loading
   const error =
     health.error || goals.error || contributions.error || investmentBalance.error || expenseHistory.error
 
@@ -95,14 +102,12 @@ export function Dashboard() {
   // Data-driven, not a localStorage flag: a flag would be scoped to this
   // browser, not this account, and would wrongly skip onboarding for a
   // brand-new account that happens to share a browser with an old one.
-  // "Fresh" means nothing has ever been saved for this account — no income
-  // row at all (hasIncomeRecord, distinct from monthlyIncome === 0, which a
-  // returning user could legitimately have), no fixed expenses, no goals.
-  const isFreshUser =
-    !loading &&
-    !health.hasIncomeRecord &&
-    health.totalFixedExpenses === 0 &&
-    goals.goals.length === 0
+  // "Fresh" means the new onboarding quiz hasn't been completed yet — NOT
+  // whether any financial data exists. The quiz-based onboarding never
+  // collects income/expenses/goals, so a real account can legitimately
+  // reach the Dashboard with all of those still at zero; Budget/Épargne's
+  // own empty states pick up from there instead of forcing it up front.
+  const isFreshUser = !loading && !quiz.completed
 
   useEffect(() => {
     if (!loading && isFreshUser) {
