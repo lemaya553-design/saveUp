@@ -70,13 +70,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       managed_payments: { enabled: false },
     }
 
+    // usePromo tried to be the ONLY thing distinguishing Premium's checkout
+    // from Standard's — but premiumPromoCouponId() throws synchronously if
+    // STRIPE_PREMIUM_PROMO_COUPON isn't set (e.g. scripts/create-onboarding-
+    // promo-coupon.mjs was never run / its output was never copied into
+    // Vercel's env vars), which used to take the ENTIRE request down with
+    // it before a Checkout Session was ever created — "Choisir Premium"
+    // doing nothing while "Choisir Standard" worked fine, since Standard
+    // never touches this code path at all. A missing PROMOTIONAL coupon
+    // shouldn't be able to block the actual purchase, so this now falls
+    // back to the same 7-day-trial checkout Standard already uses
+    // successfully — logged server-side (Vercel's function logs) so a
+    // misconfigured coupon is still diagnosable without needing a
+    // client-visible error for what is, from the buyer's side, a
+    // successful checkout.
     if (usePromo) {
-      // No trial here — the card is charged immediately at the discounted
-      // first-invoice rate. `duration: 'once'` on the coupon (set when it
-      // was created, see scripts/create-onboarding-promo-coupon.mjs) means
-      // Stripe automatically bills the full Premium price from the 2nd
-      // invoice on, with no further code needed.
-      sessionParams.discounts = [{ coupon: premiumPromoCouponId() }]
+      try {
+        // No trial here — the card is charged immediately at the discounted
+        // first-invoice rate. `duration: 'once'` on the coupon (set when it
+        // was created, see scripts/create-onboarding-promo-coupon.mjs) means
+        // Stripe automatically bills the full Premium price from the 2nd
+        // invoice on, with no further code needed.
+        sessionParams.discounts = [{ coupon: premiumPromoCouponId() }]
+      } catch (err) {
+        console.error('Premium promo coupon unavailable, falling back to the standard trial checkout:', err)
+        sessionParams.subscription_data = { trial_period_days: 7 }
+      }
     } else {
       // 7-day free trial on both paid plans, card required up front (this
       // is Checkout's default — the card is collected and validated at

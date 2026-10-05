@@ -13,18 +13,20 @@ import { TARIFS } from '../lib/i18n/tarifs'
 import {
   QUIZ_QUESTION_IDS,
   INSIGHT_POLARITY,
+  PAY_FREQUENCIES,
   SETUP_CATEGORY_IDS,
   SETUP_CATEGORY_INCOME_PCT,
   computeQuizInsights,
   computeQuizResult,
   mainGoalFromQuiz,
   suggestedSavingsPct,
+  type PayFrequency,
   type QuizAnswers,
   type QuizResult,
   type SetupCategoryId,
 } from '../lib/onboardingQuiz'
 import { PLAN_LIMITS, TRIAL_DAYS, type Plan } from '../lib/plans'
-import { formatBillingAmount } from '../lib/format'
+import { CURRENCIES, formatBillingAmount, type Currency } from '../lib/format'
 
 // Three-phase flow replacing the old income/expenses/goal wizard: a
 // 15-question quiz, a scored archetype result (shareable as an image), then
@@ -56,6 +58,115 @@ const inputCardClass =
 const fieldClass =
   'rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-white placeholder-white/35 focus:border-[#ff6b00] focus:outline-none'
 
+const pillButtonClass = (active: boolean) =>
+  `rounded-xl border px-3 py-2.5 text-center text-sm font-medium transition-all ${
+    active ? 'border-[#ff6b00] bg-[#ff6b00]/15 text-white' : 'border-white/15 bg-white/5 text-white/70 hover:bg-white/10'
+  }`
+
+// Small orange icon chip next to each field label — part of the "look more
+// premium/soigné" ask: an un-decorated stacked list of inputs reads as
+// plain, a consistent icon treatment reads as considered.
+function FieldIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#ff6b00]/15 text-[#ff6b00]">
+      {children}
+    </span>
+  )
+}
+
+function FieldLabel({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <span className="flex items-center gap-2">
+      <FieldIcon>{icon}</FieldIcon>
+      <span className="text-white/80">{children}</span>
+    </span>
+  )
+}
+
+const iconProps = {
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.75,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+  className: 'h-4 w-4',
+}
+
+function IncomeIcon() {
+  return (
+    <svg {...iconProps}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7.5v9M9.25 9.75h3.5a1.75 1.75 0 0 1 0 3.5h-1.5a1.75 1.75 0 0 0 0 3.5h3.5" />
+    </svg>
+  )
+}
+
+function RepeatIcon() {
+  return (
+    <svg {...iconProps}>
+      <path d="M17 2.5l4 4-4 4" />
+      <path d="M3 11.5v-2a4 4 0 0 1 4-4h14" />
+      <path d="M7 21.5l-4-4 4-4" />
+      <path d="M21 12.5v2a4 4 0 0 1-4 4H3" />
+    </svg>
+  )
+}
+
+function CalendarIcon() {
+  return (
+    <svg {...iconProps}>
+      <rect x="3" y="4.5" width="18" height="16" rx="2" />
+      <path d="M16 2.5v4M8 2.5v4M3 10.5h18" />
+    </svg>
+  )
+}
+
+function CurrencyIcon() {
+  return (
+    <svg {...iconProps}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3a13.5 13.5 0 0 1 0 18M12 3a13.5 13.5 0 0 0 0 18" />
+    </svg>
+  )
+}
+
+function TrendIcon() {
+  return (
+    <svg {...iconProps}>
+      <path d="M3 17l6-6 4 4 8-8" />
+      <path d="M15 7h6v6" />
+    </svg>
+  )
+}
+
+function GoalIcon() {
+  return (
+    <svg {...iconProps}>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="12" cy="12" r="0.75" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function HeartIcon() {
+  return (
+    <svg {...iconProps}>
+      <path d="M12 20.5s-7.5-4.6-9.8-9.1A5.3 5.3 0 0 1 12 6.1a5.3 5.3 0 0 1 9.8 5.3C19.5 15.9 12 20.5 12 20.5z" />
+    </svg>
+  )
+}
+
+function TagIcon() {
+  return (
+    <svg {...iconProps}>
+      <path d="M20.5 13.1L13.1 20.5a2 2 0 0 1-2.8 0L2.5 12.7V3h9.7l8.3 8.3a2 2 0 0 1 0 2.8z" />
+      <circle cx="7.5" cy="7.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 export function Onboarding() {
   const navigate = useNavigate()
   const { lang } = useLanguage()
@@ -83,13 +194,19 @@ export function Onboarding() {
   // suggestion, which drives the goal-amount suggestion, each only
   // auto-updating until the user actually edits that specific field
   // themselves (the *Touched flags), so typing an income doesn't stomp on
-  // a goal amount someone already customized.
+  // a goal amount someone already customized. Split across 3 small cards
+  // (setupStep) rather than one long form.
+  const [setupStep, setSetupStep] = useState(0)
   const [incomeDraft, setIncomeDraft] = useState('')
+  const [payFrequency, setPayFrequency] = useState<PayFrequency | null>(null)
+  const [nextPayday, setNextPayday] = useState('')
+  const [currencyDraft, setCurrencyDraft] = useState<Currency>(preferences.currency)
   const [savingsDraft, setSavingsDraft] = useState('')
   const [savingsTouched, setSavingsTouched] = useState(false)
   const [goalName, setGoalName] = useState(t.setup.defaultGoalName)
   const [goalAmount, setGoalAmount] = useState('')
   const [goalAmountTouched, setGoalAmountTouched] = useState(false)
+  const [savingsWhy, setSavingsWhy] = useState('')
   const [setupCategories, setSetupCategories] = useState<SetupCategoryId[]>(DEFAULT_SETUP_CATEGORIES)
   const [submittingSetup, setSubmittingSetup] = useState(false)
 
@@ -257,6 +374,8 @@ export function Onboarding() {
     setSubmittingSetup(true)
     try {
       await income.setMonthlyIncome(incomeValue)
+      if (currencyDraft !== preferences.currency) preferences.setCurrency(currencyDraft)
+      preferences.setAccountSetupExtras(payFrequency, nextPayday || null, savingsWhy.trim() || null)
 
       const targetAmount = Math.max(0, Number(goalAmount) || 0)
       if (goalName.trim() && targetAmount > 0) {
@@ -397,109 +516,242 @@ export function Onboarding() {
 
       {phase === 'setup' && (
         <div className="relative mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-14">
+          <div className="mb-6">
+            <div className="mb-2 flex items-center justify-between text-xs text-white/50">
+              <span>{t.setup.stepLabel(setupStep + 1, 3)}</span>
+            </div>
+            <div className="flex gap-2">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
+                    i <= setupStep ? 'bg-[#ff6b00]' : 'bg-white/10'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
           <h1 className="text-2xl font-bold text-white sm:text-3xl">{t.setup.heading}</h1>
-          <p className="mt-2 text-white/60">{t.setup.subtitle}</p>
+          <p className="mt-1 text-white/60">{t.setup.subtitle}</p>
 
-          <form onSubmit={handleSetupSubmit} className="mt-8 flex flex-col gap-6">
-            <label className="flex flex-col gap-1.5 text-sm text-white/60">
-              {t.setup.incomeLabel}
-              <input
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="0.01"
-                autoFocus
-                required
-                value={incomeDraft}
-                onChange={(e) => setIncomeDraft(e.target.value)}
-                placeholder={t.setup.incomePlaceholder}
-                className={fieldClass}
-              />
-            </label>
+          <form onSubmit={handleSetupSubmit} className="mt-6">
+            {setupStep === 0 && (
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                <h2 className="text-lg font-semibold text-white">{t.setup.card1Title}</h2>
 
-            <label className="flex flex-col gap-1.5 text-sm text-white/60">
-              {t.setup.savingsLabel}
-              <input
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="0.01"
-                value={savingsDraft}
-                onChange={(e) => {
-                  setSavingsDraft(e.target.value)
-                  setSavingsTouched(true)
-                }}
-                className={fieldClass}
-              />
-              <span className="text-xs text-white/40">{t.setup.savingsHint}</span>
-            </label>
+                <div className="mt-5 flex flex-col gap-4">
+                  <label className="flex flex-col gap-1.5 text-sm text-white/60">
+                    <FieldLabel icon={<IncomeIcon />}>{t.setup.incomeLabel}</FieldLabel>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      step="0.01"
+                      autoFocus
+                      required
+                      value={incomeDraft}
+                      onChange={(e) => setIncomeDraft(e.target.value)}
+                      placeholder={t.setup.incomePlaceholder}
+                      className={fieldClass}
+                    />
+                  </label>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-sm font-semibold text-white">{t.setup.goalHeading}</p>
-              <div className="mt-4 flex flex-col gap-4">
-                <label className="flex flex-col gap-1.5 text-sm text-white/60">
-                  {t.setup.goalNameLabel}
-                  <input
-                    type="text"
-                    value={goalName}
-                    onChange={(e) => setGoalName(e.target.value)}
-                    placeholder={t.setup.goalNamePlaceholder}
-                    className={fieldClass}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5 text-sm text-white/60">
-                  {t.setup.goalAmountLabel}
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    step="0.01"
-                    value={goalAmount}
-                    onChange={(e) => {
-                      setGoalAmount(e.target.value)
-                      setGoalAmountTouched(true)
-                    }}
-                    className={fieldClass}
-                  />
-                </label>
-              </div>
-            </div>
+                  <div className="flex flex-col gap-1.5 text-sm text-white/60">
+                    <FieldLabel icon={<RepeatIcon />}>{t.setup.payFrequencyLabel}</FieldLabel>
+                    <div className="grid grid-cols-3 gap-2">
+                      {PAY_FREQUENCIES.map((freq) => (
+                        <button
+                          key={freq}
+                          type="button"
+                          onClick={() => setPayFrequency(freq)}
+                          aria-pressed={payFrequency === freq}
+                          className={pillButtonClass(payFrequency === freq)}
+                        >
+                          {t.setup.payFrequencies[freq]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-            <div>
-              <p className="text-sm font-semibold text-white">{t.setup.categoriesHeading}</p>
-              <p className="mt-1 text-xs text-white/40">{t.setup.categoriesHint}</p>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {SETUP_CATEGORY_IDS.map((categoryId) => {
-                  const checked = setupCategories.includes(categoryId)
-                  const disabled = !checked && setupCategories.length >= MAX_SETUP_CATEGORIES
-                  return (
-                    <button
-                      key={categoryId}
-                      type="button"
-                      onClick={() => toggleSetupCategory(categoryId)}
-                      disabled={disabled}
-                      aria-pressed={checked}
-                      className={`rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
-                        checked
-                          ? 'border-[#ff6b00] bg-[#ff6b00]/15 text-white'
-                          : 'border-white/15 bg-white/5 text-white/70 hover:bg-white/10'
-                      }`}
+                  <label className="flex flex-col gap-1.5 text-sm text-white/60">
+                    <FieldLabel icon={<CalendarIcon />}>{t.setup.nextPaydayLabel}</FieldLabel>
+                    <input
+                      type="date"
+                      value={nextPayday}
+                      onChange={(e) => setNextPayday(e.target.value)}
+                      style={{ colorScheme: 'dark' }}
+                      className={fieldClass}
+                    />
+                  </label>
+
+                  <div className="flex flex-col gap-1.5 text-sm text-white/60">
+                    <FieldLabel icon={<CurrencyIcon />}>{t.setup.currencyLabel}</FieldLabel>
+                    <select
+                      value={currencyDraft}
+                      onChange={(e) => setCurrencyDraft(e.target.value as Currency)}
+                      className={fieldClass}
                     >
-                      {checked ? '✓ ' : ''}
-                      {t.setup.categories[categoryId]}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
+                      {CURRENCIES.map((code) => (
+                        <option key={code} value={code} className="bg-[#1a1a1a]">
+                          {t.setup.currencies[code]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-            <button
-              type="submit"
-              disabled={submittingSetup || Number(incomeDraft) <= 0}
-              className="rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110 disabled:opacity-60"
-            >
-              {submittingSetup ? t.setup.savingButton : t.setup.continueButton}
-            </button>
+                <button
+                  type="button"
+                  onClick={() => setSetupStep(1)}
+                  disabled={Number(incomeDraft) <= 0}
+                  className="mt-6 w-full rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110 disabled:opacity-60"
+                >
+                  {t.setup.nextButton}
+                </button>
+              </div>
+            )}
+
+            {setupStep === 1 && (
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                <h2 className="text-lg font-semibold text-white">{t.setup.card2Title}</h2>
+
+                <div className="mt-5 flex flex-col gap-4">
+                  <label className="flex flex-col gap-1.5 text-sm text-white/60">
+                    <FieldLabel icon={<TrendIcon />}>{t.setup.savingsLabel}</FieldLabel>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      step="0.01"
+                      value={savingsDraft}
+                      onChange={(e) => {
+                        setSavingsDraft(e.target.value)
+                        setSavingsTouched(true)
+                      }}
+                      className={fieldClass}
+                    />
+                    <span className="text-xs text-white/40">{t.setup.savingsHint}</span>
+                  </label>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <p className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <FieldIcon>
+                        <GoalIcon />
+                      </FieldIcon>
+                      {t.setup.goalHeading}
+                    </p>
+                    <div className="mt-4 flex flex-col gap-4">
+                      <label className="flex flex-col gap-1.5 text-sm text-white/60">
+                        {t.setup.goalNameLabel}
+                        <input
+                          type="text"
+                          value={goalName}
+                          onChange={(e) => setGoalName(e.target.value)}
+                          placeholder={t.setup.goalNamePlaceholder}
+                          className={fieldClass}
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1.5 text-sm text-white/60">
+                        {t.setup.goalAmountLabel}
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min={0}
+                          step="0.01"
+                          value={goalAmount}
+                          onChange={(e) => {
+                            setGoalAmount(e.target.value)
+                            setGoalAmountTouched(true)
+                          }}
+                          className={fieldClass}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <label className="flex flex-col gap-1.5 text-sm text-white/60">
+                    <FieldLabel icon={<HeartIcon />}>{t.setup.whyLabel}</FieldLabel>
+                    <textarea
+                      value={savingsWhy}
+                      onChange={(e) => setSavingsWhy(e.target.value)}
+                      placeholder={t.setup.whyPlaceholder}
+                      rows={2}
+                      className={`${fieldClass} resize-none`}
+                    />
+                  </label>
+                </div>
+
+                <div className="mt-6 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSetupStep(0)}
+                    className="rounded-xl border border-white/20 px-5 py-3 font-medium text-white transition-colors hover:bg-white/10"
+                  >
+                    {t.setup.backButton}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSetupStep(2)}
+                    className="flex-1 rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110"
+                  >
+                    {t.setup.nextButton}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {setupStep === 2 && (
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+                  <FieldIcon>
+                    <TagIcon />
+                  </FieldIcon>
+                  {t.setup.card3Title}
+                </h2>
+                <p className="mt-1 text-xs text-white/40">{t.setup.categoriesHint}</p>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {SETUP_CATEGORY_IDS.map((categoryId) => {
+                    const checked = setupCategories.includes(categoryId)
+                    const disabled = !checked && setupCategories.length >= MAX_SETUP_CATEGORIES
+                    return (
+                      <button
+                        key={categoryId}
+                        type="button"
+                        onClick={() => toggleSetupCategory(categoryId)}
+                        disabled={disabled}
+                        aria-pressed={checked}
+                        className={`rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+                          checked
+                            ? 'border-[#ff6b00] bg-[#ff6b00]/15 text-white'
+                            : 'border-white/15 bg-white/5 text-white/70 hover:bg-white/10'
+                        }`}
+                      >
+                        {checked ? '✓ ' : ''}
+                        {t.setup.categories[categoryId]}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="mt-6 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSetupStep(1)}
+                    className="rounded-xl border border-white/20 px-5 py-3 font-medium text-white transition-colors hover:bg-white/10"
+                  >
+                    {t.setup.backButton}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingSetup || Number(incomeDraft) <= 0}
+                    className="flex-1 rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110 disabled:opacity-60"
+                  >
+                    {submittingSetup ? t.setup.savingButton : t.setup.continueButton}
+                  </button>
+                </div>
+              </div>
+            )}
           </form>
         </div>
       )}

@@ -645,6 +645,17 @@ create policy "onboarding_quiz_results_all" on onboarding_quiz_results
 
 grant select, insert, update, delete on onboarding_quiz_results to authenticated;
 
+-- Extra account-setup fields (Onboarding.tsx's "Configure ton compte" step) --
+-- Alongside the rest of user_preferences, same "no row/null column = never
+-- set" convention. pay_frequency/next_payday feed future pay-day-aware
+-- budgeting features; savings_why is free text read back later by
+-- motivational reminders (not built yet) to personalize them with the
+-- user's own stated reason instead of generic copy.
+alter table user_preferences add column if not exists pay_frequency text
+  check (pay_frequency in ('hebdomadaire', 'aux_deux_semaines', 'mensuelle'));
+alter table user_preferences add column if not exists next_payday date;
+alter table user_preferences add column if not exists savings_why text;
+
 -- Free plan's 2-import CSV exception (Onboarding.tsx, Statistiques.tsx) ------
 -- Standard/Premium have unlimited CSV import (PLAN_LIMITS) and never touch
 -- this column; Free gets up to FREE_CSV_IMPORT_LIMIT (src/lib/plans.ts)

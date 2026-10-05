@@ -1,5 +1,6 @@
 import type { Lang } from './language'
-import type { Archetype, InsightId, SetupCategoryId } from '../onboardingQuiz'
+import type { Archetype, InsightId, PayFrequency, SetupCategoryId } from '../onboardingQuiz'
+import type { Currency } from '../format'
 
 export interface QuizQuestionContent {
   text: string
@@ -23,8 +24,16 @@ export interface OnboardingQuizContent {
   setup: {
     heading: string
     subtitle: string
+    stepLabel: (current: number, total: number) => string
+    card1Title: string
     incomeLabel: string
     incomePlaceholder: string
+    payFrequencyLabel: string
+    payFrequencies: Record<PayFrequency, string>
+    nextPaydayLabel: string
+    currencyLabel: string
+    currencies: Record<Currency, string>
+    card2Title: string
     savingsLabel: string
     savingsHint: string
     goalHeading: string
@@ -32,9 +41,14 @@ export interface OnboardingQuizContent {
     goalNamePlaceholder: string
     defaultGoalName: string
     goalAmountLabel: string
+    whyLabel: string
+    whyPlaceholder: string
+    card3Title: string
     categoriesHeading: string
     categoriesHint: string
     categories: Record<SetupCategoryId, string>
+    nextButton: string
+    backButton: string
     continueButton: string
     savingButton: string
   }
@@ -241,8 +255,26 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
     setup: {
       heading: 'Configure ton compte',
       subtitle: 'Quelques infos de base pour que ton Dashboard affiche déjà quelque chose de concret.',
+      stepLabel: (current, total) => `Étape ${current} sur ${total}`,
+      card1Title: 'Tes revenus',
       incomeLabel: 'Revenu mensuel approximatif',
       incomePlaceholder: '0.00',
+      payFrequencyLabel: 'Fréquence de paie',
+      payFrequencies: {
+        hebdomadaire: 'Hebdomadaire',
+        aux_deux_semaines: 'Aux 2 semaines',
+        mensuelle: 'Mensuelle',
+      },
+      nextPaydayLabel: 'Date du prochain versement',
+      currencyLabel: 'Devise principale',
+      currencies: {
+        CAD: 'CAD — Dollar canadien',
+        USD: 'USD — Dollar américain',
+        EUR: 'EUR — Euro',
+        GBP: 'GBP — Livre sterling',
+        CHF: 'CHF — Franc suisse',
+      },
+      card2Title: 'Ton épargne',
       savingsLabel: 'Combien aimerais-tu épargner par mois ?',
       savingsHint: 'Pré-rempli selon tes réponses — ajuste si tu veux.',
       goalHeading: 'Ton premier objectif d’épargne',
@@ -250,6 +282,9 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
       goalNamePlaceholder: 'Ex : Fonds d’urgence, Voyage',
       defaultGoalName: 'Fonds d’urgence',
       goalAmountLabel: 'Montant cible',
+      whyLabel: 'Pourquoi veux-tu épargner ?',
+      whyPlaceholder: 'Ex : Pour me sentir en sécurité, pour partir en voyage, pour sortir de mes dettes...',
+      card3Title: 'Tes catégories',
       categoriesHeading: 'Catégories à suivre en priorité',
       categoriesHint: 'Choisis 2 à 3 catégories',
       categories: {
@@ -260,6 +295,8 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
         sante: 'Santé',
         abonnements: 'Abonnements',
       },
+      nextButton: 'Suivant',
+      backButton: 'Précédent',
       continueButton: 'Continuer',
       savingButton: 'Un instant...',
     },
@@ -463,8 +500,26 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
     setup: {
       heading: 'Set up your account',
       subtitle: 'A few basics so your Dashboard already shows something real.',
+      stepLabel: (current, total) => `Step ${current} of ${total}`,
+      card1Title: 'Your income',
       incomeLabel: 'Approximate monthly income',
       incomePlaceholder: '0.00',
+      payFrequencyLabel: 'Pay frequency',
+      payFrequencies: {
+        hebdomadaire: 'Weekly',
+        aux_deux_semaines: 'Every 2 weeks',
+        mensuelle: 'Monthly',
+      },
+      nextPaydayLabel: 'Next payday',
+      currencyLabel: 'Main currency',
+      currencies: {
+        CAD: 'CAD — Canadian dollar',
+        USD: 'USD — US dollar',
+        EUR: 'EUR — Euro',
+        GBP: 'GBP — British pound',
+        CHF: 'CHF — Swiss franc',
+      },
+      card2Title: 'Your savings',
       savingsLabel: 'How much would you like to save per month?',
       savingsHint: 'Pre-filled from your answers — adjust as you like.',
       goalHeading: 'Your first savings goal',
@@ -472,6 +527,9 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
       goalNamePlaceholder: 'E.g. Emergency fund, Trip',
       defaultGoalName: 'Emergency fund',
       goalAmountLabel: 'Target amount',
+      whyLabel: 'Why do you want to save?',
+      whyPlaceholder: 'E.g. To feel more secure, to take a trip, to get out of debt...',
+      card3Title: 'Your categories',
       categoriesHeading: 'Categories to track first',
       categoriesHint: 'Pick 2 to 3 categories',
       categories: {
@@ -482,6 +540,8 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
         sante: 'Health',
         abonnements: 'Subscriptions',
       },
+      nextButton: 'Next',
+      backButton: 'Back',
       continueButton: 'Continue',
       savingButton: 'One sec...',
     },

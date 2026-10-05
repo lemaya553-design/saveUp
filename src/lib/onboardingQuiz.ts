@@ -221,6 +221,9 @@ export const SETUP_CATEGORY_INCOME_PCT: Record<SetupCategoryId, number> = {
   abonnements: 0.03,
 }
 
+export const PAY_FREQUENCIES = ['hebdomadaire', 'aux_deux_semaines', 'mensuelle'] as const
+export type PayFrequency = (typeof PAY_FREQUENCIES)[number]
+
 // Q15 ("what's your main goal right now") doubles as the same signal the
 // old onboarding's dedicated question captured — mapped onto the existing
 // MainGoal type so lib/tips.ts keeps tailoring Dashboard tips without any

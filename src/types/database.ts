@@ -307,6 +307,9 @@ export interface Database {
           csv_import_count: number
           hourly_rate: number | null
           work_hours_enabled: boolean
+          pay_frequency: string | null
+          next_payday: string | null
+          savings_why: string | null
           updated_at: string
         }
         Insert: {
@@ -321,6 +324,9 @@ export interface Database {
           csv_import_count?: number
           hourly_rate?: number | null
           work_hours_enabled?: boolean
+          pay_frequency?: string | null
+          next_payday?: string | null
+          savings_why?: string | null
           updated_at?: string
         }
         Update: {
@@ -335,6 +341,9 @@ export interface Database {
           csv_import_count?: number
           hourly_rate?: number | null
           work_hours_enabled?: boolean
+          pay_frequency?: string | null
+          next_payday?: string | null
+          savings_why?: string | null
           updated_at?: string
         }
         Relationships: []
