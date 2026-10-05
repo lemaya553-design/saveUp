@@ -105,13 +105,15 @@ export function CategorySuggestions() {
           <UpgradePrompt
             title={t.limitReached(subscription.limits.maxCategories ?? 0)}
             description={t.limitDescription}
+            variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
+            linkClassName="text-[#FF7A00] hover:opacity-80"
             minPlan="standard"
           />
         </div>
       )}
       <ul className="flex flex-col gap-4">
         {visible.map((suggestion) => (
-          <li key={suggestion.id} className="rounded-lg border border-overlay/10 bg-overlay/5 p-3">
+          <li key={suggestion.id} className="rounded-lg budget-field p-3">
             <p className="text-sm text-ink">
               {t.detectedPrefix} <span className="font-semibold">{t.detectedCount(suggestion.count)}</span>{' '}
               {t.detectedAt} <span className="font-semibold">{suggestion.merchantLabel}</span> {t.detectedSuffix}
@@ -121,14 +123,14 @@ export function CategorySuggestions() {
                 type="text"
                 value={nameFor(suggestion)}
                 onChange={(e) => setDrafts((prev) => ({ ...prev, [suggestion.id]: e.target.value }))}
-                className="min-w-[10rem] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+                className="min-w-[10rem] flex-1 rounded-lg budget-field px-3 py-1.5 text-sm text-ink"
                 aria-label={t.nameAriaLabel}
               />
               <button
                 type="button"
                 onClick={() => confirm(suggestion)}
                 disabled={confirmingId === suggestion.id || !nameFor(suggestion).trim()}
-                className="rounded-lg bg-primary-strong px-4 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                className="rounded-lg budget-btn-primary px-4 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
               >
                 {confirmingId === suggestion.id ? t.creating : COMMON[lang].app.confirm}
               </button>

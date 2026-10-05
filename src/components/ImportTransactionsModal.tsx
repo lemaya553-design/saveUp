@@ -43,7 +43,7 @@ function ToggleButton({
       type="button"
       onClick={onClick}
       className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-        active ? 'bg-primary-strong text-white' : 'bg-overlay/5 text-muted hover:text-ink'
+        active ? 'budget-btn-primary text-white' : 'bg-overlay/5 text-muted hover:text-ink'
       }`}
     >
       {children}
@@ -72,7 +72,7 @@ function ColumnSelect({
       <select
         value={value === null ? '' : value}
         onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-        className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+        className="rounded-lg budget-field px-3 py-2 text-ink"
       >
         {allowNone && (
           <option value="" className="bg-surface">
@@ -276,7 +276,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
         <div className="flex flex-col gap-4">
           <p className="text-sm text-muted">{t.upload.intro(translateCategoryLabel(FALLBACK_CATEGORY, lang))}</p>
 
-          <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-overlay/15 p-6 text-center text-sm text-muted transition-colors hover:border-primary/40 hover:text-ink">
+          <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-overlay/15 p-6 text-center text-sm text-muted transition-colors hover:border-[#FF7A00]/40 hover:text-ink">
             <input
               ref={fileInputRef}
               type="file"
@@ -354,7 +354,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
                 value={newAccountName}
                 onChange={(e) => setNewAccountName(e.target.value)}
                 placeholder={t.account.newAccountPlaceholder}
-                className="min-w-[180px] rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+                className="min-w-[180px] rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
               />
             </label>
             <button
@@ -388,7 +388,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               type="button"
               disabled={!selectedAccountName}
               onClick={() => setStep('mapping')}
-              className="ml-auto rounded-lg bg-primary-strong px-5 py-2.5 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+              className="ml-auto rounded-lg budget-btn-primary px-5 py-2.5 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
             >
               {t.account.continueButton}
             </button>
@@ -434,7 +434,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               noneLabel={t.mapping.noneOption}
             />
             <p className="self-end pb-2 text-xs text-muted">
-              {t.mapping.categoryHintPrefix} <span className="text-accent">{t.mapping.suggestedBadge}</span>{' '}
+              {t.mapping.categoryHintPrefix} <span className="text-[#FF7A00]">{t.mapping.suggestedBadge}</span>{' '}
               {t.mapping.categoryHintSuffix}
             </p>
           </div>
@@ -518,14 +518,14 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
                 <button
                   type="button"
                   onClick={() => setSelected(new Set(importRows.filter((r) => !r.skipReason).map((r) => r.index)))}
-                  className="text-accent hover:text-accent/80"
+                  className="budget-action-link"
                 >
                   {t.mapping.selectAll}
                 </button>
                 <button
                   type="button"
                   onClick={() => setSelected(new Set())}
-                  className="text-accent hover:text-accent/80"
+                  className="budget-action-link"
                 >
                   {t.mapping.deselectAll}
                 </button>
@@ -553,7 +553,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
                             type="checkbox"
                             checked={selected.has(row.index)}
                             onChange={() => toggleRow(row.index)}
-                            className="h-4 w-4 accent-primary"
+                            className="h-4 w-4 accent-[#FF7A00]"
                           />
                         )}
                       </td>
@@ -568,7 +568,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
                           <span className="text-ink">
                             {translateCategoryLabel(row.category, lang)}
                             {row.categoryGuessed && (
-                              <span className="ml-1.5 text-xs text-accent">{t.mapping.suggestedBadge}</span>
+                              <span className="ml-1.5 text-xs text-[#FF7A00]">{t.mapping.suggestedBadge}</span>
                             )}
                           </span>
                         )}
@@ -580,7 +580,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
                         {row.skipReason ? (
                           <span className="text-xs text-muted">{SKIP_LABELS[row.skipReason]}</span>
                         ) : row.isDuplicate ? (
-                          <span className="text-xs text-accent">{t.mapping.duplicateBadge}</span>
+                          <span className="text-xs text-[#FF7A00]">{t.mapping.duplicateBadge}</span>
                         ) : (
                           <span className="text-xs text-success">{t.mapping.readyBadge}</span>
                         )}
@@ -609,12 +609,12 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               type="button"
               disabled={!isMappingValid || selectedCount === 0 || importing}
               onClick={handleImport}
-              className="ml-auto rounded-lg bg-primary-strong px-5 py-2.5 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+              className="ml-auto rounded-lg budget-btn-primary px-5 py-2.5 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
             >
               {importing ? t.mapping.importing : t.mapping.importButton(selectedCount)}
             </button>
           </div>
-          {!isMappingValid && <p className="text-xs text-accent">{t.mapping.invalidHint}</p>}
+          {!isMappingValid && <p className="text-xs text-[#FF7A00]">{t.mapping.invalidHint}</p>}
         </div>
       )}
 
@@ -649,7 +649,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
             <button
               type="button"
               onClick={handleClose}
-              className="rounded-lg bg-primary-strong px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
+              className="rounded-lg budget-btn-primary px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
             >
               {COMMON[lang].app.close}
             </button>

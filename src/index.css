@@ -541,6 +541,65 @@ body {
   }
 }
 
+/* Budget page redesign — solid white/black form fields (not the translucent
+   overlay tint used everywhere else), with the page's fixed orange focus
+   ring instead of the app's default accent. Shared by every Budget-page-only
+   component (FixedExpenses, RecentExpenses, RecurringExpenses,
+   CategoryManager, CategorySuggestions, AddExpenseModal) — never used
+   outside this page, so it can't recolor any other page's inputs. */
+.budget-field {
+  background-color: var(--color-canvas);
+  border: 1px solid color-mix(in srgb, var(--color-overlay) 12%, transparent);
+}
+
+.budget-field:focus {
+  border-color: #ff7a00;
+  outline: none;
+}
+
+/* Same idea for the small text-only action links (Modifier/Récurrence...)
+   that default to the app's violet accent — orange here instead. */
+.budget-action-link {
+  color: #ff7a00;
+}
+
+.budget-action-link:hover {
+  background-color: rgba(255, 122, 0, 0.1);
+  color: #ff7a00;
+}
+
+.budget-btn-primary {
+  background-color: #ff7a00;
+  color: #fff;
+}
+
+.budget-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+/* Budget page redesign — stat cards fade/slide in staggered on load
+   (BudgetStatCards.tsx sets animation-delay per card index). */
+@keyframes budget-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.budget-card-in {
+  animation: budget-card-in 0.5s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .budget-card-in {
+    animation: none;
+  }
+}
+
 /* Onboarding quiz (Onboarding.tsx) — the selected answer briefly pulses
    orange before the question transitions (JS delays the actual advance
    until this finishes, see .question-exit below), and each new question

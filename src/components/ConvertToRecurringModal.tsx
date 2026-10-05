@@ -65,6 +65,8 @@ export function ConvertToRecurringModal({
         <UpgradePrompt
           title={t.limitReached(maxRecurringExpenses ?? 0)}
           description={t.limitDescription}
+          variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
+          linkClassName="text-[#FF7A00] hover:opacity-80"
           minPlan="standard"
         />
       ) : (
@@ -77,7 +79,7 @@ export function ConvertToRecurringModal({
             <select
               value={frequency}
               onChange={(e) => setFrequency(e.target.value as RecurringFrequency)}
-              className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+              className="rounded-lg budget-field px-3 py-2 text-ink"
             >
               {getFrequencyOptions(lang).map((f) => (
                 <option key={f.value} value={f.value} className="bg-surface">
@@ -93,7 +95,7 @@ export function ConvertToRecurringModal({
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+              className="rounded-lg budget-field px-3 py-2 text-ink"
             />
           </label>
 
@@ -102,7 +104,7 @@ export function ConvertToRecurringModal({
               type="checkbox"
               checked={hasEndDate}
               onChange={(e) => setHasEndDate(e.target.checked)}
-              className="h-4 w-4 accent-primary"
+              className="h-4 w-4 accent-[#FF7A00]"
             />
             {t.endDateLabel}
           </label>
@@ -112,14 +114,14 @@ export function ConvertToRecurringModal({
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               min={startDate}
-              className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+              className="rounded-lg budget-field px-3 py-2 text-ink"
             />
           )}
 
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-primary-strong px-5 py-2.5 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+            className="rounded-lg budget-btn-primary px-5 py-2.5 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
           >
             {submitting ? t.converting : t.convertButton}
           </button>

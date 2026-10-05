@@ -56,7 +56,7 @@ function EditRow({
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="min-w-[120px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+          className="min-w-[120px] flex-1 rounded-lg budget-field px-3 py-1.5 text-sm text-ink"
         />
         <input
           type="number"
@@ -65,12 +65,12 @@ function EditRow({
           step="0.01"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="w-24 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+          className="w-24 rounded-lg budget-field px-3 py-1.5 text-sm text-ink"
         />
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+          className="rounded-lg budget-field px-3 py-1.5 text-sm text-ink"
         >
           {categoryNames.map((cat) => (
             <option key={cat} value={cat} className="bg-surface">
@@ -85,7 +85,7 @@ function EditRow({
           type="checkbox"
           checked={applyToPast}
           onChange={(e) => setApplyToPast(e.target.checked)}
-          className="h-4 w-4 accent-primary"
+          className="h-4 w-4 accent-[#FF7A00]"
         />
         {t.applyToPast}
       </label>
@@ -93,7 +93,7 @@ function EditRow({
       <div className="flex gap-2">
         <button
           type="submit"
-          className="rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
+          className="rounded-lg budget-btn-primary px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
         >
           {COMMON[lang].app.save}
         </button>
@@ -173,7 +173,7 @@ function AddForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder={t.namePlaceholder}
-          className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="min-w-[140px] flex-1 rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
         />
         <input
           type="number"
@@ -183,12 +183,12 @@ function AddForm({
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder={t.amountPlaceholder}
-          className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="w-28 rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
         />
         <select
           value={categoryField.category}
           onChange={(e) => categoryField.setCategory(e.target.value)}
-          className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+          className="rounded-lg budget-field px-3 py-2 text-ink"
         >
           {categoryNames.map((cat) => (
             <option key={cat} value={cat} className="bg-surface">
@@ -209,7 +209,7 @@ function AddForm({
         <select
           value={frequency}
           onChange={(e) => setFrequency(e.target.value as RecurringFrequency)}
-          className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+          className="rounded-lg budget-field px-3 py-2 text-sm text-ink"
         >
           {getFrequencyOptions(lang).map((f) => (
             <option key={f.value} value={f.value} className="bg-surface">
@@ -223,7 +223,7 @@ function AddForm({
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+            className="rounded-lg budget-field px-3 py-2 text-sm text-ink"
           />
         </label>
       </div>
@@ -233,7 +233,7 @@ function AddForm({
           type="checkbox"
           checked={hasEndDate}
           onChange={(e) => setHasEndDate(e.target.checked)}
-          className="h-4 w-4 accent-primary"
+          className="h-4 w-4 accent-[#FF7A00]"
         />
         {t.endDateLabel}
       </label>
@@ -243,14 +243,14 @@ function AddForm({
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
           min={startDate}
-          className="w-fit rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+          className="w-fit rounded-lg budget-field px-3 py-2 text-sm text-ink"
         />
       )}
 
       <button
         type="submit"
         disabled={submitting}
-        className="w-fit rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+        className="w-fit rounded-lg budget-btn-primary px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
       >
         {submitting ? t.creating : t.createButton}
       </button>
@@ -325,7 +325,7 @@ export function RecurringExpenses({
                 <button
                   type="button"
                   onClick={() => setEditingId(rule.id)}
-                  className="rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
+                  className="rounded-md px-2 py-1.5 text-sm budget-action-link"
                 >
                   {COMMON[lang].app.modify}
                 </button>
@@ -347,6 +347,8 @@ export function RecurringExpenses({
         <UpgradePrompt
           title={t.limitReached(maxRecurringExpenses ?? 0)}
           description={t.limitDescription}
+          variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
+          linkClassName="text-[#FF7A00] hover:opacity-80"
           minPlan="standard"
         />
       ) : (

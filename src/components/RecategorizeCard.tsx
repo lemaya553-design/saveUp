@@ -71,14 +71,14 @@ function RecurringRecategorizeSuggestions() {
         {suggestions.map(({ rule, guessedCategory }) => {
           const isApplying = applyingId === rule.id
           return (
-            <li key={rule.id} className="rounded-lg border border-overlay/10 bg-overlay/5 p-3">
+            <li key={rule.id} className="rounded-lg budget-field p-3">
               <p className="text-sm text-ink">{t.itemLabel(rule.description, translateCategoryLabel(guessedCategory, lang))}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => apply(rule.id, guessedCategory, false)}
                   disabled={isApplying}
-                  className="rounded-lg bg-primary-strong px-3 py-1.5 text-xs font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                  className="rounded-lg budget-btn-primary px-3 py-1.5 text-xs font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
                 >
                   {isApplying ? t.applying : t.applyFutureOnly}
                 </button>
@@ -141,7 +141,7 @@ export function RecategorizeCard() {
         type="button"
         onClick={handleRecategorize}
         disabled={recategorizing || categories.loading}
-        className="rounded-lg bg-primary-strong px-5 py-2.5 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+        className="rounded-lg budget-btn-primary px-5 py-2.5 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
       >
         {recategorizing ? t.running : t.button}
       </button>
@@ -157,7 +157,7 @@ export function RecategorizeCard() {
           </p>
 
           {recategorizeResult.sample.length > 0 && (
-            <div className="mt-3 rounded-lg border border-overlay/10 bg-overlay/5 p-3">
+            <div className="mt-3 rounded-lg budget-field p-3">
               <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">{t.previewTitle}</p>
               <ul className="space-y-1.5 text-xs">
                 {recategorizeResult.sample.map((s, i) => (

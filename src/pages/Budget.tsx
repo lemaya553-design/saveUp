@@ -11,7 +11,7 @@ import { usePreferences } from '../hooks/usePreferences'
 import { useRecurringExpenses } from '../hooks/useRecurringExpenses'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
-import { getMonthRange } from '../lib/format'
+import { getCurrencySymbol, getMonthRange, getWeekStart, WEEKS_PER_MONTH } from '../lib/format'
 import {
   computeCategoryBreakdown,
   computeMonthlyTrend,
@@ -23,17 +23,18 @@ import { getCategoryShareAlert } from '../lib/alerts'
 import { canImportCsv, FREE_CSV_IMPORT_LIMIT } from '../lib/plans'
 import { computeUpcomingRecurringTotal } from '../lib/recurringExpenses'
 import { BUDGET } from '../lib/i18n/budget'
-import { PageHeader } from '../components/PageHeader'
 import { Card } from '../components/Card'
-import { EmptyState } from '../components/EmptyState'
+import { HelpButton } from '../components/HelpButton'
 import { AlertBanner } from '../components/AlertBanner'
-import { IncomeInput } from '../components/IncomeInput'
 import { FixedExpenses } from '../components/FixedExpenses'
 import { RecurringExpenses } from '../components/RecurringExpenses'
 import { ConvertToRecurringModal } from '../components/ConvertToRecurringModal'
 import { RecentExpenses } from '../components/RecentExpenses'
-import { CategoryBreakdown } from '../components/CategoryBreakdown'
-import { ExpenseTrendChart } from '../components/ExpenseTrendChart'
+import { BudgetStatCards } from '../components/BudgetStatCards'
+import { BudgetSpendingChart } from '../components/BudgetSpendingChart'
+import { BudgetCategoryRing } from '../components/BudgetCategoryRing'
+import { BudgetTrendBars } from '../components/BudgetTrendBars'
+import { AddExpenseModal } from '../components/AddExpenseModal'
 import { BudgetInsight } from '../components/BudgetInsight'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { TabBar, type TabDef } from '../components/TabBar'
@@ -45,6 +46,14 @@ import { UpgradePrompt } from '../components/UpgradePrompt'
 
 type Tab = 'depenses' | 'categories' | 'import' | 'recurrences'
 const TABS: Tab[] = ['depenses', 'categories', 'import', 'recurrences']
+
+function PlusIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
 
 export function Budget() {
   const { tab: tabParam } = useParams<{ tab: string }>()
@@ -73,8 +82,8 @@ export function Budget() {
   const subscription = useSubscription()
   const preferences = usePreferences()
   const recurring = useRecurringExpenses()
-  const [showIncomeForm, setShowIncomeForm] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [addExpenseOpen, setAddExpenseOpen] = useState(false)
   const [convertingExpense, setConvertingExpense] = useState<FixedExpense | null>(null)
 
   const loading =
@@ -132,6 +141,18 @@ export function Budget() {
     })
   }, [history.records])
 
+  // Same formula as the weekly-budget caption already established elsewhere
+  // in the app (WEEKS_PER_MONTH = 52/12) — spendableBudget ÷ weeks, minus
+  // whatever's already been spent since this week's Monday.
+  const { weeklyRemaining, spentThisWeek } = useMemo(() => {
+    const weeklyBudget = spendableBudget / WEEKS_PER_MONTH
+    const weekStart = getWeekStart(new Date())
+    const spent = thisMonthRecords
+      .filter((r) => new Date(r.spent_at) >= weekStart)
+      .reduce((sum, r) => sum + r.amount, 0)
+    return { weeklyRemaining: weeklyBudget - spent, spentThisWeek: spent }
+  }, [spendableBudget, thisMonthRecords])
+
   const categoryBreakdown = useMemo(
     () => computeCategoryBreakdown(fixed.fixedExpenses, thisMonthRecords, savingsThisMonth),
     [fixed.fixedExpenses, thisMonthRecords, savingsThisMonth],
@@ -157,8 +178,8 @@ export function Budget() {
 
   if (tab === 'depenses' && income.monthlyIncome === 0) {
     return (
-      <div className="mx-auto max-w-3xl px-4 pb-10">
-        <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={t.help.depenses} />
+      <div className="mx-auto max-w-3xl px-4 pb-10 sm:px-6">
+        <BudgetHero title={t.pageHeader.title} help={t.help.depenses} onAddExpense={() => setAddExpenseOpen(true)} hideAdd />
 
         <TabBar tabs={TAB_DEFS} active={tab} onChange={(next) => navigate(`/budget/${next}`)} />
 
@@ -168,16 +189,34 @@ export function Budget() {
           </div>
         )}
 
-        {showIncomeForm ? (
-          <IncomeInput monthlyIncome={income.monthlyIncome} onChange={income.setMonthlyIncome} />
-        ) : (
-          <EmptyState
-            title={t.noIncome.title}
-            description={t.noIncome.description}
-            actionLabel={t.noIncome.actionLabel}
-            onAction={() => setShowIncomeForm(true)}
-          />
-        )}
+        <div
+          className="rounded-2xl border p-8 text-center shadow-sm"
+          style={{ borderColor: 'color-mix(in srgb, var(--color-overlay) 10%, transparent)' }}
+        >
+          <h2 className="text-xl font-semibold text-ink">{t.noIncome.title}</h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-muted">{t.noIncome.description}</p>
+          <label className="mx-auto mt-5 flex max-w-xs items-center gap-2">
+            <span className="text-muted">{getCurrencySymbol(preferences.currency, lang)}</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="0.01"
+              placeholder="0.00"
+              className="w-full rounded-lg border bg-canvas px-3 py-2.5 text-ink placeholder-muted focus:outline-none"
+              style={{ borderColor: 'color-mix(in srgb, var(--color-overlay) 12%, transparent)' }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return
+                const value = Math.max(0, Number((e.target as HTMLInputElement).value) || 0)
+                if (value > 0) income.setMonthlyIncome(value)
+              }}
+              onBlur={(e) => {
+                const value = Math.max(0, Number(e.target.value) || 0)
+                if (value > 0) income.setMonthlyIncome(value)
+              }}
+            />
+          </label>
+        </div>
       </div>
     )
   }
@@ -192,11 +231,23 @@ export function Budget() {
     spendableBudget > 0 ? (monthly.spentThisMonth / spendableBudget) * 100 : monthly.spentThisMonth > 0 ? 100 : 0
   const monthProgressPct = monthly.monthProgress * 100
 
-  return (
-    <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={HELP_BY_TAB[tab]} />
+  let spendableCaption = getSpendableBudgetCaption(rawSpendableBudget, lang, preferences.currency)
+  if (savingsThisMonth > 0 && rawSpendableBudget >= 0) {
+    spendableCaption += t.remaining.includesSavings(formatMoney(savingsThisMonth))
+  }
 
-      <TabBar tabs={TAB_DEFS} active={tab} onChange={(next) => navigate(`/budget/${next}`)} />
+  return (
+    <div className="mx-auto max-w-[1200px] px-4 pb-16 sm:px-6 lg:px-8">
+      <BudgetHero title={t.pageHeader.title} help={HELP_BY_TAB[tab]} onAddExpense={() => setAddExpenseOpen(true)} />
+
+      <div className="mb-6">
+        <TabBar
+          tabs={TAB_DEFS}
+          active={tab}
+          onChange={(next) => navigate(`/budget/${next}`)}
+          activeClassName="bg-[#FF7A00] text-white shadow-md"
+        />
+      </div>
 
       {/* `error` combines every hook this page loads, including
           recurring.error — gating it to 'depenses' only used to leave a
@@ -217,70 +268,53 @@ export function Budget() {
             </div>
           )}
 
-          <div className="grid gap-4">
-            <div className="glass rounded-xl p-4 shadow-lg shadow-black/30">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted">{t.remaining.label}</p>
-              <p
-                className={`mt-1 text-3xl font-bold sm:text-4xl ${
-                  isOverBudget ? 'text-red-400' : 'text-success'
-                }`}
-              >
-                {formatMoney(remainingThisMonth)}
-              </p>
+          <BudgetStatCards
+            remainingThisMonth={remainingThisMonth}
+            spentThisMonth={monthly.spentThisMonth}
+            spentPct={spentPct}
+            monthProgressPct={monthProgressPct}
+            isOverBudget={isOverBudget}
+            progressCaption={t.remaining.progressCaption(spentPct, monthProgressPct)}
+            spendableCaption={spendableCaption}
+            monthlyIncome={income.monthlyIncome}
+            onIncomeChange={income.setMonthlyIncome}
+            weeklyRemaining={weeklyRemaining}
+            spentThisWeek={spentThisWeek}
+          />
 
-              <div className="relative mt-3 h-2 w-full overflow-hidden rounded-full bg-overlay/10">
-                <div
-                  className={`h-full rounded-full transition-all ${
-                    isOverBudget ? 'bg-red-400' : 'bg-primary'
-                  }`}
-                  style={{ width: `${Math.min(100, spentPct)}%` }}
+          <div className="mt-6 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+            <div className="flex flex-col gap-6">
+              <BudgetCard title={t.spendingChart.title} hint={t.spendingChart.hint}>
+                <BudgetSpendingChart
+                  records={thisMonthRecords}
+                  spendableBudget={spendableBudget}
+                  onAddExpense={() => setAddExpenseOpen(true)}
                 />
-                <div
-                  className="absolute top-0 h-full w-0.5 bg-overlay/70"
-                  style={{ left: `${Math.min(100, monthProgressPct)}%` }}
-                  aria-hidden="true"
-                />
-              </div>
-              <p className="mt-2 text-xs text-muted">{t.remaining.progressCaption(spentPct, monthProgressPct)}</p>
-              <p className={`mt-1 text-xs ${rawSpendableBudget < 0 ? 'text-red-400' : 'text-muted'}`}>
-                {getSpendableBudgetCaption(rawSpendableBudget, lang, preferences.currency)}
-                {savingsThisMonth > 0 && rawSpendableBudget >= 0 && t.remaining.includesSavings(formatMoney(savingsThisMonth))}
-              </p>
-              {upcomingRecurringTotal > 0 && (
-                <p className="mt-1 text-xs text-muted">
-                  {t.remaining.upcomingRecurring(formatMoney(upcomingRecurringTotal))}
-                </p>
-              )}
+              </BudgetCard>
+
+              <FixedExpenses
+                expenses={fixed.fixedExpenses}
+                total={fixed.totalFixedExpenses}
+                onAdd={fixed.addFixedExpense}
+                onUpdate={fixed.updateFixedExpense}
+                onRemove={fixed.removeFixedExpense}
+                onConvertToRecurring={setConvertingExpense}
+              />
+
+              <RecentExpenses expenses={spending.expenses} onUpdate={spending.updateExpense} onRemove={spending.removeExpense} />
             </div>
 
-            <Card title={t.breakdownCard.title} hint={t.breakdownCard.hint} compact>
-              <CategoryBreakdown categories={categoryBreakdown} />
-            </Card>
+            <div className="flex flex-col gap-6">
+              <BudgetCard title={t.breakdownCard.title} hint={t.breakdownCard.hint}>
+                <BudgetCategoryRing categories={categoryBreakdown} onAddExpense={() => setAddExpenseOpen(true)} />
+              </BudgetCard>
 
-            <IncomeInput monthlyIncome={income.monthlyIncome} onChange={income.setMonthlyIncome} compact />
+              <BudgetCard title={t.trendCard.title} hint={t.trendCard.hint}>
+                <BudgetTrendBars months={monthlyTrend} onAddExpense={() => setAddExpenseOpen(true)} />
+              </BudgetCard>
 
-            <FixedExpenses
-              expenses={fixed.fixedExpenses}
-              total={fixed.totalFixedExpenses}
-              onAdd={fixed.addFixedExpense}
-              onUpdate={fixed.updateFixedExpense}
-              onRemove={fixed.removeFixedExpense}
-              onConvertToRecurring={setConvertingExpense}
-              compact
-            />
-
-            <RecentExpenses
-              expenses={spending.expenses}
-              onUpdate={spending.updateExpense}
-              onRemove={spending.removeExpense}
-              compact
-            />
-
-            <Card title={t.trendCard.title} hint={t.trendCard.hint} compact>
-              <ExpenseTrendChart months={monthlyTrend} />
-            </Card>
-
-            <BudgetInsight text={insightText} />
+              <BudgetInsight text={insightText} />
+            </div>
           </div>
         </>
       )}
@@ -301,7 +335,8 @@ export function Budget() {
                 <button
                   type="button"
                   onClick={() => setImportOpen(true)}
-                  className="rounded-lg bg-primary-strong px-5 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110"
+                  className="rounded-lg px-5 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110"
+                  style={{ backgroundColor: '#FF7A00' }}
                 >
                   {t.importTab.importButton}
                 </button>
@@ -319,6 +354,8 @@ export function Budget() {
                     ? t.importTab.upgradeUsedLimit(FREE_CSV_IMPORT_LIMIT)
                     : t.importTab.upgradeGeneric
                 }
+                variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
+                linkClassName="text-[#FF7A00] hover:opacity-80"
                 minPlan="standard"
               />
             )}
@@ -340,6 +377,7 @@ export function Budget() {
       )}
 
       <ImportTransactionsModal open={importOpen} onClose={() => setImportOpen(false)} />
+      <AddExpenseModal open={addExpenseOpen} onClose={() => setAddExpenseOpen(false)} onAdd={spending.addExpense} />
       <ConvertToRecurringModal
         expense={convertingExpense}
         atLimit={atRecurringLimit}
@@ -352,5 +390,52 @@ export function Budget() {
         }}
       />
     </div>
+  )
+}
+
+function BudgetHero({
+  title,
+  help,
+  onAddExpense,
+  hideAdd = false,
+}: {
+  title: string
+  help: { title?: string; purpose: string; actions: string[] }
+  onAddExpense: () => void
+  hideAdd?: boolean
+}) {
+  const { lang } = useLanguage()
+  const t = BUDGET[lang]
+  return (
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-4 pt-6">
+      <div className="flex items-center gap-2">
+        <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{title}</h1>
+        <HelpButton title={help.title ?? title} purpose={help.purpose} actions={help.actions} />
+      </div>
+      {!hideAdd && (
+        <button
+          type="button"
+          onClick={onAddExpense}
+          className="flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110"
+          style={{ backgroundColor: '#FF7A00' }}
+        >
+          <PlusIcon className="h-4 w-4" />
+          {t.heroAddButton}
+        </button>
+      )}
+    </div>
+  )
+}
+
+function BudgetCard({ title, hint, children }: { title: string; hint: string; children: React.ReactNode }) {
+  return (
+    <section
+      className="hover-lift min-w-0 rounded-2xl border bg-surface p-5 shadow-sm sm:p-6"
+      style={{ borderColor: 'color-mix(in srgb, var(--color-overlay) 10%, transparent)' }}
+    >
+      <h2 className="text-base font-semibold text-ink">{title}</h2>
+      <p className="mb-4 mt-1 text-xs text-muted">{hint}</p>
+      {children}
+    </section>
   )
 }

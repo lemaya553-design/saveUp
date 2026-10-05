@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { Card } from './Card'
 import { useCategories } from '../hooks/useCategories'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
@@ -41,7 +40,7 @@ function EditRow({
         type="text"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        className="min-w-[120px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="budget-field min-w-[120px] flex-1 rounded-lg px-3 py-1.5 text-sm text-ink"
       />
       <input
         type="number"
@@ -50,12 +49,12 @@ function EditRow({
         step="0.01"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        className="w-24 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="budget-field w-24 rounded-lg px-3 py-1.5 text-sm text-ink"
       />
       <select
         value={category}
         onChange={(e) => setCategory(e.target.value)}
-        className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="budget-field rounded-lg px-3 py-1.5 text-sm text-ink"
       >
         {categoryNames.map((cat) => (
           <option key={cat} value={cat} className="bg-surface">
@@ -63,10 +62,7 @@ function EditRow({
           </option>
         ))}
       </select>
-      <button
-        type="submit"
-        className="rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
-      >
+      <button type="submit" className="budget-btn-primary rounded-lg px-3 py-1.5 text-sm font-medium transition-all">
         {COMMON[lang].app.save}
       </button>
       <button type="button" onClick={onCancel} className="text-sm text-muted hover:text-ink">
@@ -80,12 +76,10 @@ export function RecentExpenses({
   expenses,
   onUpdate,
   onRemove,
-  compact = false,
 }: {
   expenses: Expense[]
   onUpdate: (id: string, description: string, amount: number, category: string) => void
   onRemove: (id: string) => void
-  compact?: boolean
 }) {
   const { lang } = useLanguage()
   const t = BUDGET[lang].recentExpenses
@@ -123,7 +117,13 @@ export function RecentExpenses({
   }
 
   return (
-    <Card title={t.cardTitle} hint={t.cardHint} compact={compact}>
+    <section
+      className="hover-lift min-w-0 rounded-2xl border bg-surface p-5 shadow-sm sm:p-6"
+      style={{ borderColor: 'color-mix(in srgb, var(--color-overlay) 10%, transparent)' }}
+    >
+      <h2 className="text-base font-semibold text-ink">{t.cardTitle}</h2>
+      <p className="mb-4 mt-1 text-xs text-muted">{t.cardHint}</p>
+
       {expenses.length === 0 ? (
         <p className="text-sm text-muted">{t.empty}</p>
       ) : (
@@ -134,12 +134,12 @@ export function RecentExpenses({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t.searchPlaceholder}
-              className="min-w-[160px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink placeholder-muted focus:border-primary focus:outline-none"
+              className="budget-field min-w-[160px] flex-1 rounded-lg px-3 py-2 text-sm text-ink placeholder-muted"
             />
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+              className="budget-field rounded-lg px-3 py-2 text-sm text-ink"
             >
               <option value="" className="bg-surface">
                 {t.allCategories}
@@ -156,7 +156,7 @@ export function RecentExpenses({
                 type="date"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                className="budget-field rounded-lg px-2 py-2 text-sm text-ink"
               />
             </label>
             <label className="flex items-center gap-1 text-xs text-muted">
@@ -165,14 +165,14 @@ export function RecentExpenses({
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                className="budget-field rounded-lg px-2 py-2 text-sm text-ink"
               />
             </label>
             {hasActiveFilters && (
               <button
                 type="button"
                 onClick={clearFilters}
-                className="-mx-2 -my-1 rounded-md px-2 py-1 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
+                className="budget-action-link -mx-2 -my-1 rounded-md px-2 py-1 text-sm"
               >
                 {t.clearFilters}
               </button>
@@ -223,7 +223,7 @@ export function RecentExpenses({
                       <button
                         type="button"
                         onClick={() => setEditingId(expense.id)}
-                        className="rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
+                        className="budget-action-link rounded-md px-2 py-1.5 text-sm"
                       >
                         {COMMON[lang].app.modify}
                       </button>
@@ -246,13 +246,13 @@ export function RecentExpenses({
             <button
               type="button"
               onClick={() => setShowAll((v) => !v)}
-              className="-mx-2 mt-3 rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
+              className="budget-action-link -mx-2 mt-3 rounded-md px-2 py-1.5 text-sm"
             >
               {showAll ? t.collapse : t.showAll(filtered.length)}
             </button>
           )}
         </>
       )}
-    </Card>
+    </section>
   )
 }

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Card } from './Card'
 import { useCategories } from '../hooks/useCategories'
 import { useCustomKeywords } from '../hooks/useCustomKeywords'
 import { useCategorySuggestion } from '../hooks/useCategorySuggestion'
@@ -7,10 +6,21 @@ import { useSubscription } from '../hooks/useSubscription'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
+import { budgetColorForCategory } from '../lib/budgetChartColors'
 import { BUDGET } from '../lib/i18n/budget'
 import { COMMON } from '../lib/i18n/common'
 import type { Lang } from '../lib/i18n/language'
 import type { FixedExpense } from '../hooks/useFixedExpenses'
+
+const CARD_BORDER = 'color-mix(in srgb, var(--color-overlay) 10%, transparent)'
+
+function RepeatIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h13l-3-3m3 3-3 3M20 17H7l3 3m-3-3 3-3" />
+    </svg>
+  )
+}
 
 function EditRow({
   expense,
@@ -41,7 +51,7 @@ function EditRow({
         type="text"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="min-w-[120px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="budget-field min-w-[120px] flex-1 rounded-lg px-3 py-1.5 text-sm text-ink"
       />
       <input
         type="number"
@@ -50,12 +60,12 @@ function EditRow({
         step="0.01"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        className="w-24 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="budget-field w-24 rounded-lg px-3 py-1.5 text-sm text-ink"
       />
       <select
         value={category}
         onChange={(e) => setCategory(e.target.value)}
-        className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+        className="budget-field rounded-lg px-3 py-1.5 text-sm text-ink"
       >
         {categoryNames.map((cat) => (
           <option key={cat} value={cat} className="bg-surface">
@@ -63,10 +73,7 @@ function EditRow({
           </option>
         ))}
       </select>
-      <button
-        type="submit"
-        className="rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
-      >
+      <button type="submit" className="budget-btn-primary rounded-lg px-3 py-1.5 text-sm font-medium transition-all">
         {COMMON[lang].app.save}
       </button>
       <button
@@ -87,7 +94,6 @@ export function FixedExpenses({
   onUpdate,
   onRemove,
   onConvertToRecurring,
-  compact = false,
 }: {
   expenses: FixedExpense[]
   total: number
@@ -95,7 +101,6 @@ export function FixedExpenses({
   onUpdate: (id: string, name: string, amount: number, category: string) => void
   onRemove: (id: string) => void
   onConvertToRecurring?: (expense: FixedExpense) => void
-  compact?: boolean
 }) {
   const { lang } = useLanguage()
   const t = BUDGET[lang].fixedExpenses
@@ -132,7 +137,13 @@ export function FixedExpenses({
   }
 
   return (
-    <Card title={t.cardTitle} hint={t.cardHint} compact={compact}>
+    <section
+      className="hover-lift min-w-0 rounded-2xl border bg-surface p-5 shadow-sm sm:p-6"
+      style={{ borderColor: CARD_BORDER }}
+    >
+      <h2 className="text-base font-semibold text-ink">{t.cardTitle}</h2>
+      <p className="mb-4 mt-1 text-xs text-muted">{t.cardHint}</p>
+
       <ul className="mb-4 divide-y divide-overlay/10">
         {expenses.length === 0 && <li className="py-2 text-sm text-muted">{t.empty}</li>}
         {expenses.map((expense) =>
@@ -149,10 +160,18 @@ export function FixedExpenses({
               />
             </li>
           ) : (
-            <li key={expense.id} className="flex flex-wrap items-center justify-between gap-y-1 py-2">
-              <div>
-                <span className="text-ink">{expense.name}</span>
-                <span className="ml-2 text-xs text-muted">{translateCategoryLabel(expense.category, lang)}</span>
+            <li key={expense.id} className="flex flex-wrap items-center justify-between gap-y-1 py-2.5">
+              <div className="flex items-center gap-2.5">
+                <span
+                  aria-hidden="true"
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: budgetColorForCategory(expense.category) }}
+                />
+                <RepeatIcon className="h-4 w-4 shrink-0 text-muted" />
+                <div>
+                  <span className="text-ink">{expense.name}</span>
+                  <span className="ml-2 text-xs text-muted">{translateCategoryLabel(expense.category, lang)}</span>
+                </div>
               </div>
               <div className="flex items-center gap-1">
                 <span className="mr-2 font-medium text-ink">{formatMoney(expense.amount)}</span>
@@ -160,7 +179,7 @@ export function FixedExpenses({
                   <button
                     type="button"
                     onClick={() => onConvertToRecurring(expense)}
-                    className="rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
+                    className="budget-action-link rounded-md px-2 py-1.5 text-sm"
                     title={t.recurringButtonTitle}
                   >
                     {t.recurringButton}
@@ -169,7 +188,7 @@ export function FixedExpenses({
                 <button
                   type="button"
                   onClick={() => setEditingId(expense.id)}
-                  className="rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
+                  className="budget-action-link rounded-md px-2 py-1.5 text-sm"
                 >
                   {COMMON[lang].app.modify}
                 </button>
@@ -194,7 +213,7 @@ export function FixedExpenses({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t.namePlaceholder}
-            className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+            className="budget-field min-w-[140px] flex-1 rounded-lg px-3 py-2 text-ink placeholder-muted"
           />
           <input
             type="number"
@@ -204,12 +223,12 @@ export function FixedExpenses({
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder={t.amountPlaceholder}
-            className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+            className="budget-field w-28 rounded-lg px-3 py-2 text-ink placeholder-muted"
           />
           <select
             value={categoryField.category}
             onChange={(e) => categoryField.setCategory(e.target.value)}
-            className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+            className="budget-field rounded-lg px-3 py-2 text-ink"
           >
             {categoryNames.map((cat) => (
               <option key={cat} value={cat} className="bg-surface">
@@ -220,7 +239,7 @@ export function FixedExpenses({
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+            className="budget-btn-primary rounded-lg px-4 py-2 font-medium transition-all disabled:opacity-60"
           >
             {submitting ? t.adding : COMMON[lang].app.add}
           </button>
@@ -237,6 +256,6 @@ export function FixedExpenses({
       <p className="mt-4 text-sm text-muted">
         {t.total} <span className="font-semibold text-ink">{formatMoney(total)}</span>
       </p>
-    </Card>
+    </section>
   )
 }

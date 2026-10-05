@@ -1,7 +1,9 @@
 import { useId } from 'react'
 
-// The app's bar-chart mark — three ascending bars, blue-to-mauve gradient
-// (same stops as public/icon.svg, the favicon/PWA icon source). Rendered
+// The app's bar-chart mark — three ascending bars, orange gradient (the
+// Budget page redesign's brand palette). public/icon.svg, the favicon/PWA
+// icon source, keeps its own original blue-to-mauve gradient on purpose —
+// out of scope for that redesign, which only covers in-app chrome. Rendered
 // inline as SVG rather than an <img> so it stays crisp at any size/DPI and
 // needs no separate asset request, consistent with every other icon in
 // this app. useId keeps the gradient's id collision-free if this ever
@@ -26,8 +28,8 @@ export function LogoMark({
     >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#4A6CF7" />
-          <stop offset="1" stopColor="#8B5CF6" />
+          <stop offset="0" stopColor="#CC5F00" />
+          <stop offset="1" stopColor="#FF7A00" />
         </linearGradient>
       </defs>
       <rect x="70" y="260" width="85" height="180" rx="32" fill={`url(#${gradientId})`} />

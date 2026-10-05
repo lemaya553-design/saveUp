@@ -49,7 +49,7 @@ function BudgetInput({
         onBlur={commit}
         onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
         placeholder={t.nonePlaceholder}
-        className="w-20 rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-1 text-xs text-ink focus:border-primary focus:outline-none"
+        className="w-20 rounded-lg budget-field px-2 py-1 text-xs text-ink"
       />
       <span>{getCurrencySymbol(currency, lang)}</span>
     </label>
@@ -91,11 +91,11 @@ function CategoryRow({
           value={name}
           onChange={(e) => setName(e.target.value)}
           autoFocus
-          className="flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+          className="flex-1 rounded-lg budget-field px-3 py-1.5 text-sm text-ink"
         />
         <button
           type="submit"
-          className="rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
+          className="rounded-lg budget-btn-primary px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
         >
           {COMMON[lang].app.save}
         </button>
@@ -121,7 +121,7 @@ function CategoryRow({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
+          className="rounded-md px-2 py-1.5 text-sm budget-action-link"
         >
           {t.rename}
         </button>
@@ -207,7 +207,7 @@ export function CategoryManager() {
       )}
 
       {pendingDelete && (
-        <div className="mt-3 rounded-lg border border-accent/30 bg-accent/10 px-4 py-3 text-sm">
+        <div className="mt-3 rounded-lg border border-[#FF7A00]/30 bg-[#FF7A00]/10 px-4 py-3 text-sm">
           <p className="text-ink">
             {t.confirmDelete(
               translateCategoryLabel(pendingDelete.name, lang),
@@ -239,6 +239,8 @@ export function CategoryManager() {
           <UpgradePrompt
             title={t.limitReached(limits.maxCategories ?? 0)}
             description={t.limitDescription}
+            variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
+            linkClassName="text-[#FF7A00] hover:opacity-80"
             minPlan="standard"
           />
         </div>
@@ -249,12 +251,12 @@ export function CategoryManager() {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder={t.newCategoryPlaceholder}
-            className="flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+            className="flex-1 rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
           />
           <button
             type="submit"
             disabled={addingCategory}
-            className="rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+            className="rounded-lg budget-btn-primary px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
           >
             {addingCategory ? t.adding : COMMON[lang].app.add}
           </button>

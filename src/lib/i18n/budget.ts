@@ -9,6 +9,31 @@ import type { Lang } from './language'
 // tiny and only ever mounted from this one page.
 export interface BudgetContent {
   pageHeader: { title: string; subtitle: string }
+  heroAddButton: string
+  statCards: {
+    remaining: string
+    spent: string
+    income: string
+    weeklyBudget: string
+    weeklyBudgetCaption: (spentThisWeek: string) => string
+    editIncomeAria: string
+  }
+  spendingChart: {
+    title: string
+    hint: string
+    idealPaceLegend: string
+    actualLegend: string
+    weeklyFallbackLabel: (weekIndex: number) => string
+  }
+  emptyChart: {
+    spendingTitle: string
+    spendingDescription: string
+    categoryTitle: string
+    categoryDescription: string
+    trendTitle: string
+    trendDescription: string
+    cta: string
+  }
   tabs: { depenses: string; categories: string; import: string; recurrences: string }
   help: {
     depenses: { title: string; purpose: string; actions: string[] }
@@ -227,8 +252,33 @@ export interface BudgetContent {
 export const BUDGET: Record<Lang, BudgetContent> = {
   fr: {
     pageHeader: {
-      title: 'Où va ton argent ce mois-ci',
+      title: 'Où va ton argent ce mois-ci ?',
       subtitle: 'Revenu, dépenses fixes et budget de la semaine.',
+    },
+    heroAddButton: 'Ajouter une dépense',
+    statCards: {
+      remaining: 'Il te reste ce mois-ci',
+      spent: 'Dépensé',
+      income: 'Revenu mensuel',
+      weeklyBudget: 'Budget de la semaine',
+      weeklyBudgetCaption: (spentThisWeek) => `${spentThisWeek} dépensé cette semaine`,
+      editIncomeAria: 'Modifier le revenu mensuel',
+    },
+    spendingChart: {
+      title: 'Dépenses du mois',
+      hint: 'Cumul de tes dépenses jour par jour, comparé au rythme idéal de ton budget.',
+      idealPaceLegend: 'Rythme idéal',
+      actualLegend: 'Cumul réel',
+      weeklyFallbackLabel: (weekIndex) => `Sem. ${weekIndex}`,
+    },
+    emptyChart: {
+      spendingTitle: 'Rien à montrer pour l’instant',
+      spendingDescription: 'Ajoute une dépense pour voir ton rythme se dessiner ici.',
+      categoryTitle: 'Pas encore de répartition',
+      categoryDescription: 'Ajoute des dépenses fixes ou quotidiennes pour voir la répartition par catégorie.',
+      trendTitle: 'Pas encore de tendance',
+      trendDescription: "Reviens dans quelques semaines pour voir ta tendance sur 3 mois.",
+      cta: 'Ajouter ma première dépense',
     },
     tabs: {
       depenses: 'Dépenses',
@@ -514,8 +564,33 @@ export const BUDGET: Record<Lang, BudgetContent> = {
   },
   en: {
     pageHeader: {
-      title: "Where your money's going this month",
+      title: "Where's your money going this month?",
       subtitle: 'Income, fixed expenses, and your weekly budget.',
+    },
+    heroAddButton: 'Add an expense',
+    statCards: {
+      remaining: 'Left this month',
+      spent: 'Spent',
+      income: 'Monthly income',
+      weeklyBudget: 'Weekly budget',
+      weeklyBudgetCaption: (spentThisWeek) => `${spentThisWeek} spent this week`,
+      editIncomeAria: 'Edit monthly income',
+    },
+    spendingChart: {
+      title: "This month's spending",
+      hint: "Your day-by-day running total, compared to your budget's ideal pace.",
+      idealPaceLegend: 'Ideal pace',
+      actualLegend: 'Actual total',
+      weeklyFallbackLabel: (weekIndex) => `Week ${weekIndex}`,
+    },
+    emptyChart: {
+      spendingTitle: 'Nothing to show yet',
+      spendingDescription: 'Add an expense to see your pace take shape here.',
+      categoryTitle: 'No breakdown yet',
+      categoryDescription: 'Add fixed or day-to-day expenses to see the breakdown by category.',
+      trendTitle: 'No trend yet',
+      trendDescription: 'Check back in a few weeks to see your 3-month trend.',
+      cta: 'Add my first expense',
     },
     tabs: {
       depenses: 'Expenses',

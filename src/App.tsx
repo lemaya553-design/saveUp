@@ -14,7 +14,6 @@ import { Connexion } from './pages/Connexion'
 import { Confidentialite } from './pages/Confidentialite'
 import { Conditions } from './pages/Conditions'
 import { Dashboard } from './pages/Dashboard'
-import { Budget } from './pages/Budget'
 import { Epargne } from './pages/Epargne'
 import { Parametres } from './pages/Parametres'
 import { Onboarding } from './pages/Onboarding'
@@ -25,6 +24,10 @@ import { DuelAccept } from './pages/DuelAccept'
 const Statistiques = lazy(() =>
   import('./pages/Statistiques').then((m) => ({ default: m.Statistiques })),
 )
+
+// Same reasoning as Statistiques above — the redesigned Budget page now
+// charts its spending/category/trend data with recharts too.
+const Budget = lazy(() => import('./pages/Budget').then((m) => ({ default: m.Budget })))
 
 // Public, standalone, meant to be shared and opened cold on a phone —
 // code-split so nobody visiting the rest of the app pays for it, and it
@@ -60,7 +63,14 @@ function App() {
                       <Route path="dashboard" element={<Dashboard />} />
 
                       <Route path="budget" element={<Navigate to="/budget/depenses" replace />} />
-                      <Route path="budget/:tab" element={<Budget />} />
+                      <Route
+                        path="budget/:tab"
+                        element={
+                          <Suspense fallback={<PageSkeleton cards={5} />}>
+                            <Budget />
+                          </Suspense>
+                        }
+                      />
 
                       <Route path="epargne" element={<Navigate to="/epargne/objectifs" replace />} />
                       <Route path="epargne/:tab" element={<Epargne />} />
