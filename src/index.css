@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --color-canvas: #0b0b12;
-  --color-surface: #15151f;
+  --color-canvas: #0a0a0a;
+  --color-surface: #1a1a1a;
   --color-primary: #4a6cf7;
   /* White text on --color-primary is ~4:1, short of WCAG AA (4.5:1) for normal-size
      text. Solid button fills use this slightly deeper shade instead; links, borders,
@@ -25,9 +25,12 @@
   /* Raw (non-Tailwind-utility) values used directly in the plain CSS rules
      below — kept as real custom properties, not baked-in rgba(), so
      [data-theme="light"] can override them the same way it overrides the
-     @theme tokens above. */
-  --glass-bg: rgba(21, 21, 31, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
+     @theme tokens above. --glass-bg is now solid (not translucent) so
+     cards read as a genuinely distinct near-black surface rather than a
+     blurred wash of whatever sits behind them. --glass-border is a thin,
+     clearly-lighter-than-the-card edge — never a medium gray. */
+  --glass-bg: var(--color-surface);
+  --glass-border: #2a2a2a;
   --slider-track-bg: rgba(255, 255, 255, 0.1);
 }
 
@@ -54,13 +57,15 @@
    only the neutral surface/ink/overlay tokens flip. */
 :root[data-theme='light'] {
   color-scheme: light;
-  --color-canvas: #f5f5f8;
+  --color-canvas: #ffffff;
   --color-surface: #ffffff;
   --color-ink: #16161d;
   --color-muted: #5b5f6d;
   --color-overlay: #16161d;
-  --glass-bg: rgba(255, 255, 255, 0.75);
-  --glass-border: rgba(22, 22, 29, 0.08);
+  /* Solid white card on a solid white page — the thin #e5e5e5 border is
+     what delimits a card, not a background-color difference. */
+  --glass-bg: var(--color-surface);
+  --glass-border: #e5e5e5;
   --slider-track-bg: rgba(22, 22, 29, 0.1);
   /* red-200/red-300 are used ONLY as text color inside the app's
      "border-red-900/N bg-red-950/N text-red-{200,300}" error/warning
@@ -114,11 +119,11 @@ body {
   color: var(--color-ink);
 }
 
-/* Glassmorphism surface: translucent card background, blur, faint edge. */
+/* Card surface: solid fill (--glass-bg resolves to --color-surface in both
+   themes, see :root above), no blur — a flat, high-contrast card delimited
+   by a thin border rather than a translucent wash over the page behind it. */
 .glass {
   background-color: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
 }
 
