@@ -63,7 +63,7 @@ function ReceivedInviteForm({
       {goals.length === 0 ? (
         <p className="text-sm text-muted">
           {t.noGoalsToAccept.before}
-          <button type="button" onClick={onGoToObjectifs} className="text-accent hover:text-accent/80">
+          <button type="button" onClick={onGoToObjectifs} className="budget-action-link">
             {t.noGoalsToAccept.linkText}
           </button>
           {t.noGoalsToAccept.after}
@@ -77,7 +77,7 @@ function ReceivedInviteForm({
             <select
               value={goalId || availableGoals[0].id}
               onChange={(e) => setGoalId(e.target.value)}
-              className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+              className="rounded-lg budget-field px-3 py-2 text-sm text-ink"
             >
               {availableGoals.map((g) => (
                 <option key={g.id} value={g.id} className="bg-surface">
@@ -94,7 +94,7 @@ function ReceivedInviteForm({
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder={at.namePlaceholder}
-              className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink placeholder-muted focus:border-primary focus:outline-none"
+              className="rounded-lg budget-field px-3 py-2 text-sm text-ink placeholder-muted"
             />
           </label>
 
@@ -103,7 +103,7 @@ function ReceivedInviteForm({
               type="checkbox"
               checked={shareGoalName}
               onChange={(e) => setShareGoalName(e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-primary"
+              className="mt-0.5 h-4 w-4 accent-[#FF7A00]"
             />
             {at.shareGoalNameLabel}
           </label>
@@ -114,7 +114,7 @@ function ReceivedInviteForm({
             <button
               type="submit"
               disabled={submitting !== null || !displayName.trim()}
-              className="rounded-lg bg-primary-strong px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+              className="rounded-lg budget-btn-primary px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
             >
               {submitting === 'accept' ? t.accepting : t.accept}
             </button>
@@ -167,9 +167,9 @@ export function DuelCard({
         <span
           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
             duel.status === 'active'
-              ? 'bg-success/15 text-success'
+              ? 'bg-[#FF7A00]/15 text-[#FF7A00]'
               : duel.status === 'pending'
-                ? 'bg-accent/15 text-accent'
+                ? 'bg-[#FFB347]/20 text-[#CC5F00]'
                 : 'bg-overlay/10 text-muted'
           }`}
         >
@@ -197,16 +197,16 @@ export function DuelCard({
         <div className="flex flex-col gap-4">
           <div>
             <div className="mb-1.5 flex items-center justify-between text-sm">
-              <span className={`font-medium ${leader === 'me' ? 'text-success' : 'text-ink'}`}>
+              <span className={`font-medium ${leader === 'me' ? 'text-[#FF7A00]' : 'text-ink'}`}>
                 {t.you} {leader === 'me' ? t.leadingSuffix : ''}
               </span>
               <span className="font-semibold text-ink">{(duel.me?.progressPct ?? 0).toFixed(0)}%</span>
             </div>
-            <ProgressBar value={duel.me?.progressPct ?? 0} colorClass="bg-primary" />
+            <ProgressBar value={duel.me?.progressPct ?? 0} colorClass="bg-[#FF7A00]" />
           </div>
           <div>
             <div className="mb-1.5 flex items-center justify-between text-sm">
-              <span className={`font-medium ${leader === 'opponent' ? 'text-success' : 'text-ink'}`}>
+              <span className={`font-medium ${leader === 'opponent' ? 'text-[#FF7A00]' : 'text-ink'}`}>
                 {duel.opponent?.displayName ?? t.opponentFallback}{' '}
                 {leader === 'opponent' ? t.leadingSuffix : ''}
                 {duel.opponent?.shareGoalName && duel.opponent.goalName ? (
@@ -215,7 +215,7 @@ export function DuelCard({
               </span>
               <span className="font-semibold text-ink">{(duel.opponent?.progressPct ?? 0).toFixed(0)}%</span>
             </div>
-            <ProgressBar value={duel.opponent?.progressPct ?? 0} colorClass="bg-accent" />
+            <ProgressBar value={duel.opponent?.progressPct ?? 0} colorClass="bg-[#CC5F00]" />
           </div>
 
           {(duel.status === 'completed' || duel.status === 'abandoned') && (

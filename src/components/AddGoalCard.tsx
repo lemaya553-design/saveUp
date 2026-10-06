@@ -77,7 +77,7 @@ export function AddGoalCard({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="glass flex min-h-[96px] min-w-0 items-center justify-center rounded-2xl border-2 border-dashed border-overlay/15 p-5 text-sm font-medium text-muted transition-colors hover:border-primary/40 hover:text-ink"
+        className="glass flex min-h-[96px] min-w-0 items-center justify-center rounded-2xl border-2 border-dashed border-overlay/15 p-5 text-sm font-medium text-muted transition-colors hover:border-[#FF7A00]/40 hover:text-ink"
       >
         {t.newGoalButton}
       </button>
@@ -95,7 +95,7 @@ export function AddGoalCard({
           onChange={(e) => setName(e.target.value)}
           placeholder={t.namePlaceholder}
           autoFocus
-          className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="min-w-[140px] flex-1 rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
         />
         <input
           type="number"
@@ -105,7 +105,7 @@ export function AddGoalCard({
           value={target}
           onChange={(e) => setTarget(e.target.value)}
           placeholder={t.targetPlaceholder}
-          className="w-32 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="w-32 rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
         />
         <label className="flex flex-col gap-1 text-xs text-muted">
           {t.dueDateOptionalLabel}
@@ -115,7 +115,7 @@ export function AddGoalCard({
             onChange={(e) => setTargetDate(e.target.value)}
             min={getTodayDateString()}
             max={getFarFutureDateString()}
-            className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+            className="rounded-lg budget-field px-3 py-2 text-sm text-ink"
           />
         </label>
 
@@ -139,7 +139,7 @@ export function AddGoalCard({
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+            className="rounded-lg budget-btn-primary px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
           >
             {submitting ? t.creating : COMMON[lang].app.createAction}
           </button>
@@ -154,7 +154,7 @@ export function AddGoalCard({
       </form>
 
       {requiredPace && (
-        <p className="mt-3 text-xs text-accent">
+        <p className="mt-3 text-xs text-[#FF7A00]">
           {t.requiredPace(formatMoney(requiredPace.perWeek), formatMoney(requiredPace.perMonth))}
         </p>
       )}

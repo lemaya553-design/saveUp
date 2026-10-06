@@ -43,7 +43,7 @@ export function ContributionHistory({
                     })}
                   </p>
                 </div>
-                <span className="font-medium text-success">
+                <span className="font-medium text-[#FF7A00]">
                   +{formatMoney(contribution.amount)}
                 </span>
               </li>
@@ -54,7 +54,7 @@ export function ContributionHistory({
             <button
               type="button"
               onClick={() => setShowAll((v) => !v)}
-              className="-mx-2 mt-3 rounded-md px-2 py-1.5 text-sm text-accent hover:bg-accent/10 hover:text-accent/80"
+              className="-mx-2 mt-3 rounded-md px-2 py-1.5 text-sm budget-action-link"
             >
               {showAll ? t.collapse : t.viewAll(contributions.length)}
             </button>

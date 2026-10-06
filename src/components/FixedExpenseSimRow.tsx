@@ -29,7 +29,7 @@ export function FixedExpenseSimRow({
         <div className="flex items-center gap-2">
           <span className="font-medium text-ink">{formatMoney(simulatedAmount)}</span>
           {delta !== 0 && (
-            <span className={`text-xs font-semibold ${delta < 0 ? 'text-success' : 'text-red-400'}`}>
+            <span className={`text-xs font-semibold ${delta < 0 ? 'text-[#FF7A00]' : 'text-red-400'}`}>
               ({delta > 0 ? '+' : ''}
               {formatMoney(delta)})
             </span>
@@ -43,7 +43,7 @@ export function FixedExpenseSimRow({
         step={1}
         value={Math.min(simulatedAmount, sliderMax)}
         onChange={(e) => onChange(expense.id, Number(e.target.value))}
-        className="w-full accent-primary"
+        className="w-full accent-[#FF7A00]"
         aria-label={t.simulatedAmountAria(expense.name)}
       />
       <p className="text-xs text-muted">{t.actual(formatMoney(expense.amount))}</p>

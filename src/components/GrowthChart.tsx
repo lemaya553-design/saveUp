@@ -59,7 +59,7 @@ export function GrowthChart({ points }: { points: ProjectionPoint[] }) {
     <div className="relative">
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        className="w-full touch-none text-primary"
+        className="w-full touch-none text-[#FF7A00]"
         onMouseMove={handleMove}
         onMouseLeave={() => setHoverIndex(null)}
       >

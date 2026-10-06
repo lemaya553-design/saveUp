@@ -36,7 +36,7 @@ export function PaceComparisonChart({ entries }: { entries: PaceComparisonEntry[
               <span className="text-sm font-medium text-ink">{entry.name}</span>
               <span
                 className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                  entry.isAhead ? 'bg-success/15 text-success' : 'bg-red-400/15 text-red-400'
+                  entry.isAhead ? 'bg-[#FF7A00]/15 text-[#FF7A00]' : 'bg-red-400/15 text-red-400'
                 }`}
               >
                 {entry.isAhead ? t.ahead : t.behind}
@@ -48,7 +48,7 @@ export function PaceComparisonChart({ entries }: { entries: PaceComparisonEntry[
                 <span className="w-16 shrink-0 text-[11px] text-muted">{t.actualLabel}</span>
                 <div className="h-3 flex-1 overflow-hidden rounded-full bg-overlay/10">
                   <div
-                    className="h-full rounded-full bg-primary transition-all"
+                    className="h-full rounded-full bg-[#FF7A00] transition-all"
                     style={{ width: `${actualPct}%` }}
                   />
                 </div>
@@ -60,7 +60,7 @@ export function PaceComparisonChart({ entries }: { entries: PaceComparisonEntry[
                 <span className="w-16 shrink-0 text-[11px] text-muted">{t.requiredLabel}</span>
                 <div className="h-3 flex-1 overflow-hidden rounded-full bg-overlay/10">
                   <div
-                    className="h-full rounded-full bg-accent transition-all"
+                    className="h-full rounded-full bg-[#CC5F00] transition-all"
                     style={{ width: `${requiredPct}%` }}
                   />
                 </div>

@@ -87,7 +87,7 @@ export function SavingsComparisonChart({
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-primary"
+            className="text-[#FF7A00]"
           />
           <path
             d={simulatedPath}
@@ -96,7 +96,8 @@ export function SavingsComparisonChart({
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-accent"
+            strokeDasharray="5 5"
+            className="text-[#CC5F00]"
           />
           {hoveredCurrent && hoveredSimulated && (
             <>
@@ -115,7 +116,7 @@ export function SavingsComparisonChart({
                 r={4}
                 fill="currentColor"
                 strokeWidth={2}
-                className="text-primary stroke-surface"
+                className="text-[#FF7A00] stroke-surface"
               />
               <circle
                 cx={hoveredSimulated.x}
@@ -123,7 +124,7 @@ export function SavingsComparisonChart({
                 r={4}
                 fill="currentColor"
                 strokeWidth={2}
-                className="text-accent stroke-surface"
+                className="text-[#CC5F00] stroke-surface"
               />
             </>
           )}
@@ -148,11 +149,11 @@ export function SavingsComparisonChart({
 
       <div className="mt-3 flex flex-wrap gap-4 text-sm">
         <div className="flex items-center gap-2">
-          <span className="h-0.5 w-4 rounded-full bg-primary" aria-hidden="true" />
+          <span className="h-0.5 w-4 rounded-full bg-[#FF7A00]" aria-hidden="true" />
           <span className="text-ink">{t.currentLabel}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="h-0.5 w-4 rounded-full bg-accent" aria-hidden="true" />
+          <span className="h-0.5 w-4 rounded-full bg-[#CC5F00]" aria-hidden="true" />
           <span className="text-ink">{t.simulatedLabel}</span>
         </div>
       </div>

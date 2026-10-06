@@ -101,7 +101,7 @@ export function InvestissementTab() {
                 step="0.01"
                 value={initialAmount}
                 onChange={(e) => setInitialAmount(e.target.value)}
-                className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+                className="rounded-lg budget-field px-3 py-2 text-ink"
               />
             </label>
 
@@ -113,7 +113,7 @@ export function InvestissementTab() {
                 step="0.1"
                 value={annualRatePercent}
                 onChange={(e) => setAnnualRatePercent(e.target.value)}
-                className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+                className="rounded-lg budget-field px-3 py-2 text-ink"
               />
             </label>
 
@@ -126,7 +126,7 @@ export function InvestissementTab() {
                 step="0.01"
                 value={monthlyContribution}
                 onChange={(e) => setMonthlyContribution(e.target.value)}
-                className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+                className="rounded-lg budget-field px-3 py-2 text-ink"
               />
             </label>
           </div>
@@ -141,7 +141,7 @@ export function InvestissementTab() {
                 onClick={() => setHorizonYears(years)}
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                   horizonYears === years
-                    ? 'bg-primary-strong text-white'
+                    ? 'budget-btn-primary text-white'
                     : 'bg-overlay/5 text-muted hover:text-ink'
                 }`}
               >
@@ -150,7 +150,7 @@ export function InvestissementTab() {
             ))}
           </div>
 
-          <p className="text-3xl font-bold text-success sm:text-4xl">
+          <p className="text-3xl font-bold text-[#FF7A00] sm:text-4xl">
             {formatMoney(breakdown.finalValue)}
           </p>
           <p className="mb-4 text-xs text-muted">{t.estimatedValueIn(horizonYears)}</p>
@@ -186,7 +186,7 @@ export function InvestissementTab() {
               <p className="text-sm text-muted">{t.noGoalsHint}</p>
               <Link
                 to="/epargne/objectifs"
-                className="whitespace-nowrap rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
+                className="whitespace-nowrap rounded-lg budget-btn-primary px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
               >
                 {t.setGoalButton}
               </Link>

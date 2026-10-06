@@ -27,6 +27,8 @@ export interface EpargneContent {
     emptyAction: string
     savedLabel: string
     totalTargetLabel: string
+    progressLabel: string
+    activeGoalsLabel: string
     goalsCount: (n: number) => string
     limitReachedTitle: (max: number) => string
     limitReachedDescription: string
@@ -316,6 +318,8 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
       emptyAction: 'Fixer mon premier objectif',
       savedLabel: 'Épargné',
       totalTargetLabel: 'Objectif total',
+      progressLabel: 'Progression',
+      activeGoalsLabel: 'Objectifs',
       goalsCount: (n) => `${n} objectif${n > 1 ? 's' : ''}`,
       limitReachedTitle: (max) => `Limite de ${max} objectif${max > 1 ? 's' : ''} atteinte`,
       limitReachedDescription:
@@ -636,6 +640,8 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
       emptyAction: 'Set my first goal',
       savedLabel: 'Saved',
       totalTargetLabel: 'Total target',
+      progressLabel: 'Progress',
+      activeGoalsLabel: 'Goals',
       goalsCount: (n) => `${n} goal${n > 1 ? 's' : ''}`,
       limitReachedTitle: (max) => `${max} goal${max > 1 ? 's' : ''} limit reached`,
       limitReachedDescription:

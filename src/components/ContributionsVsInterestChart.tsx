@@ -29,20 +29,20 @@ export function ContributionsVsInterestChart({
         role="img"
         aria-label={t.ariaLabel(Math.round(contribPct), Math.round(interestPct))}
       >
-        <div className="h-full bg-primary transition-all" style={{ width: `${contribPct}%` }} />
-        <div className="h-full bg-success transition-all" style={{ width: `${interestPct}%` }} />
+        <div className="h-full bg-[#FF7A00] transition-all" style={{ width: `${contribPct}%` }} />
+        <div className="h-full bg-[#FFB347] transition-all" style={{ width: `${interestPct}%` }} />
       </div>
 
       <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
         <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#FF7A00]" aria-hidden="true" />
           <span className="text-ink">{t.contributionsLabel}</span>
           <span className="text-muted">
             {formatMoney(totalContributions)} · {Math.round(contribPct)}%
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-success" aria-hidden="true" />
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#FFB347]" aria-hidden="true" />
           <span className="text-ink">{t.interestLabel}</span>
           <span className="text-muted">
             {formatMoney(interestEarned)} · {Math.round(interestPct)}%

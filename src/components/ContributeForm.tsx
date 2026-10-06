@@ -49,7 +49,7 @@ export function ContributeForm({
           <select
             value={selectedGoalId}
             onChange={(e) => setGoalId(e.target.value)}
-            className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+            className="rounded-lg budget-field px-3 py-2 text-ink"
           >
             {goals.map((g) => (
               <option key={g.id} value={g.id} className="bg-surface">
@@ -66,19 +66,19 @@ export function ContributeForm({
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder={t.amountPlaceholder}
-          className="flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="flex-1 rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
         />
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-success px-6 py-2 font-semibold text-canvas transition-all hover:brightness-110 disabled:opacity-60"
+          className="rounded-lg bg-[#FF7A00] px-6 py-2 font-semibold text-canvas transition-all hover:brightness-110 disabled:opacity-60"
         >
           {submitting ? t.submitting : t.submitButton}
         </button>
       </form>
 
       {wouldExceedBudget && (
-        <p className="mt-3 flex items-start gap-1.5 text-xs text-accent">
+        <p className="mt-3 flex items-start gap-1.5 text-xs text-red-400">
           <span aria-hidden="true">⚠</span>
           <span>
             {remainingBeforeThis > 0 ? t.overBudget(formatMoney(remainingBeforeThis)) : t.budgetExhausted}{' '}

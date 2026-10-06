@@ -85,7 +85,7 @@ export function CreateDuelModal({
           <button
             type="button"
             onClick={handleClose}
-            className="self-start rounded-lg bg-primary-strong px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
+            className="self-start rounded-lg budget-btn-primary px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
           >
             {COMMON[lang].app.close}
           </button>
@@ -93,7 +93,7 @@ export function CreateDuelModal({
       ) : goals.length === 0 ? (
         <p className="text-sm text-muted">
           {t.noGoalsAtAll.before}
-          <button type="button" onClick={onGoToObjectifs} className="text-accent hover:text-accent/80">
+          <button type="button" onClick={onGoToObjectifs} className="budget-action-link">
             {t.noGoalsAtAll.linkText}
           </button>
           {t.noGoalsAtAll.after}
@@ -107,7 +107,7 @@ export function CreateDuelModal({
             <select
               value={goalId || availableGoals[0].id}
               onChange={(e) => setGoalId(e.target.value)}
-              className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink focus:border-primary focus:outline-none"
+              className="rounded-lg budget-field px-3 py-2 text-ink"
             >
               {availableGoals.map((g) => (
                 <option key={g.id} value={g.id} className="bg-surface">
@@ -127,7 +127,7 @@ export function CreateDuelModal({
                   onClick={() => setDurationDays(d)}
                   className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                     durationDays === d
-                      ? 'bg-primary-strong text-white'
+                      ? 'budget-btn-primary text-white'
                       : 'border border-overlay/10 text-muted hover:text-ink'
                   }`}
                 >
@@ -145,7 +145,7 @@ export function CreateDuelModal({
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder={t.namePlaceholder}
               autoFocus
-              className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+              className="rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
             />
           </label>
 
@@ -156,11 +156,11 @@ export function CreateDuelModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t.emailPlaceholder}
-              className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+              className="rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
             />
           </label>
 
-          <div className="rounded-lg border border-accent/30 bg-accent/10 px-3 py-2.5 text-xs text-muted">
+          <div className="rounded-lg border border-[#FF7A00]/30 bg-[#FF7A00]/10 px-3 py-2.5 text-xs text-muted">
             <p className="font-medium text-ink">{t.whatOpponentSeesTitle}</p>
             <p className="mt-1">{t.whatOpponentSeesBody}</p>
           </div>
@@ -171,7 +171,7 @@ export function CreateDuelModal({
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+              className="flex-1 rounded-lg budget-btn-primary px-4 py-2 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
             >
               {submitting ? t.creating : t.sendInvite}
             </button>

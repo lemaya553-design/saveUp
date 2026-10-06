@@ -9,13 +9,13 @@ import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { sumThisMonth } from '../lib/budgetInsights'
 import { computeRequiredPace, estimateMonthlyRate } from '../lib/savingsProjection'
 import { computeCategorySpending } from '../lib/categorySpending'
-import { PageHeader } from '../components/PageHeader'
+import { HelpButton } from '../components/HelpButton'
 import { Card } from '../components/Card'
-import { EmptyState } from '../components/EmptyState'
 import { SavingsGoalCard } from '../components/SavingsGoalCard'
 import { AddGoalCard } from '../components/AddGoalCard'
 import { ContributeForm } from '../components/ContributeForm'
 import { ContributionHistory } from '../components/ContributionHistory'
+import { EpargneStatCards } from '../components/EpargneStatCards'
 import { PaceComparisonChart, type PaceComparisonEntry } from '../components/PaceComparisonChart'
 import { SimulateurTab } from '../components/SimulateurTab'
 import { DuelsTab } from '../components/DuelsTab'
@@ -29,6 +29,8 @@ import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { splitByLimit } from '../lib/plans'
 import { EPARGNE } from '../lib/i18n/epargne'
+
+const CARD_BORDER = 'color-mix(in srgb, var(--color-overlay) 10%, transparent)'
 
 type Tab = 'objectifs' | 'simulateur' | 'duels' | 'investissement'
 const TABS: Tab[] = ['objectifs', 'simulateur', 'duels', 'investissement']
@@ -135,10 +137,20 @@ export function Epargne() {
     totalTargetAmount > 0 ? Math.min(100, (totalCurrentAmount / totalTargetAmount) * 100) : 0
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={HELP_BY_TAB[tab]} />
+    <div className="mx-auto max-w-[1200px] px-4 pb-16 sm:px-6 lg:px-8">
+      <div className="mb-6 flex items-center gap-2 pt-6">
+        <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{t.pageHeader.title}</h1>
+        <HelpButton title={HELP_BY_TAB[tab].title ?? t.pageHeader.title} purpose={HELP_BY_TAB[tab].purpose} actions={HELP_BY_TAB[tab].actions} />
+      </div>
 
-      <TabBar tabs={TAB_DEFS} active={tab} onChange={(next) => navigate(`/epargne/${next}`)} />
+      <div className="mb-6">
+        <TabBar
+          tabs={TAB_DEFS}
+          active={tab}
+          onChange={(next) => navigate(`/epargne/${next}`)}
+          activeClassName="bg-[#FF7A00] text-white shadow-md"
+        />
+      </div>
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
@@ -148,47 +160,30 @@ export function Epargne() {
 
       {tab === 'objectifs' ? (
         !hasGoals && !showCreateForm ? (
-          <EmptyState
-            title={t.objectifsTab.emptyTitle}
-            description={t.objectifsTab.emptyDescription}
-            actionLabel={t.objectifsTab.emptyAction}
-            onAction={() => setShowCreateForm(true)}
-          />
+          <div
+            className="rounded-2xl border p-8 text-center shadow-sm"
+            style={{ borderColor: CARD_BORDER }}
+          >
+            <h2 className="text-xl font-semibold text-ink">{t.objectifsTab.emptyTitle}</h2>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-muted">{t.objectifsTab.emptyDescription}</p>
+            <button
+              type="button"
+              onClick={() => setShowCreateForm(true)}
+              className="budget-btn-primary mt-5 rounded-lg px-5 py-2.5 font-medium transition-all"
+            >
+              {t.objectifsTab.emptyAction}
+            </button>
+          </div>
         ) : (
           <div className="grid gap-6">
             {hasGoals && (
-              <div className="glass rounded-2xl p-6 shadow-lg shadow-black/30">
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted">{t.objectifsTab.savedLabel}</p>
-                    <p className="mt-1 text-2xl font-bold text-success sm:text-3xl">
-                      {formatMoney(totalCurrentAmount)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted">{t.objectifsTab.totalTargetLabel}</p>
-                    <p className="mt-1 text-2xl font-bold text-ink sm:text-3xl">
-                      {formatMoney(totalTargetAmount)}
-                    </p>
-                  </div>
-                  <div className="col-span-2 sm:col-span-1">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted">
-                      {t.objectifsTab.goalsCount(goals.goals.length)}
-                    </p>
-                    <p className="mt-1 text-2xl font-bold text-primary sm:text-3xl">
-                      {overallProgress.toFixed(0)}%
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-overlay/10">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      overallProgress >= 100 ? 'bg-success' : 'bg-primary'
-                    }`}
-                    style={{ width: `${overallProgress}%` }}
-                  />
-                </div>
-              </div>
+              <EpargneStatCards
+                totalCurrentAmount={totalCurrentAmount}
+                totalTargetAmount={totalTargetAmount}
+                overallProgress={overallProgress}
+                goalsCount={goals.goals.length}
+                formatMoney={formatMoney}
+              />
             )}
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -209,6 +204,8 @@ export function Epargne() {
                 <UpgradePrompt
                   title={t.objectifsTab.limitReachedTitle(subscription.limits.maxGoals)}
                   description={t.objectifsTab.limitReachedDescription}
+                  variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
+                  linkClassName="text-[#FF7A00] hover:opacity-80"
                   minPlan="standard"
                 />
               ) : (
@@ -217,19 +214,20 @@ export function Epargne() {
             </div>
 
             {hasGoals && (
-              <>
+              <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+                <div className="flex flex-col gap-6">
+                  <ContributeForm
+                    goals={activeGoals}
+                    onContribute={goals.addContribution}
+                    discretionaryBudget={discretionaryBudget}
+                    savingsThisMonth={savingsThisMonth}
+                  />
+                  <ContributionHistory contributions={contributions.contributions} goals={goals.goals} />
+                </div>
                 <Card title={t.objectifsTab.paceCardTitle} hint={t.objectifsTab.paceCardHint}>
                   <PaceComparisonChart entries={paceComparison} />
                 </Card>
-
-                <ContributeForm
-                  goals={activeGoals}
-                  onContribute={goals.addContribution}
-                  discretionaryBudget={discretionaryBudget}
-                  savingsThisMonth={savingsThisMonth}
-                />
-                <ContributionHistory contributions={contributions.contributions} goals={goals.goals} />
-              </>
+              </div>
             )}
           </div>
         )
@@ -250,6 +248,8 @@ export function Epargne() {
           <UpgradePrompt
             title={t.simulatorGate.title}
             description={t.simulatorGate.description}
+            variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
+            linkClassName="text-[#FF7A00] hover:opacity-80"
             minPlan="premium"
           />
         )

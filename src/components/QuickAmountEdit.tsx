@@ -48,11 +48,11 @@ export function QuickAmountEdit({
             autoFocus
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            className="w-28 rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-1 text-ink focus:border-primary focus:outline-none"
+            className="budget-field w-28 rounded-lg px-2 py-1 text-ink"
           />
           <button
             type="submit"
-            className="rounded-lg bg-primary-strong px-3 py-1 font-medium text-white transition-all hover:brightness-110"
+            className="budget-btn-primary rounded-lg px-3 py-1 font-medium transition-all"
           >
             {COMMON[lang].app.save}
           </button>
@@ -67,7 +67,7 @@ export function QuickAmountEdit({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="text-accent hover:text-accent/80"
+            className="budget-action-link"
           >
             {COMMON[lang].app.modify}
           </button>

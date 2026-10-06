@@ -273,7 +273,7 @@ export function SimulateurTab({
         <p className="text-xs text-muted">{t.notModifiedYet}</p>
         {hasSliderChanges && (
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent">
+            <span className="rounded-full bg-[#FF7A00]/15 px-2.5 py-1 text-xs font-semibold text-[#FF7A00]">
               {t.adjustmentsCount(totalAdjustedCount)}
             </span>
             <button
@@ -288,7 +288,7 @@ export function SimulateurTab({
       </div>
 
       {applySuccess && (
-        <div className="rounded-lg border border-success/40 bg-success/10 px-4 py-3 text-sm text-success">
+        <div className="rounded-lg border border-[#FF7A00]/40 bg-[#FF7A00]/10 px-4 py-3 text-sm text-[#FF7A00]">
           {t.appliedSuccess}
         </div>
       )}
@@ -300,7 +300,7 @@ export function SimulateurTab({
             {fixed.fixedExpenses.length === 0 ? (
               <p className="mb-3 text-sm text-muted">
                 {t.noFixedExpenses.before}
-                <Link to="/budget" className="text-accent hover:text-accent/80">
+                <Link to="/budget" className="budget-action-link">
                   {t.noFixedExpenses.linkText}
                 </Link>
                 {t.noFixedExpenses.after}
@@ -389,7 +389,7 @@ export function SimulateurTab({
                 <button
                   type="button"
                   onClick={onGoToObjectifs}
-                  className="whitespace-nowrap rounded-lg bg-primary-strong px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
+                  className="whitespace-nowrap rounded-lg budget-btn-primary px-3 py-1.5 text-sm font-medium text-white transition-all hover:brightness-110"
                 >
                   {t.setGoalButton}
                 </button>
@@ -400,7 +400,7 @@ export function SimulateurTab({
                   {goalProjections.map(({ goal, remaining, monthsBefore, monthsAfter }) => {
                     if (remaining <= 0) {
                       return (
-                        <p key={goal.id} className="py-2 text-sm text-success">
+                        <p key={goal.id} className="py-2 text-sm text-[#FF7A00]">
                           {t.alreadyReached(goal.name)}
                         </p>
                       )
@@ -452,7 +452,7 @@ export function SimulateurTab({
       </div>
 
       {hasChanges && (
-        <div className="glass rounded-2xl border border-success/30 p-5 shadow-lg shadow-black/30">
+        <div className="glass rounded-2xl border border-[#FF7A00]/30 p-5 shadow-lg shadow-black/30">
           <h2 className="text-lg font-semibold text-ink">{t.readyToApplyTitle}</h2>
           <p className="mb-4 mt-1 text-xs text-muted">{t.willModify}</p>
           {showApplyConfirm ? (
@@ -463,7 +463,7 @@ export function SimulateurTab({
                   type="button"
                   onClick={applyChanges}
                   disabled={applying}
-                  className="rounded-lg bg-success px-5 py-2 font-semibold text-canvas transition-all hover:brightness-110 disabled:opacity-60"
+                  className="rounded-lg bg-[#FF7A00] px-5 py-2 font-semibold text-canvas transition-all hover:brightness-110 disabled:opacity-60"
                 >
                   {applying ? t.applying : COMMON[lang].app.confirm}
                 </button>
@@ -480,7 +480,7 @@ export function SimulateurTab({
             <button
               type="button"
               onClick={() => setShowApplyConfirm(true)}
-              className="rounded-lg bg-success px-5 py-2 font-semibold text-canvas transition-all hover:brightness-110"
+              className="rounded-lg bg-[#FF7A00] px-5 py-2 font-semibold text-canvas transition-all hover:brightness-110"
             >
               {t.applyForReal}
             </button>

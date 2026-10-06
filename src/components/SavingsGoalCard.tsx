@@ -42,13 +42,13 @@ function TargetIcon({ className }: { className: string }) {
   )
 }
 
-// Blue / mauve / green — cosmetic only (which color a goal's icon gets),
+// Orange-family — cosmetic only (which shade a goal's icon gets),
 // deterministic on the name so it doesn't shuffle every render as goals
-// reorder.
+// reorder. No green/blue/violet anywhere on this page.
 const ICON_STYLES = [
-  { bg: 'bg-primary/15', text: 'text-primary' },
-  { bg: 'bg-accent/15', text: 'text-accent' },
-  { bg: 'bg-success/15', text: 'text-success' },
+  { bg: 'bg-[#FF7A00]/15', text: 'text-[#FF7A00]' },
+  { bg: 'bg-[#CC5F00]/15', text: 'text-[#CC5F00]' },
+  { bg: 'bg-[#FFB347]/20', text: 'text-[#CC5F00]' },
 ]
 
 function iconStyleForGoal(name: string): { bg: string; text: string } {
@@ -200,7 +200,7 @@ export function SavingsGoalCard({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t.namePlaceholder}
-            className="min-w-[140px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+            className="min-w-[140px] flex-1 rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
           />
           <input
             type="number"
@@ -210,7 +210,7 @@ export function SavingsGoalCard({
             value={target}
             onChange={(e) => setTarget(e.target.value)}
             placeholder={t.targetPlaceholder}
-            className="w-32 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+            className="w-32 rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
           />
           <label className="flex flex-col gap-1 text-xs text-muted">
             {t.dueDateOptionalLabel}
@@ -220,7 +220,7 @@ export function SavingsGoalCard({
               onChange={(e) => setTargetDate(e.target.value)}
               min={getTodayDateString()}
               max={getFarFutureDateString()}
-              className="rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+              className="rounded-lg budget-field px-3 py-2 text-sm text-ink"
             />
           </label>
 
@@ -240,7 +240,7 @@ export function SavingsGoalCard({
           <div className="flex gap-2">
             <button
               type="submit"
-              className="rounded-lg bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:brightness-110"
+              className="rounded-lg budget-btn-primary px-4 py-2 font-medium text-white transition-all hover:brightness-110"
             >
               {COMMON[lang].app.save}
             </button>
@@ -311,7 +311,7 @@ export function SavingsGoalCard({
                 type="button"
                 onClick={() => setEditing(true)}
                 className={`rounded-md px-2 py-1.5 text-sm ${
-                  showPhoto ? 'text-white hover:bg-white/10' : 'text-accent hover:bg-accent/10 hover:text-accent/80'
+                  showPhoto ? 'text-white hover:bg-white/10' : 'budget-action-link'
                 }`}
               >
                 {COMMON[lang].app.modify}
@@ -333,7 +333,7 @@ export function SavingsGoalCard({
         {locked && (
           <Link
             to="/tarifs"
-            className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent hover:bg-accent/25"
+            className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-[#FF7A00]/15 px-2.5 py-1 text-xs font-semibold text-[#FF7A00] hover:bg-[#FF7A00]/25"
           >
             {t.pausedBadge}
           </Link>
@@ -346,7 +346,7 @@ export function SavingsGoalCard({
           </span>
         </p>
         <div className="mt-3">
-          <ProgressBar value={progress} colorClass={progress >= 100 ? 'bg-success' : 'bg-primary'} />
+          <ProgressBar value={progress} colorClass={progress >= 100 ? 'bg-[#FF7A00]' : 'bg-[#CC5F00]'} />
         </div>
         <p className={`mt-1.5 text-xs ${textSecondary}`}>
           {t.percentReached(Math.round(progress))}
@@ -355,7 +355,7 @@ export function SavingsGoalCard({
         </p>
 
         {remaining <= 0 ? (
-          <p className="mt-3 text-xs text-success">{t.goalReached}</p>
+          <p className="mt-3 text-xs text-[#FF7A00]">{t.goalReached}</p>
         ) : !hasEstimate ? (
           <p className={`mt-3 text-xs ${textSecondary}`}>{t.notEnoughHistory}</p>
         ) : exceedsSanityCeiling ? (
@@ -364,7 +364,7 @@ export function SavingsGoalCard({
           <div className={`mt-3 rounded-lg ${paceBg} px-3 py-2`}>
             <p className={`text-sm font-medium ${textPrimary}`}>{t.estimateIn(displayDuration)}</p>
             {targetComparisonText && (
-              <p className={`mt-0.5 text-xs font-medium ${targetAhead ? 'text-success' : 'text-red-400'}`}>
+              <p className={`mt-0.5 text-xs font-medium ${targetAhead ? 'text-[#FF7A00]' : 'text-red-400'}`}>
                 {targetComparisonText}
               </p>
             )}
@@ -379,7 +379,7 @@ export function SavingsGoalCard({
             {weeklyDots.map((hasContribution, i) => (
               <span
                 key={i}
-                className={`h-2.5 w-2.5 rounded-full ${hasContribution ? 'bg-success' : dotOff}`}
+                className={`h-2.5 w-2.5 rounded-full ${hasContribution ? 'bg-[#FF7A00]' : dotOff}`}
                 aria-hidden="true"
               />
             ))}

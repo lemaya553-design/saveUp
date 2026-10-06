@@ -29,7 +29,7 @@ export function GoalPhotoPicker({
     return (
       <Link
         to="/tarifs"
-        className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1.5 text-xs font-semibold text-accent transition-colors hover:bg-accent/25"
+        className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#FF7A00]/15 px-3 py-1.5 text-xs font-semibold text-[#FF7A00] transition-colors hover:bg-[#FF7A00]/25"
       >
         {t.premiumBadge}
       </Link>
@@ -66,7 +66,7 @@ export function GoalPhotoPicker({
         )}
         <div className="flex flex-col items-start gap-1">
           <label
-            className={`text-xs font-medium text-accent hover:text-accent/80 ${
+            className={`text-xs font-medium budget-action-link ${
               uploading ? 'pointer-events-none opacity-60' : 'cursor-pointer'
             }`}
           >

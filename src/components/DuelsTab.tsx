@@ -63,7 +63,7 @@ export function DuelsTab({ onGoToObjectifs }: { onGoToObjectifs: () => void }) {
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
-            className="rounded-lg bg-primary-strong px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
+            className="rounded-lg budget-btn-primary px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
           >
             {t.createDuelButton}
           </button>

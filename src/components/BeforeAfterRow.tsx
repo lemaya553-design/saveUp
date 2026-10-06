@@ -14,7 +14,7 @@ export function BeforeAfterRow({
   const delta = after - before
   const improved = delta !== 0 && (higherIsBetter ? delta > 0 : delta < 0)
   const worsened = delta !== 0 && (higherIsBetter ? delta < 0 : delta > 0)
-  const deltaColorClass = improved ? 'text-success' : worsened ? 'text-red-400' : 'text-muted'
+  const deltaColorClass = improved ? 'text-[#FF7A00]' : worsened ? 'text-red-400' : 'text-muted'
   const arrow = delta === 0 ? null : delta > 0 ? '↑' : '↓'
 
   return (

@@ -47,12 +47,12 @@ export function HypotheticalExpenses({
                     value={expense.name}
                     onChange={(e) => onUpdate(expense.id, { name: e.target.value })}
                     placeholder={t.namePlaceholder}
-                    className="min-w-[120px] flex-1 rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-1.5 text-sm text-ink placeholder-muted focus:border-primary focus:outline-none"
+                    className="min-w-[120px] flex-1 rounded-lg budget-field px-2 py-1.5 text-sm text-ink placeholder-muted"
                   />
                   <select
                     value={expense.category}
                     onChange={(e) => onUpdate(expense.id, { category: e.target.value })}
-                    className="rounded-lg border border-overlay/10 bg-overlay/5 px-2 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+                    className="rounded-lg budget-field px-2 py-1.5 text-sm text-ink"
                   >
                     {categoryNames.map((cat) => (
                       <option key={cat} value={cat} className="bg-surface">
@@ -60,7 +60,7 @@ export function HypotheticalExpenses({
                       </option>
                     ))}
                   </select>
-                  <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">{t.newBadge}</span>
+                  <span className="rounded-full bg-[#FF7A00]/15 px-2 py-0.5 text-xs text-[#FF7A00]">{t.newBadge}</span>
                   <button
                     type="button"
                     onClick={() => onRemove(expense.id)}
@@ -81,7 +81,7 @@ export function HypotheticalExpenses({
                   step={1}
                   value={Math.min(expense.amount, sliderMax)}
                   onChange={(e) => onUpdate(expense.id, { amount: Number(e.target.value) })}
-                  className="w-full accent-primary"
+                  className="w-full accent-[#FF7A00]"
                   aria-label={t.amountAria(expense.name || t.fallbackName)}
                 />
               </li>
@@ -93,7 +93,7 @@ export function HypotheticalExpenses({
       <button
         type="button"
         onClick={onAdd}
-        className="w-full rounded-xl border-2 border-dashed border-overlay/15 px-4 py-3 text-sm font-medium text-muted transition-colors hover:border-primary/40 hover:text-ink"
+        className="w-full rounded-xl border-2 border-dashed border-overlay/15 px-4 py-3 text-sm font-medium text-muted transition-colors hover:border-[#FF7A00]/40 hover:text-ink"
       >
         {t.addButton}
       </button>
