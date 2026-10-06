@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
-import { colorForCategoryLabel } from '../lib/categoryColors'
+import { budgetColorForCategory as colorForCategoryLabel } from '../lib/budgetChartColors'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'

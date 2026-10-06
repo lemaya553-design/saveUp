@@ -7,13 +7,13 @@ import type { Lang } from '../lib/i18n/language'
 import type { CategoryMomChange } from '../lib/statistics'
 
 // Mirrors BudgetVsActualChart's convention exactly, translated from a
-// horizontal CSS progress bar to a vertical Recharts one: the track (mauve,
-// translucent) is the reference ceiling — here "last month" instead of a
-// fixed budget — and the fill is the actual/current amount, blue when under
-// the ceiling, red when it exceeds it.
-const TRACK_COLOR = 'color-mix(in srgb, var(--color-accent) 30%, transparent)' // "last month"
-const FILL_COLOR = 'var(--color-primary)' // "this month", under last month — follows the chosen accent
-const OVER_COLOR = '#f87171' // red-400 — "this month" exceeds last month (fixed semantic color)
+// horizontal CSS progress bar to a vertical Recharts one: the track (a
+// faint orange, translucent) is the reference ceiling — here "last month"
+// instead of a fixed budget — and the fill is the actual/current amount,
+// solid orange when under the ceiling, red when it exceeds it.
+const TRACK_COLOR = 'rgba(255, 122, 0, 0.25)' // "last month"
+const FILL_COLOR = '#FF7A00' // "this month", under last month
+const OVER_COLOR = '#E5484D' // "this month" exceeds last month (fixed semantic color)
 
 const MIN_COLUMN_WIDTH = 76
 const CHART_HEIGHT = 220

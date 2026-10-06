@@ -34,7 +34,7 @@ export function MonthComparison({
         {hasPreviousData && pctChange !== null && (
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
-              spentLess ? 'bg-success/15 text-success' : 'bg-red-400/15 text-red-400'
+              spentLess ? 'bg-[#FF7A00]/15 text-[#FF7A00]' : 'bg-red-400/15 text-red-400'
             }`}
           >
             <span aria-hidden="true">{spentLess ? '↓' : '↑'}</span>
@@ -51,7 +51,7 @@ export function MonthComparison({
           </div>
           <div className="h-2.5 w-full overflow-hidden rounded-full bg-overlay/10">
             <div
-              className="h-full rounded-full bg-primary transition-all"
+              className="h-full rounded-full bg-[#FF7A00] transition-all"
               style={{ width: `${currentPct}%` }}
             />
           </div>

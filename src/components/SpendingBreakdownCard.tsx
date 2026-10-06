@@ -87,7 +87,7 @@ export function SpendingBreakdownCard({
             type="button"
             onClick={() => setTab('depenses')}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              tab === 'depenses' ? 'bg-primary-strong text-white shadow-md shadow-primary/30' : 'text-muted hover:text-ink'
+              tab === 'depenses' ? 'budget-btn-primary text-white shadow-md shadow-primary/30' : 'text-muted hover:text-ink'
             }`}
           >
             {t.expensesTab}
@@ -96,7 +96,7 @@ export function SpendingBreakdownCard({
             type="button"
             onClick={() => setTab('revenus')}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              tab === 'revenus' ? 'bg-primary-strong text-white shadow-md shadow-primary/30' : 'text-muted hover:text-ink'
+              tab === 'revenus' ? 'budget-btn-primary text-white shadow-md shadow-primary/30' : 'text-muted hover:text-ink'
             }`}
           >
             {t.incomeTab}

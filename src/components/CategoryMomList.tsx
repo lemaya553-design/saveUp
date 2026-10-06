@@ -28,7 +28,7 @@ export function CategoryMomList({ changes }: { changes: CategoryMomChange[] }) {
             ) : (
               <span
                 className={`inline-flex items-center gap-1 text-xs font-semibold ${
-                  change.pctChange > 0 ? 'text-red-400' : 'text-success'
+                  change.pctChange > 0 ? 'text-red-400' : 'text-[#FF7A00]'
                 }`}
               >
                 <span aria-hidden="true">{change.pctChange > 0 ? '↑' : '↓'}</span>

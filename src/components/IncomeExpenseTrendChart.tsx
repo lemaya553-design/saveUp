@@ -4,10 +4,10 @@ import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { IncomeExpenseTrendPoint } from '../lib/statistics'
 
-const EXPENSE_COLOR = '#4a6cf7'
+const EXPENSE_COLOR = '#FF7A00'
 // Status color (a month spent more than the current income), not a second
 // categorical hue — reserved separately from the donut's category palette.
-const OVER_INCOME_COLOR = '#f87171'
+const OVER_INCOME_COLOR = '#E5484D'
 
 function SavingsRateLabel({
   x,
@@ -29,7 +29,7 @@ function SavingsRateLabel({
   const numY = Number(y) - 8
   const rate = Math.round(point.savingsRatePct)
   return (
-    <text x={numX} y={numY} textAnchor="middle" fontSize={12} fontWeight={600} fill={rate >= 0 ? '#22c55e' : '#f87171'}>
+    <text x={numX} y={numY} textAnchor="middle" fontSize={12} fontWeight={600} fill={rate >= 0 ? '#FF7A00' : '#E5484D'}>
       {rate >= 0 ? `+${rate}%` : `${rate}%`}
     </text>
   )
@@ -53,7 +53,7 @@ function TrendTooltip({
       <p className="font-semibold capitalize text-ink">{point.label}</p>
       <p className="mt-1 text-ink">{t.expenses(formatMoney(point.expenses))}</p>
       <p className="text-muted">{t.income(formatMoney(point.income))}</p>
-      <p className={`mt-1 font-medium ${point.savingsRatePct >= 0 ? 'text-success' : 'text-red-400'}`}>
+      <p className={`mt-1 font-medium ${point.savingsRatePct >= 0 ? 'text-[#FF7A00]' : 'text-red-400'}`}>
         {t.savingsRate(`${point.savingsRatePct >= 0 ? '+' : ''}${point.savingsRatePct.toFixed(0)}%`)}
       </p>
     </div>

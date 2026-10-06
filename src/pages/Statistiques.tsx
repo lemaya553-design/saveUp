@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { PageHeader } from '../components/PageHeader'
+import { HelpButton } from '../components/HelpButton'
 import { Card } from '../components/Card'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { TabBar, type TabDef } from '../components/TabBar'
@@ -14,6 +14,7 @@ import { BudgetVsActualChart } from '../components/BudgetVsActualChart'
 import { CategoryMomList } from '../components/CategoryMomList'
 import { DataExportCard } from '../components/DataExportCard'
 import { RecompensesTab } from '../components/RecompensesTab'
+import { StatistiquesStatCards } from '../components/StatistiquesStatCards'
 import { UpgradePrompt } from '../components/UpgradePrompt'
 import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { useExpenses } from '../hooks/useExpenses'
@@ -25,6 +26,7 @@ import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSubscription } from '../hooks/useSubscription'
 import { useCsvExport } from '../hooks/useCsvExport'
 import { useLanguage } from '../hooks/useLanguage'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { computeCategorySpending } from '../lib/categorySpending'
 import { getMonthRange } from '../lib/format'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
@@ -51,6 +53,7 @@ export function Statistiques() {
   const navigate = useNavigate()
   const { lang } = useLanguage()
   const t = STATISTIQUES[lang]
+  const formatMoney = useMoneyFormat()
   const TAB_DEFS: TabDef<Tab>[] = [
     { key: 'apercu', label: t.tabs.apercu },
     { key: 'tendances', label: t.tabs.tendances },
@@ -79,6 +82,10 @@ export function Statistiques() {
     const now = new Date()
     return new Date(now.getFullYear(), now.getMonth() + monthOffset, 1)
   }, [monthOffset])
+  const selectedMonthLabel = useMemo(
+    () => selectedMonth.toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-CA', { month: 'long', year: 'numeric' }),
+    [selectedMonth, lang],
+  )
 
   const loading =
     history.loading || fixed.loading || categories.loading || income.loading || contributions.loading || goals.loading
@@ -145,6 +152,12 @@ export function Statistiques() {
     }
   }, [contributions.contributions, goalNameById, selectedMonth, t])
 
+  const spentThisSelectedMonth = useMemo(
+    () => categorySpending.reduce((sum, e) => sum + e.total, 0),
+    [categorySpending],
+  )
+  const withinBudgetCount = useMemo(() => budgetVsActual.filter((s) => !s.overBudget).length, [budgetVsActual])
+
   if (!tabParam || !TABS.includes(tabParam as Tab)) {
     return <Navigate to="/statistiques/apercu" replace />
   }
@@ -155,10 +168,20 @@ export function Statistiques() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader title={t.page.title} subtitle={t.page.subtitle} help={HELP_BY_TAB[tab]} />
+    <div className="mx-auto max-w-[1200px] px-4 pb-16 sm:px-6 lg:px-8">
+      <div className="mb-6 flex items-center gap-2 pt-6">
+        <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{t.page.title}</h1>
+        <HelpButton title={HELP_BY_TAB[tab].title ?? t.page.title} purpose={HELP_BY_TAB[tab].purpose} actions={HELP_BY_TAB[tab].actions} />
+      </div>
 
-      <TabBar tabs={TAB_DEFS} active={tab} onChange={(next) => navigate(`/statistiques/${next}`)} />
+      <div className="mb-6">
+        <TabBar
+          tabs={TAB_DEFS}
+          active={tab}
+          onChange={(next) => navigate(`/statistiques/${next}`)}
+          activeClassName="bg-[#FF7A00] text-white shadow-md"
+        />
+      </div>
 
       {tab !== 'recompenses' && error && (
         <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
@@ -168,51 +191,63 @@ export function Statistiques() {
 
       {tab === 'apercu' && (
         <div className="grid gap-6">
-          <SpendingBreakdownCard
-            historyRecords={history.records}
-            fixedExpenses={fixed.fixedExpenses}
+          <StatistiquesStatCards
+            spentThisMonth={spentThisSelectedMonth}
+            monthLabel={selectedMonthLabel}
             monthlyIncome={income.monthlyIncome}
-            maxMonthsBack={MAX_MONTHS_BACK}
+            categoriesTracked={categorySpending.length}
+            withinBudgetCount={withinBudgetCount}
+            budgetTrackedCount={budgetVsActual.length}
+            formatMoney={formatMoney}
           />
 
-          <Card title={t.apercu.categoryCard.title} hint={t.apercu.categoryCard.hint}>
-            <div className="mb-4 flex items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => setMonthOffset((o) => Math.max(-MAX_MONTHS_BACK, o - 1))}
-                disabled={monthOffset <= -MAX_MONTHS_BACK}
-                aria-label={t.monthNav.prev}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5 disabled:opacity-30"
-              >
-                ‹
-              </button>
-              <span className="min-w-[9rem] text-center text-sm font-medium capitalize text-ink">
-                {selectedMonth.toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-CA', { month: 'long', year: 'numeric' })}
-              </span>
-              <button
-                type="button"
-                onClick={() => setMonthOffset((o) => Math.min(0, o + 1))}
-                disabled={monthOffset >= 0}
-                aria-label={t.monthNav.next}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5 disabled:opacity-30"
-              >
-                ›
-              </button>
-            </div>
-
-            {monthOffset !== 0 && (
-              <p className="mb-3 text-center text-xs text-muted">{t.apercu.categoryCard.pctNote}</p>
-            )}
-
-            <CategorySpendingChart
-              entries={categorySpending}
-              savingsTotal={savingsForMonth.total}
-              savingsTransactions={savingsForMonth.transactions}
-              categories={categories.categories}
-              onRenameCategory={categories.renameCategory}
-              onReclassify={(t, newCategory) => expenses.updateExpense(t.id, t.description, t.amount, newCategory)}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <SpendingBreakdownCard
+              historyRecords={history.records}
+              fixedExpenses={fixed.fixedExpenses}
+              monthlyIncome={income.monthlyIncome}
+              maxMonthsBack={MAX_MONTHS_BACK}
             />
-          </Card>
+
+            <Card title={t.apercu.categoryCard.title} hint={t.apercu.categoryCard.hint}>
+              <div className="mb-4 flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setMonthOffset((o) => Math.max(-MAX_MONTHS_BACK, o - 1))}
+                  disabled={monthOffset <= -MAX_MONTHS_BACK}
+                  aria-label={t.monthNav.prev}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5 disabled:opacity-30"
+                >
+                  ‹
+                </button>
+                <span className="min-w-[9rem] text-center text-sm font-medium capitalize text-ink">
+                  {selectedMonthLabel}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMonthOffset((o) => Math.min(0, o + 1))}
+                  disabled={monthOffset >= 0}
+                  aria-label={t.monthNav.next}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5 disabled:opacity-30"
+                >
+                  ›
+                </button>
+              </div>
+
+              {monthOffset !== 0 && (
+                <p className="mb-3 text-center text-xs text-muted">{t.apercu.categoryCard.pctNote}</p>
+              )}
+
+              <CategorySpendingChart
+                entries={categorySpending}
+                savingsTotal={savingsForMonth.total}
+                savingsTransactions={savingsForMonth.transactions}
+                categories={categories.categories}
+                onRenameCategory={categories.renameCategory}
+                onReclassify={(t, newCategory) => expenses.updateExpense(t.id, t.description, t.amount, newCategory)}
+              />
+            </Card>
+          </div>
 
           <Card title={t.apercu.budgetVsActualCard.title} hint={t.apercu.budgetVsActualCard.hint}>
             <BudgetVsActualChart statuses={budgetVsActual} />
@@ -229,7 +264,7 @@ export function Statistiques() {
                   type="button"
                   onClick={csvExport.exportAll}
                   disabled={csvExport.exporting}
-                  className="rounded-lg bg-primary-strong px-5 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                  className="budget-btn-primary rounded-lg px-5 py-2.5 text-sm font-medium transition-all disabled:opacity-60"
                 >
                   {csvExport.exporting ? t.apercu.csvCard.exporting : t.apercu.csvCard.download}
                 </button>
@@ -263,6 +298,8 @@ export function Statistiques() {
             <UpgradePrompt
               title={t.tendances.upgradeTrends.title}
               description={t.tendances.upgradeTrends.description}
+              variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
+              linkClassName="text-[#FF7A00] hover:opacity-80"
               minPlan="standard"
             />
           )}
@@ -279,6 +316,8 @@ export function Statistiques() {
             <UpgradePrompt
               title={t.tendances.upgradeIncomeExpense.title}
               description={t.tendances.upgradeIncomeExpense.description}
+              variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
+              linkClassName="text-[#FF7A00] hover:opacity-80"
               minPlan="standard"
             />
           )}

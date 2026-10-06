@@ -22,6 +22,12 @@ export interface StatistiquesContent {
     tendances: { title: string; purpose: string; actions: string[] }
     recompenses: { title: string; purpose: string; actions: string[] }
   }
+  statCards: {
+    spent: string
+    income: string
+    categories: string
+    onBudget: string
+  }
   monthNav: {
     prev: string
     next: string
@@ -231,6 +237,12 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
           'Reviens régulièrement pour garder ta série de connexions active.',
         ],
       },
+    },
+    statCards: {
+      spent: 'Dépensé',
+      income: 'Revenu mensuel',
+      categories: 'Catégories',
+      onBudget: 'Dans le budget',
     },
     monthNav: {
       prev: 'Mois précédent',
@@ -454,6 +466,12 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
           'Come back regularly to keep your login streak going.',
         ],
       },
+    },
+    statCards: {
+      spent: 'Spent',
+      income: 'Monthly income',
+      categories: 'Categories',
+      onBudget: 'On budget',
     },
     monthNav: {
       prev: 'Previous month',
