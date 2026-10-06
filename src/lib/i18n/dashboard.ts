@@ -37,6 +37,16 @@ export interface DashboardContent {
     savedLabel: string
     investedLabel: string
   }
+  scoreChart: {
+    title: string
+    hint: string
+    emptyTitle: string
+    emptyDescription: string
+  }
+  factors: {
+    title: string
+    hint: string
+  }
   goFurther: string
   featureLinks: {
     to: string
@@ -95,6 +105,16 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
       hint: 'Épargne totale (tous objectifs) et montant réellement investi à ce jour.',
       savedLabel: 'Épargné',
       investedLabel: 'Investi',
+    },
+    scoreChart: {
+      title: 'Évolution de ton score',
+      hint: 'Ton score de santé financière, jour par jour.',
+      emptyTitle: 'Pas encore assez d’historique',
+      emptyDescription: 'Reviens dans quelques jours pour voir l’évolution de ton score.',
+    },
+    factors: {
+      title: 'Ce qui compose ton score',
+      hint: 'Rythme de dépenses, régularité d’épargne et dépenses fixes vs revenu.',
     },
     goFurther: 'Aller plus loin',
     featureLinks: [
@@ -169,6 +189,16 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
       hint: 'Total savings (all goals) and the amount actually invested so far.',
       savedLabel: 'Saved',
       investedLabel: 'Invested',
+    },
+    scoreChart: {
+      title: 'Your score over time',
+      hint: 'Your financial health score, day by day.',
+      emptyTitle: 'Not enough history yet',
+      emptyDescription: 'Check back in a few days to see your score trend.',
+    },
+    factors: {
+      title: "What makes up your score",
+      hint: 'Spending pace, savings regularity, and fixed expenses vs. income.',
     },
     goFurther: 'Go further',
     featureLinks: [

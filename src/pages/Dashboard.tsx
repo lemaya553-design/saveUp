@@ -1,21 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { PageHeader } from '../components/PageHeader'
-import { Card } from '../components/Card'
-import { EmptyState } from '../components/EmptyState'
-import { ScoreTrendBadge } from '../components/ScoreTrendBadge'
-import { ScoreGauge } from '../components/ScoreGauge'
+import { HelpButton } from '../components/HelpButton'
 import { AlertBanner } from '../components/AlertBanner'
-import { DashboardStat } from '../components/DashboardStat'
+import { DashboardStatCards } from '../components/DashboardStatCards'
+import { DashboardScoreFactors } from '../components/DashboardScoreFactors'
 import { PersonalizedTips } from '../components/PersonalizedTips'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { TIER_ICONS, TIER_UNLOCKED_CLASS } from '../components/rewardIcons'
-import {
-  BudgetIllustration,
-  SavingsIllustration,
-  StatsIllustration,
-  BadgesIllustration,
-} from '../components/FeatureIllustrations'
 import { useFinancialHealth } from '../hooks/useFinancialHealth'
 import { useOnboardingQuiz } from '../hooks/useOnboardingQuiz'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
@@ -35,18 +26,75 @@ import { generatePersonalizedTips } from '../lib/tips'
 import { STARTER_BADGE, isStarterBadgeUnlocked } from '../lib/rewards'
 import { DASHBOARD } from '../lib/i18n/dashboard'
 
-const ILLUSTRATIONS_BY_PATH: Record<string, typeof BudgetIllustration> = {
-  '/budget': BudgetIllustration,
-  '/epargne': SavingsIllustration,
-  '/statistiques': StatsIllustration,
-  '/statistiques/recompenses': BadgesIllustration,
-}
+const CARD_BORDER = 'color-mix(in srgb, var(--color-overlay) 10%, transparent)'
+
+// Recharts is sizeable — Dashboard itself stays eager (it's the first page
+// most sessions land on) but the one chart on it that needs the library is
+// loaded on demand, same reasoning as Budget/Statistiques being lazy pages.
+const DashboardScoreChart = lazy(() =>
+  import('../components/DashboardScoreChart').then((m) => ({ default: m.DashboardScoreChart })),
+)
 
 // A touch longer than the shared .badge-unlock keyframe (0.7s) so the
 // animation always finishes before the class is removed — same value as
 // RecompensesTab's own claim animation, kept local since it's the only
 // other place this exact interaction happens.
 const CLAIM_ANIMATION_MS = 900
+
+function WalletIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5A1.5 1.5 0 0 1 4.5 6h13A1.5 1.5 0 0 1 19 7.5V9h2.5A1.5 1.5 0 0 1 23 10.5v7a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 3 17.5Z" />
+      <circle cx="18" cy="14" r="1.25" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function TargetIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="12" cy="12" r="0.75" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function ChartIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 19.5h16M7 19.5v-6M12 19.5v-10M17 19.5v-4" />
+    </svg>
+  )
+}
+
+function StarIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="m12 3 2.6 5.6 6.1.6-4.6 4.1 1.3 6-5.4-3.1-5.4 3.1 1.3-6-4.6-4.1 6.1-.6Z" />
+    </svg>
+  )
+}
+
+const FEATURE_ICONS: Record<string, (props: { className: string }) => ReactElement> = {
+  '/budget': WalletIcon,
+  '/epargne': TargetIcon,
+  '/statistiques': ChartIcon,
+  '/statistiques/recompenses': StarIcon,
+}
+
+function DashboardCard({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
+  return (
+    <section
+      className="hover-lift min-w-0 rounded-2xl border bg-surface p-5 shadow-sm sm:p-6"
+      style={{ borderColor: CARD_BORDER }}
+    >
+      <h2 className="text-base font-semibold text-ink">{title}</h2>
+      <p className="mb-4 mt-1 text-xs text-muted">{hint}</p>
+      {children}
+    </section>
+  )
+}
 
 export function Dashboard() {
   const navigate = useNavigate()
@@ -135,14 +183,18 @@ export function Dashboard() {
 
   if (needsOnboarding) {
     return (
-      <div className="mx-auto max-w-3xl px-4 pb-10">
-        <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={t.help} compact />
-        <EmptyState
-          title={t.freshUser.title}
-          description={t.freshUser.description}
-          actionLabel={t.freshUser.actionLabel}
-          actionTo="/budget"
-        />
+      <div className="mx-auto max-w-3xl px-4 pb-10 sm:px-6">
+        <div className="mb-6 flex items-center gap-2 pt-6">
+          <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{t.pageHeader.title}</h1>
+          <HelpButton title={t.pageHeader.title} purpose={t.help.purpose} actions={t.help.actions} />
+        </div>
+        <div className="rounded-2xl border p-8 text-center shadow-sm" style={{ borderColor: CARD_BORDER }}>
+          <h2 className="text-xl font-semibold text-ink">{t.freshUser.title}</h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-muted">{t.freshUser.description}</p>
+          <Link to="/budget" className="budget-btn-primary mt-5 inline-block rounded-lg px-5 py-2.5 font-medium transition-all">
+            {t.freshUser.actionLabel}
+          </Link>
+        </div>
       </div>
     )
   }
@@ -159,7 +211,6 @@ export function Dashboard() {
 
   const totalCurrentAmount = goals.goals.reduce((sum, g) => sum + g.currentAmount, 0)
   const totalTargetAmount = goals.goals.reduce((sum, g) => sum + g.targetAmount, 0)
-  const goalProgress = totalTargetAmount > 0 ? Math.min(100, (totalCurrentAmount / totalTargetAmount) * 100) : 0
 
   const budgetPaceAlert = getBudgetPaceAlert(
     {
@@ -185,19 +236,44 @@ export function Dashboard() {
     preferences.currency,
   )
 
+  const hoursLabel = workHours(health.spentThisMonth)
+  const spentCaption = (
+    <>
+      {getSpendableBudgetCaption(rawSpendableBudget, lang, preferences.currency)}
+      {hoursLabel && <span className="ml-1">· {hoursLabel}</span>}
+    </>
+  )
+
+  const savedCaption = (
+    <Link to="/epargne" className="budget-action-link">
+      {goals.goals.length === 0
+        ? t.saved.noGoal
+        : goals.goals.length === 1
+          ? t.saved.oneGoal(formatMoney(totalTargetAmount))
+          : t.saved.manyGoals(goals.goals.length)}
+    </Link>
+  )
+
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-10">
-      <PageHeader title={t.pageHeader.title} subtitle={t.pageHeader.subtitle} help={t.help} compact />
+    <div className="mx-auto max-w-[1200px] px-4 pb-16 sm:px-6 lg:px-8">
+      <div className="mb-6 flex items-center gap-2 pt-6">
+        <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{t.pageHeader.title}</h1>
+        <HelpButton title={t.pageHeader.title} purpose={t.help.purpose} actions={t.help.actions} />
+      </div>
 
       {/* Streak + starter badge — surfaced here (not just on Récompenses,
           which nothing else points a new user toward) so day one has a
           visible, claimable win even for an account with zero real data. */}
       <div
-        className={`mb-6 glass flex flex-wrap items-center gap-4 rounded-2xl p-5 shadow-lg shadow-black/30 ${
+        className={`budget-card-in hover-lift mb-6 flex flex-wrap items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm ${
           justClaimedStarter ? 'badge-unlock' : ''
         }`}
+        style={{ borderColor: CARD_BORDER }}
       >
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent/15 text-2xl">
+        <div
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl"
+          style={{ backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
+        >
           🔥
         </div>
         <div className="min-w-0 flex-1">
@@ -224,11 +300,7 @@ export function Dashboard() {
             ) : (
               <>
                 <p className="text-sm text-ink">{t.starterBadge.unlocked(STARTER_BADGE.name[lang])}</p>
-                <button
-                  type="button"
-                  onClick={handleClaimStarter}
-                  className="whitespace-nowrap rounded-full bg-primary-strong px-3 py-1.5 text-xs font-semibold text-white transition-all hover:brightness-110"
-                >
+                <button type="button" onClick={handleClaimStarter} className="budget-btn-primary whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition-all">
                   {t.starterBadge.claim}
                 </button>
               </>
@@ -250,97 +322,62 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* Score gets the visual lead — it's the one number meant to answer
-          "how am I doing," everything else here is supporting detail. The
-          featured card takes 3/5 of the row on wider screens, with spent/saved
-          stacked narrower beside it rather than three equal-weight boxes. */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-5">
-        <div className="glass flex flex-col items-center rounded-2xl p-6 text-center shadow-lg shadow-black/30 sm:col-span-3 sm:justify-center">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted">{t.score.label}</p>
-          <div className="mt-2 w-full max-w-[240px]">
-            <ScoreGauge score={health.breakdown.score} />
-          </div>
-          <ScoreTrendBadge trend={health.trend} />
-          <p className="mt-3 max-w-[26ch] text-xs text-muted">
-            {t.score.caption}{' '}
-            <Link to="/statistiques/recompenses" className="text-accent hover:text-accent/80">
-              {t.score.linkText}
-            </Link>
-          </p>
-        </div>
+      <DashboardStatCards
+        score={health.breakdown.score}
+        trend={health.trend}
+        spentThisMonth={health.spentThisMonth}
+        isOverBudget={isOverBudget}
+        spentCaption={spentCaption}
+        totalCurrentAmount={totalCurrentAmount}
+        savedCaption={savedCaption}
+        accumulatedTotal={totalCurrentAmount + investmentBalance.currentAmount}
+        formatMoney={formatMoney}
+      />
 
-        <div className="grid gap-4 sm:col-span-2">
-          <DashboardStat
-            label={t.spent.label}
-            value={formatMoney(health.spentThisMonth)}
-            valueColorClass={isOverBudget ? 'text-red-400' : 'text-ink'}
-            suffix={workHours(health.spentThisMonth) ?? undefined}
-            progress={budgetPct}
-            progressColorClass={isOverBudget ? 'bg-red-400' : 'bg-primary'}
-            caption={getSpendableBudgetCaption(rawSpendableBudget, lang, preferences.currency)}
-          />
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+        <div className="flex flex-col gap-6">
+          <DashboardCard title={t.scoreChart.title} hint={t.scoreChart.hint}>
+            <Suspense fallback={<div className="h-48 w-full animate-pulse rounded-xl bg-overlay/5" />}>
+              <DashboardScoreChart history={health.history} />
+            </Suspense>
+          </DashboardCard>
 
-          <DashboardStat
-            label={t.saved.label}
-            value={formatMoney(totalCurrentAmount)}
-            valueColorClass="text-success"
-            progress={totalTargetAmount > 0 ? goalProgress : undefined}
-            progressColorClass="bg-success"
-            caption={
-              <Link to="/epargne" className="hover:text-accent">
-                {goals.goals.length === 0
-                  ? t.saved.noGoal
-                  : goals.goals.length === 1
-                    ? t.saved.oneGoal(formatMoney(totalTargetAmount))
-                    : t.saved.manyGoals(goals.goals.length)}
-              </Link>
-            }
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-6">
-        <Card title={t.accumulated.title} hint={t.accumulated.hint}>
-          <p className="text-3xl font-bold text-success sm:text-4xl">
-            {formatMoney(totalCurrentAmount + investmentBalance.currentAmount)}
-          </p>
-          <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-xs text-muted">{t.accumulated.savedLabel}</p>
-              <p className="font-medium text-ink">{formatMoney(totalCurrentAmount)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted">{t.accumulated.investedLabel}</p>
-              <Link to="/epargne/investissement" className="font-medium text-ink hover:text-accent">
-                {formatMoney(investmentBalance.currentAmount)}
-              </Link>
+          <div>
+            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">{t.goFurther}</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {t.featureLinks.map(({ to, title, description }) => {
+                const Icon = FEATURE_ICONS[to]
+                return (
+                  <Link
+                    key={to}
+                    to={to}
+                    className="hover-lift flex min-w-0 items-center gap-3 rounded-2xl border bg-surface p-4 shadow-sm"
+                    style={{ borderColor: CARD_BORDER }}
+                  >
+                    <span
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                      style={{ color: '#FF7A00', backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-ink">{title}</p>
+                      <p className="truncate text-xs text-muted">{description}</p>
+                    </div>
+                    <span className="shrink-0" style={{ color: '#FF7A00' }}>→</span>
+                  </Link>
+                )
+              })}
             </div>
           </div>
-        </Card>
+        </div>
 
-        <PersonalizedTips tips={tips} />
+        <div className="flex flex-col gap-6">
+          <DashboardCard title={t.factors.title} hint={t.factors.hint}>
+            <DashboardScoreFactors breakdown={health.breakdown} />
+          </DashboardCard>
 
-        <div>
-          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">{t.goFurther}</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {t.featureLinks.map(({ to, title, description }) => {
-              const Illustration = ILLUSTRATIONS_BY_PATH[to]
-              return (
-                <Link
-                  key={to}
-                  to={to}
-                  className="hover-lift glass flex min-w-0 items-center gap-3 rounded-2xl p-4 shadow-lg shadow-black/30"
-                >
-                  <Illustration variant="icon" />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-ink">{title}</p>
-                    <p className="truncate text-xs text-muted">{description}</p>
-                  </div>
-                  <span className="shrink-0 text-accent">→</span>
-                </Link>
-              )
-            })}
-          </div>
+          <PersonalizedTips tips={tips} />
         </div>
       </div>
     </div>

@@ -17,8 +17,11 @@ export function BudgetEmptyChart({
   icon: ReactNode
   title: string
   description: string
-  actionLabel: string
-  onAction: () => void
+  // Omit both when there's genuinely nothing to "go do" (e.g. Dashboard's
+  // score chart just needs a day or two of history, not an action) —
+  // every other caller still passes both.
+  actionLabel?: string
+  onAction?: () => void
   heightClassName?: string
 }) {
   return (
@@ -35,14 +38,16 @@ export function BudgetEmptyChart({
         </span>
         <p className="text-sm font-semibold text-ink">{title}</p>
         <p className="max-w-[22rem] text-xs text-muted">{description}</p>
-        <button
-          type="button"
-          onClick={onAction}
-          className="mt-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
-          style={{ backgroundColor: '#FF7A00' }}
-        >
-          {actionLabel}
-        </button>
+        {actionLabel && onAction && (
+          <button
+            type="button"
+            onClick={onAction}
+            className="mt-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
+            style={{ backgroundColor: '#FF7A00' }}
+          >
+            {actionLabel}
+          </button>
+        )}
       </div>
     </div>
   )
