@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Card } from './Card'
 import { usePreferences } from '../hooks/usePreferences'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
@@ -7,6 +6,8 @@ import { computeHourlyRateFromAnnual } from '../lib/workHours'
 import { PARAMETRES } from '../lib/i18n/parametres'
 
 type Mode = 'hourly' | 'annual'
+
+const CARD_BORDER = 'color-mix(in srgb, var(--color-overlay) 10%, transparent)'
 
 // Only the final hourly_rate is ever persisted (see usePreferences) — mode
 // and the raw annual/weekly-hours inputs are session-only UI state. Coming
@@ -39,13 +40,18 @@ export function WorkHoursSettings() {
   }
 
   return (
-    <Card title={t.cardTitle} hint={t.cardHint}>
+    <section
+      className="hover-lift min-w-0 rounded-2xl border bg-surface p-5 shadow-sm sm:p-6"
+      style={{ borderColor: CARD_BORDER }}
+    >
+      <h2 className="text-base font-semibold text-ink">{t.cardTitle}</h2>
+      <p className="mb-4 mt-1 text-xs text-muted">{t.cardHint}</p>
       <label className="flex items-center gap-2 text-sm text-ink">
         <input
           type="checkbox"
           checked={workHoursEnabled}
           onChange={(e) => setWorkHoursEnabled(e.target.checked)}
-          className="h-4 w-4 accent-primary"
+          className="h-4 w-4 accent-[#FF7A00]"
         />
         {t.enableLabel}
       </label>
@@ -60,7 +66,7 @@ export function WorkHoursSettings() {
               onClick={() => setMode(option)}
               aria-pressed={mode === option}
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                mode === option ? 'bg-primary-strong text-white shadow-md shadow-primary/30' : 'text-muted hover:text-ink'
+                mode === option ? 'budget-btn-primary' : 'text-muted hover:text-ink'
               }`}
             >
               {option === 'hourly' ? t.modeHourly : t.modeAnnual}
@@ -81,7 +87,7 @@ export function WorkHoursSettings() {
               onBlur={commitHourly}
               onKeyDown={(e) => e.key === 'Enter' && commitHourly()}
               placeholder={t.hourlyRatePlaceholder}
-              className="w-40 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+              className="w-40 rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
             />
           </label>
         ) : (
@@ -98,7 +104,7 @@ export function WorkHoursSettings() {
                 onBlur={commitAnnual}
                 onKeyDown={(e) => e.key === 'Enter' && commitAnnual()}
                 placeholder={t.annualSalaryPlaceholder}
-                className="w-40 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+                className="w-40 rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
               />
             </label>
             <label className="flex flex-col gap-1 text-sm text-muted">
@@ -113,7 +119,7 @@ export function WorkHoursSettings() {
                 onBlur={commitAnnual}
                 onKeyDown={(e) => e.key === 'Enter' && commitAnnual()}
                 placeholder={t.hoursPerWeekPlaceholder}
-                className="w-32 rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-ink placeholder-muted focus:border-primary focus:outline-none"
+                className="w-32 rounded-lg budget-field px-3 py-2 text-ink placeholder-muted"
               />
             </label>
             {computedFromAnnual !== null && (
@@ -122,6 +128,6 @@ export function WorkHoursSettings() {
           </div>
         )}
       </div>
-    </Card>
+    </section>
   )
 }

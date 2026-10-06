@@ -1,18 +1,17 @@
 import { useState } from 'react'
-import { Card } from './Card'
 import { useLanguage } from '../hooks/useLanguage'
 import { usePreferences } from '../hooks/usePreferences'
 import { getCurrencySymbol } from '../lib/format'
 import { COMMON } from '../lib/i18n/common'
 
+const CARD_BORDER = 'color-mix(in srgb, var(--color-overlay) 10%, transparent)'
+
 export function IncomeInput({
   monthlyIncome,
   onChange,
-  compact = false,
 }: {
   monthlyIncome: number
   onChange: (value: number) => void
-  compact?: boolean
 }) {
   const [draft, setDraft] = useState(String(monthlyIncome || ''))
   const { lang } = useLanguage()
@@ -26,7 +25,12 @@ export function IncomeInput({
   }
 
   return (
-    <Card title={t.title} hint={t.hint} compact={compact}>
+    <section
+      className="hover-lift min-w-0 rounded-2xl border bg-surface p-5 shadow-sm sm:p-6"
+      style={{ borderColor: CARD_BORDER }}
+    >
+      <h2 className="text-base font-semibold text-ink">{t.title}</h2>
+      <p className="mb-4 mt-1 text-xs text-muted">{t.hint}</p>
       <label className="flex items-center gap-2">
         <span className="text-muted">{getCurrencySymbol(currency, lang)}</span>
         <input
@@ -39,9 +43,9 @@ export function IncomeInput({
           onBlur={commit}
           onKeyDown={(e) => e.key === 'Enter' && commit()}
           placeholder="0.00"
-          className="w-full rounded-lg border border-overlay/10 bg-overlay/5 px-3 py-2 text-lg text-ink placeholder-muted focus:border-primary focus:outline-none"
+          className="budget-field w-full rounded-lg px-3 py-2 text-lg text-ink placeholder-muted"
         />
       </label>
-    </Card>
+    </section>
   )
 }

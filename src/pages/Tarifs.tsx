@@ -22,7 +22,13 @@ export function Tarifs() {
           would stack two header bars. */}
       {!user && <LandingHeader />}
 
-      <section className="hero-gradient relative px-4 pb-24 pt-10 text-center sm:px-6">
+      <section
+        className="relative px-4 pb-24 pt-10 text-center sm:px-6"
+        style={{
+          backgroundImage:
+            'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 122, 0, 0.16), transparent 70%)',
+        }}
+      >
         <div className="absolute right-4 top-4 sm:right-6 sm:top-6">
           <HelpButton title={t.help.title} purpose={t.help.purpose} actions={t.help.actions(TRIAL_DAYS)} />
         </div>
@@ -32,10 +38,12 @@ export function Tarifs() {
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-lg text-muted">{t.hero.subtitle}</p>
 
-        <TrialBadge className="mx-auto mt-6 inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-4 py-2 text-sm font-semibold text-accent" />
+        <TrialBadge
+          className="mx-auto mt-6 inline-flex items-center gap-1.5 rounded-full bg-[#FF7A00]/15 px-4 py-2 text-sm font-semibold text-[#FF7A00]"
+        />
 
         <div className="mt-14">
-          <PricingCards />
+          <PricingCards accentOverride />
         </div>
       </section>
     </div>

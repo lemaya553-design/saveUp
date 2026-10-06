@@ -1,9 +1,10 @@
-import { Card } from './Card'
 import { AvatarCircle } from './AvatarCircle'
 import { usePreferences } from '../hooks/usePreferences'
 import { useLanguage } from '../hooks/useLanguage'
 import { ACCENT_COLORS, AVATAR_EMOJIS, type AccentColor, type Theme } from '../lib/theme'
 import { PARAMETRES } from '../lib/i18n/parametres'
+
+const CARD_BORDER = 'color-mix(in srgb, var(--color-overlay) 10%, transparent)'
 
 export function PersonalizationSettings() {
   const { loading, error, accentColor, theme, avatarEmoji, setAccentColor, setTheme, setAvatarEmoji } =
@@ -12,7 +13,12 @@ export function PersonalizationSettings() {
   const t = PARAMETRES[lang].personalization
 
   return (
-    <Card title={t.cardTitle} hint={t.cardHint}>
+    <section
+      className="hover-lift min-w-0 rounded-2xl border bg-surface p-5 shadow-sm sm:p-6"
+      style={{ borderColor: CARD_BORDER }}
+    >
+      <h2 className="text-base font-semibold text-ink">{t.cardTitle}</h2>
+      <p className="mb-4 mt-1 text-xs text-muted">{t.cardHint}</p>
       {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
 
       <div className="flex flex-col gap-6">
@@ -52,9 +58,7 @@ export function PersonalizationSettings() {
                 onClick={() => setTheme(option)}
                 aria-pressed={theme === option}
                 className={`rounded-full px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60 ${
-                  theme === option
-                    ? 'bg-primary-strong text-white shadow-md shadow-primary/30'
-                    : 'text-muted hover:text-ink'
+                  theme === option ? 'budget-btn-primary' : 'text-muted hover:text-ink'
                 }`}
               >
                 {option === 'dark' ? t.dark : t.light}
@@ -77,7 +81,7 @@ export function PersonalizationSettings() {
                   aria-pressed={avatarEmoji === emoji}
                   aria-label={t.avatarAriaLabel(emoji)}
                   className={`flex h-10 w-10 items-center justify-center rounded-full text-lg transition-colors disabled:opacity-60 ${
-                    avatarEmoji === emoji ? 'bg-primary/20 ring-1 ring-inset ring-primary/40' : 'hover:bg-overlay/10'
+                    avatarEmoji === emoji ? 'bg-[#FF7A00]/20 ring-1 ring-inset ring-[#FF7A00]/40' : 'hover:bg-overlay/10'
                   }`}
                 >
                   {emoji}
@@ -87,6 +91,6 @@ export function PersonalizationSettings() {
           </div>
         </div>
       </div>
-    </Card>
+    </section>
   )
 }

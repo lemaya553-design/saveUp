@@ -13,7 +13,13 @@ import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
 // pricing section and the standalone /tarifs page render from the exact
 // same real data and the exact same checkout logic — never two copies that
 // can quietly drift apart on price, features, or trial terms.
-export function PricingCards() {
+//
+// accentOverride: the /tarifs redesign wants its fixed orange regardless of
+// the app's default accent (same "always orange" rule as the rest of that
+// redesign); the landing page's own pricing section (Home.tsx) keeps the
+// app's normal accent-driven look, so this defaults to false and only
+// Tarifs.tsx opts in.
+export function PricingCards({ accentOverride = false }: { accentOverride?: boolean } = {}) {
   const navigate = useNavigate()
   const { user } = useAuth()
   const subscription = useSubscription()
@@ -22,6 +28,13 @@ export function PricingCards() {
   const { showToast } = useToast()
   const t = TARIFS[lang]
   const fmt = (amount: number) => formatBillingAmount(amount, lang)
+
+  const highlightBorder = accentOverride ? 'border-[#FF7A00]/40' : 'border-accent/40'
+  const badgeClass = accentOverride ? 'bg-[#FF7A00]/15 text-[#FF7A00]' : 'bg-accent/15 text-accent'
+  const checkClass = accentOverride ? 'text-[#FF7A00]' : 'text-success'
+  const ctaClass = accentOverride
+    ? 'bg-[#FF7A00] hover:brightness-110'
+    : 'bg-primary-strong hover:brightness-110'
 
   // Both handlers below used to leave a click looking like it did nothing
   // whenever startCheckout/openBillingPortal resolved to null without
@@ -86,11 +99,11 @@ export function PricingCards() {
             <div
               key={planId}
               className={`glass relative rounded-3xl p-6 shadow-lg shadow-black/30 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${
-                highlight ? 'border-accent/40' : ''
+                highlight ? highlightBorder : ''
               }`}
             >
               {highlight && (
-                <span className="absolute -top-3 left-6 rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
+                <span className={`absolute -top-3 left-6 rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}`}>
                   {t.popular}
                 </span>
               )}
@@ -99,7 +112,7 @@ export function PricingCards() {
               <p className="mt-1 text-sm text-muted">{plan.description}</p>
 
               {planId !== 'free' && (
-                <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
+                <span className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}`}>
                   {t.trialBadge(TRIAL_DAYS)}
                 </span>
               )}
@@ -112,7 +125,7 @@ export function PricingCards() {
               <ul className="mt-6 space-y-2">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm text-muted">
-                    <span className="mt-0.5 text-success">✓</span>
+                    <span className={`mt-0.5 ${checkClass}`}>✓</span>
                     {feature}
                   </li>
                 ))}
@@ -122,7 +135,7 @@ export function PricingCards() {
                 <>
                   <Link
                     to={user ? '/dashboard' : '/connexion'}
-                    className="mt-8 block rounded-xl bg-primary-strong px-4 py-2 text-center font-medium text-white transition-all hover:-translate-y-0.5 hover:brightness-110"
+                    className={`mt-8 block rounded-xl px-4 py-2 text-center font-medium text-white transition-all hover:-translate-y-0.5 ${ctaClass}`}
                   >
                     {user ? t.cta.goToDashboard : t.cta.startFree}
                   </Link>
@@ -155,7 +168,7 @@ export function PricingCards() {
                     type="button"
                     onClick={() => handleChoose(planId as Exclude<Plan, 'free'>)}
                     disabled={isLoadingThis}
-                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-strong px-4 py-2 font-medium text-white transition-all hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-60"
+                    className={`mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2 font-medium text-white transition-all hover:-translate-y-0.5 disabled:opacity-60 ${ctaClass}`}
                   >
                     {isLoadingThis && (
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
