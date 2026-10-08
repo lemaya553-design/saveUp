@@ -6,6 +6,7 @@ import { useExpenses } from '../hooks/useExpenses'
 import { useMonthlyExpenses } from '../hooks/useMonthlyExpenses'
 import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
+import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
 import { useRecurringExpenses } from '../hooks/useRecurringExpenses'
@@ -20,7 +21,7 @@ import {
   sumThisMonth,
 } from '../lib/budgetInsights'
 import { getCategoryShareAlert } from '../lib/alerts'
-import { canImportCsv, FREE_CSV_IMPORT_LIMIT } from '../lib/plans'
+import { canImportCsv, FREE_CSV_IMPORT_LIMIT, splitByLimit } from '../lib/plans'
 import { computeUpcomingRecurringTotal } from '../lib/recurringExpenses'
 import { BUDGET } from '../lib/i18n/budget'
 import { Card } from '../components/Card'
@@ -33,6 +34,7 @@ import { RecentExpenses } from '../components/RecentExpenses'
 import { BudgetStatCards } from '../components/BudgetStatCards'
 import { BudgetSpendingChart } from '../components/BudgetSpendingChart'
 import { BudgetCategoryRing } from '../components/BudgetCategoryRing'
+import { BudgetPayPeriodCard } from '../components/BudgetPayPeriodCard'
 import { BudgetTrendBars } from '../components/BudgetTrendBars'
 import { AddExpenseModal } from '../components/AddExpenseModal'
 import { BudgetInsight } from '../components/BudgetInsight'
@@ -79,6 +81,7 @@ export function Budget() {
   const monthly = useMonthlyExpenses()
   const history = useExpenseHistory()
   const contributions = useSavingsContributions()
+  const goals = useSavingsGoals()
   const subscription = useSubscription()
   const preferences = usePreferences()
   const recurring = useRecurringExpenses()
@@ -93,6 +96,7 @@ export function Budget() {
     monthly.loading ||
     history.loading ||
     contributions.loading ||
+    goals.loading ||
     recurring.loading
   const error =
     income.error ||
@@ -101,6 +105,7 @@ export function Budget() {
     monthly.error ||
     history.error ||
     contributions.error ||
+    goals.error ||
     recurring.error
 
   const savingsThisMonth = useMemo(
@@ -165,6 +170,15 @@ export function Budget() {
   const categoryShareAlert = useMemo(
     () => getCategoryShareAlert(history.records, lang),
     [history.records, lang],
+  )
+
+  // Same active/paused split as the Épargne page — a goal beyond the
+  // account's plan limit stays visible there but shouldn't surface in this
+  // card's "mettre de côté" list, since contributing toward it is already
+  // blocked until the account upgrades or frees up a slot.
+  const activeGoals = useMemo(
+    () => splitByLimit(goals.goals, subscription.limits.maxGoals).active,
+    [goals.goals, subscription.limits.maxGoals],
   )
 
   if (!tabParam || !TABS.includes(tabParam as Tab)) {
@@ -305,6 +319,14 @@ export function Budget() {
             </div>
 
             <div className="flex flex-col gap-6">
+              <BudgetPayPeriodCard
+                payFrequency={preferences.payFrequency}
+                nextPayday={preferences.nextPayday}
+                records={history.records}
+                spendableBudget={spendableBudget}
+                goals={activeGoals}
+              />
+
               <BudgetCard title={t.breakdownCard.title} hint={t.breakdownCard.hint}>
                 <BudgetCategoryRing categories={categoryBreakdown} onAddExpense={() => setAddExpenseOpen(true)} />
               </BudgetCard>

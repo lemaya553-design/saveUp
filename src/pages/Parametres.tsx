@@ -4,6 +4,7 @@ import { HelpButton } from '../components/HelpButton'
 import { TabBar, type TabDef } from '../components/TabBar'
 import { PersonalizationSettings } from '../components/PersonalizationSettings'
 import { WorkHoursSettings } from '../components/WorkHoursSettings'
+import { PayScheduleSettings } from '../components/PayScheduleSettings'
 import { IncomeInput } from '../components/IncomeInput'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { useIncome } from '../hooks/useIncome'
@@ -202,6 +203,7 @@ export function Parametres() {
         <div className="grid gap-6 lg:grid-cols-2">
           <PersonalizationSettings />
           <WorkHoursSettings />
+          <PayScheduleSettings />
         </div>
       )}
     </div>

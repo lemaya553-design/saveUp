@@ -34,6 +34,19 @@ export interface BudgetContent {
     trendDescription: string
     cta: string
   }
+  payPeriodCard: {
+    title: string
+    hint: string
+    daysRemaining: (n: number) => string
+    spentLabel: string
+    remainingLabel: string
+    setAsideTitle: string
+    perPeriodSuffix: string
+    setAsideCaption: (targetDateLabel: string) => string
+    emptyTitle: string
+    emptyDescription: string
+    emptyCta: string
+  }
   tabs: { depenses: string; categories: string; import: string; recurrences: string }
   help: {
     depenses: { title: string; purpose: string; actions: string[] }
@@ -279,6 +292,19 @@ export const BUDGET: Record<Lang, BudgetContent> = {
       trendTitle: 'Pas encore de tendance',
       trendDescription: "Reviens dans quelques semaines pour voir ta tendance sur 3 mois.",
       cta: 'Ajouter ma première dépense',
+    },
+    payPeriodCard: {
+      title: 'Cette paie',
+      hint: 'Ton budget pour la période de paie en cours.',
+      daysRemaining: (n) => `${n} jour${n > 1 ? 's' : ''} restant${n > 1 ? 's' : ''}`,
+      spentLabel: 'Dépensé',
+      remainingLabel: 'Restant',
+      setAsideTitle: 'Mettre de côté par paie',
+      perPeriodSuffix: '/ paie',
+      setAsideCaption: (targetDateLabel) => `pour l'atteindre d'ici le ${targetDateLabel}`,
+      emptyTitle: 'Pas encore configuré',
+      emptyDescription: 'Renseigne ta fréquence et ta date de paie pour voir ton budget par période de paie.',
+      emptyCta: 'Configurer ma paie',
     },
     tabs: {
       depenses: 'Dépenses',
@@ -591,6 +617,19 @@ export const BUDGET: Record<Lang, BudgetContent> = {
       trendTitle: 'No trend yet',
       trendDescription: 'Check back in a few weeks to see your 3-month trend.',
       cta: 'Add my first expense',
+    },
+    payPeriodCard: {
+      title: 'This pay period',
+      hint: 'Your budget for the current pay period.',
+      daysRemaining: (n) => `${n} day${n > 1 ? 's' : ''} left`,
+      spentLabel: 'Spent',
+      remainingLabel: 'Remaining',
+      setAsideTitle: 'Set aside per pay period',
+      perPeriodSuffix: '/ pay period',
+      setAsideCaption: (targetDateLabel) => `to reach it by ${targetDateLabel}`,
+      emptyTitle: 'Not set up yet',
+      emptyDescription: 'Set your pay frequency and payday to see your budget by pay period.',
+      emptyCta: 'Set up my pay schedule',
     },
     tabs: {
       depenses: 'Expenses',

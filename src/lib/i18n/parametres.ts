@@ -62,6 +62,13 @@ export interface ParametresContent {
     hoursPerWeekPlaceholder: string
     computedRateSentence: (rate: string) => string
   }
+  paySchedule: {
+    cardTitle: string
+    cardHint: string
+    frequencyLabel: string
+    nextPaydayLabel: string
+    incompleteHint: string
+  }
 }
 
 export const PARAMETRES: Record<Lang, ParametresContent> = {
@@ -95,7 +102,11 @@ export const PARAMETRES: Record<Lang, ParametresContent> = {
       preferences: {
         title: 'Préférences',
         purpose: "L'apparence de SaveUp, juste pour toi.",
-        actions: ["Choisis ta couleur d'accent et ton thème.", 'Personnalise ton avatar.'],
+        actions: [
+          "Choisis ta couleur d'accent et ton thème.",
+          'Personnalise ton avatar.',
+          'Renseigne ta fréquence et ta date de paie pour voir ton budget par période de paie.',
+        ],
       },
     },
     toasts: {
@@ -150,6 +161,13 @@ export const PARAMETRES: Record<Lang, ParametresContent> = {
       hoursPerWeekPlaceholder: '40',
       computedRateSentence: (rate) => `Ça représente environ ${rate} de l'heure.`,
     },
+    paySchedule: {
+      cardTitle: 'Horaire de paie',
+      cardHint: "Utilisé par la carte « Cette paie » du Budget pour afficher ton argent par période de paie.",
+      frequencyLabel: 'Fréquence de paie',
+      nextPaydayLabel: 'Date d\'un prochain versement',
+      incompleteHint: 'Renseigne les deux champs pour voir la carte « Cette paie » sur le Budget.',
+    },
   },
   en: {
     pageHeader: {
@@ -181,7 +199,11 @@ export const PARAMETRES: Record<Lang, ParametresContent> = {
       preferences: {
         title: 'Preferences',
         purpose: "SaveUp's look, just for you.",
-        actions: ['Choose your accent color and theme.', 'Personalize your avatar.'],
+        actions: [
+          'Choose your accent color and theme.',
+          'Personalize your avatar.',
+          'Set your pay frequency and payday to see your budget by pay period.',
+        ],
       },
     },
     toasts: {
@@ -235,6 +257,13 @@ export const PARAMETRES: Record<Lang, ParametresContent> = {
       hoursPerWeekLabel: 'Hours worked per week',
       hoursPerWeekPlaceholder: '40',
       computedRateSentence: (rate) => `That's about ${rate} an hour.`,
+    },
+    paySchedule: {
+      cardTitle: 'Pay schedule',
+      cardHint: "Used by the Budget page's \"This pay period\" card to show your money by pay period.",
+      frequencyLabel: 'Pay frequency',
+      nextPaydayLabel: 'Date of a next payday',
+      incompleteHint: 'Fill in both fields to see the "This pay period" card on Budget.',
     },
   },
 }
