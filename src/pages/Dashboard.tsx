@@ -15,6 +15,7 @@ import { useInvestmentBalance } from '../hooks/useInvestmentBalance'
 import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
+import { useAuth } from '../hooks/useAuth'
 import { useLoginStreak } from '../hooks/useLoginStreak'
 import { useClaimedBadges } from '../hooks/useClaimedBadges'
 import { useLanguage } from '../hooks/useLanguage'
@@ -27,6 +28,11 @@ import { STARTER_BADGE, isStarterBadgeUnlocked } from '../lib/rewards'
 import { DASHBOARD } from '../lib/i18n/dashboard'
 
 const CARD_BORDER = 'color-mix(in srgb, var(--color-overlay) 10%, transparent)'
+
+// Cutoff for the WhatsApp opt-in gate below — only accounts created at or
+// after this feature shipped are routed through /numero-whatsapp; accounts
+// older than this were never asked and stay that way (see needsWhatsapp).
+const WHATSAPP_OPT_IN_LAUNCH = new Date('2026-10-09T00:00:00Z')
 
 // Recharts is sizeable — Dashboard itself stays eager (it's the first page
 // most sessions land on) but the one chart on it that needs the library is
@@ -98,6 +104,7 @@ function DashboardCard({ title, hint, children }: { title: string; hint: string;
 
 export function Dashboard() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { lang } = useLanguage()
   const t = DASHBOARD[lang]
   const formatMoney = useMoneyFormat()
@@ -173,14 +180,19 @@ export function Dashboard() {
     !loading && !quiz.error && !health.error && (!quiz.completed || !health.hasIncomeRecord)
 
   // Gates even earlier than onboarding — same data-driven, no-flag
-  // reasoning as needsOnboarding above (and runs for every account that
-  // predates this field too, not just brand-new signups: Loi 25/LCAP
-  // consent has to be collected from everyone, not only new users).
+  // reasoning as needsOnboarding above, but scoped to accounts created on
+  // or after this feature's launch: existing users signed up before we had
+  // anywhere to collect Loi 25/LCAP consent, and are intentionally never
+  // asked for it retroactively — only brand-new signups go through this
+  // screen. created_at comes from Supabase auth (not spoofable client-side
+  // the way a localStorage flag would be, and unlike a flag, correctly
+  // scopes to the account rather than the browser).
   // WhatsappOptIn.tsx always sends a successful submit to /onboarding
   // next, which immediately bounces an already-onboarded account straight
   // back to /dashboard via its own resume check — so this never replays
   // the quiz for someone who already finished it.
-  const needsWhatsapp = !loading && !preferences.error && !preferences.whatsappNumber
+  const isNewAccount = !!user?.created_at && new Date(user.created_at) >= WHATSAPP_OPT_IN_LAUNCH
+  const needsWhatsapp = !loading && !preferences.error && !preferences.whatsappNumber && isNewAccount
 
   useEffect(() => {
     if (loading) return
