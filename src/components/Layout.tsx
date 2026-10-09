@@ -24,6 +24,7 @@ export function Layout() {
     location.pathname === '/calculateur' ||
     (location.pathname === '/tarifs' && !user) ||
     location.pathname === '/onboarding' ||
+    location.pathname === '/numero-whatsapp' ||
     location.pathname === '/connexion' ||
     location.pathname === '/confidentialite' ||
     location.pathname === '/conditions'

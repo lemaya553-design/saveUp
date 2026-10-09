@@ -30,12 +30,19 @@ interface PreferencesContextValue {
   payFrequency: PayFrequency | null
   nextPayday: string | null
   savingsWhy: string | null
+  // Set together, once, by the WhatsApp opt-in step (src/pages/WhatsappOptIn.tsx)
+  // — Dashboard.tsx's gate reads whatsappNumber: null = not collected yet,
+  // same "no value = never set" convention as payFrequency/nextPayday.
+  whatsappNumber: string | null
+  whatsappConsent: boolean
+  whatsappConsentAt: string | null
   setAccentColor: (value: AccentColor) => void
   setTheme: (value: Theme) => void
   setAvatarEmoji: (value: string | null) => void
   setCurrency: (value: Currency) => void
   setOnboardingProfile: (mainGoal: MainGoal, triedOtherApp: boolean, frequency: TrackingFrequency) => void
   setAccountSetupExtras: (payFrequency: PayFrequency | null, nextPayday: string | null, savingsWhy: string | null) => void
+  setWhatsappOptIn: (e164Number: string) => void
   incrementCsvImportCount: () => void
   setHourlyRate: (value: number | null) => void
   setWorkHoursEnabled: (value: boolean) => void
@@ -65,6 +72,9 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [payFrequency, setPayFrequencyState] = useState<PayFrequency | null>(null)
   const [nextPayday, setNextPaydayState] = useState<string | null>(null)
   const [savingsWhy, setSavingsWhyState] = useState<string | null>(null)
+  const [whatsappNumber, setWhatsappNumberState] = useState<string | null>(null)
+  const [whatsappConsent, setWhatsappConsentState] = useState(false)
+  const [whatsappConsentAt, setWhatsappConsentAtState] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -73,7 +83,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     const { data, error: fetchError } = await supabase
       .from('user_preferences')
       .select(
-        'accent_color, theme, avatar_emoji, currency, onboarding_main_goal, onboarding_tried_other_app, onboarding_frequency, csv_import_count, hourly_rate, work_hours_enabled, pay_frequency, next_payday, savings_why',
+        'accent_color, theme, avatar_emoji, currency, onboarding_main_goal, onboarding_tried_other_app, onboarding_frequency, csv_import_count, hourly_rate, work_hours_enabled, pay_frequency, next_payday, savings_why, whatsapp_number, whatsapp_consent, whatsapp_consent_at',
       )
       .eq('user_id', userId)
       .maybeSingle()
@@ -95,6 +105,9 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setPayFrequencyState((data?.pay_frequency as PayFrequency | null) ?? null)
       setNextPaydayState(data?.next_payday ?? null)
       setSavingsWhyState(data?.savings_why ?? null)
+      setWhatsappNumberState(data?.whatsapp_number ?? null)
+      setWhatsappConsentState(data?.whatsapp_consent ?? false)
+      setWhatsappConsentAtState(data?.whatsapp_consent_at ?? null)
       // Reconciles with whatever index.html's bootstrap script guessed from
       // localStorage before this fetch resolved — a no-op on the common
       // path where they already matched.
@@ -123,6 +136,9 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       pay_frequency?: PayFrequency | null
       next_payday?: string | null
       savings_why?: string | null
+      whatsapp_number?: string
+      whatsapp_consent?: boolean
+      whatsapp_consent_at?: string
     }) => {
       if (!userId) return
       const { error: upsertError } = await supabase
@@ -221,6 +237,27 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [upsert],
   )
 
+  // Written once, by the WhatsApp opt-in step — the only path that can
+  // reach this setter already requires its consent checkbox to be checked
+  // (see WhatsappOptIn.tsx, whose Continue button stays disabled until it
+  // is), so consent is always true here. There's no opt-out UI: a user who
+  // wants to stop would do so by contacting support, same as any other
+  // consent withdrawal under Loi 25, not a toggle in Paramètres.
+  const setWhatsappOptIn = useCallback(
+    (e164Number: string) => {
+      const consentedAt = new Date().toISOString()
+      setWhatsappNumberState(e164Number)
+      setWhatsappConsentState(true)
+      setWhatsappConsentAtState(consentedAt)
+      upsert({
+        whatsapp_number: e164Number,
+        whatsapp_consent: true,
+        whatsapp_consent_at: consentedAt,
+      })
+    },
+    [upsert],
+  )
+
   // Fires once a free-plan user completes a CSV import that used their
   // 2-import exception — read the current count off state rather than
   // taking it as a param, so callers don't need their own copy of it.
@@ -248,12 +285,16 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     payFrequency,
     nextPayday,
     savingsWhy,
+    whatsappNumber,
+    whatsappConsent,
+    whatsappConsentAt,
     setAccentColor,
     setTheme,
     setAvatarEmoji,
     setCurrency,
     setOnboardingProfile,
     setAccountSetupExtras,
+    setWhatsappOptIn,
     incrementCsvImportCount,
     setHourlyRate,
     setWorkHoursEnabled,

@@ -120,7 +120,8 @@ export function Dashboard() {
     goals.loading ||
     contributions.loading ||
     investmentBalance.loading ||
-    expenseHistory.loading
+    expenseHistory.loading ||
+    preferences.loading
   const error =
     health.error || quiz.error || goals.error || contributions.error || investmentBalance.error || expenseHistory.error
 
@@ -171,13 +172,32 @@ export function Dashboard() {
   const needsOnboarding =
     !loading && !quiz.error && !health.error && (!quiz.completed || !health.hasIncomeRecord)
 
+  // Gates even earlier than onboarding — same data-driven, no-flag
+  // reasoning as needsOnboarding above (and runs for every account that
+  // predates this field too, not just brand-new signups: Loi 25/LCAP
+  // consent has to be collected from everyone, not only new users).
+  // WhatsappOptIn.tsx always sends a successful submit to /onboarding
+  // next, which immediately bounces an already-onboarded account straight
+  // back to /dashboard via its own resume check — so this never replays
+  // the quiz for someone who already finished it.
+  const needsWhatsapp = !loading && !preferences.error && !preferences.whatsappNumber
+
   useEffect(() => {
-    if (!loading && needsOnboarding) {
+    if (loading) return
+    if (needsWhatsapp) {
+      navigate('/numero-whatsapp', { replace: true })
+      return
+    }
+    if (needsOnboarding) {
       navigate('/onboarding', { replace: true })
     }
-  }, [loading, needsOnboarding, navigate])
+  }, [loading, needsWhatsapp, needsOnboarding, navigate])
 
   if (loading) {
+    return <PageSkeleton cards={4} />
+  }
+
+  if (needsWhatsapp) {
     return <PageSkeleton cards={4} />
   }
 

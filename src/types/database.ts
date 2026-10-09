@@ -310,6 +310,9 @@ export interface Database {
           pay_frequency: string | null
           next_payday: string | null
           savings_why: string | null
+          whatsapp_number: string | null
+          whatsapp_consent: boolean
+          whatsapp_consent_at: string | null
           updated_at: string
         }
         Insert: {
@@ -327,6 +330,9 @@ export interface Database {
           pay_frequency?: string | null
           next_payday?: string | null
           savings_why?: string | null
+          whatsapp_number?: string | null
+          whatsapp_consent?: boolean
+          whatsapp_consent_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -344,6 +350,9 @@ export interface Database {
           pay_frequency?: string | null
           next_payday?: string | null
           savings_why?: string | null
+          whatsapp_number?: string | null
+          whatsapp_consent?: boolean
+          whatsapp_consent_at?: string | null
           updated_at?: string
         }
         Relationships: []

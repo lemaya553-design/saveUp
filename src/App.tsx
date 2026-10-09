@@ -19,6 +19,12 @@ import { Parametres } from './pages/Parametres'
 import { Onboarding } from './pages/Onboarding'
 import { DuelAccept } from './pages/DuelAccept'
 
+// libphonenumber-js's metadata is sizeable for a single one-time screen —
+// loaded on demand so no other route pays for it.
+const WhatsappOptIn = lazy(() =>
+  import('./pages/WhatsappOptIn').then((m) => ({ default: m.WhatsappOptIn })),
+)
+
 // Recharts is sizeable and used across every chart on this page — loaded on
 // demand so no other route pays for it in the initial bundle.
 const Statistiques = lazy(() =>
@@ -96,6 +102,14 @@ function App() {
                       <Route path="parametres/:tab" element={<Parametres />} />
 
                       <Route path="onboarding" element={<Onboarding />} />
+                      <Route
+                        path="numero-whatsapp"
+                        element={
+                          <Suspense fallback={<PageSkeleton cards={1} />}>
+                            <WhatsappOptIn />
+                          </Suspense>
+                        }
+                      />
                     </Route>
                   </Route>
                 </Routes>
