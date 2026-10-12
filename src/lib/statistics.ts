@@ -1,4 +1,4 @@
-import { getMonthRange, getPreviousMonthRange, toDateString } from './format'
+import { getMonthRange, getPreviousMonthRange, getWeekStart, toDateString } from './format'
 import type { Lang } from './i18n/language'
 
 // ---------------------------------------------------------------------------
@@ -223,4 +223,176 @@ export function computeBudgetVsActual(
       }
     })
     .sort((a, b) => b.pctUsed - a.pctUsed)
+}
+
+// ---------------------------------------------------------------------------
+// Weekly spending, last N weeks (Tendances' "Dépenses par semaine")
+
+export interface WeeklySpendingPoint {
+  label: string
+  weekStart: string
+  amount: number
+  isCurrentWeek: boolean
+}
+
+export function computeWeeklySpending(
+  records: { amount: number; spent_at: string }[],
+  lang: Lang,
+  now = new Date(),
+  weeksBack = 8,
+): WeeklySpendingPoint[] {
+  const locale = lang === 'fr' ? 'fr-CA' : 'en-CA'
+  const currentWeekStart = getWeekStart(now)
+
+  const points: WeeklySpendingPoint[] = []
+  for (let offset = weeksBack - 1; offset >= 0; offset--) {
+    const weekStart = new Date(currentWeekStart)
+    weekStart.setDate(currentWeekStart.getDate() - offset * 7)
+    const weekEnd = new Date(weekStart)
+    weekEnd.setDate(weekStart.getDate() + 7)
+
+    const amount = records
+      .filter((r) => {
+        const d = new Date(r.spent_at)
+        return d >= weekStart && d < weekEnd
+      })
+      .reduce((sum, r) => sum + r.amount, 0)
+
+    points.push({
+      label: weekStart.toLocaleDateString(locale, { day: 'numeric', month: 'short' }),
+      weekStart: toDateString(weekStart),
+      amount,
+      isCurrentWeek: offset === 0,
+    })
+  }
+  return points
+}
+
+// ---------------------------------------------------------------------------
+// Savings goal progress, most-advanced first (Tendances' "Progression de mes
+// objectifs") — a thin reshape of SavingsGoal, not a real computation, but
+// kept here so the sort order (and the "no target" edge case) has one
+// tested home instead of living inline in the component.
+
+export interface GoalProgressPoint {
+  id: string
+  name: string
+  current: number
+  target: number
+  pct: number
+}
+
+export function computeGoalsProgress(
+  goals: { id: string; name: string; currentAmount: number; targetAmount: number }[],
+): GoalProgressPoint[] {
+  return goals
+    .map((g) => ({
+      id: g.id,
+      name: g.name,
+      current: g.currentAmount,
+      target: g.targetAmount,
+      // A goal with no target (shouldn't normally happen — the form
+      // requires one) reads as "fully reached" once anything's saved,
+      // rather than dividing by zero.
+      pct: g.targetAmount > 0 ? (g.currentAmount / g.targetAmount) * 100 : g.currentAmount > 0 ? 100 : 0,
+    }))
+    .sort((a, b) => b.pct - a.pct)
+}
+
+// ---------------------------------------------------------------------------
+// Income, expenses and savings, last N months (Tendances' "Revenus, dépenses
+// et épargne") — same income/expenses convention as computeIncomeExpenseTrend
+// (current income and fixed-expenses totals held constant across history,
+// real ad-hoc spending per month), plus savings contributions summed per
+// month from their own table. Savings are deliberately never added into
+// `expenses` — putting money into a goal isn't spending it.
+
+export interface IncomeExpenseSavingsPoint {
+  label: string
+  monthStart: string
+  income: number
+  expenses: number
+  savings: number
+}
+
+export function computeIncomeExpenseSavingsTrend(
+  adHocRecords: { amount: number; spent_at: string }[],
+  currentFixedExpensesTotal: number,
+  monthlyIncome: number,
+  contributions: { amount: number; created_at: string }[],
+  lang: Lang,
+  now = new Date(),
+  maxMonths = 6,
+): IncomeExpenseSavingsPoint[] {
+  const monthlyAdHoc = computeMonthlySpendingTrend(adHocRecords, lang, now, maxMonths)
+
+  return monthlyAdHoc.map((point) => {
+    // Not `new Date(point.monthStart)`: a date-only ISO string ("2026-10-01")
+    // parses as UTC midnight, which getMonthRange then reads back via
+    // getFullYear()/getMonth() in LOCAL time — in any timezone behind UTC
+    // (e.g. America/Toronto) that silently lands in the previous month.
+    // Building the Date from components instead stays in local time throughout.
+    const [y, m, d] = point.monthStart.split('-').map(Number)
+    const { start, end } = getMonthRange(new Date(y, m - 1, d))
+    const savings = contributions
+      .filter((c) => {
+        const d = new Date(c.created_at)
+        return d >= start && d < end
+      })
+      .reduce((sum, c) => sum + c.amount, 0)
+
+    return {
+      label: point.label,
+      monthStart: point.monthStart,
+      income: monthlyIncome,
+      expenses: currentFixedExpensesTotal + point.amount,
+      savings,
+    }
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Spending by day of week, for one month (Tendances' "Dépenses par jour de
+// la semaine") — Monday-first to match getWeekStart's convention used
+// elsewhere on this page.
+
+export interface WeekdaySpendingPoint {
+  label: string
+  // Full weekday name ("jeudi", not "jeu.") for the "Tu dépenses le plus le
+  // {longLabel}." sentence — French's abbreviated form already ends in a
+  // period, which read as "jeu.." once dropped into that sentence.
+  longLabel: string
+  weekdayIndex: number
+  amount: number
+}
+
+export function computeWeekdaySpending(
+  records: { amount: number; spent_at: string }[],
+  month: Date,
+  lang: Lang,
+): WeekdaySpendingPoint[] {
+  const locale = lang === 'fr' ? 'fr-CA' : 'en-CA'
+  const { start, end } = getMonthRange(month)
+  const totals = new Array(7).fill(0) as number[]
+
+  for (const r of records) {
+    const d = new Date(r.spent_at)
+    if (d < start || d >= end) continue
+    const jsDay = d.getDay() // 0 = Sunday .. 6 = Saturday
+    const mondayFirstIndex = jsDay === 0 ? 6 : jsDay - 1
+    totals[mondayFirstIndex] += r.amount
+  }
+
+  // Any Monday works as a label reference — only the weekday name is used.
+  const referenceMonday = getWeekStart(new Date())
+  return totals.map((amount, i) => {
+    const d = new Date(referenceMonday)
+    d.setDate(referenceMonday.getDate() + i)
+    return {
+      label: d.toLocaleDateString(locale, { weekday: 'short' }),
+      longLabel: d.toLocaleDateString(locale, { weekday: 'long' }),
+      weekdayIndex: i,
+      amount,
+    }
+  })
 }

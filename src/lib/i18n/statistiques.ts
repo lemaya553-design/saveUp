@@ -66,6 +66,42 @@ export interface StatistiquesContent {
     upgradeTrends: { title: string; description: string }
     upgradeIncomeExpense: { title: string; description: string }
   }
+  newTrendCharts: {
+    weeklySpending: {
+      title: string
+      hint: string
+      currentWeekLabel: string
+      emptyTitle: string
+      emptyDescription: string
+      emptyCta: string
+    }
+    goalsProgress: {
+      title: string
+      hint: string
+      reached: (current: string, target: string, pct: number) => string
+      emptyTitle: string
+      emptyDescription: string
+      emptyCta: string
+    }
+    incomeExpenseSavings: {
+      title: string
+      hint: string
+      income: string
+      expenses: string
+      savings: string
+      emptyTitle: string
+      emptyDescription: string
+      emptyCta: string
+    }
+    weekdaySpending: {
+      title: string
+      hint: string
+      emptyTitle: string
+      emptyDescription: string
+      emptyCta: string
+      busiestDay: (dayName: string) => string
+    }
+  }
   monthComparison: {
     heading: string
     hint: string
@@ -297,6 +333,42 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
         description: "Vois ton revenu et tes dépenses évoluer côte à côte sur 6 mois, avec le taux d'épargne que ça donne chaque mois.",
       },
     },
+    newTrendCharts: {
+      weeklySpending: {
+        title: 'Dépenses par semaine',
+        hint: 'Total dépensé chaque semaine, sur les 8 dernières semaines.',
+        currentWeekLabel: 'Cette semaine',
+        emptyTitle: 'Pas encore de dépenses sur cette période',
+        emptyDescription: 'Ajoute une dépense pour voir ton rythme hebdomadaire se dessiner ici.',
+        emptyCta: 'Ajouter une dépense',
+      },
+      goalsProgress: {
+        title: 'Progression de mes objectifs',
+        hint: "Où en est chacun de tes objectifs d'épargne, du plus avancé au moins avancé.",
+        reached: (current, target, pct) => `${current} sur ${target} (${pct} %)`,
+        emptyTitle: "Aucun objectif pour l'instant",
+        emptyDescription: "Crée un objectif d'épargne pour suivre sa progression ici.",
+        emptyCta: 'Créer un objectif',
+      },
+      incomeExpenseSavings: {
+        title: 'Revenus, dépenses et épargne',
+        hint: "Comparaison sur les 6 derniers mois — l'épargne n'est jamais comptée comme une dépense.",
+        income: 'Revenus',
+        expenses: 'Dépenses',
+        savings: 'Épargne',
+        emptyTitle: 'Pas encore assez de données',
+        emptyDescription: 'Ajoute ton revenu (Paramètres) et quelques dépenses pour voir cette comparaison.',
+        emptyCta: 'Ajouter une dépense',
+      },
+      weekdaySpending: {
+        title: 'Dépenses par jour de la semaine',
+        hint: 'Total dépensé chaque jour, du lundi au dimanche, pour le mois choisi ci-dessous.',
+        emptyTitle: 'Pas encore de dépenses ce mois-ci',
+        emptyDescription: 'Ajoute une dépense pour voir quel jour tu dépenses le plus.',
+        emptyCta: 'Ajouter une dépense',
+        busiestDay: (day) => `Tu dépenses le plus le ${day}.`,
+      },
+    },
     monthComparison: {
       heading: 'Ce mois vs le mois passé',
       hint: 'Combien tu as dépensé, comparé au mois précédent.',
@@ -524,6 +596,42 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
       upgradeIncomeExpense: {
         title: 'Income vs. expenses — Standard feature',
         description: 'See your income and expenses evolve side by side over 6 months, with the savings rate that gives you each month.',
+      },
+    },
+    newTrendCharts: {
+      weeklySpending: {
+        title: 'Spending by week',
+        hint: 'Total spent each week, over the last 8 weeks.',
+        currentWeekLabel: 'This week',
+        emptyTitle: 'Nothing to show for this period yet',
+        emptyDescription: 'Add an expense to see your weekly pace take shape here.',
+        emptyCta: 'Add an expense',
+      },
+      goalsProgress: {
+        title: 'My goals progress',
+        hint: 'Where each of your savings goals stands, from most to least advanced.',
+        reached: (current, target, pct) => `${current} of ${target} (${pct}%)`,
+        emptyTitle: 'No goals yet',
+        emptyDescription: 'Create a savings goal to track its progress here.',
+        emptyCta: 'Create a goal',
+      },
+      incomeExpenseSavings: {
+        title: 'Income, expenses and savings',
+        hint: "Comparison over the last 6 months — savings are never counted as an expense.",
+        income: 'Income',
+        expenses: 'Expenses',
+        savings: 'Savings',
+        emptyTitle: 'Not enough data yet',
+        emptyDescription: 'Add your income (Settings) and a few expenses to see this comparison.',
+        emptyCta: 'Add an expense',
+      },
+      weekdaySpending: {
+        title: 'Spending by day of week',
+        hint: 'Total spent each day, Monday to Sunday, for the month picked below.',
+        emptyTitle: 'No expenses yet this month',
+        emptyDescription: 'Add an expense to see which day you spend the most.',
+        emptyCta: 'Add an expense',
+        busiestDay: (day) => `You spend the most on ${day}.`,
       },
     },
     monthComparison: {
