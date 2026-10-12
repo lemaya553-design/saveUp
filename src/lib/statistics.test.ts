@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   computeGoalsProgress,
   computeIncomeExpenseSavingsTrend,
+  computePeriodDelta,
   computeWeekdaySpending,
   computeWeeklySpending,
 } from './statistics'
@@ -151,5 +152,45 @@ describe('computeWeekdaySpending edge cases', () => {
     const points = computeWeekdaySpending([], month, 'fr')
     expect(points.some((p) => p.label.endsWith('.'))).toBe(true)
     expect(points.every((p) => !p.longLabel.endsWith('.'))).toBe(true)
+  })
+})
+
+describe('computePeriodDelta edge cases', () => {
+  it('no previous period (null) -> direction none, not a crash', () => {
+    const delta = computePeriodDelta(500, null)
+    expect(delta.direction).toBe('none')
+    expect(delta.pct).toBeNull()
+  })
+
+  it('previous period of exactly 0 -> treated as none, not divide-by-zero', () => {
+    const delta = computePeriodDelta(500, 0)
+    expect(delta.direction).toBe('none')
+    expect(Number.isFinite(delta.pct ?? 0)).toBe(true)
+  })
+
+  it('1 data point: current > previous -> up, correct pct', () => {
+    const delta = computePeriodDelta(150, 100)
+    expect(delta.direction).toBe('up')
+    expect(delta.amount).toBe(50)
+    expect(delta.pct).toBe(50)
+  })
+
+  it('current < previous -> down', () => {
+    const delta = computePeriodDelta(80, 100)
+    expect(delta.direction).toBe('down')
+    expect(delta.amount).toBe(-20)
+    expect(delta.pct).toBe(-20)
+  })
+
+  it('current === previous -> flat, 0%', () => {
+    const delta = computePeriodDelta(100, 100)
+    expect(delta.direction).toBe('flat')
+    expect(delta.pct).toBe(0)
+  })
+
+  it('many values: large previous base keeps pct well-formed', () => {
+    const delta = computePeriodDelta(10500, 10000)
+    expect(delta.direction).toBe('up')
+    expect(delta.pct).toBeCloseTo(5, 5)
   })
 })

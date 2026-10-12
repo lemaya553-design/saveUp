@@ -1,7 +1,8 @@
-import { lazy, Suspense, useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState, type ReactElement } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { HelpButton } from '../components/HelpButton'
 import { AlertBanner } from '../components/AlertBanner'
+import { DashboardCard, CARD_BORDER } from '../components/DashboardCard'
 import { DashboardStatCards } from '../components/DashboardStatCards'
 import { DashboardScoreFactors } from '../components/DashboardScoreFactors'
 import { PersonalizedTips } from '../components/PersonalizedTips'
@@ -26,8 +27,6 @@ import { getBudgetPaceAlert, getSavingsGoalLateAlert } from '../lib/alerts'
 import { generatePersonalizedTips } from '../lib/tips'
 import { STARTER_BADGE, isStarterBadgeUnlocked } from '../lib/rewards'
 import { DASHBOARD } from '../lib/i18n/dashboard'
-
-const CARD_BORDER = 'color-mix(in srgb, var(--color-overlay) 10%, transparent)'
 
 // Cutoff for the WhatsApp opt-in gate below — only accounts created at or
 // after this feature shipped are routed through /numero-whatsapp; accounts
@@ -87,19 +86,6 @@ const FEATURE_ICONS: Record<string, (props: { className: string }) => ReactEleme
   '/epargne': TargetIcon,
   '/statistiques': ChartIcon,
   '/statistiques/recompenses': StarIcon,
-}
-
-function DashboardCard({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
-  return (
-    <section
-      className="hover-lift min-w-0 rounded-2xl border bg-surface p-5 shadow-sm sm:p-6"
-      style={{ borderColor: CARD_BORDER }}
-    >
-      <h2 className="text-base font-semibold text-ink">{title}</h2>
-      <p className="mb-4 mt-1 text-xs text-muted">{hint}</p>
-      {children}
-    </section>
-  )
 }
 
 export function Dashboard() {

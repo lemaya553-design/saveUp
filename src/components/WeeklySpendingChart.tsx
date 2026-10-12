@@ -1,4 +1,5 @@
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { useId } from 'react'
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
@@ -6,8 +7,8 @@ import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { WeeklySpendingPoint } from '../lib/statistics'
 import { BudgetEmptyChart } from './BudgetEmptyChart'
 
-const PAST_WEEK_COLOR = '#CC5F00'
-const CURRENT_WEEK_COLOR = '#FF7A00'
+const ORANGE = '#FF7A00'
+const GRID_STROKE = 'color-mix(in srgb, var(--color-overlay) 8%, transparent)'
 
 function WeekIcon({ className }: { className: string }) {
   return (
@@ -17,17 +18,28 @@ function WeekIcon({ className }: { className: string }) {
   )
 }
 
-function GhostBars() {
+// Same ghost curve shape as DashboardScoreChart's empty state — this card
+// uses the exact same recipe (white card, orange monotone area), so its
+// empty state should look like the same product, not a different one.
+function GhostCurve() {
   return (
-    <svg viewBox="0 0 160 100" className="h-full w-full" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-      <rect x="4" y="55" width="12" height="45" rx="4" fill="#CC5F00" />
-      <rect x="24" y="40" width="12" height="60" rx="4" fill="#CC5F00" />
-      <rect x="44" y="62" width="12" height="38" rx="4" fill="#CC5F00" />
-      <rect x="64" y="30" width="12" height="70" rx="4" fill="#CC5F00" />
-      <rect x="84" y="50" width="12" height="50" rx="4" fill="#CC5F00" />
-      <rect x="104" y="45" width="12" height="55" rx="4" fill="#CC5F00" />
-      <rect x="124" y="20" width="12" height="80" rx="4" fill="#CC5F00" />
-      <rect x="144" y="10" width="12" height="90" rx="4" fill="#FF7A00" />
+    <svg viewBox="0 0 300 120" className="h-full w-full" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="ghost-weekly-gradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={ORANGE} stopOpacity={0.35} />
+          <stop offset="100%" stopColor={ORANGE} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <path
+        d="M0,90 C40,70 60,80 90,60 C130,35 150,55 190,40 C230,25 260,45 300,20 L300,120 L0,120 Z"
+        fill="url(#ghost-weekly-gradient)"
+      />
+      <path
+        d="M0,90 C40,70 60,80 90,60 C130,35 150,55 190,40 C230,25 260,45 300,20"
+        fill="none"
+        stroke={ORANGE}
+        strokeWidth={2.5}
+      />
     </svg>
   )
 }
@@ -46,7 +58,7 @@ function WeeklyTooltip({
   if (!active || !payload?.length) return null
   const point = payload[0].payload
   return (
-    <div className="glass rounded-lg px-3 py-2 text-xs shadow-lg shadow-black/40">
+    <div className="glass rounded-lg px-3 py-2 text-xs shadow-lg shadow-black/20">
       <p className="font-semibold text-ink">{point.isCurrentWeek ? currentWeekLabel : point.label}</p>
       <p className="text-muted">{formatMoney(point.amount)}</p>
     </div>
@@ -64,12 +76,13 @@ export function WeeklySpendingChart({
   const t = STATISTIQUES[lang].newTrendCharts.weeklySpending
   const formatMoney = useMoneyFormat()
   const reduceMotion = usePrefersReducedMotion()
+  const gradientId = useId()
   const hasData = points.some((p) => p.amount > 0)
 
   if (!hasData) {
     return (
       <BudgetEmptyChart
-        ghost={<GhostBars />}
+        ghost={<GhostCurve />}
         icon={<WeekIcon className="h-5 w-5" />}
         title={t.emptyTitle}
         description={t.emptyDescription}
@@ -81,25 +94,29 @@ export function WeeklySpendingChart({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <div style={{ minWidth: Math.max(320, points.length * 44) }}>
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid stroke="color-mix(in srgb, var(--color-overlay) 8%, transparent)" vertical={false} />
-            <XAxis dataKey="label" tick={{ fill: 'var(--color-muted)', fontSize: 11 }} tickLine={false} axisLine={false} />
-            <YAxis hide />
-            <Tooltip
-              content={<WeeklyTooltip formatMoney={formatMoney} currentWeekLabel={t.currentWeekLabel} />}
-              cursor={{ fill: 'color-mix(in srgb, var(--color-overlay) 6%, transparent)' }}
-            />
-            <Bar dataKey="amount" radius={[6, 6, 0, 0]} maxBarSize={40} isAnimationActive={!reduceMotion}>
-              {points.map((p) => (
-                <Cell key={p.weekStart} fill={p.isCurrentWeek ? CURRENT_WEEK_COLOR : PAST_WEEK_COLOR} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+    <ResponsiveContainer width="100%" height={200}>
+      <AreaChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={ORANGE} stopOpacity={0.35} />
+            <stop offset="100%" stopColor={ORANGE} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid stroke={GRID_STROKE} strokeDasharray="3 3" vertical={false} />
+        <XAxis dataKey="label" tick={{ fill: 'var(--color-muted)', fontSize: 11 }} tickLine={false} axisLine={false} />
+        <YAxis hide />
+        <Tooltip content={<WeeklyTooltip formatMoney={formatMoney} currentWeekLabel={t.currentWeekLabel} />} />
+        <Area
+          type="monotone"
+          dataKey="amount"
+          stroke={ORANGE}
+          strokeWidth={3}
+          fill={`url(#${gradientId})`}
+          dot={{ r: 3, fill: ORANGE, strokeWidth: 0 }}
+          activeDot={{ r: 5, fill: ORANGE, strokeWidth: 0 }}
+          isAnimationActive={!reduceMotion}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
   )
 }

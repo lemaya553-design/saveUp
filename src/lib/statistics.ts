@@ -396,3 +396,25 @@ export function computeWeekdaySpending(
     }
   })
 }
+
+// ---------------------------------------------------------------------------
+// Period-over-period delta for a single KPI number (Aperçu's clickable
+// "chiffres clés" row above each chart) — current vs. previous value, as a
+// direction + raw amount + percentage, so each component only has to format
+// a number already computed here. `previous === null` means "no previous
+// period exists at all"; `previous === 0` is treated the same way (a % off
+// a $0 base isn't a meaningful number) — both surface as direction 'none',
+// which callers render as "—" per the spec.
+
+export interface PeriodDelta {
+  direction: 'up' | 'down' | 'flat' | 'none'
+  amount: number
+  pct: number | null
+}
+
+export function computePeriodDelta(current: number, previous: number | null): PeriodDelta {
+  if (previous === null || previous === 0) return { direction: 'none', amount: 0, pct: null }
+  const amount = current - previous
+  const direction = amount > 0 ? 'up' : amount < 0 ? 'down' : 'flat'
+  return { direction, amount, pct: (amount / previous) * 100 }
+}

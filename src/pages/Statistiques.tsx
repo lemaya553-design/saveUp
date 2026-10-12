@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { HelpButton } from '../components/HelpButton'
 import { Card } from '../components/Card'
+import { StatCard } from '../components/StatCard'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { TabBar, type TabDef } from '../components/TabBar'
 import { MonthComparison } from '../components/MonthComparison'
@@ -42,6 +43,7 @@ import {
   computeIncomeExpenseSavingsTrend,
   computeIncomeExpenseTrend,
   computeMonthlySpendingTrend,
+  computePeriodDelta,
   computeThisVsLastMonth,
   computeWeeklySpending,
   computeWeekdaySpending,
@@ -82,9 +84,14 @@ export function Statistiques() {
   const goals = useSavingsGoals()
   const subscription = useSubscription()
   const csvExport = useCsvExport()
-  // Shared "add an expense" entry point for the new Tendances charts' empty
+  // Shared "add an expense" entry point for the new Aperçu charts' empty
   // states — same modal/addExpense call Budget's hero button uses.
   const [addExpenseOpen, setAddExpenseOpen] = useState(false)
+  // Which KPI "tab" is selected above the weekly-spending curve and the
+  // income/expenses/savings curve, respectively — 0-indexed into each
+  // chart's own kpis array below.
+  const [weeklyActiveKpi, setWeeklyActiveKpi] = useState(0)
+  const [iesActiveKpi, setIesActiveKpi] = useState(0)
 
   // 0 = current month, -1 = last month, etc. — shared by the category-by-
   // category card (Aperçu) and the day-of-week card (Tendances), the only
@@ -135,6 +142,64 @@ export function Statistiques() {
     () => computeWeekdaySpending(history.records, selectedMonth, lang),
     [history.records, selectedMonth, lang],
   )
+
+  // Previous 8-week window, for the "Moyenne par semaine" KPI's delta —
+  // reuses computeWeeklySpending itself rather than a second computation,
+  // anchored 8 weeks earlier so the two windows never overlap.
+  const previousWeeklySpending = useMemo(() => {
+    const anchor = new Date()
+    anchor.setDate(anchor.getDate() - 7 * 8)
+    return computeWeeklySpending(history.records, lang, anchor)
+  }, [history.records, lang])
+  const thisWeekAmount = weeklySpending[weeklySpending.length - 1]?.amount ?? 0
+  const lastWeekAmount = weeklySpending[weeklySpending.length - 2]?.amount ?? 0
+  const avgWeeklyCurrent = weeklySpending.reduce((s, p) => s + p.amount, 0) / weeklySpending.length
+  const avgWeeklyPrevious =
+    previousWeeklySpending.reduce((s, p) => s + p.amount, 0) / previousWeeklySpending.length
+  const weeklyKpis = [
+    {
+      label: t.newTrendCharts.weeklySpending.currentWeekLabel,
+      value: formatMoney(thisWeekAmount),
+      delta: computePeriodDelta(thisWeekAmount, lastWeekAmount),
+    },
+    {
+      label: t.newTrendCharts.weeklySpending.averageWeeklyLabel,
+      value: formatMoney(avgWeeklyCurrent),
+      delta: computePeriodDelta(avgWeeklyCurrent, avgWeeklyPrevious),
+    },
+  ]
+
+  const goalsReachedCount = useMemo(() => goalsProgress.filter((g) => g.pct >= 100).length, [goalsProgress])
+  // No history of past goal completions is stored anywhere — always "—",
+  // per the "no previous period" fallback, not a real zero-change reading.
+  const goalsKpis = [
+    {
+      label: t.newTrendCharts.goalsProgress.reachedLabel,
+      value: `${goalsReachedCount}/${goalsProgress.length}`,
+      delta: computePeriodDelta(goalsReachedCount, null),
+    },
+  ]
+
+  const iesLast = incomeExpenseSavingsTrend[incomeExpenseSavingsTrend.length - 1]
+  const iesPrev =
+    incomeExpenseSavingsTrend.length >= 2 ? incomeExpenseSavingsTrend[incomeExpenseSavingsTrend.length - 2] : null
+  const iesKpis = [
+    {
+      label: t.newTrendCharts.incomeExpenseSavings.income,
+      value: formatMoney(iesLast?.income ?? 0),
+      delta: computePeriodDelta(iesLast?.income ?? 0, iesPrev?.income ?? null),
+    },
+    {
+      label: t.newTrendCharts.incomeExpenseSavings.expenses,
+      value: formatMoney(iesLast?.expenses ?? 0),
+      delta: computePeriodDelta(iesLast?.expenses ?? 0, iesPrev?.expenses ?? null),
+    },
+    {
+      label: t.newTrendCharts.incomeExpenseSavings.savings,
+      value: formatMoney(iesLast?.savings ?? 0),
+      delta: computePeriodDelta(iesLast?.savings ?? 0, iesPrev?.savings ?? null),
+    },
+  ]
   const momChanges = useMemo(() => computeCategoryMonthOverMonth(history.records), [history.records])
   // Same data as momChanges, just re-sorted biggest-last-month-first and
   // limited to categories that actually had a last month to compare
@@ -284,6 +349,65 @@ export function Statistiques() {
             <BudgetVsActualChart statuses={budgetVsActual} />
           </Card>
 
+          <StatCard
+            title={t.newTrendCharts.weeklySpending.title}
+            hint={t.newTrendCharts.weeklySpending.hint}
+            kpis={weeklyKpis}
+            activeIndex={weeklyActiveKpi}
+            onSelectKpi={setWeeklyActiveKpi}
+          >
+            <WeeklySpendingChart points={weeklySpending} onAddExpense={() => setAddExpenseOpen(true)} />
+          </StatCard>
+
+          <StatCard
+            title={t.newTrendCharts.goalsProgress.title}
+            hint={t.newTrendCharts.goalsProgress.hint}
+            kpis={goalsKpis}
+          >
+            <GoalsProgressChart goals={goalsProgress} />
+          </StatCard>
+
+          <StatCard
+            title={t.newTrendCharts.incomeExpenseSavings.title}
+            hint={t.newTrendCharts.incomeExpenseSavings.hint}
+            kpis={iesKpis}
+            activeIndex={iesActiveKpi}
+            onSelectKpi={setIesActiveKpi}
+          >
+            <IncomeExpenseSavingsChart
+              points={incomeExpenseSavingsTrend}
+              onAddExpense={() => setAddExpenseOpen(true)}
+              activeIndex={iesActiveKpi}
+            />
+          </StatCard>
+
+          <StatCard title={t.newTrendCharts.weekdaySpending.title} hint={t.newTrendCharts.weekdaySpending.hint}>
+            <div className="mb-4 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setMonthOffset((o) => Math.max(-MAX_MONTHS_BACK, o - 1))}
+                disabled={monthOffset <= -MAX_MONTHS_BACK}
+                aria-label={t.monthNav.prev}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5 disabled:opacity-30"
+              >
+                ‹
+              </button>
+              <span className="min-w-[9rem] text-center text-sm font-medium capitalize text-ink">
+                {selectedMonthLabel}
+              </span>
+              <button
+                type="button"
+                onClick={() => setMonthOffset((o) => Math.min(0, o + 1))}
+                disabled={monthOffset >= 0}
+                aria-label={t.monthNav.next}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5 disabled:opacity-30"
+              >
+                ›
+              </button>
+            </div>
+            <WeekdaySpendingChart points={weekdaySpending} onAddExpense={() => setAddExpenseOpen(true)} />
+          </StatCard>
+
           <div>
             <h2 className="mb-4 text-lg font-semibold text-ink">{t.apercu.manageData.heading}</h2>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -352,45 +476,6 @@ export function Statistiques() {
               minPlan="standard"
             />
           )}
-
-          <Card title={t.newTrendCharts.weeklySpending.title} hint={t.newTrendCharts.weeklySpending.hint}>
-            <WeeklySpendingChart points={weeklySpending} onAddExpense={() => setAddExpenseOpen(true)} />
-          </Card>
-
-          <Card title={t.newTrendCharts.goalsProgress.title} hint={t.newTrendCharts.goalsProgress.hint}>
-            <GoalsProgressChart goals={goalsProgress} />
-          </Card>
-
-          <Card title={t.newTrendCharts.incomeExpenseSavings.title} hint={t.newTrendCharts.incomeExpenseSavings.hint}>
-            <IncomeExpenseSavingsChart points={incomeExpenseSavingsTrend} onAddExpense={() => setAddExpenseOpen(true)} />
-          </Card>
-
-          <Card title={t.newTrendCharts.weekdaySpending.title} hint={t.newTrendCharts.weekdaySpending.hint}>
-            <div className="mb-4 flex items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => setMonthOffset((o) => Math.max(-MAX_MONTHS_BACK, o - 1))}
-                disabled={monthOffset <= -MAX_MONTHS_BACK}
-                aria-label={t.monthNav.prev}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5 disabled:opacity-30"
-              >
-                ‹
-              </button>
-              <span className="min-w-[9rem] text-center text-sm font-medium capitalize text-ink">
-                {selectedMonthLabel}
-              </span>
-              <button
-                type="button"
-                onClick={() => setMonthOffset((o) => Math.min(0, o + 1))}
-                disabled={monthOffset >= 0}
-                aria-label={t.monthNav.next}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5 disabled:opacity-30"
-              >
-                ›
-              </button>
-            </div>
-            <WeekdaySpendingChart points={weekdaySpending} onAddExpense={() => setAddExpenseOpen(true)} />
-          </Card>
         </div>
       )}
 

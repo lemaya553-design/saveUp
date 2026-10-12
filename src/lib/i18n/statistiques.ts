@@ -71,6 +71,7 @@ export interface StatistiquesContent {
       title: string
       hint: string
       currentWeekLabel: string
+      averageWeeklyLabel: string
       emptyTitle: string
       emptyDescription: string
       emptyCta: string
@@ -78,6 +79,7 @@ export interface StatistiquesContent {
     goalsProgress: {
       title: string
       hint: string
+      reachedLabel: string
       reached: (current: string, target: string, pct: number) => string
       emptyTitle: string
       emptyDescription: string
@@ -338,6 +340,7 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
         title: 'Dépenses par semaine',
         hint: 'Total dépensé chaque semaine, sur les 8 dernières semaines.',
         currentWeekLabel: 'Cette semaine',
+        averageWeeklyLabel: 'Moyenne par semaine',
         emptyTitle: 'Pas encore de dépenses sur cette période',
         emptyDescription: 'Ajoute une dépense pour voir ton rythme hebdomadaire se dessiner ici.',
         emptyCta: 'Ajouter une dépense',
@@ -345,6 +348,7 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
       goalsProgress: {
         title: 'Progression de mes objectifs',
         hint: "Où en est chacun de tes objectifs d'épargne, du plus avancé au moins avancé.",
+        reachedLabel: 'Objectifs atteints',
         reached: (current, target, pct) => `${current} sur ${target} (${pct} %)`,
         emptyTitle: "Aucun objectif pour l'instant",
         emptyDescription: "Crée un objectif d'épargne pour suivre sa progression ici.",
@@ -603,6 +607,7 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
         title: 'Spending by week',
         hint: 'Total spent each week, over the last 8 weeks.',
         currentWeekLabel: 'This week',
+        averageWeeklyLabel: 'Average per week',
         emptyTitle: 'Nothing to show for this period yet',
         emptyDescription: 'Add an expense to see your weekly pace take shape here.',
         emptyCta: 'Add an expense',
@@ -610,6 +615,7 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
       goalsProgress: {
         title: 'My goals progress',
         hint: 'Where each of your savings goals stands, from most to least advanced.',
+        reachedLabel: 'Goals reached',
         reached: (current, target, pct) => `${current} of ${target} (${pct}%)`,
         emptyTitle: 'No goals yet',
         emptyDescription: 'Create a savings goal to track its progress here.',
