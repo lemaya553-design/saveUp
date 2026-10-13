@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { HelpButton } from '../components/HelpButton'
 import { AlertBanner } from '../components/AlertBanner'
 import { DashboardCard, CARD_BORDER } from '../components/DashboardCard'
+import { GettingStartedGuide } from '../components/GettingStartedGuide'
 import { DashboardStatCards } from '../components/DashboardStatCards'
 import { DashboardScoreFactors } from '../components/DashboardScoreFactors'
 import { PersonalizedTips } from '../components/PersonalizedTips'
@@ -26,6 +27,7 @@ import { getSpendableBudgetCaption, sumThisMonth } from '../lib/budgetInsights'
 import { getBudgetPaceAlert, getSavingsGoalLateAlert } from '../lib/alerts'
 import { generatePersonalizedTips } from '../lib/tips'
 import { STARTER_BADGE, isStarterBadgeUnlocked } from '../lib/rewards'
+import { hasViewedStats, markStatsViewed } from '../lib/gettingStarted'
 import { DASHBOARD } from '../lib/i18n/dashboard'
 
 // Cutoff for the WhatsApp opt-in gate below — only accounts created at or
@@ -38,6 +40,15 @@ const WHATSAPP_OPT_IN_LAUNCH = new Date('2026-10-09T00:00:00Z')
 // loaded on demand, same reasoning as Budget/Statistiques being lazy pages.
 const DashboardScoreChart = lazy(() =>
   import('../components/DashboardScoreChart').then((m) => ({ default: m.DashboardScoreChart })),
+)
+
+// Same reasoning: xlsx parsing + the full import flow (ImportParsing.ts,
+// category-matching, dedup) is real weight that every Dashboard visit
+// would otherwise pay for, even the vast majority who never click "Importer
+// un fichier" from the getting-started guide. Already lazy on Budget.tsx —
+// matched here rather than left eager just because this is a new usage.
+const ImportTransactionsModal = lazy(() =>
+  import('../components/ImportTransactionsModal').then((m) => ({ default: m.ImportTransactionsModal })),
 )
 
 // A touch longer than the shared .badge-unlock keyframe (0.7s) so the
@@ -106,6 +117,10 @@ export function Dashboard() {
   const streak = useLoginStreak()
   const claimedBadges = useClaimedBadges()
   const [justClaimedStarter, setJustClaimedStarter] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
+  // Lazy initializer so this only ever reads localStorage once, not on
+  // every render — same convention as useLanguage's initial-state read.
+  const [viewedStats, setViewedStats] = useState(() => (user ? hasViewedStats(user.id) : false))
 
   const loading =
     health.loading ||
@@ -126,6 +141,12 @@ export function Dashboard() {
     if (!ok) return
     setJustClaimedStarter(true)
     setTimeout(() => setJustClaimedStarter(false), CLAIM_ANIMATION_MS)
+  }
+
+  function handleViewStatsClick() {
+    if (!user) return
+    markStatsViewed(user.id)
+    setViewedStats(true)
   }
 
   const savingsThisMonth = useMemo(
@@ -327,6 +348,14 @@ export function Dashboard() {
         )}
       </div>
 
+      <GettingStartedGuide
+        hasGoal={goals.goals.length > 0}
+        hasData={expenseHistory.records.length > 0}
+        viewedStats={viewedStats}
+        onImportClick={() => setImportOpen(true)}
+        onViewStatsClick={handleViewStatsClick}
+      />
+
       {error && (
         <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
           {error}
@@ -398,6 +427,10 @@ export function Dashboard() {
           <PersonalizedTips tips={tips} />
         </div>
       </div>
+
+      <Suspense fallback={null}>
+        <ImportTransactionsModal open={importOpen} onClose={() => setImportOpen(false)} />
+      </Suspense>
     </div>
   )
 }

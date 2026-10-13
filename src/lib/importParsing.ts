@@ -42,7 +42,22 @@ const MAX_IMPORT_ROWS = 2000
 
 export async function parseFile(file: File, lang: Lang): Promise<ParsedFile> {
   const name = file.name.toLowerCase()
-  const rows = name.endsWith('.csv') ? await parseCsv(file, lang) : await parseXlsx(file, lang)
+  const isCsv = name.endsWith('.csv')
+  const isExcel = name.endsWith('.xlsx') || name.endsWith('.xls')
+  // The file input's `accept` attribute is only a UI hint — most OS file
+  // pickers still let someone override it to "All files", so a PDF bank
+  // statement (the exact thing the help text right above this warns
+  // against) can reach here. Without this check it fell through to the
+  // Excel parser and failed with "is this a valid Excel file?", which is a
+  // confusing answer to someone who picked a PDF, not a mis-saved .xlsx.
+  if (!isCsv && !isExcel) {
+    throw new Error(
+      lang === 'fr'
+        ? "Ce format de fichier n'est pas pris en charge — importe un fichier .csv ou .xlsx (pas de PDF)."
+        : "This file format isn't supported — import a .csv or .xlsx file (not a PDF).",
+    )
+  }
+  const rows = isCsv ? await parseCsv(file, lang) : await parseXlsx(file, lang)
 
   const nonEmpty = rows.filter((row) => row.some((cell) => cell.trim() !== ''))
   if (nonEmpty.length === 0) {

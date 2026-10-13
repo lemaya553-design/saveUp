@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useAuth } from '../hooks/useAuth'
@@ -7,6 +8,7 @@ import { REWARD_TIERS, getUnlockedTiers } from '../lib/rewards'
 import { COMMON } from '../lib/i18n/common'
 import { TARIFS } from '../lib/i18n/tarifs'
 import { LogoMark } from './Logo'
+import { FeedbackModal } from './FeedbackModal'
 
 // Fixed regardless of the user's accent preset (Paramètres > Personnalisation
 // can be bleu/vert/violet/orange) — the active nav item should always read as
@@ -79,6 +81,18 @@ function IconGear({ className }: { className: string }) {
   )
 }
 
+function IconFeedback({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4 5.5h16v10a1 1 0 0 1-1 1H9l-4 4v-4H5a1 1 0 0 1-1-1v-10Z"
+      />
+    </svg>
+  )
+}
+
 function IconLogout({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
@@ -101,6 +115,8 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
   const subscription = useSubscription()
   const navigate = useNavigate()
   const t = COMMON[lang].nav
+  const tFeedback = COMMON[lang].feedback
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const totalCurrentAmount = goals.goals.reduce((sum, g) => sum + g.currentAmount, 0)
   const unlockedCount = goals.loading ? null : getUnlockedTiers(totalCurrentAmount, goals.goals).length
   const planName = TARIFS[lang].plans[subscription.plan].name
@@ -198,6 +214,15 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 
           <button
             type="button"
+            onClick={() => setFeedbackOpen(true)}
+            className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-overlay/5 hover:text-ink"
+          >
+            <IconFeedback className="h-5 w-5 shrink-0" />
+            <span>{tFeedback.buttonLabel}</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleSignOut}
             className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-overlay/5 hover:text-red-400"
           >
@@ -206,6 +231,8 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
           </button>
         </div>
       </aside>
+
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </>
   )
 }

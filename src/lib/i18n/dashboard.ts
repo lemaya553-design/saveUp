@@ -53,6 +53,13 @@ export interface DashboardContent {
     title: string
     description: string
   }[]
+  gettingStarted: {
+    title: string
+    hint: string
+    step1: { title: string; description: string; actionLabel: string }
+    step2: { title: string; description: string; actionLabel: string }
+    step3: { title: string; description: string; actionLabel: string }
+  }
 }
 
 export const DASHBOARD: Record<Lang, DashboardContent> = {
@@ -139,6 +146,25 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
         description: 'Tes badges et ta série de connexions.',
       },
     ],
+    gettingStarted: {
+      title: 'Bien démarrer',
+      hint: '3 étapes pour voir ton portrait financier au complet.',
+      step1: {
+        title: 'Choisis ton objectif',
+        description: 'Dis-nous ce que tu veux accomplir — on personnalise le reste autour de ça.',
+        actionLabel: 'Choisir un objectif',
+      },
+      step2: {
+        title: 'Importe le fichier de ta banque',
+        description: "Un relevé CSV ou Excel suffit pour voir toutes tes dépenses d'un coup.",
+        actionLabel: 'Importer un fichier',
+      },
+      step3: {
+        title: 'Vois où va ton argent',
+        description: 'Explore tes dépenses par catégorie, par semaine et par mois.',
+        actionLabel: 'Voir mes statistiques',
+      },
+    },
   },
   en: {
     pageHeader: {
@@ -223,5 +249,24 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
         description: 'Your badges and your login streak.',
       },
     ],
+    gettingStarted: {
+      title: 'Get started',
+      hint: '3 steps to see your full financial picture.',
+      step1: {
+        title: 'Choose your goal',
+        description: "Tell us what you're working toward — we personalize the rest around it.",
+        actionLabel: 'Choose a goal',
+      },
+      step2: {
+        title: 'Import your bank file',
+        description: 'A CSV or Excel statement is all it takes to see all your spending at once.',
+        actionLabel: 'Import a file',
+      },
+      step3: {
+        title: 'See where your money goes',
+        description: 'Explore your spending by category, week, and month.',
+        actionLabel: 'View my stats',
+      },
+    },
   },
 }

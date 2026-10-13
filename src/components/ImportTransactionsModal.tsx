@@ -300,7 +300,12 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
             </p>
           )}
 
-          <details className="group rounded-xl border border-overlay/10 bg-overlay/[0.03] px-4 py-3">
+          {/* Open by default — a first-time importer has no reason to think
+              to click a collapsed summary, and this is exactly the "where do
+              I find this file" context they need before they've even picked
+              one. Still a <details>, so it collapses with one click for
+              anyone who's imported before and doesn't need it every time. */}
+          <details open className="group rounded-xl border border-overlay/10 bg-overlay/[0.03] px-4 py-3">
             <summary className="cursor-pointer text-sm font-medium text-ink marker:content-none">
               <span className="mr-1.5 inline-block transition-transform group-open:rotate-90">›</span>
               {t.upload.howToSummary}

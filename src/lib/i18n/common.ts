@@ -134,6 +134,19 @@ export interface CommonContent {
     hours: (h: number) => string
     hoursAndDays: (h: number, d: number) => string
   }
+  // Sidebar's "Donner mon avis" button → FeedbackModal.tsx — a single free-text
+  // field, no personal info asked for beyond the account already signed in.
+  feedback: {
+    buttonLabel: string
+    modalTitle: string
+    modalHint: string
+    placeholder: string
+    submit: string
+    submitting: string
+    success: string
+    errorFallback: string
+    emptyError: string
+  }
 }
 
 export const COMMON: Record<Lang, CommonContent> = {
@@ -251,6 +264,17 @@ export const COMMON: Record<Lang, CommonContent> = {
       hours: (h) => `${h} h de travail`,
       hoursAndDays: (h, d) => `${h} h · ${d} jour${d > 1 ? 's' : ''}`,
     },
+    feedback: {
+      buttonLabel: 'Donner mon avis',
+      modalTitle: 'Donner mon avis',
+      modalHint: "Dis-nous ce qui fonctionne, ce qui manque, ou ce qui t'agace. Pas besoin de nous donner ton nom ou ton courriel — on sait déjà qui tu es.",
+      placeholder: 'Ton message...',
+      submit: 'Envoyer',
+      submitting: 'Envoi en cours...',
+      success: 'Merci ! Ton message a été envoyé.',
+      errorFallback: "L'envoi a échoué — réessaie dans un instant.",
+      emptyError: 'Écris quelque chose avant d’envoyer.',
+    },
   },
   en: {
     app: {
@@ -365,6 +389,17 @@ export const COMMON: Record<Lang, CommonContent> = {
       minutes: (m) => `${m} min of work`,
       hours: (h) => `${h} h of work`,
       hoursAndDays: (h, d) => `${h} h · ${d} day${d > 1 ? 's' : ''}`,
+    },
+    feedback: {
+      buttonLabel: 'Give feedback',
+      modalTitle: 'Give feedback',
+      modalHint: "Tell us what's working, what's missing, or what's bugging you. No need to give us your name or email — we already know who you are.",
+      placeholder: 'Your message...',
+      submit: 'Send',
+      submitting: 'Sending...',
+      success: 'Thanks! Your message was sent.',
+      errorFallback: 'Something went wrong — try again in a moment.',
+      emptyError: 'Write something before sending.',
     },
   },
 }
