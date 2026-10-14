@@ -6,6 +6,7 @@ import { Reveal } from '../components/Reveal'
 import { MetaTags } from '../components/MetaTags'
 import { PricingCards } from '../components/PricingCards'
 import { TestimonialCarousel } from '../components/TestimonialCarousel'
+import { DemoVideo } from '../components/DemoVideo'
 import { useLanguage } from '../hooks/useLanguage'
 import { HOME } from '../lib/i18n/home'
 import { TARIFS } from '../lib/i18n/tarifs'
@@ -475,11 +476,7 @@ export function Home() {
                 {/* Inner bezel ring. */}
                 <div className="rounded-[2.6rem] bg-black p-[7px]">
                   <div className="relative aspect-[790/1628] overflow-hidden rounded-[2.2rem] bg-[#0b0b12]">
-                    <img
-                      src="/screenshots/phone-mockup.jpg"
-                      alt={t.showcase.phoneAlt}
-                      className="h-full w-full object-cover object-top"
-                    />
+                    <DemoVideo src="/demo-saveup.mp4" poster="/demo-saveup-poster.jpg" alt={t.showcase.phoneAlt} />
                     {/* Dynamic island. */}
                     <div className="absolute left-1/2 top-[2.2%] z-20 h-[22px] w-[86px] -translate-x-1/2 rounded-full bg-black" />
                     {/* Diagonal glass reflection. */}

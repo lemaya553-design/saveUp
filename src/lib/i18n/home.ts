@@ -114,7 +114,7 @@ export const HOME: Record<Lang, HomeContent> = {
     },
     showcase: {
       notification: 'Objectif atteint 🎉 +50 $',
-      phoneAlt: 'Aperçu du Dashboard SaveUp',
+      phoneAlt: "Démo vidéo de l'application SaveUp",
       cardLeft: {
         before: 'On ',
         highlight: 'simplifie',
@@ -286,7 +286,7 @@ export const HOME: Record<Lang, HomeContent> = {
     },
     showcase: {
       notification: 'Goal reached 🎉 +$50',
-      phoneAlt: 'Preview of the SaveUp Dashboard',
+      phoneAlt: 'Video demo of the SaveUp app',
       cardLeft: {
         before: 'We ',
         highlight: 'simplify',
