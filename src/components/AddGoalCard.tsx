@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { getFarFutureDateString, getTodayDateString } from '../lib/format'
 import { computeRequiredPace } from '../lib/savingsProjection'
+import { consumePendingGoalName } from '../lib/pendingGoal'
 import { GoalPhotoPicker } from './GoalPhotoPicker'
 import { useSubscription } from '../hooks/useSubscription'
 import { useToast } from './ToastProvider'
@@ -25,7 +26,12 @@ export function AddGoalCard({
   const formatMoney = useMoneyFormat()
   const { showToast } = useToast()
   const [open, setOpen] = useState(defaultOpen)
-  const [name, setName] = useState('')
+  // Picked up once, on first mount, from the landing page's goal picker
+  // (Home.tsx) if the signed-up-with-a-goal-in-mind flow set one — consuming
+  // it here clears it immediately, so it never bleeds into a later goal
+  // this same card creates, or a different account's first goal on a
+  // shared browser.
+  const [name, setName] = useState(() => consumePendingGoalName() ?? '')
   const [target, setTarget] = useState('')
   const [targetDate, setTargetDate] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)

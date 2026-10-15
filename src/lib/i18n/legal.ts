@@ -247,7 +247,7 @@ export const LEGAL: Record<Lang, LegalContent> = {
           },
         ],
         outro:
-          "Pour exercer l'un de ces droits, écris-nous à l'adresse indiquée à la section 6. La suppression de compte en libre-service n'est pas encore offerte directement dans l'application — jusqu'à ce qu'elle le soit, toute demande de suppression est traitée manuellement par courriel.",
+          "Pour exercer l'un de ces droits, écris-nous à l'adresse indiquée à la section 6. Tu peux aussi supprimer ton compte toi-même, immédiatement et sans attendre de réponse, depuis Paramètres → Zone de danger.",
       },
 
       retention: {
@@ -484,7 +484,7 @@ export const LEGAL: Record<Lang, LegalContent> = {
           },
         ],
         outro:
-          'To exercise any of these rights, write to us at the address listed in section 6. Self-service account deletion is not yet available directly in the app — until it is, all deletion requests are handled manually by email.',
+          'To exercise any of these rights, write to us at the address listed in section 6. You can also delete your account yourself, immediately and without waiting for a reply, from Settings → Danger zone.',
       },
 
       retention: {

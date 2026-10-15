@@ -1232,3 +1232,15 @@ create policy "feedback_all" on feedback
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 grant select, insert, update, delete on feedback to authenticated;
+
+-- Found during a security/data-integrity audit: every user-owned table's
+-- user_id FK has "on delete cascade" except savings_duels.ended_by, which
+-- had no delete action — deleting an account that ever abandoned a duel it
+-- didn't create (abandon_duel() sets ended_by = auth.uid(), not necessarily
+-- the creator) would fail with a foreign-key violation. "set null" (not
+-- cascade): the duel and the other participant's view of it should survive
+-- the ender's account deletion — only the "who ended it" pointer needs to go.
+alter table savings_duels drop constraint if exists savings_duels_ended_by_fkey;
+alter table savings_duels
+  add constraint savings_duels_ended_by_fkey
+  foreign key (ended_by) references auth.users(id) on delete set null;

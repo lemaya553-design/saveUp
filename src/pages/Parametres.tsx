@@ -7,6 +7,7 @@ import { WorkHoursSettings } from '../components/WorkHoursSettings'
 import { PayScheduleSettings } from '../components/PayScheduleSettings'
 import { IncomeInput } from '../components/IncomeInput'
 import { PageSkeleton } from '../components/PageSkeleton'
+import { DeleteAccountModal } from '../components/DeleteAccountModal'
 import { useIncome } from '../hooks/useIncome'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePwaInstall } from '../hooks/usePwaInstall'
@@ -48,6 +49,7 @@ export function Parametres() {
   const tarifsT = TARIFS[lang]
   const [searchParams, setSearchParams] = useSearchParams()
   const [managingBilling, setManagingBilling] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
 
   const TAB_DEFS: TabDef<Tab>[] = [
     { key: 'compte', label: t.tabs.compte },
@@ -146,6 +148,20 @@ export function Parametres() {
               </button>
             )}
           </ParametresCard>
+
+          <section
+            className="min-w-0 rounded-2xl border border-red-900/30 bg-red-950/10 p-5 shadow-sm sm:p-6 lg:col-span-2"
+          >
+            <h2 className="text-base font-semibold text-ink">{t.compte.dangerZone.title}</h2>
+            <p className="mb-4 mt-1 text-xs text-muted">{t.compte.dangerZone.hint}</p>
+            <button
+              type="button"
+              onClick={() => setDeleteModalOpen(true)}
+              className="rounded-lg border border-red-600/40 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-600/10"
+            >
+              {t.compte.dangerZone.button}
+            </button>
+          </section>
         </div>
       )}
 
@@ -206,6 +222,8 @@ export function Parametres() {
           <PayScheduleSettings />
         </div>
       )}
+
+      <DeleteAccountModal open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} />
     </div>
   )
 }

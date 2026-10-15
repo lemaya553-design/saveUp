@@ -25,6 +25,21 @@ export interface ParametresContent {
       unsupported: string
       reopenPrompt: string
     }
+    dangerZone: {
+      title: string
+      hint: string
+      button: string
+      modalTitle: string
+      warningIntro: string
+      warningItems: string[]
+      warningIrreversible: string
+      confirmWord: string
+      confirmInstructions: (word: string) => string
+      confirmPlaceholder: string
+      confirmButton: string
+      deleting: string
+      errorFallback: string
+    }
   }
   abonnement: {
     cardTitle: string
@@ -126,6 +141,27 @@ export const PARAMETRES: Record<Lang, ParametresContent> = {
         unsupported: "L'installation n'est pas proposée par ce navigateur.",
         reopenPrompt: "Revoir l'invite d'installation",
       },
+      dangerZone: {
+        title: 'Zone de danger',
+        hint: 'Supprimer ton compte est définitif et irréversible.',
+        button: 'Supprimer mon compte',
+        modalTitle: 'Supprimer définitivement ton compte ?',
+        warningIntro: 'Ceci supprime immédiatement et pour toujours :',
+        warningItems: [
+          'Toutes tes transactions et dépenses fixes',
+          'Tes objectifs d’épargne et leur progression',
+          'Tes avis envoyés via « Donner mon avis »',
+          'Ton profil et ta photo de profil',
+          'Ton compte de connexion',
+        ],
+        warningIrreversible: 'Cette action ne peut pas être annulée — il n’y a pas de retour en arrière possible.',
+        confirmWord: 'SUPPRIMER',
+        confirmInstructions: (word) => `Tape ${word} ci-dessous pour confirmer.`,
+        confirmPlaceholder: 'SUPPRIMER',
+        confirmButton: 'Supprimer définitivement',
+        deleting: 'Suppression en cours...',
+        errorFallback: 'La suppression a échoué — réessaie dans un instant.',
+      },
     },
     abonnement: {
       cardTitle: 'Mon abonnement',
@@ -222,6 +258,27 @@ export const PARAMETRES: Record<Lang, ParametresContent> = {
         installed: '✅ SaveUp is installed on this device.',
         unsupported: "This browser doesn't offer installation.",
         reopenPrompt: 'Show the install prompt again',
+      },
+      dangerZone: {
+        title: 'Danger zone',
+        hint: 'Deleting your account is permanent and cannot be undone.',
+        button: 'Delete my account',
+        modalTitle: 'Permanently delete your account?',
+        warningIntro: 'This immediately and permanently deletes:',
+        warningItems: [
+          'All your transactions and fixed expenses',
+          'Your savings goals and their progress',
+          'Feedback you sent via "Give feedback"',
+          'Your profile and profile photo',
+          'Your login account',
+        ],
+        warningIrreversible: 'This action cannot be undone — there is no way to recover it.',
+        confirmWord: 'DELETE',
+        confirmInstructions: (word) => `Type ${word} below to confirm.`,
+        confirmPlaceholder: 'DELETE',
+        confirmButton: 'Permanently delete',
+        deleting: 'Deleting...',
+        errorFallback: 'Deletion failed — try again in a moment.',
       },
     },
     abonnement: {

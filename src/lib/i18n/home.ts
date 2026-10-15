@@ -6,6 +6,12 @@ export interface HomeContent {
     title: string
     description: string
   }
+  // Dismissible banner shown after a redirect from Paramètres' self-service
+  // account deletion (?compte-supprime=1) — see DeleteAccountModal.tsx.
+  accountDeleted: {
+    message: string
+    dismiss: string
+  }
   hero: {
     trustBadge: string
     titleStart: string
@@ -16,6 +22,16 @@ export interface HomeContent {
     // 2 entries (not 4) — the other 2, plus this section's own CTA, were
     // removed for sitting too close to the showcase section's phone below.
     floatingCards: { icon: 'goal' | 'trend'; text: string }[]
+    // Picking a preset here carries its `name` through signup via
+    // localStorage (lib/pendingGoal.ts) and prefills AddGoalCard's name
+    // field the first time the new account opens it (Épargne → Objectifs).
+    // "other" has an empty `name` on purpose — no specific goal name to
+    // prefill, so the form stays blank like clicking straight through
+    // without picking anything.
+    goalPicker: {
+      label: string
+      presets: { id: string; label: string; name: string }[]
+    }
   }
   // Section 2 — phone mockup + 2 narrative cards + CTA, directly below the
   // title hero above (not a replacement for it — see the task that added
@@ -101,6 +117,10 @@ export const HOME: Record<Lang, HomeContent> = {
       description:
         'Importe ton relevé bancaire, budgète et épargne au même endroit — sans tableur compliqué. 100% gratuit pour commencer.',
     },
+    accountDeleted: {
+      message: 'Ton compte et toutes tes données ont été supprimés avec succès.',
+      dismiss: 'Fermer',
+    },
     hero: {
       trustBadge: 'Rejoins les premiers utilisateurs de SaveUp',
       titleStart: 'Gère ton budget,',
@@ -111,6 +131,15 @@ export const HOME: Record<Lang, HomeContent> = {
         { icon: 'goal', text: "Objectif d'épargne atteint ✅" },
         { icon: 'trend', text: 'Santé financière : Bonne' },
       ],
+      goalPicker: {
+        label: 'Quel est ton objectif ?',
+        presets: [
+          { id: 'urgence', label: "🛟 Fonds d'urgence", name: "Fonds d'urgence" },
+          { id: 'vacances', label: '✈️ Vacances', name: 'Vacances' },
+          { id: 'achat', label: '🛍️ Achat important', name: 'Achat important' },
+          { id: 'autre', label: 'Autre', name: '' },
+        ],
+      },
     },
     showcase: {
       notification: 'Objectif atteint 🎉 +50 $',
@@ -273,6 +302,10 @@ export const HOME: Record<Lang, HomeContent> = {
       description:
         'Import your bank statement, budget and save in one place — no complicated spreadsheet. 100% free to start.',
     },
+    accountDeleted: {
+      message: 'Your account and all your data were successfully deleted.',
+      dismiss: 'Dismiss',
+    },
     hero: {
       trustBadge: 'Join the first SaveUp users',
       titleStart: 'Manage your budget,',
@@ -283,6 +316,15 @@ export const HOME: Record<Lang, HomeContent> = {
         { icon: 'goal', text: 'Savings goal reached ✅' },
         { icon: 'trend', text: 'Financial health: Good' },
       ],
+      goalPicker: {
+        label: "What's your goal?",
+        presets: [
+          { id: 'urgence', label: '🛟 Emergency fund', name: 'Emergency fund' },
+          { id: 'vacances', label: '✈️ Vacation', name: 'Vacation' },
+          { id: 'achat', label: '🛍️ Big purchase', name: 'Big purchase' },
+          { id: 'autre', label: 'Other', name: '' },
+        ],
+      },
     },
     showcase: {
       notification: 'Goal reached 🎉 +$50',

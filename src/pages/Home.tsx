@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { LandingHeader } from '../components/LandingHeader'
 import { Footer } from '../components/Footer'
 import { Reveal } from '../components/Reveal'
@@ -11,6 +11,7 @@ import { useLanguage } from '../hooks/useLanguage'
 import { HOME } from '../lib/i18n/home'
 import { TARIFS } from '../lib/i18n/tarifs'
 import { COMMON } from '../lib/i18n/common'
+import { clearPendingGoalName, setPendingGoalName } from '../lib/pendingGoal'
 
 // Full landing page rewrite — white/black/orange (.landing-classic, see
 // index.css), new content throughout. Deliberately drops the previous
@@ -235,11 +236,13 @@ const DISCORD_URL: string | null = 'https://discord.gg/bhqXVF5a8'
 
 export function Home() {
   const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { lang } = useLanguage()
   const t = HOME[lang]
   const tarifs = TARIFS[lang]
   const header = COMMON[lang].header
   const goalCount = useLoopingCountUp(t.showcase.floatingLabels.goal.amount)
+  const accountDeleted = searchParams.get('compte-supprime') === '1'
 
   useEffect(() => {
     if (!location.hash) return
@@ -247,10 +250,39 @@ export function Home() {
     target?.scrollIntoView({ behavior: 'smooth' })
   }, [location.hash])
 
+  function dismissAccountDeletedBanner() {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.delete('compte-supprime')
+      return next
+    })
+  }
+
+  // "Other"/no-name presets explicitly clear rather than leaving a stale
+  // pick from an earlier click in the same visit — AddGoalCard.tsx consumes
+  // whatever's here (or nothing) the first time it mounts after signup.
+  function handleGoalPresetClick(name: string) {
+    if (name) setPendingGoalName(name)
+    else clearPendingGoalName()
+  }
+
   return (
     <div className="landing-classic">
       <MetaTags />
       <LandingHeader />
+
+      {accountDeleted && (
+        <div className="flex items-center justify-center gap-3 border-b border-overlay/10 bg-primary/10 px-4 py-3 text-center text-sm font-medium text-ink sm:px-6">
+          <span>{t.accountDeleted.message}</span>
+          <button
+            type="button"
+            onClick={dismissAccountDeletedBanner}
+            className="shrink-0 text-primary underline-offset-2 hover:underline"
+          >
+            {t.accountDeleted.dismiss}
+          </button>
+        </div>
+      )}
 
       {/* 1. Hero — badge, two-tone title, search-bar-style CTA, and 4
           floating "real feature" cards (no invented metrics) scattered
@@ -290,6 +322,20 @@ export function Home() {
             <span className="text-primary">{t.hero.titleHighlight}</span>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-lg text-muted">{t.hero.subtitle}</p>
+
+          <p className="mt-8 text-sm font-medium text-muted">{t.hero.goalPicker.label}</p>
+          <div className="mx-auto mt-3 flex max-w-xl flex-wrap items-center justify-center gap-2">
+            {t.hero.goalPicker.presets.map((preset) => (
+              <Link
+                key={preset.id}
+                to="/connexion"
+                onClick={() => handleGoalPresetClick(preset.name)}
+                className="rounded-full border border-overlay/15 bg-surface px-4 py-2 text-sm font-medium text-ink shadow-sm transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                {preset.label}
+              </Link>
+            ))}
+          </div>
         </Reveal>
 
         {/* Floating cards — large screens only, absolutely positioned
