@@ -60,6 +60,20 @@ export interface DashboardContent {
     step2: { title: string; description: string; actionLabel: string }
     step3: { title: string; description: string; actionLabel: string }
   }
+  goalCard: {
+    eyebrow: string
+    outOf: (target: string) => string
+    remaining: (amount: string) => string
+    goalReached: string
+    viewDetail: string
+    // Keyed by getGoalEncouragementTier (lib/goalEncouragement.ts).
+    encouragement: Record<'start' | 'progress' | 'half' | 'final' | 'done', string>
+    empty: {
+      title: string
+      description: string
+      actionLabel: string
+    }
+  }
 }
 
 export const DASHBOARD: Record<Lang, DashboardContent> = {
@@ -165,6 +179,25 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
         actionLabel: 'Voir mes statistiques',
       },
     },
+    goalCard: {
+      eyebrow: 'Mon objectif',
+      outOf: (target) => `sur ${target}`,
+      remaining: (amount) => `Il te reste ${amount}`,
+      goalReached: 'Objectif atteint !',
+      viewDetail: 'Voir le détail',
+      encouragement: {
+        start: 'Beau départ, chaque dollar compte.',
+        progress: 'Tu avances bien, continue comme ça.',
+        half: 'Plus de la moitié, tu y es presque.',
+        final: 'Dernière ligne droite !',
+        done: 'Objectif atteint, bravo ! 🎉',
+      },
+      empty: {
+        title: 'Quel est ton premier objectif ?',
+        description: 'Voyage, auto, cadeau… choisis ce qui te motive.',
+        actionLabel: 'Créer mon objectif',
+      },
+    },
   },
   en: {
     pageHeader: {
@@ -266,6 +299,25 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
         title: 'See where your money goes',
         description: 'Explore your spending by category, week, and month.',
         actionLabel: 'View my stats',
+      },
+    },
+    goalCard: {
+      eyebrow: 'My goal',
+      outOf: (target) => `of ${target}`,
+      remaining: (amount) => `${amount} left to save`,
+      goalReached: 'Goal reached!',
+      viewDetail: 'View detail',
+      encouragement: {
+        start: 'Great start — every dollar counts.',
+        progress: "You're making progress, keep it up.",
+        half: "Past the halfway mark, you're almost there.",
+        final: 'Home stretch!',
+        done: 'Goal reached, nice work! 🎉',
+      },
+      empty: {
+        title: "What's your first goal?",
+        description: 'Trip, car, gift… pick what motivates you.',
+        actionLabel: 'Create my goal',
       },
     },
   },

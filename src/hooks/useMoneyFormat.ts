@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useLanguage } from './useLanguage'
 import { usePreferences } from './usePreferences'
-import { formatMoney } from '../lib/format'
+import { formatMoney, formatMoneyRounded } from '../lib/format'
 
 // The one hook every component reaches for to display a user-data amount —
 // wraps lib/format.ts's formatMoney with the active language and the
@@ -12,4 +12,12 @@ export function useMoneyFormat() {
   const { lang } = useLanguage()
   const { currency } = usePreferences()
   return useCallback((amount: number) => formatMoney(amount, lang, currency), [lang, currency])
+}
+
+// Same, but whole dollars only — see formatMoneyRounded for when to use this
+// instead (rare: just DashboardGoalCard's hero amount today).
+export function useMoneyFormatRounded() {
+  const { lang } = useLanguage()
+  const { currency } = usePreferences()
+  return useCallback((amount: number) => formatMoneyRounded(amount, lang, currency), [lang, currency])
 }

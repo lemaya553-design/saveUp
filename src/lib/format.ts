@@ -19,6 +19,22 @@ function getFormatter(lang: Lang, currency: Currency): Intl.NumberFormat {
   return formatter
 }
 
+const roundedFormatterCache = new Map<string, Intl.NumberFormat>()
+
+function getRoundedFormatter(lang: Lang, currency: Currency): Intl.NumberFormat {
+  const key = `${lang}:${currency}`
+  let formatter = roundedFormatterCache.get(key)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(localeFor(lang), {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    })
+    roundedFormatterCache.set(key, formatter)
+  }
+  return formatter
+}
+
 // The one place a dollar amount gets turned into display text anywhere in
 // the app. `currency` is purely cosmetic — it changes which symbol/format
 // Intl.NumberFormat renders, never the underlying stored number, and there
@@ -27,6 +43,14 @@ function getFormatter(lang: Lang, currency: Currency): Intl.NumberFormat {
 // of which currency is selected.
 export function formatMoney(amount: number, lang: Lang, currency: Currency): string {
   return getFormatter(lang, currency).format(amount)
+}
+
+// Same as formatMoney but always whole dollars ("12 500 $", never
+// "12 500,00 $") — for the rare display spot (DashboardGoalCard's hero
+// amount) that explicitly wants the cleaner, bigger-feeling number over
+// cents precision. Everywhere else should keep using formatMoney.
+export function formatMoneyRounded(amount: number, lang: Lang, currency: Currency): string {
+  return getRoundedFormatter(lang, currency).format(amount)
 }
 
 // For real billing amounts (Stripe subscription pricing) only — these are

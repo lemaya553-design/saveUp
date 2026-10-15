@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { HelpButton } from '../components/HelpButton'
 import { AlertBanner } from '../components/AlertBanner'
 import { DashboardCard, CARD_BORDER } from '../components/DashboardCard'
+import { DashboardGoalCard } from '../components/DashboardGoalCard'
 import { GettingStartedGuide } from '../components/GettingStartedGuide'
 import { DashboardStatCards } from '../components/DashboardStatCards'
 import { DashboardScoreFactors } from '../components/DashboardScoreFactors'
@@ -299,6 +300,8 @@ export function Dashboard() {
         <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{t.pageHeader.title}</h1>
         <HelpButton title={t.pageHeader.title} purpose={t.help.purpose} actions={t.help.actions} />
       </div>
+
+      <DashboardGoalCard goals={goals.goals} />
 
       {/* Streak + starter badge — surfaced here (not just on Récompenses,
           which nothing else points a new user toward) so day one has a
