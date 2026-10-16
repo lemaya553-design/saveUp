@@ -166,10 +166,26 @@ export function Epargne() {
           >
             <h2 className="text-xl font-semibold text-ink">{t.objectifsTab.emptyTitle}</h2>
             <p className="mx-auto mt-2 max-w-sm text-sm text-muted">{t.objectifsTab.emptyDescription}</p>
+
+            <div className="mx-auto mt-6 flex max-w-xs flex-col gap-3 text-left">
+              {t.objectifsTab.emptySteps.map((step, i) => (
+                <div key={step} className="flex items-center gap-3">
+                  <span
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold text-muted"
+                    style={{ borderColor: CARD_BORDER }}
+                    aria-hidden="true"
+                  >
+                    {i + 1}
+                  </span>
+                  <p className="text-sm font-medium text-ink">{step}</p>
+                </div>
+              ))}
+            </div>
+
             <button
               type="button"
               onClick={() => setShowCreateForm(true)}
-              className="budget-btn-primary mt-5 rounded-lg px-5 py-2.5 font-medium transition-all"
+              className="budget-btn-primary mt-6 rounded-lg px-5 py-2.5 font-medium transition-all"
             >
               {t.objectifsTab.emptyAction}
             </button>
@@ -196,6 +212,7 @@ export function Epargne() {
                   onRemove={goals.removeGoal}
                   onSetPhoto={goals.setGoalPhoto}
                   onRemovePhoto={goals.removeGoalPhoto}
+                  onAddContribution={goals.addContribution}
                   isDueling={duels.busyGoalIds.has(goal.id)}
                   locked={pausedGoalIds.has(goal.id)}
                 />

@@ -42,6 +42,14 @@ function TargetIcon({ className }: { className: string }) {
   )
 }
 
+function PlusIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className={className}>
+      <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
 // Orange-family — cosmetic only (which shade a goal's icon gets),
 // deterministic on the name so it doesn't shuffle every render as goals
 // reorder. No green/blue/violet anywhere on this page.
@@ -66,6 +74,7 @@ export function SavingsGoalCard({
   onRemove,
   onSetPhoto,
   onRemovePhoto,
+  onAddContribution,
   isDueling = false,
   locked = false,
 }: {
@@ -75,6 +84,10 @@ export function SavingsGoalCard({
   onRemove: (id: string) => void
   onSetPhoto: (goalId: string, file: File) => Promise<{ error: string | null }>
   onRemovePhoto: (goalId: string) => void
+  // Quick "+" inline contribution, separate from the page-level
+  // ContributeForm (which has its own goal picker + budget-exhaustion
+  // warnings) — this one is just "add an amount to THIS goal, right here."
+  onAddContribution: (goalId: string, amount: number) => Promise<void>
   // True while this goal is already committed to a pending/active duel —
   // a goal can only be in one duel at a time (also enforced server-side).
   // Duels are now only ever started from the Duels tab, so this card just
@@ -98,6 +111,10 @@ export function SavingsGoalCard({
   const [targetDate, setTargetDate] = useState(goal.targetDate ?? '')
   const [photoUploading, setPhotoUploading] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
+  const [addingAmount, setAddingAmount] = useState(false)
+  const [contributeAmount, setContributeAmount] = useState('')
+  const [contributeError, setContributeError] = useState<string | null>(null)
+  const [contributing, setContributing] = useState(false)
 
   const progress =
     goal.targetAmount > 0 ? Math.min(100, (goal.currentAmount / goal.targetAmount) * 100) : 0
@@ -181,6 +198,30 @@ export function SavingsGoalCard({
     if (!name.trim() || parsedTarget <= 0) return
     onSave(goal.id, name.trim(), parsedTarget, targetDate || null)
     setEditing(false)
+  }
+
+  function cancelAddAmount() {
+    setAddingAmount(false)
+    setContributeAmount('')
+    setContributeError(null)
+  }
+
+  async function submitAddAmount(e: React.FormEvent) {
+    e.preventDefault()
+    if (contributeAmount.trim() === '') {
+      setContributeError(t.addAmountEmptyError)
+      return
+    }
+    const parsed = Number(contributeAmount)
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      setContributeError(t.addAmountInvalidError)
+      return
+    }
+    setContributeError(null)
+    setContributing(true)
+    await onAddContribution(goal.id, parsed)
+    setContributing(false)
+    cancelAddAmount()
   }
 
   async function handleSelectPhoto(file: File) {
@@ -339,12 +380,67 @@ export function SavingsGoalCard({
           </Link>
         )}
 
-        <p className={`text-2xl font-bold ${textPrimary}`}>
-          {formatMoney(goal.currentAmount)}
-          <span className={`ml-1.5 text-sm font-normal ${textSecondary}`}>
-            / {formatMoney(goal.targetAmount)}
-          </span>
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <p className={`text-2xl font-bold ${textPrimary}`}>
+            {formatMoney(goal.currentAmount)}
+            <span className={`ml-1.5 text-sm font-normal ${textSecondary}`}>
+              / {formatMoney(goal.targetAmount)}
+            </span>
+          </p>
+          {!locked && !addingAmount && (
+            <button
+              type="button"
+              onClick={() => setAddingAmount(true)}
+              aria-label={t.addAmountAriaLabel(goal.name)}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${
+                showPhoto ? 'bg-white/15 text-white hover:bg-white/25' : 'bg-[#FF7A00]/15 text-[#FF7A00] hover:bg-[#FF7A00]/25'
+              }`}
+            >
+              <PlusIcon className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+
+        {/* noValidate: the native "must be >= 0" browser tooltip (always
+            English, uncontrollable styling) would otherwise block submission
+            before submitAddAmount's own French validation ever ran — every
+            error message here needs to be the one actually specified
+            (vide/nul/négatif, in French), not whatever the browser feels
+            like showing. */}
+        {addingAmount && (
+          <form onSubmit={submitAddAmount} noValidate className="mt-2 flex flex-wrap items-start gap-2">
+            <input
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="0.01"
+              value={contributeAmount}
+              onChange={(e) => {
+                setContributeAmount(e.target.value)
+                setContributeError(null)
+              }}
+              placeholder={t.addAmountPlaceholder}
+              autoFocus
+              className="min-w-0 flex-1 rounded-lg budget-field px-3 py-2 text-sm text-ink placeholder-muted"
+            />
+            <button
+              type="submit"
+              disabled={contributing}
+              className="rounded-lg budget-btn-primary px-4 py-2 text-sm font-medium transition-all disabled:opacity-60"
+            >
+              {t.addAmountConfirm}
+            </button>
+            <button
+              type="button"
+              onClick={cancelAddAmount}
+              className={`rounded-lg px-3 py-2 text-sm ${showPhoto ? 'text-white/80 hover:bg-white/10' : 'text-muted hover:text-ink'}`}
+            >
+              {COMMON[lang].app.cancel}
+            </button>
+            {contributeError && <p className="w-full text-xs text-red-400">{contributeError}</p>}
+          </form>
+        )}
+
         <div className="mt-3">
           <ProgressBar value={progress} colorClass={progress >= 100 ? 'bg-[#FF7A00]' : 'bg-[#CC5F00]'} />
         </div>

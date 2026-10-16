@@ -25,6 +25,10 @@ export interface EpargneContent {
     emptyTitle: string
     emptyDescription: string
     emptyAction: string
+    // 3 numbered steps shown in the empty state, before a first goal exists
+    // — replaced entirely once hasGoals flips true (Epargne.tsx), never
+    // shown again after.
+    emptySteps: [string, string, string]
     savedLabel: string
     totalTargetLabel: string
     progressLabel: string
@@ -60,6 +64,11 @@ export interface EpargneContent {
     consistency: (done: number, total: number) => string
     duelActiveLink: string
     wonDaysToast: (delta: number) => string
+    addAmountAriaLabel: (name: string) => string
+    addAmountPlaceholder: string
+    addAmountConfirm: string
+    addAmountEmptyError: string
+    addAmountInvalidError: string
   }
   addGoalCard: {
     newGoalButton: string
@@ -315,7 +324,8 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
       emptyTitle: "Tu n'as pas encore d'objectif d'épargne",
       emptyDescription:
         'Fixe un montant à atteindre pour commencer à suivre ta progression et débloquer des badges.',
-      emptyAction: 'Fixer mon premier objectif',
+      emptyAction: 'Créer mon premier objectif',
+      emptySteps: ['Choisis ton objectif', 'Mets un montant', 'Regarde ta barre se remplir'],
       savedLabel: 'Épargné',
       totalTargetLabel: 'Objectif total',
       progressLabel: 'Progression',
@@ -356,6 +366,11 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
       consistency: (done, total) => `Régularité (${done}/${total} dernières semaines)`,
       duelActiveLink: '⚔ En duel — voir le résultat',
       wonDaysToast: (delta) => `Tu viens de gagner ${delta} jour${delta > 1 ? 's' : ''} !`,
+      addAmountAriaLabel: (name) => `Ajouter un montant à ${name}`,
+      addAmountPlaceholder: 'Montant à ajouter',
+      addAmountConfirm: 'Ajouter',
+      addAmountEmptyError: 'Entre un montant.',
+      addAmountInvalidError: 'Le montant doit être plus grand que 0 $.',
     },
     addGoalCard: {
       newGoalButton: '+ Nouvel objectif',
@@ -637,7 +652,8 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
     objectifsTab: {
       emptyTitle: "You don't have a savings goal yet",
       emptyDescription: 'Set an amount to reach to start tracking your progress and unlocking badges.',
-      emptyAction: 'Set my first goal',
+      emptyAction: 'Create my first goal',
+      emptySteps: ['Choose your goal', 'Set an amount', 'Watch your bar fill up'],
       savedLabel: 'Saved',
       totalTargetLabel: 'Total target',
       progressLabel: 'Progress',
@@ -675,6 +691,11 @@ export const EPARGNE: Record<Lang, EpargneContent> = {
       consistency: (done, total) => `Consistency (${done}/${total} last weeks)`,
       duelActiveLink: '⚔ In a duel — see the result',
       wonDaysToast: (delta) => `You just gained ${delta} day${delta > 1 ? 's' : ''}!`,
+      addAmountAriaLabel: (name) => `Add an amount to ${name}`,
+      addAmountPlaceholder: 'Amount to add',
+      addAmountConfirm: 'Add',
+      addAmountEmptyError: 'Enter an amount.',
+      addAmountInvalidError: 'The amount must be greater than $0.',
     },
     addGoalCard: {
       newGoalButton: '+ New goal',

@@ -16,7 +16,7 @@ export function ProgressBar({
       aria-valuemax={100}
     >
       <div
-        className={`h-full rounded-full ${colorClass} transition-all`}
+        className={`h-full rounded-full ${colorClass} transition-all motion-reduce:transition-none`}
         style={{ width: `${clamped}%` }}
       />
     </div>
