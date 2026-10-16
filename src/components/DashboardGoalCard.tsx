@@ -7,6 +7,7 @@ import { useMoneyFormatRounded } from '../hooks/useMoneyFormat'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 import { getGoalEncouragementTier } from '../lib/goalEncouragement'
 import { hasCelebratedGoal, markGoalCelebrated } from '../lib/goalCelebration'
+import { DEMO_GOALS } from '../lib/demoGoals'
 import { DASHBOARD } from '../lib/i18n/dashboard'
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
 
@@ -53,6 +54,32 @@ function ConfettiBurst() {
           }}
         />
       ))}
+    </div>
+  )
+}
+
+function DemoBanner({ onExit }: { onExit: () => void }) {
+  const { lang } = useLanguage()
+  const t = DASHBOARD[lang].goalCard.demoBanner
+  return (
+    <div
+      className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2"
+      style={{ borderColor: 'rgba(255, 122, 0, 0.35)', backgroundColor: 'rgba(255, 122, 0, 0.12)' }}
+    >
+      <p className="text-xs font-medium text-ink">
+        <span className="font-bold" style={{ color: '#FF7A00' }}>
+          🧪 {t.label}
+        </span>{' '}
+        — {t.description}
+      </p>
+      <button
+        type="button"
+        onClick={onExit}
+        className="min-h-[36px] shrink-0 rounded-md px-2.5 py-1 text-xs font-semibold underline-offset-2 hover:underline"
+        style={{ color: '#FF7A00' }}
+      >
+        {t.exitButton}
+      </button>
     </div>
   )
 }
@@ -152,19 +179,38 @@ export function DashboardGoalCard({ goals }: { goals: SavingsGoal[] }) {
   const { lang } = useLanguage()
   const t = DASHBOARD[lang].goalCard
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null)
+  const [demoMode, setDemoMode] = useState(false)
+
+  // The only two places DEMO_GOALS is read — everything below this line
+  // (sorting, the active-goal lookup, the card's own JSX) treats
+  // displayGoals as "the goals," with zero awareness of where they came
+  // from. No write/mutation callback is ever passed into this component or
+  // anything it renders, so there is no code path by which demo data could
+  // reach Supabase even by accident.
+  const displayGoals = demoMode ? DEMO_GOALS : goals
+
+  function enterDemoMode() {
+    setSelectedGoalId(null)
+    setDemoMode(true)
+  }
+
+  function exitDemoMode() {
+    setSelectedGoalId(null)
+    setDemoMode(false)
+  }
 
   // Most-advanced-first — an exactly-100% goal naturally surfaces first
   // (a nice "you just hit this" moment), ties broken by creation order
   // (goals arrives already sorted oldest-first from useSavingsGoals).
   const sortedGoals = useMemo(() => {
-    return [...goals].sort((a, b) => {
+    return [...displayGoals].sort((a, b) => {
       const pctA = a.targetAmount > 0 ? a.currentAmount / a.targetAmount : a.currentAmount > 0 ? 1 : 0
       const pctB = b.targetAmount > 0 ? b.currentAmount / b.targetAmount : b.currentAmount > 0 ? 1 : 0
       return pctB - pctA
     })
-  }, [goals])
+  }, [displayGoals])
 
-  if (goals.length === 0) {
+  if (displayGoals.length === 0) {
     return (
       <div
         className="hover-lift mb-6 min-w-0 rounded-2xl border p-5 text-center shadow-sm sm:p-6"
@@ -176,19 +222,29 @@ export function DashboardGoalCard({ goals }: { goals: SavingsGoal[] }) {
         </div>
         <h2 className="mt-3 text-xl font-bold text-ink">{t.empty.title}</h2>
         <p className="mx-auto mt-1.5 max-w-xs text-sm text-muted">{t.empty.description}</p>
-        <Link
-          to="/epargne/objectifs"
-          className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-lg px-6 py-2.5 font-medium text-white transition-all hover:brightness-110"
-          style={{ backgroundColor: '#FF7A00' }}
-        >
-          {t.empty.actionLabel}
-        </Link>
+        <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
+          <Link
+            to="/epargne/objectifs"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg px-6 py-2.5 font-medium text-white transition-all hover:brightness-110"
+            style={{ backgroundColor: '#FF7A00' }}
+          >
+            {t.empty.actionLabel}
+          </Link>
+          <button
+            type="button"
+            onClick={enterDemoMode}
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg border px-6 py-2.5 font-medium text-ink transition-colors hover:bg-overlay/5"
+            style={{ borderColor: CARD_BORDER }}
+          >
+            {t.empty.demoActionLabel}
+          </button>
+        </div>
       </div>
     )
   }
 
   const mainGoal = sortedGoals[0]
-  const activeGoal = goals.find((g) => g.id === selectedGoalId) ?? mainGoal
+  const activeGoal = displayGoals.find((g) => g.id === selectedGoalId) ?? mainGoal
 
   const pct =
     activeGoal.targetAmount > 0
@@ -198,43 +254,66 @@ export function DashboardGoalCard({ goals }: { goals: SavingsGoal[] }) {
         : 0
   const tier = getGoalEncouragementTier(pct)
 
+  // The clickable area links to the real Épargne page when showing real
+  // goals — but a demo goal has no page to link to there (Épargne reads the
+  // real useSavingsGoals(), which knows nothing about DEMO_GOALS), so demo
+  // mode renders the exact same content in a plain, non-navigating <div>
+  // instead of a <Link>.
+  const cardBody = (
+    <>
+      <p className="text-xs font-medium uppercase tracking-wide text-muted">{t.eyebrow}</p>
+
+      <div className="mt-1.5 flex min-w-0 items-center gap-2.5">
+        <span
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+          style={{ color: '#FF7A00', backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
+        >
+          <TargetIcon className="h-5 w-5" />
+        </span>
+        <h2 className="truncate text-lg font-bold text-ink sm:text-xl">{activeGoal.name}</h2>
+      </div>
+
+      <div className="mt-4">
+        <AnimatedGoalStats
+          key={activeGoal.id}
+          goalId={activeGoal.id}
+          currentAmount={activeGoal.currentAmount}
+          targetAmount={activeGoal.targetAmount}
+          tier={tier}
+        />
+      </div>
+
+      {!demoMode && (
+        <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium" style={{ color: '#FF7A00' }}>
+          {t.viewDetail}
+          <span aria-hidden="true">→</span>
+        </span>
+      )}
+    </>
+  )
+
   return (
     <div
       className="hover-lift mb-6 min-w-0 overflow-hidden rounded-2xl border shadow-sm"
       style={{ borderColor: CARD_BORDER, background: CARD_BACKGROUND }}
     >
-      <Link
-        to="/epargne/objectifs"
-        className="block p-5 transition-transform active:scale-[0.98] sm:p-6"
-        aria-label={`${t.eyebrow}: ${activeGoal.name} — ${t.viewDetail}`}
-      >
-        <p className="text-xs font-medium uppercase tracking-wide text-muted">{t.eyebrow}</p>
-
-        <div className="mt-1.5 flex min-w-0 items-center gap-2.5">
-          <span
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-            style={{ color: '#FF7A00', backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
-          >
-            <TargetIcon className="h-5 w-5" />
-          </span>
-          <h2 className="truncate text-lg font-bold text-ink sm:text-xl">{activeGoal.name}</h2>
+      {demoMode && (
+        <div className="p-5 pb-0 sm:p-6 sm:pb-0">
+          <DemoBanner onExit={exitDemoMode} />
         </div>
+      )}
 
-        <div className="mt-4">
-          <AnimatedGoalStats
-            key={activeGoal.id}
-            goalId={activeGoal.id}
-            currentAmount={activeGoal.currentAmount}
-            targetAmount={activeGoal.targetAmount}
-            tier={tier}
-          />
-        </div>
-
-        <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium" style={{ color: '#FF7A00' }}>
-          {t.viewDetail}
-          <span aria-hidden="true">→</span>
-        </span>
-      </Link>
+      {demoMode ? (
+        <div className="p-5 pt-0 sm:p-6 sm:pt-0">{cardBody}</div>
+      ) : (
+        <Link
+          to="/epargne/objectifs"
+          className="block p-5 transition-transform active:scale-[0.98] sm:p-6"
+          aria-label={`${t.eyebrow}: ${activeGoal.name} — ${t.viewDetail}`}
+        >
+          {cardBody}
+        </Link>
+      )}
 
       {sortedGoals.length > 1 && (
         <div className="flex flex-wrap gap-2 px-5 pb-5 sm:px-6 sm:pb-6">

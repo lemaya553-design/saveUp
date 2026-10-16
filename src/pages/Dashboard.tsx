@@ -4,6 +4,7 @@ import { HelpButton } from '../components/HelpButton'
 import { AlertBanner } from '../components/AlertBanner'
 import { DashboardCard, CARD_BORDER } from '../components/DashboardCard'
 import { DashboardGoalCard } from '../components/DashboardGoalCard'
+import { DashboardFeedbackPrompt } from '../components/DashboardFeedbackPrompt'
 import { GettingStartedGuide } from '../components/GettingStartedGuide'
 import { DashboardStatCards } from '../components/DashboardStatCards'
 import { DashboardScoreFactors } from '../components/DashboardScoreFactors'
@@ -299,6 +300,7 @@ export function Dashboard() {
       <div className="mb-6 flex items-center gap-2 pt-6">
         <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{t.pageHeader.title}</h1>
         <HelpButton title={t.pageHeader.title} purpose={t.help.purpose} actions={t.help.actions} />
+        <DashboardFeedbackPrompt />
       </div>
 
       <DashboardGoalCard goals={goals.goals} />

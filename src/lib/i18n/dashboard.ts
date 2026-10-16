@@ -8,6 +8,20 @@ export interface DashboardContent {
     description: string
     actionLabel: string
   }
+  // Dashboard-only "Donner mon avis" entry point — separate from Sidebar's
+  // generic free-text one (useFeedback.ts/feedback table is shared by
+  // both; the question and placement are the only things different here).
+  feedbackPrompt: {
+    buttonLabel: string
+    modalTitle: string
+    question: string
+    questionPlaceholder: string
+    optionalLabel: string
+    optionalPlaceholder: string
+    send: string
+    sending: string
+    successMessage: string
+  }
   streak: {
     days: (count: number) => string
     comeBackActive: string
@@ -72,6 +86,12 @@ export interface DashboardContent {
       title: string
       description: string
       actionLabel: string
+      demoActionLabel: string
+    }
+    demoBanner: {
+      label: string
+      description: string
+      exitButton: string
     }
   }
 }
@@ -97,6 +117,17 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
       description:
         "Commence par ajouter ton revenu mensuel — tout le reste (budget, alertes, score) se calcule automatiquement à partir de là.",
       actionLabel: 'Ajouter mes revenus',
+    },
+    feedbackPrompt: {
+      buttonLabel: 'Donner mon avis',
+      modalTitle: 'Donner mon avis',
+      question: 'Qu’est-ce qui te ferait revenir ?',
+      questionPlaceholder: 'Dis-nous en quelques mots...',
+      optionalLabel: 'Autre chose à ajouter ? (optionnel)',
+      optionalPlaceholder: 'Ton commentaire...',
+      send: 'Envoyer',
+      sending: 'Envoi...',
+      successMessage: 'Merci, ton avis est reçu.',
     },
     streak: {
       days: (count) => `${count} jour${count > 1 ? 's' : ''} de suite`,
@@ -196,6 +227,12 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
         title: 'Quel est ton premier objectif ?',
         description: 'Voyage, auto, cadeau… choisis ce qui te motive.',
         actionLabel: 'Créer mon objectif',
+        demoActionLabel: "Essayer avec des données d'exemple",
+      },
+      demoBanner: {
+        label: 'Mode démo',
+        description: 'Données fictives — rien n’est enregistré dans ton compte.',
+        exitButton: 'Revenir à mes données',
       },
     },
   },
@@ -219,6 +256,17 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
       description:
         'Start by adding your monthly income — everything else (budget, alerts, score) gets calculated automatically from there.',
       actionLabel: 'Add my income',
+    },
+    feedbackPrompt: {
+      buttonLabel: 'Give feedback',
+      modalTitle: 'Give feedback',
+      question: 'What would bring you back?',
+      questionPlaceholder: 'Tell us in a few words...',
+      optionalLabel: 'Anything else to add? (optional)',
+      optionalPlaceholder: 'Your comment...',
+      send: 'Send',
+      sending: 'Sending...',
+      successMessage: 'Thanks, your feedback was received.',
     },
     streak: {
       days: (count) => `${count} day${count > 1 ? 's' : ''} in a row`,
@@ -318,6 +366,12 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
         title: "What's your first goal?",
         description: 'Trip, car, gift… pick what motivates you.',
         actionLabel: 'Create my goal',
+        demoActionLabel: 'Try with sample data',
+      },
+      demoBanner: {
+        label: 'Demo mode',
+        description: 'Sample data — nothing is saved to your account.',
+        exitButton: 'Back to my data',
       },
     },
   },
