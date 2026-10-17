@@ -31,8 +31,12 @@ const MAX_GAP_DAYS = 36
 // Same-merchant charges within this band count as "the same price" (tax
 // rounding, minor FX drift) — wider than that, and it reads as a
 // coincidentally-similar but different purchase, not a repeating bill.
-const AMOUNT_TOLERANCE_RATIO = 0.08
-const AMOUNT_TOLERANCE_MIN_DOLLARS = 1
+// Exported so other code that needs to recognize "is this specific
+// transaction one of the subscriptions already detected above" (see
+// categoryBenchmark.ts) uses the exact same tolerance rather than a second,
+// possibly-drifting copy of these numbers.
+export const AMOUNT_TOLERANCE_RATIO = 0.08
+export const AMOUNT_TOLERANCE_MIN_DOLLARS = 1
 
 // Lowercase, accent-stripped, punctuation-stripped, and reference/store
 // numbers removed, so "NETFLIX.COM 8532", "Netflix.com*8532NY", and
@@ -46,7 +50,7 @@ const AMOUNT_TOLERANCE_MIN_DOLLARS = 1
 // chain (e.g. two different gas-station fill-ups) can collide into one
 // merchant group — real limitation, not a bug, see this module's own tests
 // for a false-positive example.
-function normalizeMerchant(description: string): string {
+export function normalizeMerchant(description: string): string {
   const cleaned = description
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
