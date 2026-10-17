@@ -55,6 +55,18 @@ function IconChart({ className }: { className: string }) {
   )
 }
 
+function IconRepeat({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M17 2.1l4 4-4 4M3 12.9v-1a4 4 0 0 1 4-4h14M7 21.9l-4-4 4-4M21 11.1v1a4 4 0 0 1-4 4H3"
+      />
+    </svg>
+  )
+}
+
 function IconTag({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
@@ -126,6 +138,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
     { to: '/budget', label: t.budget, Icon: IconCard },
     { to: '/epargne', label: t.epargne, Icon: IconTarget },
     { to: '/statistiques', label: t.statistiques, Icon: IconChart },
+    { to: '/premium', label: t.premium, Icon: IconRepeat },
     { to: '/tarifs', label: t.tarifs, Icon: IconTag },
     { to: '/parametres', label: t.parametres, Icon: IconGear },
   ]

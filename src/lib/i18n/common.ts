@@ -56,6 +56,7 @@ export interface CommonContent {
     budget: string
     epargne: string
     statistiques: string
+    premium: string
     tarifs: string
     parametres: string
     signOut: string
@@ -184,6 +185,7 @@ export const COMMON: Record<Lang, CommonContent> = {
       budget: 'Budget',
       epargne: 'Épargne',
       statistiques: 'Statistiques',
+      premium: 'Premium',
       tarifs: 'Tarifs',
       parametres: 'Paramètres',
       signOut: 'Déconnexion',
@@ -310,6 +312,7 @@ export const COMMON: Record<Lang, CommonContent> = {
       budget: 'Budget',
       epargne: 'Savings',
       statistiques: 'Statistics',
+      premium: 'Premium',
       tarifs: 'Pricing',
       parametres: 'Settings',
       signOut: 'Sign out',
