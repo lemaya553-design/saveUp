@@ -4,6 +4,7 @@ import { Card } from '../components/Card'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { UpgradePrompt } from '../components/UpgradePrompt'
 import { ImportTransactionsModal } from '../components/ImportTransactionsModal'
+import { SubscriptionReviewModal } from '../components/SubscriptionReviewModal'
 import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
@@ -14,9 +15,12 @@ import { canImportCsv, FREE_CSV_IMPORT_LIMIT } from '../lib/plans'
 import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { detectRecurringCharges, type DetectedSubscription } from '../lib/subscriptionDetection'
 import {
-  getSubscriptionReviewStatus,
-  setSubscriptionReviewStatus,
-  type SubscriptionReviewStatus,
+  clearSubscriptionMark,
+  getSubscriptionMark,
+  markSubscriptionForReview,
+  markSubscriptionKept,
+  type ReviewDetails,
+  type SubscriptionMark,
 } from '../lib/subscriptionReview'
 import { PREMIUM } from '../lib/i18n/premium'
 
@@ -28,6 +32,10 @@ import { PREMIUM } from '../lib/i18n/premium'
 // below unmodified rather than duplicated.
 const MONTHS_BACK = 5
 
+// Theme-only border, same color-mix recipe used across the rest of the app
+// (DashboardCard.tsx's CARD_BORDER, etc.) — a token, not a literal color.
+const CARD_BORDER = 'color-mix(in srgb, var(--color-overlay) 10%, transparent)'
+
 function RepeatIcon({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
@@ -36,46 +44,55 @@ function RepeatIcon({ className }: { className: string }) {
   )
 }
 
-function StatTile({ label, amount }: { label: string; amount: string }) {
+function ChevronIcon({ className }: { className: string }) {
   return (
-    <div className="glass min-w-0 rounded-2xl p-5 shadow-lg shadow-black/30">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
-      <p className="mt-1.5 text-2xl font-bold text-ink sm:text-3xl">{amount}</p>
-    </div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="m9 6 6 6-6 6" />
+    </svg>
+  )
+}
+
+function SubscriptionIcon({ className }: { className: string }) {
+  return (
+    <span
+      className={`flex shrink-0 items-center justify-center rounded-full ${className}`}
+      style={{ color: '#FF7A00', backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
+    >
+      <RepeatIcon className="h-4 w-4" />
+    </span>
   )
 }
 
 function SubscriptionRow({
   item,
-  status,
-  onSetStatus,
+  mark,
+  onKeep,
+  onOpenReview,
 }: {
   item: DetectedSubscription
-  status: SubscriptionReviewStatus | null
-  onSetStatus: (status: SubscriptionReviewStatus) => void
+  mark: SubscriptionMark | null
+  onKeep: () => void
+  onOpenReview: () => void
 }) {
   const { lang } = useLanguage()
   const t = PREMIUM[lang].item
+  const reasonLabels = PREMIUM[lang].reasonLabels
   const formatMoney = useMoneyFormat()
   const lastChargedLabel = new Date(item.lastSpentAt).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-CA', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   })
+  const inReview = mark?.status === 'review'
 
   return (
     <div
       className="flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between"
-      style={{ borderColor: 'color-mix(in srgb, var(--color-overlay) 10%, transparent)' }}
+      style={{ borderColor: CARD_BORDER }}
     >
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2.5">
-          <span
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-            style={{ color: '#FF7A00', backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
-          >
-            <RepeatIcon className="h-4 w-4" />
-          </span>
+          <SubscriptionIcon className="h-9 w-9" />
           <div className="min-w-0">
             <p className="truncate font-semibold text-ink">{item.displayName}</p>
             <p className="text-xs text-muted">{translateCategoryLabel(item.category, lang)}</p>
@@ -84,34 +101,68 @@ function SubscriptionRow({
         <p className="mt-2 text-xs text-muted">
           {t.lastCharged(lastChargedLabel)} · {t.occurrences(item.occurrences)}
         </p>
+        {inReview && (
+          <span
+            className="mt-2 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+            style={{ color: '#CC5F00', backgroundColor: 'rgba(204, 95, 0, 0.14)' }}
+          >
+            {t.reviewBadge(reasonLabels[mark.review.reason])}
+          </span>
+        )}
       </div>
 
-      <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end">
+      <div className="flex shrink-0 items-center justify-between gap-3 sm:flex-col sm:items-end">
         <p className="text-lg font-bold text-ink">{formatMoney(item.monthlyAmount)}</p>
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => onSetStatus('kept')}
-            aria-pressed={status === 'kept'}
-            className={`min-h-[36px] rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-              status === 'kept' ? 'border-transparent text-white' : 'border-overlay/15 text-muted hover:text-ink'
-            }`}
-            style={status === 'kept' ? { backgroundColor: '#FF7A00' } : undefined}
+            onClick={onOpenReview}
+            className="min-h-[36px] rounded-full border px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-ink"
+            style={{ borderColor: CARD_BORDER }}
           >
-            {t.keepButton}
+            {inReview ? t.editReview : t.reviewButton}
           </button>
           <button
             type="button"
-            onClick={() => onSetStatus('review')}
-            aria-pressed={status === 'review'}
-            className={`min-h-[36px] rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-              status === 'review' ? 'border-transparent text-white' : 'border-overlay/15 text-muted hover:text-ink'
-            }`}
-            style={status === 'review' ? { backgroundColor: '#CC5F00' } : undefined}
+            onClick={onKeep}
+            className="min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-all hover:brightness-110"
+            style={{ backgroundColor: '#FF7A00' }}
           >
-            {t.reviewButton}
+            {t.keepButton}
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function KeptRow({
+  item,
+  onRestore,
+}: {
+  item: DetectedSubscription
+  onRestore: () => void
+}) {
+  const { lang } = useLanguage()
+  const t = PREMIUM[lang].keptSection
+  const formatMoney = useMoneyFormat()
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5" style={{ borderColor: CARD_BORDER }}>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <SubscriptionIcon className="h-7 w-7" />
+        <p className="truncate text-sm font-medium text-ink">{item.displayName}</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-3">
+        <p className="text-sm text-muted">{formatMoney(item.monthlyAmount)}</p>
+        <button
+          type="button"
+          onClick={onRestore}
+          className="min-h-[36px] rounded-md px-2 py-1.5 text-xs font-medium hover:underline"
+          style={{ color: '#FF7A00' }}
+        >
+          {t.restoreButton}
+        </button>
       </div>
     </div>
   )
@@ -131,33 +182,50 @@ export function Premium() {
   // statement outlives the page visit.
   const history = useExpenseHistory(MONTHS_BACK)
   const [importOpen, setImportOpen] = useState(false)
-  // Bumped after a status change so the review-status lookup below
-  // re-reads localStorage — the detected list itself doesn't change
-  // (marking is display-only), only which pill reads as active.
-  const [reviewVersion, setReviewVersion] = useState(0)
+  const [keptOpen, setKeptOpen] = useState(false)
+  const [reviewTarget, setReviewTarget] = useState<DetectedSubscription | null>(null)
+  // Bumped after any mark change so the lookup below re-reads localStorage
+  // — the detected list itself never changes from marking (nothing here
+  // ever deletes a transaction), only which bucket/badge an item shows in.
+  const [markVersion, setMarkVersion] = useState(0)
 
   const detected = useMemo(() => detectRecurringCharges(history.records), [history.records])
 
-  const statuses = useMemo(() => {
-    if (!user) return new Map<string, SubscriptionReviewStatus | null>()
-    const map = new Map<string, SubscriptionReviewStatus | null>()
+  const marks = useMemo(() => {
+    const map = new Map<string, SubscriptionMark | null>()
+    if (!user) return map
     for (const item of detected) {
-      map.set(item.key, getSubscriptionReviewStatus(user.id, item.key))
+      map.set(item.key, getSubscriptionMark(user.id, item.key))
     }
     return map
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [detected, user, reviewVersion])
+  }, [detected, user, markVersion])
 
-  function handleSetStatus(key: string, status: SubscriptionReviewStatus) {
+  const activeItems = detected.filter((d) => marks.get(d.key)?.status !== 'kept')
+  const keptItems = detected.filter((d) => marks.get(d.key)?.status === 'kept')
+
+  function handleKeep(key: string) {
     if (!user) return
-    setSubscriptionReviewStatus(user.id, key, status)
-    setReviewVersion((v) => v + 1)
+    markSubscriptionKept(user.id, key)
+    setMarkVersion((v) => v + 1)
   }
 
-  // Deliberately the sum of every detected charge, not just the ones
-  // marked "Je garde" — marking something "à vérifier" flags it for a
-  // closer look, it doesn't mean it stopped billing. See this page's own
-  // report to the user for the same reasoning spelled out.
+  function handleRestore(key: string) {
+    if (!user) return
+    clearSubscriptionMark(user.id, key)
+    setMarkVersion((v) => v + 1)
+  }
+
+  function handleSaveReview(review: ReviewDetails) {
+    if (!user || !reviewTarget) return
+    markSubscriptionForReview(user.id, reviewTarget.key, review)
+    setMarkVersion((v) => v + 1)
+    setReviewTarget(null)
+  }
+
+  // Deliberately the sum of every detected charge, kept or not — marking
+  // something "Je garde" means "I know about this, stop asking," not "this
+  // stopped billing." Still a real recurring cost either way.
   const monthlyTotal = useMemo(() => detected.reduce((sum, d) => sum + d.monthlyAmount, 0), [detected])
   const annualTotal = monthlyTotal * 12
 
@@ -165,13 +233,16 @@ export function Premium() {
     return <PageSkeleton cards={4} />
   }
 
+  const reviewTargetMark = reviewTarget ? marks.get(reviewTarget.key) : null
+  const reviewInitial = reviewTargetMark?.status === 'review' ? reviewTargetMark.review : null
+
   return (
     <div className="mx-auto max-w-[1200px] px-4 pb-16 sm:px-6 lg:px-8">
-      <div className="mb-6 flex items-center gap-2 pt-6">
+      <div className="mb-1 flex items-center gap-2 pt-6">
         <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{t.pageHeader.title}</h1>
         <HelpButton title={t.help.title} purpose={t.help.purpose} actions={t.help.actions} />
       </div>
-      <p className="-mt-4 mb-6 max-w-xl text-sm text-muted">{t.pageHeader.subtitle}</p>
+      <p className="mb-6 max-w-xl text-sm text-muted">{t.pageHeader.subtitle}</p>
 
       {history.error && (
         <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
@@ -186,7 +257,7 @@ export function Premium() {
               <button
                 type="button"
                 onClick={() => setImportOpen(true)}
-                className="rounded-lg px-5 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110"
+                className="min-h-[44px] rounded-lg px-5 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110"
                 style={{ backgroundColor: '#FF7A00' }}
               >
                 {t.empty.importButton}
@@ -211,25 +282,68 @@ export function Premium() {
         </Card>
       ) : (
         <div className="grid gap-6">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <StatTile label={t.stats.monthlyTotal} amount={formatMoney(monthlyTotal)} />
-            <StatTile label={t.stats.annualTotal} amount={formatMoney(annualTotal)} />
+          {/* Hero total — monthly first and biggest (what someone actually
+              feels every month), the yearly figure as a smaller supporting
+              line underneath rather than an equally-weighted second tile. */}
+          <div className="glass min-w-0 rounded-2xl p-6 shadow-lg shadow-black/30">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">{t.stats.monthlyTotal}</p>
+            <p className="mt-1.5 text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
+              {formatMoney(monthlyTotal)}
+            </p>
+            <p className="mt-1.5 text-sm text-muted">{t.stats.annualTotalInline(formatMoney(annualTotal))}</p>
           </div>
 
-          <div className="flex flex-col gap-3">
-            {detected.map((item) => (
-              <SubscriptionRow
-                key={item.key}
-                item={item}
-                status={statuses.get(item.key) ?? null}
-                onSetStatus={(status) => handleSetStatus(item.key, status)}
-              />
-            ))}
-          </div>
+          {activeItems.length === 0 ? (
+            <Card title={t.allKept.title} hint={t.allKept.description}>
+              {null}
+            </Card>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {activeItems.map((item) => (
+                <SubscriptionRow
+                  key={item.key}
+                  item={item}
+                  mark={marks.get(item.key) ?? null}
+                  onKeep={() => handleKeep(item.key)}
+                  onOpenReview={() => setReviewTarget(item)}
+                />
+              ))}
+            </div>
+          )}
+
+          {keptItems.length > 0 && (
+            <div className="border-t pt-4" style={{ borderColor: CARD_BORDER }}>
+              <button
+                type="button"
+                onClick={() => setKeptOpen((o) => !o)}
+                aria-expanded={keptOpen}
+                className="flex min-h-[36px] items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink"
+              >
+                <ChevronIcon className={`h-4 w-4 transition-transform motion-reduce:transition-none ${keptOpen ? 'rotate-90' : ''}`} />
+                {t.keptSection.linkLabel(keptItems.length)}
+              </button>
+
+              {keptOpen && (
+                <div className="mt-3 flex flex-col gap-2">
+                  {keptItems.map((item) => (
+                    <KeptRow key={item.key} item={item} onRestore={() => handleRestore(item.key)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
       <ImportTransactionsModal open={importOpen} onClose={() => setImportOpen(false)} />
+
+      <SubscriptionReviewModal
+        open={reviewTarget !== null}
+        onClose={() => setReviewTarget(null)}
+        subscriptionName={reviewTarget?.displayName ?? ''}
+        initial={reviewInitial}
+        onSave={handleSaveReview}
+      />
     </div>
   )
 }

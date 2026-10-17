@@ -1,17 +1,38 @@
 import type { Lang } from './language'
+import type { ReviewReason } from '../subscriptionReview'
 
 export interface PremiumContent {
   pageHeader: { title: string; subtitle: string }
   help: { title: string; purpose: string; actions: string[] }
   stats: {
     monthlyTotal: string
-    annualTotal: string
+    annualTotalInline: (amount: string) => string
   }
   item: {
     lastCharged: (date: string) => string
     occurrences: (n: number) => string
     keepButton: string
     reviewButton: string
+    reviewBadge: (reason: string) => string
+    editReview: string
+  }
+  reasonLabels: Record<ReviewReason, string>
+  reviewModal: {
+    title: (name: string) => string
+    questionReason: string
+    questionUsage: string
+    usageLow: string
+    usageHigh: string
+    questionNote: string
+    notePlaceholder: string
+    noteCounter: (used: number, max: number) => string
+    save: string
+    cancel: string
+  }
+  keptSection: {
+    linkLabel: (n: number) => string
+    heading: string
+    restoreButton: string
   }
   empty: {
     title: string
@@ -21,6 +42,10 @@ export interface PremiumContent {
     upgradeTitle: string
     upgradeUsedLimit: (limit: number) => string
     upgradeGeneric: string
+  }
+  allKept: {
+    title: string
+    description: string
   }
 }
 
@@ -42,13 +67,39 @@ export const PREMIUM: Record<Lang, PremiumContent> = {
     },
     stats: {
       monthlyTotal: 'Total par mois',
-      annualTotal: 'Total par année',
+      annualTotalInline: (amount) => `soit ${amount} par année`,
     },
     item: {
       lastCharged: (date) => `Dernière charge : ${date}`,
       occurrences: (n) => `${n} fois détecté${n > 1 ? 'es' : 'e'}`,
       keepButton: 'Je garde',
       reviewButton: 'À vérifier',
+      reviewBadge: (reason) => `À vérifier · ${reason}`,
+      editReview: 'Modifier',
+    },
+    reasonLabels: {
+      dont_recognize: 'Je ne le reconnais pas',
+      want_to_cancel: "Je veux l'annuler",
+      rarely_use: "Je l'utilise peu",
+      one_time_purchase: 'C’est un achat ponctuel',
+      other: 'Autre',
+    },
+    reviewModal: {
+      title: (name) => `À vérifier : ${name}`,
+      questionReason: 'Pourquoi veux-tu vérifier cet abonnement ?',
+      questionUsage: "À quel point tu l'utilises ?",
+      usageLow: 'Jamais',
+      usageHigh: 'Tout le temps',
+      questionNote: 'Veux-tu une note ?',
+      notePlaceholder: 'Ajoute une note (optionnel)...',
+      noteCounter: (used, max) => `${used}/${max}`,
+      save: 'Enregistrer',
+      cancel: 'Annuler',
+    },
+    keptSection: {
+      linkLabel: (n) => `Abonnements gardés (${n})`,
+      heading: 'Abonnements gardés',
+      restoreButton: 'Remettre dans la liste',
     },
     empty: {
       title: 'Aucun abonnement détecté pour l’instant',
@@ -59,6 +110,10 @@ export const PREMIUM: Record<Lang, PremiumContent> = {
       upgradeTitle: 'Import de relevé — fonctionnalité Standard',
       upgradeUsedLimit: (limit) => `Tu as utilisé tes ${limit} imports gratuits. Passe à Standard pour continuer.`,
       upgradeGeneric: "L'import de relevé n'est pas inclus dans ton plan actuel.",
+    },
+    allKept: {
+      title: 'Tout est trié !',
+      description: 'Tous tes abonnements détectés sont dans ta liste « Gardés », en bas de page.',
     },
   },
   en: {
@@ -78,13 +133,39 @@ export const PREMIUM: Record<Lang, PremiumContent> = {
     },
     stats: {
       monthlyTotal: 'Monthly total',
-      annualTotal: 'Yearly total',
+      annualTotalInline: (amount) => `that's ${amount} per year`,
     },
     item: {
       lastCharged: (date) => `Last charged: ${date}`,
       occurrences: (n) => `Detected ${n} time${n > 1 ? 's' : ''}`,
       keepButton: 'Keep',
       reviewButton: 'To check',
+      reviewBadge: (reason) => `To check · ${reason}`,
+      editReview: 'Edit',
+    },
+    reasonLabels: {
+      dont_recognize: "I don't recognize it",
+      want_to_cancel: 'I want to cancel it',
+      rarely_use: 'I rarely use it',
+      one_time_purchase: 'It was a one-time purchase',
+      other: 'Other',
+    },
+    reviewModal: {
+      title: (name) => `To check: ${name}`,
+      questionReason: 'Why do you want to check this subscription?',
+      questionUsage: 'How much do you use it?',
+      usageLow: 'Never',
+      usageHigh: 'All the time',
+      questionNote: 'Want to add a note?',
+      notePlaceholder: 'Add a note (optional)...',
+      noteCounter: (used, max) => `${used}/${max}`,
+      save: 'Save',
+      cancel: 'Cancel',
+    },
+    keptSection: {
+      linkLabel: (n) => `Kept subscriptions (${n})`,
+      heading: 'Kept subscriptions',
+      restoreButton: 'Move back to the list',
     },
     empty: {
       title: 'No subscriptions detected yet',
@@ -95,6 +176,10 @@ export const PREMIUM: Record<Lang, PremiumContent> = {
       upgradeTitle: 'Statement import — Standard feature',
       upgradeUsedLimit: (limit) => `You've used your ${limit} free imports. Upgrade to Standard to continue.`,
       upgradeGeneric: "Statement import isn't included in your current plan.",
+    },
+    allKept: {
+      title: 'All sorted!',
+      description: 'Every detected subscription is in your "Kept" list, at the bottom of the page.',
     },
   },
 }
