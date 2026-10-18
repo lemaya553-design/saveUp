@@ -6,7 +6,7 @@ import { useCalendarNotes } from '../hooks/useCalendarNotes'
 import { useMonthSavingsContributions } from '../hooks/useMonthSavingsContributions'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
-import { getMonthRange } from '../lib/format'
+import { getMonthRange, getWeekStart, toDateString } from '../lib/format'
 import { buildMonthGrid, computeMonthNoteStats, ratingBlendPct, type CalendarCell } from '../lib/calendarGrid'
 import { CALENDRIER } from '../lib/i18n/calendrier'
 
@@ -26,6 +26,23 @@ function SavingsDot({ label }: { label: string }) {
   )
 }
 
+function TopStatTile({ index, label, average, notedDaysCount }: { index: number; label: string; average: number | null; notedDaysCount: number }) {
+  const { lang } = useLanguage()
+  const t = CALENDRIER[lang].stats
+  return (
+    <div
+      className="budget-card-in glass min-w-0 rounded-2xl p-4 shadow-lg shadow-black/30"
+      style={{ animationDelay: `${index * 80}ms` }}
+    >
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted">{label}</p>
+      <p className="mt-1 text-2xl font-bold text-ink sm:text-3xl">
+        {average === null ? t.noAverage : `${average.toFixed(1)} / 10`}
+      </p>
+      <p className="mt-0.5 text-xs text-muted">{t.notedDays(notedDaysCount)}</p>
+    </div>
+  )
+}
+
 export function Calendrier() {
   const { lang } = useLanguage()
   const t = CALENDRIER[lang]
@@ -39,14 +56,64 @@ export function Calendrier() {
   }, [monthOffset])
   const { start: monthStart, end: monthEnd } = useMemo(() => getMonthRange(selectedMonth), [selectedMonth])
 
-  const notesData = useCalendarNotes(monthStart, monthEnd)
+  // The top averages zone is always anchored to the REAL today (week/month/
+  // year), independent of month navigation — so the fetch range has to
+  // cover both that and whichever month is currently browsed. Unioning them
+  // into one range means one Map backs everything below: the grid, the
+  // modal, and the three top tiles all read from (and stay in sync
+  // through) the exact same fetched data, with no separate hook instances
+  // to keep synchronized by hand.
+  const now = useMemo(() => new Date(), [])
+  const weekStart = useMemo(() => getWeekStart(now), [now])
+  const weekEnd = useMemo(() => {
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + 7)
+    return d
+  }, [weekStart])
+  const { start: realMonthStart, end: realMonthEnd } = useMemo(() => getMonthRange(now), [now])
+  const yearStart = useMemo(() => new Date(now.getFullYear(), 0, 1), [now])
+  const yearEnd = useMemo(() => new Date(now.getFullYear() + 1, 0, 1), [now])
+
+  const fetchStart = useMemo(
+    () => (monthStart < yearStart ? monthStart : yearStart),
+    [monthStart, yearStart],
+  )
+  const fetchEnd = useMemo(() => (monthEnd > yearEnd ? monthEnd : yearEnd), [monthEnd, yearEnd])
+
+  const notesData = useCalendarNotes(fetchStart, fetchEnd)
   const savingsData = useMonthSavingsContributions(monthStart, monthEnd)
 
   const weeks = useMemo(() => buildMonthGrid(selectedMonth), [selectedMonth])
 
+  function ratingsWithin(start: Date, end: Date): number[] {
+    const startStr = toDateString(start)
+    const endStr = toDateString(end)
+    const result: number[] = []
+    for (const note of notesData.notes.values()) {
+      if (note.dateStr >= startStr && note.dateStr < endStr) result.push(note.rating)
+    }
+    return result
+  }
+
   const monthStats = useMemo(
-    () => computeMonthNoteStats([...notesData.notes.values()].map((n) => n.rating)),
-    [notesData.notes],
+    () => computeMonthNoteStats(ratingsWithin(monthStart, monthEnd)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [notesData.notes, monthStart, monthEnd],
+  )
+  const weekStats = useMemo(
+    () => computeMonthNoteStats(ratingsWithin(weekStart, weekEnd)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [notesData.notes, weekStart, weekEnd],
+  )
+  const realMonthStats = useMemo(
+    () => computeMonthNoteStats(ratingsWithin(realMonthStart, realMonthEnd)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [notesData.notes, realMonthStart, realMonthEnd],
+  )
+  const yearStats = useMemo(
+    () => computeMonthNoteStats(ratingsWithin(yearStart, yearEnd)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [notesData.notes, yearStart, yearEnd],
   )
 
   const [activeCell, setActiveCell] = useState<CalendarCell | null>(null)
@@ -86,8 +153,15 @@ export function Calendrier() {
         </div>
       )}
 
+      {/* Always-current (not navigable) week/month/year averages. */}
+      <div className="mb-6 grid grid-cols-3 gap-3 sm:gap-4">
+        <TopStatTile index={0} label={t.topStats.week} average={weekStats.average} notedDaysCount={weekStats.notedDaysCount} />
+        <TopStatTile index={1} label={t.topStats.month} average={realMonthStats.average} notedDaysCount={realMonthStats.notedDaysCount} />
+        <TopStatTile index={2} label={t.topStats.year} average={yearStats.average} notedDaysCount={yearStats.notedDaysCount} />
+      </div>
+
       <div className="glass w-full min-w-0 rounded-2xl p-4 shadow-lg shadow-black/30 sm:p-6">
-        {/* Month nav + stats header */}
+        {/* Month nav + the browsed month's own average */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center justify-center gap-3">
             <button
@@ -137,19 +211,20 @@ export function Calendrier() {
           </div>
         </div>
 
-        {/* Desktop/tablet: full 7-column month grid. motion-safe entrance
-            replays per month change via the key below, matching
-            "transitions douces entre les mois" — already reduced-motion-safe
-            (see .budget-card-in's own @media block in index.css). */}
+        {/* Desktop/tablet: full 7-column month grid, square-ish cells that
+            fill the available width. motion-safe entrance replays per month
+            change via the key below, matching "transitions douces entre les
+            mois" — already reduced-motion-safe (see .budget-card-in's own
+            @media block in index.css). */}
         <div key={monthLabel} className="budget-card-in mt-6 hidden sm:block">
-          <div className="grid grid-cols-7 gap-1.5 text-center text-xs font-medium text-muted">
+          <div className="grid grid-cols-7 gap-2 text-center text-xs font-medium text-muted">
             {t.weekdaysShort.map((d) => (
               <div key={d} className="pb-2">
                 {d}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-1.5">
+          <div className="grid grid-cols-7 gap-2">
             {weeks.flat().map((cell) => {
               const note = notesData.notes.get(cell.dateStr)
               const hasSavings = savingsData.contributionDays.has(cell.dateStr)
@@ -161,7 +236,7 @@ export function Calendrier() {
                   disabled={!clickable}
                   onClick={() => setActiveCell(cell)}
                   aria-label={t.dayAriaLabel(dayLabel(cell.dateStr), note?.rating ?? null)}
-                  className={`relative flex min-h-[96px] flex-col items-start rounded-xl border p-2 text-left transition-colors motion-reduce:transition-none ${
+                  className={`relative flex aspect-square flex-col rounded-xl border p-2 text-left transition-colors motion-reduce:transition-none ${
                     clickable ? 'cursor-pointer hover:border-overlay/25' : 'cursor-default'
                   } ${cell.isToday ? 'border-primary/60' : 'border-overlay/10'} ${
                     !cell.inCurrentMonth ? 'opacity-35' : ''
@@ -173,14 +248,20 @@ export function Calendrier() {
                     {cell.date.getDate()}
                   </span>
                   {note && (
-                    <>
-                      <span className="mt-1 text-2xl font-extrabold leading-none text-ink">{note.rating}</span>
+                    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-0.5 text-center">
+                      <span
+                        className={`font-extrabold leading-none text-ink ${
+                          note.description ? 'text-3xl' : 'text-4xl lg:text-5xl'
+                        }`}
+                      >
+                        {note.rating}
+                      </span>
                       {note.description && (
-                        <span className="mt-1 line-clamp-2 text-[11px] leading-snug text-ink/80">
+                        <span className="line-clamp-2 px-0.5 text-[11px] leading-snug text-ink/80">
                           {note.description}
                         </span>
                       )}
-                    </>
+                    </div>
                   )}
                 </button>
               )
@@ -199,7 +280,7 @@ export function Calendrier() {
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
                   {t.mobile.weekLabel(shortDayLabel(inMonthDays[0].dateStr), shortDayLabel(inMonthDays[inMonthDays.length - 1].dateStr))}
                 </p>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2.5">
                   {inMonthDays.map((cell) => {
                     const note = notesData.notes.get(cell.dateStr)
                     const hasSavings = savingsData.contributionDays.has(cell.dateStr)
@@ -211,13 +292,13 @@ export function Calendrier() {
                         disabled={!clickable}
                         onClick={() => setActiveCell(cell)}
                         aria-label={t.dayAriaLabel(dayLabel(cell.dateStr), note?.rating ?? null)}
-                        className={`relative flex min-w-0 items-center gap-3 rounded-xl border p-3 text-left ${
+                        className={`relative flex min-w-0 items-center gap-3 rounded-xl border p-4 text-left ${
                           clickable ? 'cursor-pointer hover:border-overlay/25' : 'cursor-default opacity-60'
                         } ${cell.isToday ? 'border-primary/60' : 'border-overlay/10'}`}
                       >
                         {hasSavings && <SavingsDot label={t.savingsIndicatorLabel(dayLabel(cell.dateStr))} />}
                         <span
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-ink"
+                          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl text-xl font-bold text-ink"
                           style={dayCellStyle(note?.rating)}
                         >
                           {note ? note.rating : cell.date.getDate()}
@@ -226,7 +307,7 @@ export function Calendrier() {
                           <p className={`text-sm font-medium capitalize ${cell.isToday ? 'text-primary' : 'text-ink'}`}>
                             {shortDayLabel(cell.dateStr)}
                           </p>
-                          <p className="truncate text-xs text-muted">
+                          <p className="mt-0.5 line-clamp-2 text-xs text-muted">
                             {note?.description || (note ? '' : t.mobile.noNote)}
                           </p>
                         </div>
@@ -246,14 +327,8 @@ export function Calendrier() {
         dateStr={activeCell?.dateStr ?? ''}
         dateLabel={activeCell ? dayLabel(activeCell.dateStr) : ''}
         initial={activeCell ? (notesData.notes.get(activeCell.dateStr) ?? null) : null}
-        onSave={(dateStr, rating, description) => {
-          notesData.saveNote(dateStr, rating, description)
-          setActiveCell(null)
-        }}
-        onClear={(dateStr) => {
-          notesData.deleteNote(dateStr)
-          setActiveCell(null)
-        }}
+        onSave={(dateStr, rating, description) => notesData.saveNote(dateStr, rating, description)}
+        onClear={(dateStr) => notesData.deleteNote(dateStr)}
       />
     </div>
   )

@@ -10,20 +10,20 @@ export interface CalendarNote {
 }
 
 // One row per day (see supabase/migrations/20261017000000_add_calendar_notes.sql),
-// fetched a month at a time so navigating the Calendrier page never pulls
-// more than one month's worth of rows — refetches whenever the visible
-// month range changes. RLS scopes every read/write to the signed-in user;
-// no manual .eq('user_id', ...) filter needed on the select, same
-// convention as useIncome.ts/useExpenseHistory.ts.
-export function useCalendarNotes(monthStart: Date, monthEnd: Date) {
+// fetched a range at a time (Calendrier.tsx passes both the browsed month
+// and the current year, unioned into a single range — see that file for
+// why) so navigating/editing never pulls more than necessary. RLS scopes
+// every read/write to the signed-in user; no manual .eq('user_id', ...)
+// filter needed on the select, same convention as useIncome.ts/useExpenseHistory.ts.
+export function useCalendarNotes(rangeStart: Date, rangeEnd: Date) {
   const { user } = useAuth()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [notes, setNotes] = useState<Map<string, CalendarNote>>(new Map())
 
-  const startStr = toDateString(monthStart)
-  const endStr = toDateString(monthEnd)
+  const startStr = toDateString(rangeStart)
+  const endStr = toDateString(rangeEnd)
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -51,37 +51,37 @@ export function useCalendarNotes(monthStart: Date, monthEnd: Date) {
     load()
   }, [load])
 
+  // Returns whether the write succeeded — the autosave indicator in
+  // CalendarNoteModal needs this per-attempt, not a page-level error banner
+  // (a single failed autosave is retryable inline, not a "couldn't load
+  // your data" situation), so failures here are NOT written to `error`.
   const saveNote = useCallback(
-    async (dateStr: string, rating: number, description: string) => {
-      if (!userId) return
+    async (dateStr: string, rating: number, description: string): Promise<boolean> => {
+      if (!userId) return false
       const { error: upsertError } = await supabase
         .from('calendar_notes')
         .upsert(
           { user_id: userId, note_date: dateStr, rating, description, updated_at: new Date().toISOString() },
           { onConflict: 'user_id,note_date' },
         )
-      if (upsertError) {
-        setError(upsertError.message)
-        return
-      }
+      if (upsertError) return false
       setNotes((prev) => new Map(prev).set(dateStr, { dateStr, rating, description }))
+      return true
     },
     [userId],
   )
 
   const deleteNote = useCallback(
-    async (dateStr: string) => {
-      if (!userId) return
+    async (dateStr: string): Promise<boolean> => {
+      if (!userId) return false
       const { error: deleteError } = await supabase.from('calendar_notes').delete().eq('note_date', dateStr)
-      if (deleteError) {
-        setError(deleteError.message)
-        return
-      }
+      if (deleteError) return false
       setNotes((prev) => {
         const next = new Map(prev)
         next.delete(dateStr)
         return next
       })
+      return true
     },
     [userId],
   )
