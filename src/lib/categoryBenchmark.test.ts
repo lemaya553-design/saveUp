@@ -109,6 +109,37 @@ describe('computeCategoryBenchmarks — abonnements bucket (reuses subscription 
     const result = computeCategoryBenchmarks(records, 4000, NOW)
     expect(result.entries.find((e) => e.category === 'abonnements')?.total).toBe(0)
   })
+
+  // Regression: rent paid at the same amount every month passes
+  // detectRecurringCharges's cadence/amount checks exactly like a real
+  // subscription does — reported as "Abonnements" showing the full rent
+  // amount (and the whole month's spending) instead of $0.
+  it('a same-amount monthly rent charge (Logement) is NEVER reclassified as abonnements', () => {
+    const records = [
+      expense('Loyer', 2500, '2026-07-01', 'Logement'),
+      expense('Loyer', 2500, '2026-08-01', 'Logement'),
+      expense('Loyer', 2500, '2026-09-01', 'Logement'),
+    ]
+    const result = computeCategoryBenchmarks(records, 2500, NOW)
+    expect(result.entries.find((e) => e.category === 'loyer')?.total).toBe(2500)
+    expect(result.entries.find((e) => e.category === 'abonnements')?.total).toBe(0)
+    expect(result.totalPctOfIncome).toBeCloseTo(100, 2)
+  })
+
+  it('same guard applies to epicerie, restaurants and transport — regular amounts stay put', () => {
+    const records = [
+      expense('IGA', 200, '2026-07-02', 'Alimentation'),
+      expense('IGA', 200, '2026-08-02', 'Alimentation'),
+      expense('IGA', 200, '2026-09-02', 'Alimentation'),
+      expense('Essence', 80, '2026-07-03', 'Transport'),
+      expense('Essence', 80, '2026-08-03', 'Transport'),
+      expense('Essence', 80, '2026-09-03', 'Transport'),
+    ]
+    const result = computeCategoryBenchmarks(records, 4000, NOW)
+    expect(result.entries.find((e) => e.category === 'epicerie')?.total).toBe(200)
+    expect(result.entries.find((e) => e.category === 'transport')?.total).toBe(80)
+    expect(result.entries.find((e) => e.category === 'abonnements')?.total).toBe(0)
+  })
 })
 
 describe('computeCategoryBenchmarks — benchmarks', () => {

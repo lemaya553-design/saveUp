@@ -47,6 +47,26 @@ export interface PremiumContent {
     title: string
     description: string
   }
+  categoryBenchmark: {
+    title: string
+    hint: string
+    disclaimer: string
+    totalPre: string
+    totalPost: string
+    noIncome: string
+    empty: {
+      title: string
+      description: string
+    }
+    categoryLabels: Record<'loyer' | 'epicerie' | 'restaurants' | 'transport' | 'abonnements' | 'autre', string>
+    possessiveLabels: Record<'loyer' | 'epicerie' | 'restaurants' | 'transport' | 'abonnements' | 'autre', string>
+    amountAndPct: (amount: string, pct: number) => string
+    benchmarkLabel: (pct: number) => string
+    overBenchmarkBadge: string
+    reductionLabel: (pct: number) => string
+    reductionSliderAria: (categoryLabel: string) => string
+    reductionSentence: (possessiveLabel: string, reductionPct: number, monthly: string, annual: string) => string
+  }
 }
 
 export const PREMIUM: Record<Lang, PremiumContent> = {
@@ -115,6 +135,42 @@ export const PREMIUM: Record<Lang, PremiumContent> = {
       title: 'Tout est trié !',
       description: 'Tous tes abonnements détectés sont dans ta liste « Gardés », en bas de page.',
     },
+    categoryBenchmark: {
+      title: 'Dépenses par catégorie vs repères',
+      hint: 'Basé sur tes transactions importées et ton revenu mensuel.',
+      disclaimer: 'Les repères sont des repères généraux, pas des conseils financiers.',
+      totalPre: 'Tes dépenses représentent',
+      totalPost: 'de ton revenu ce mois-ci',
+      noIncome: 'Ajoute ton revenu mensuel dans Paramètres pour voir cette analyse.',
+      empty: {
+        title: 'Importe un relevé pour voir cette analyse',
+        description:
+          'Dès que tu as importé un relevé bancaire (CSV ou Excel), tes dépenses par catégorie apparaissent ici, comparées à des repères généraux.',
+      },
+      categoryLabels: {
+        loyer: 'Loyer',
+        epicerie: 'Épicerie',
+        restaurants: 'Restaurants',
+        transport: 'Transport',
+        abonnements: 'Abonnements',
+        autre: 'Autre',
+      },
+      possessiveLabels: {
+        loyer: 'ton loyer',
+        epicerie: 'ton épicerie',
+        restaurants: 'tes restaurants',
+        transport: 'ton transport',
+        abonnements: 'tes abonnements',
+        autre: 'tes autres dépenses',
+      },
+      amountAndPct: (amount, pct) => `${amount} · ${pct.toFixed(0)} % du revenu`,
+      benchmarkLabel: (pct) => `Repère : ${pct} % du revenu`,
+      overBenchmarkBadge: 'Au-dessus du repère',
+      reductionLabel: (pct) => `Réduction simulée : ${pct} %`,
+      reductionSliderAria: (categoryLabel) => `Pourcentage de réduction simulé pour ${categoryLabel}`,
+      reductionSentence: (possessiveLabel, reductionPct, monthly, annual) =>
+        `Si tu réduis ${possessiveLabel} de ${reductionPct} %, tu gardes environ ${monthly} par mois, soit ${annual} par année.`,
+    },
   },
   en: {
     pageHeader: {
@@ -180,6 +236,42 @@ export const PREMIUM: Record<Lang, PremiumContent> = {
     allKept: {
       title: 'All sorted!',
       description: 'Every detected subscription is in your "Kept" list, at the bottom of the page.',
+    },
+    categoryBenchmark: {
+      title: 'Spending by category vs. reference points',
+      hint: 'Based on your imported transactions and your monthly income.',
+      disclaimer: 'These are general reference points, not financial advice.',
+      totalPre: 'Your spending is',
+      totalPost: 'of your income this month',
+      noIncome: 'Add your monthly income in Settings to see this analysis.',
+      empty: {
+        title: 'Import a statement to see this analysis',
+        description:
+          'Once you import a bank statement (CSV or Excel), your spending by category shows up here, compared to general reference points.',
+      },
+      categoryLabels: {
+        loyer: 'Rent',
+        epicerie: 'Groceries',
+        restaurants: 'Restaurants',
+        transport: 'Transport',
+        abonnements: 'Subscriptions',
+        autre: 'Other',
+      },
+      possessiveLabels: {
+        loyer: 'your rent',
+        epicerie: 'your groceries',
+        restaurants: 'your restaurant spending',
+        transport: 'your transport spending',
+        abonnements: 'your subscriptions',
+        autre: 'your other expenses',
+      },
+      amountAndPct: (amount, pct) => `${amount} · ${pct.toFixed(0)}% of income`,
+      benchmarkLabel: (pct) => `Reference: ${pct}% of income`,
+      overBenchmarkBadge: 'Above reference',
+      reductionLabel: (pct) => `Simulated cut: ${pct}%`,
+      reductionSliderAria: (categoryLabel) => `Simulated reduction percentage for ${categoryLabel}`,
+      reductionSentence: (possessiveLabel, reductionPct, monthly, annual) =>
+        `If you cut ${possessiveLabel} by ${reductionPct}%, you'd keep about ${monthly} a month, or ${annual} a year.`,
     },
   },
 }

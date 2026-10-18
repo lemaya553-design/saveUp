@@ -5,7 +5,9 @@ import { PageSkeleton } from '../components/PageSkeleton'
 import { UpgradePrompt } from '../components/UpgradePrompt'
 import { ImportTransactionsModal } from '../components/ImportTransactionsModal'
 import { SubscriptionReviewModal } from '../components/SubscriptionReviewModal'
+import { CategoryBenchmarkCard } from '../components/CategoryBenchmarkCard'
 import { useExpenseHistory } from '../hooks/useExpenseHistory'
+import { useIncome } from '../hooks/useIncome'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
 import { useAuth } from '../hooks/useAuth'
@@ -181,6 +183,9 @@ export function Premium() {
   // lifetime is cached or written anywhere new, so no copy of the
   // statement outlives the page visit.
   const history = useExpenseHistory(MONTHS_BACK)
+  // Same hook Budget.tsx reads its "revenu mensuel" from — the category
+  // benchmark section below must always agree with Budget's own number.
+  const income = useIncome()
   const [importOpen, setImportOpen] = useState(false)
   const [keptOpen, setKeptOpen] = useState(false)
   const [reviewTarget, setReviewTarget] = useState<DetectedSubscription | null>(null)
@@ -229,7 +234,7 @@ export function Premium() {
   const monthlyTotal = useMemo(() => detected.reduce((sum, d) => sum + d.monthlyAmount, 0), [detected])
   const annualTotal = monthlyTotal * 12
 
-  if (history.loading) {
+  if (history.loading || income.loading) {
     return <PageSkeleton cards={4} />
   }
 
@@ -334,6 +339,18 @@ export function Premium() {
           )}
         </div>
       )}
+
+      {/* Shows regardless of whether any subscription was detected above —
+          it's a broader "all spending this month" analysis, not scoped to
+          subscriptions, so an empty subscription list above shouldn't hide
+          it. */}
+      <div className="mt-6">
+        <CategoryBenchmarkCard
+          historyRecords={history.records}
+          monthlyIncome={income.monthlyIncome}
+          onOpenImport={() => setImportOpen(true)}
+        />
+      </div>
 
       <ImportTransactionsModal open={importOpen} onClose={() => setImportOpen(false)} />
 

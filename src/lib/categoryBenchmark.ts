@@ -82,10 +82,13 @@ export interface CategoryBenchmarkResult {
 // filled from the same recurring-charge detector that powers the Premium
 // page (detectRecurringCharges) rather than the `category` field — the app
 // has no native "Abonnements" category, and a subscription can land under
-// Loisirs, Divers, or whatever the user renamed a category to. A
-// transaction recognized as a still-active subscription this month is
-// counted under "abonnements" and nowhere else, so the 6 buckets never
-// double-count a single transaction.
+// Loisirs, Divers, or whatever the user renamed a category to. Only a
+// transaction that would otherwise fall into the catch-all "autre" bucket
+// AND is recognized as a still-active subscription this month gets counted
+// under "abonnements" — see the `bucket !== 'autre'` guard below for why
+// rent, groceries, dining out and transport are never eligible, even when
+// they're perfectly regular. Every transaction lands in exactly one bucket,
+// so the 6 buckets never double-count.
 export function computeCategoryBenchmarks(
   records: ExpenseRecord[],
   monthlyIncome: number,
@@ -116,13 +119,28 @@ export function computeCategoryBenchmarks(
   }
 
   for (const r of thisMonth) {
+    const bucket = mapToBucket(r.category)
+    // detectRecurringCharges only looks at merchant + amount + cadence — it
+    // has no idea "Loyer" means rent, not a subscription, so a rent payment
+    // (same amount, every ~30 days) passes its checks exactly like Netflix
+    // does. Only reclassify a transaction into "abonnements" when it would
+    // otherwise land in the catch-all "autre" bucket — a charge already
+    // identified as rent, groceries, dining out or transport is never a
+    // subscription, no matter how regular it is. Without this guard, rent
+    // alone could swallow the entire "abonnements" total (this was a real
+    // bug, not a hypothetical: a $2 500/month rent charge with no other
+    // variation reads as a textbook "recurring charge").
+    if (bucket !== 'autre') {
+      totals[bucket] += r.amount
+      continue
+    }
     const merchantKey = normalizeMerchant(r.description)
     const isSubscriptionCharge = activeSubscriptions.some((s) => {
       if (merchantKeyFromSubscriptionKey(s.key) !== merchantKey) return false
       const tolerance = Math.max(AMOUNT_TOLERANCE_MIN_DOLLARS, s.monthlyAmount * AMOUNT_TOLERANCE_RATIO)
       return Math.abs(r.amount - s.monthlyAmount) <= tolerance
     })
-    totals[isSubscriptionCharge ? 'abonnements' : mapToBucket(r.category)] += r.amount
+    totals[isSubscriptionCharge ? 'abonnements' : 'autre'] += r.amount
   }
 
   const totalSpent = BENCHMARK_CATEGORY_ORDER.reduce((sum, category) => sum + totals[category], 0)

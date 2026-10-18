@@ -234,30 +234,6 @@ export interface StatistiquesContent {
     emptyGoalLink: string
     emptyPost: string
   }
-  categoryBenchmark: {
-    title: string
-    hint: string
-    disclaimer: string
-    importButton: string
-    freeRemaining: (n: number) => string
-    upgradeTitle: string
-    upgradeUsedLimit: (limit: number) => string
-    upgradeGeneric: string
-    totalLine: (pct: number) => string
-    noIncome: string
-    empty: {
-      title: string
-      description: string
-    }
-    categoryLabels: Record<'loyer' | 'epicerie' | 'restaurants' | 'transport' | 'abonnements' | 'autre', string>
-    possessiveLabels: Record<'loyer' | 'epicerie' | 'restaurants' | 'transport' | 'abonnements' | 'autre', string>
-    amountAndPct: (amount: string, pct: number) => string
-    amountOnly: (amount: string) => string
-    benchmarkLabel: (pct: number) => string
-    reductionLabel: (pct: number) => string
-    reductionSliderAria: (categoryLabel: string) => string
-    reductionSentence: (possessiveLabel: string, reductionPct: number, monthly: string, annual: string) => string
-  }
 }
 
 export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
@@ -527,46 +503,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
       emptyGoalLink: "objectif d'épargne",
       emptyPost: ' pour voir tes premiers conseils personnalisés ici.',
     },
-    categoryBenchmark: {
-      title: 'Dépenses par catégorie vs repères',
-      hint: 'Basé sur tes transactions importées et ton revenu mensuel.',
-      disclaimer: 'Les repères sont des repères généraux, pas des conseils financiers.',
-      importButton: 'Importer un relevé',
-      freeRemaining: (n) => `Il te reste ${n} import${n > 1 ? 's' : ''} gratuit${n > 1 ? 's' : ''} ce mois-ci.`,
-      upgradeTitle: 'Import de relevé — fonctionnalité Standard',
-      upgradeUsedLimit: (limit) => `Tu as utilisé tes ${limit} imports gratuits. Passe à Standard pour continuer.`,
-      upgradeGeneric: "L'import de relevé n'est pas inclus dans ton plan actuel.",
-      totalLine: (pct) => `Tes dépenses représentent ${pct.toFixed(0)} % de ton revenu ce mois-ci.`,
-      noIncome: 'Ajoute ton revenu mensuel dans Paramètres pour voir cette analyse.',
-      empty: {
-        title: 'Importe un relevé pour voir cette analyse',
-        description:
-          'Dès que tu as importé un relevé bancaire (CSV ou Excel), tes dépenses par catégorie apparaissent ici, comparées à des repères généraux.',
-      },
-      categoryLabels: {
-        loyer: 'Loyer',
-        epicerie: 'Épicerie',
-        restaurants: 'Restaurants',
-        transport: 'Transport',
-        abonnements: 'Abonnements',
-        autre: 'Autre',
-      },
-      possessiveLabels: {
-        loyer: 'ton loyer',
-        epicerie: 'ton épicerie',
-        restaurants: 'tes restaurants',
-        transport: 'ton transport',
-        abonnements: 'tes abonnements',
-        autre: 'tes autres dépenses',
-      },
-      amountAndPct: (amount, pct) => `${amount} · ${pct.toFixed(0)} % du revenu`,
-      amountOnly: (amount) => amount,
-      benchmarkLabel: (pct) => `Repère : ${pct} % du revenu`,
-      reductionLabel: (pct) => `Réduction simulée : ${pct} %`,
-      reductionSliderAria: (categoryLabel) => `Pourcentage de réduction simulé pour ${categoryLabel}`,
-      reductionSentence: (possessiveLabel, reductionPct, monthly, annual) =>
-        `Si tu réduis ${possessiveLabel} de ${reductionPct} %, tu gardes environ ${monthly} par mois, soit ${annual} par année.`,
-    },
   },
   en: {
     page: {
@@ -833,46 +769,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
       emptyAnd: ' or a ',
       emptyGoalLink: 'savings goal',
       emptyPost: ' to see your first personalized tips here.',
-    },
-    categoryBenchmark: {
-      title: 'Spending by category vs. reference points',
-      hint: 'Based on your imported transactions and your monthly income.',
-      disclaimer: 'These are general reference points, not financial advice.',
-      importButton: 'Import a statement',
-      freeRemaining: (n) => `You have ${n} free import${n > 1 ? 's' : ''} left this month.`,
-      upgradeTitle: 'Statement import — Standard feature',
-      upgradeUsedLimit: (limit) => `You've used your ${limit} free imports. Upgrade to Standard to continue.`,
-      upgradeGeneric: "Statement import isn't included in your current plan.",
-      totalLine: (pct) => `Your spending is ${pct.toFixed(0)}% of your income this month.`,
-      noIncome: 'Add your monthly income in Settings to see this analysis.',
-      empty: {
-        title: 'Import a statement to see this analysis',
-        description:
-          'Once you import a bank statement (CSV or Excel), your spending by category shows up here, compared to general reference points.',
-      },
-      categoryLabels: {
-        loyer: 'Rent',
-        epicerie: 'Groceries',
-        restaurants: 'Restaurants',
-        transport: 'Transport',
-        abonnements: 'Subscriptions',
-        autre: 'Other',
-      },
-      possessiveLabels: {
-        loyer: 'your rent',
-        epicerie: 'your groceries',
-        restaurants: 'your restaurant spending',
-        transport: 'your transport spending',
-        abonnements: 'your subscriptions',
-        autre: 'your other expenses',
-      },
-      amountAndPct: (amount, pct) => `${amount} · ${pct.toFixed(0)}% of income`,
-      amountOnly: (amount) => amount,
-      benchmarkLabel: (pct) => `Reference: ${pct}% of income`,
-      reductionLabel: (pct) => `Simulated cut: ${pct}%`,
-      reductionSliderAria: (categoryLabel) => `Simulated reduction percentage for ${categoryLabel}`,
-      reductionSentence: (possessiveLabel, reductionPct, monthly, annual) =>
-        `If you cut ${possessiveLabel} by ${reductionPct}%, you'd keep about ${monthly} a month, or ${annual} a year.`,
     },
   },
 }

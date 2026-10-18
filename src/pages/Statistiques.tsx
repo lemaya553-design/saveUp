@@ -21,7 +21,6 @@ import { AddExpenseModal } from '../components/AddExpenseModal'
 import { DataExportCard } from '../components/DataExportCard'
 import { RecompensesTab } from '../components/RecompensesTab'
 import { StatistiquesStatCards } from '../components/StatistiquesStatCards'
-import { CategoryBenchmarkCard } from '../components/CategoryBenchmarkCard'
 import { UpgradePrompt } from '../components/UpgradePrompt'
 import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { useExpenses } from '../hooks/useExpenses'
@@ -296,12 +295,6 @@ export function Statistiques() {
             withinBudgetCount={withinBudgetCount}
             budgetTrackedCount={budgetVsActual.length}
             formatMoney={formatMoney}
-          />
-
-          <CategoryBenchmarkCard
-            historyRecords={history.records}
-            monthlyIncome={income.monthlyIncome}
-            selectedMonth={selectedMonth}
           />
 
           <div className="grid gap-6 lg:grid-cols-2">
