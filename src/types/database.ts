@@ -234,6 +234,36 @@ export interface Database {
         }
         Relationships: []
       }
+      calendar_notes: {
+        Row: {
+          id: string
+          user_id: string
+          note_date: string
+          rating: number
+          description: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          note_date: string
+          rating: number
+          description?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          note_date?: string
+          rating?: number
+          description?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           user_id: string

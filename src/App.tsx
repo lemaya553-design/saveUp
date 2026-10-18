@@ -39,6 +39,8 @@ const Budget = lazy(() => import('./pages/Budget').then((m) => ({ default: m.Bud
 // Budget.tsx does — code-split for the same reason.
 const Premium = lazy(() => import('./pages/Premium').then((m) => ({ default: m.Premium })))
 
+const Calendrier = lazy(() => import('./pages/Calendrier').then((m) => ({ default: m.Calendrier })))
+
 // Public, standalone, meant to be shared and opened cold on a phone —
 // code-split so nobody visiting the rest of the app pays for it, and it
 // pays for nothing else in return.
@@ -101,6 +103,15 @@ function App() {
                       />
                       {/* Récompenses merged into Statistiques as a tab — keep old links/bookmarks working. */}
                       <Route path="recompenses" element={<Navigate to="/statistiques/recompenses" replace />} />
+
+                      <Route
+                        path="calendrier"
+                        element={
+                          <Suspense fallback={<PageSkeleton cards={1} />}>
+                            <Calendrier />
+                          </Suspense>
+                        }
+                      />
 
                       <Route
                         path="premium"
