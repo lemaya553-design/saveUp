@@ -62,6 +62,9 @@ export interface CommonContent {
     parametres: string
     signOut: string
     settingsAriaLabel: string
+    guestBadge: string
+    guestCreateAccount: string
+    exitGuest: string
   }
   footer: {
     pricing: string
@@ -192,6 +195,9 @@ export const COMMON: Record<Lang, CommonContent> = {
       parametres: 'Paramètres',
       signOut: 'Déconnexion',
       settingsAriaLabel: 'Paramètres et personnalisation',
+      guestBadge: 'Mode essai',
+      guestCreateAccount: 'Créer mon compte',
+      exitGuest: "Quitter le mode essai",
     },
     footer: {
       pricing: 'Tarifs',
@@ -320,6 +326,9 @@ export const COMMON: Record<Lang, CommonContent> = {
       parametres: 'Settings',
       signOut: 'Sign out',
       settingsAriaLabel: 'Settings and personalization',
+      guestBadge: 'Guest mode',
+      guestCreateAccount: 'Create my account',
+      exitGuest: 'Exit guest mode',
     },
     footer: {
       pricing: 'Pricing',

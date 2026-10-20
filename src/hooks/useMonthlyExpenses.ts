@@ -2,8 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { getMonthProgress, getMonthRange, getPreviousMonthRange } from '../lib/format'
 import { onExpensesChanged } from '../lib/events'
+import { useGuestMode } from './useGuestMode'
+import { getGuestExpenses } from '../lib/guestStore'
 
 export function useMonthlyExpenses() {
+  const guest = useGuestMode()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [spentThisMonth, setSpentThisMonth] = useState(0)
@@ -13,12 +16,27 @@ export function useMonthlyExpenses() {
   const hasLoadedOnce = useRef(false)
 
   const load = useCallback(async () => {
-    if (!hasLoadedOnce.current) setLoading(true)
-    setError(null)
-
     const now = new Date()
     const thisMonth = getMonthRange(now)
     const lastMonth = getPreviousMonthRange(now)
+
+    if (guest.active) {
+      let thisSum = 0
+      let lastSum = 0
+      for (const row of getGuestExpenses()) {
+        const spentAt = new Date(row.spent_at)
+        if (spentAt >= thisMonth.start) thisSum += row.amount
+        else if (spentAt >= lastMonth.start) lastSum += row.amount
+      }
+      setSpentThisMonth(thisSum)
+      setSpentLastMonth(lastSum)
+      setLoading(false)
+      hasLoadedOnce.current = true
+      return
+    }
+
+    if (!hasLoadedOnce.current) setLoading(true)
+    setError(null)
 
     const { data, error: fetchError } = await supabase
       .from('expenses')
@@ -44,7 +62,7 @@ export function useMonthlyExpenses() {
     setSpentLastMonth(lastSum)
     setLoading(false)
     hasLoadedOnce.current = true
-  }, [])
+  }, [guest.active])
 
   useEffect(() => {
     load()

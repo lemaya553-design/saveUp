@@ -1,4 +1,4 @@
-import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js'
+import { getCountries, getCountryCallingCode, parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js'
 
 export interface DialCountry {
   iso: CountryCode
@@ -6,21 +6,29 @@ export interface DialCountry {
   label: { fr: string; en: string }
 }
 
-// Deliberately short — SaveUp is a CAD app with a French/English Quebec
-// audience, not a global one. Canada first (the default), United States
-// next (shares NANP's "+1" with Canada but is a distinct ISO country for
-// libphonenumber-js's numbering-plan validation), then a handful of other
-// Francophone-relevant countries. Not meant to be exhaustive.
-export const DIAL_COUNTRIES: DialCountry[] = [
-  { iso: 'CA', dial: '+1', label: { fr: 'Canada', en: 'Canada' } },
-  { iso: 'US', dial: '+1', label: { fr: 'États-Unis', en: 'United States' } },
-  { iso: 'FR', dial: '+33', label: { fr: 'France', en: 'France' } },
-  { iso: 'BE', dial: '+32', label: { fr: 'Belgique', en: 'Belgium' } },
-  { iso: 'CH', dial: '+41', label: { fr: 'Suisse', en: 'Switzerland' } },
-  { iso: 'GB', dial: '+44', label: { fr: 'Royaume-Uni', en: 'United Kingdom' } },
-]
-
 export const DEFAULT_DIAL_COUNTRY: CountryCode = 'CA'
+
+const regionNameFr = new Intl.DisplayNames(['fr'], { type: 'region' })
+const regionNameEn = new Intl.DisplayNames(['en'], { type: 'region' })
+
+// Every country/territory libphonenumber-js has a numbering plan for (~245)
+// — built from its own metadata rather than a hand-maintained list, so it
+// can never drift out of sync with what toE164 below actually validates.
+// Localized names come from the runtime's own Intl.DisplayNames, not a
+// second hand-translated list to keep up to date. Canada sorts first
+// (SaveUp's primary market, and the default everywhere a country picker
+// appears); everything else is alphabetical by its French name.
+export const DIAL_COUNTRIES: DialCountry[] = getCountries()
+  .map((iso) => ({
+    iso,
+    dial: `+${getCountryCallingCode(iso)}`,
+    label: { fr: regionNameFr.of(iso) ?? iso, en: regionNameEn.of(iso) ?? iso },
+  }))
+  .sort((a, b) => {
+    if (a.iso === DEFAULT_DIAL_COUNTRY) return -1
+    if (b.iso === DEFAULT_DIAL_COUNTRY) return 1
+    return a.label.fr.localeCompare(b.label.fr, 'fr')
+  })
 
 // Validates `nationalNumber` against `country`'s real numbering plan (not
 // just a digit-count check — libphonenumber-js knows which area

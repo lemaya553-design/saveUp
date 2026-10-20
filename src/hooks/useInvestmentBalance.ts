@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
 
 // The real, tracked amount currently invested — separate from the
 // Investissement page's projection calculator, which is a hypothetical,
@@ -10,12 +11,19 @@ import { useAuth } from './useAuth'
 // no row yet.
 export function useInvestmentBalance() {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentAmount, setCurrentAmountState] = useState(0)
 
   useEffect(() => {
+    // Not part of the sample dataset — a guest just sees $0 invested,
+    // same as a brand-new real account that hasn't touched this page yet.
+    if (guest.active) {
+      setLoading(false)
+      return
+    }
     if (!userId) return
     let cancelled = false
 
@@ -39,7 +47,7 @@ export function useInvestmentBalance() {
     return () => {
       cancelled = true
     }
-  }, [userId])
+  }, [userId, guest.active])
 
   const setCurrentAmount = useCallback(
     async (value: number) => {

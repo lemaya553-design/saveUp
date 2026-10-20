@@ -50,6 +50,10 @@ export interface MiscContent {
     purposeHeading: string
     actionsHeading: string
   }
+  guestModeBanner: {
+    message: string
+    cta: string
+  }
 }
 
 export const MISC: Record<Lang, MiscContent> = {
@@ -99,6 +103,10 @@ export const MISC: Record<Lang, MiscContent> = {
       purposeHeading: 'À quoi sert cette page',
       actionsHeading: "Comment l'utiliser",
     },
+    guestModeBanner: {
+      message: 'Tu explores en mode essai — rien n’est encore sauvegardé.',
+      cta: 'Créer mon compte',
+    },
   },
   en: {
     quickAddFab: {
@@ -145,6 +153,10 @@ export const MISC: Record<Lang, MiscContent> = {
       ariaLabel: (title) => `Help: ${title}`,
       purposeHeading: 'What this page is for',
       actionsHeading: 'How to use it',
+    },
+    guestModeBanner: {
+      message: 'You’re trying it out as a guest — nothing is saved yet.',
+      cta: 'Create my account',
     },
   },
 }

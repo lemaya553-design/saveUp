@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
+import { getGuestIncome, setGuestIncome } from '../lib/guestStore'
 
 // One row per user (primary key user_id) — RLS scopes select/upsert to the
 // signed-in user, so no manual .eq('user_id', ...) filter is needed on read.
 // maybeSingle() (not single()) because a brand-new user has no row yet.
 export function useIncome() {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -18,6 +21,13 @@ export function useIncome() {
   const [hasIncomeRecord, setHasIncomeRecord] = useState(false)
 
   useEffect(() => {
+    if (guest.active) {
+      const g = getGuestIncome()
+      setMonthlyIncomeState(g.monthlyIncome)
+      setHasIncomeRecord(g.hasIncomeRecord)
+      setLoading(false)
+      return
+    }
     if (!userId) return
     let cancelled = false
 
@@ -42,10 +52,16 @@ export function useIncome() {
     return () => {
       cancelled = true
     }
-  }, [userId])
+  }, [userId, guest.active])
 
   const setMonthlyIncome = useCallback(
     async (value: number) => {
+      if (guest.active) {
+        setGuestIncome(value)
+        setMonthlyIncomeState(value)
+        setHasIncomeRecord(true)
+        return
+      }
       if (!userId) return
       setMonthlyIncomeState(value)
       setHasIncomeRecord(true)
@@ -57,7 +73,7 @@ export function useIncome() {
         )
       if (upsertError) setError(upsertError.message)
     },
-    [userId],
+    [userId, guest.active],
   )
 
   return { loading, error, monthlyIncome, hasIncomeRecord, setMonthlyIncome }

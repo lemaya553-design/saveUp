@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useGuestMode } from './useGuestMode'
+import { getGuestContributions } from '../lib/guestStore'
 
 export interface Contribution {
   id: string
@@ -14,11 +16,20 @@ export interface Contribution {
 // contributions); Statistiques passes a wider window to match its 6-month
 // category-chart month picker.
 export function useSavingsContributions(daysBack = 90) {
+  const guest = useGuestMode()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [contributions, setContributions] = useState<Contribution[]>([])
 
   useEffect(() => {
+    if (guest.active) {
+      const since = new Date()
+      since.setDate(since.getDate() - daysBack)
+      setContributions(getGuestContributions().filter((c) => new Date(c.created_at) >= since))
+      setLoading(false)
+      return
+    }
+
     let cancelled = false
 
     async function load() {
@@ -47,7 +58,7 @@ export function useSavingsContributions(daysBack = 90) {
     return () => {
       cancelled = true
     }
-  }, [daysBack])
+  }, [daysBack, guest.active])
 
   return { loading, error, contributions }
 }

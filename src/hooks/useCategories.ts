@@ -3,9 +3,19 @@ import { supabase } from '../lib/supabase'
 import { emitCategoriesChanged, emitExpensesChanged, onCategoriesChanged } from '../lib/events'
 import { FALLBACK_CATEGORY } from '../lib/categories'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
 import { useLanguage } from './useLanguage'
 import { COMMON } from '../lib/i18n/common'
 import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
+import {
+  addGuestCategory,
+  getGuestCategories,
+  getGuestExpenses,
+  getGuestFixedExpenses,
+  removeGuestCategory,
+  renameGuestCategory,
+  setGuestCategoryBudget,
+} from '../lib/guestStore'
 
 export interface Category {
   id: string
@@ -29,6 +39,7 @@ function sortCategories(categories: Category[]): Category[] {
 
 export function useCategories() {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const { lang } = useLanguage()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
@@ -40,6 +51,12 @@ export function useCategories() {
   const hasLoadedOnce = useRef(false)
 
   const load = useCallback(async () => {
+    if (guest.active) {
+      setCategories(sortCategories(getGuestCategories()))
+      setLoading(false)
+      hasLoadedOnce.current = true
+      return
+    }
     if (!userId) return
     if (!hasLoadedOnce.current) setLoading(true)
     setError(null)
@@ -51,7 +68,7 @@ export function useCategories() {
     }
     setLoading(false)
     hasLoadedOnce.current = true
-  }, [userId])
+  }, [userId, guest.active])
 
   useEffect(() => {
     load()
@@ -65,7 +82,13 @@ export function useCategories() {
   const addCategory = useCallback(
     async (name: string): Promise<Category | null> => {
       const trimmed = name.trim()
-      if (!trimmed || !userId) return null
+      if (!trimmed) return null
+      if (guest.active) {
+        const created = addGuestCategory(trimmed)
+        setCategories((prev) => sortCategories([...prev, created]))
+        return created
+      }
+      if (!userId) return null
       const { data, error: insertError } = await supabase
         .from('categories')
         .insert({ user_id: userId, name: trimmed })
@@ -80,18 +103,25 @@ export function useCategories() {
       emitCategoriesChanged()
       return created
     },
-    [userId, lang],
+    [userId, lang, guest.active],
   )
 
-  const setCategoryBudget = useCallback(async (id: string, monthlyBudget: number | null) => {
-    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, monthlyBudget } : c)))
-    const { error: updateError } = await supabase
-      .from('categories')
-      .update({ monthly_budget: monthlyBudget })
-      .eq('id', id)
-    if (updateError) setError(updateError.message)
-    emitCategoriesChanged()
-  }, [])
+  const setCategoryBudget = useCallback(
+    async (id: string, monthlyBudget: number | null) => {
+      setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, monthlyBudget } : c)))
+      if (guest.active) {
+        setGuestCategoryBudget(id, monthlyBudget)
+        return
+      }
+      const { error: updateError } = await supabase
+        .from('categories')
+        .update({ monthly_budget: monthlyBudget })
+        .eq('id', id)
+      if (updateError) setError(updateError.message)
+      emitCategoriesChanged()
+    },
+    [guest.active],
+  )
 
   // Renaming updates the category row AND every fixed_expenses/expenses
   // row that references the old name by text — there's no foreign key
@@ -103,6 +133,11 @@ export function useCategories() {
       if (!category || !trimmed || trimmed === category.name) return
 
       setCategories((prev) => sortCategories(prev.map((c) => (c.id === id ? { ...c, name: trimmed } : c))))
+
+      if (guest.active) {
+        renameGuestCategory(id, trimmed)
+        return
+      }
 
       const { error: updateError } = await supabase
         .from('categories')
@@ -120,16 +155,25 @@ export function useCategories() {
       emitCategoriesChanged()
       emitExpensesChanged()
     },
-    [categories],
+    [categories, guest.active],
   )
 
-  const getUsageCount = useCallback(async (name: string): Promise<number> => {
-    const [fixedRes, expensesRes] = await Promise.all([
-      supabase.from('fixed_expenses').select('id', { count: 'exact', head: true }).eq('category', name),
-      supabase.from('expenses').select('id', { count: 'exact', head: true }).eq('category', name),
-    ])
-    return (fixedRes.count ?? 0) + (expensesRes.count ?? 0)
-  }, [])
+  const getUsageCount = useCallback(
+    async (name: string): Promise<number> => {
+      if (guest.active) {
+        return (
+          getGuestFixedExpenses().filter((f) => f.category === name).length +
+          getGuestExpenses().filter((e) => e.category === name).length
+        )
+      }
+      const [fixedRes, expensesRes] = await Promise.all([
+        supabase.from('fixed_expenses').select('id', { count: 'exact', head: true }).eq('category', name),
+        supabase.from('expenses').select('id', { count: 'exact', head: true }).eq('category', name),
+      ])
+      return (fixedRes.count ?? 0) + (expensesRes.count ?? 0)
+    },
+    [guest.active],
+  )
 
   // Deleting a category in use requires `reassignTo` — every expense row
   // using it gets moved there first (normally "Autre") so nothing is left
@@ -140,6 +184,12 @@ export function useCategories() {
       if (!category) return
       if (category.name === FALLBACK_CATEGORY) {
         setError(HOOK_ERRORS[lang].categories.cannotDeleteFallback(FALLBACK_CATEGORY))
+        return
+      }
+
+      if (guest.active) {
+        setCategories((prev) => prev.filter((c) => c.id !== id))
+        removeGuestCategory(id, opts?.reassignTo)
         return
       }
 
@@ -159,7 +209,7 @@ export function useCategories() {
       emitCategoriesChanged()
       if (opts?.reassignTo) emitExpensesChanged()
     },
-    [categories, lang],
+    [categories, lang, guest.active],
   )
 
   return {

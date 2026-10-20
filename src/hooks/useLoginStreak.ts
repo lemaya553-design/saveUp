@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { toDateString } from '../lib/format'
 import { computeStreak } from '../lib/streak'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
 
 const WINDOW_DAYS = 60
 
@@ -14,12 +15,19 @@ const WINDOW_DAYS = 60
 // Récompenses page that happens to display it.
 export function useLoginStreak() {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [streak, setStreak] = useState(0)
 
   useEffect(() => {
+    // Nothing to record for a guest (no real account to attach a visit
+    // to) — stays at 0, same as a real account's first-ever day.
+    if (guest.active) {
+      setLoading(false)
+      return
+    }
     if (!userId) return
     const uid = userId
     let cancelled = false
@@ -59,7 +67,7 @@ export function useLoginStreak() {
     return () => {
       cancelled = true
     }
-  }, [userId])
+  }, [userId, guest.active])
 
   return { loading, error, streak }
 }

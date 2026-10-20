@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
 import { usePreferences } from '../hooks/usePreferences'
-import { DIAL_COUNTRIES, DEFAULT_DIAL_COUNTRY, toE164 } from '../lib/phone'
+import { CountrySelect } from '../components/CountrySelect'
+import { DEFAULT_DIAL_COUNTRY, toE164 } from '../lib/phone'
 import { WHATSAPP_OPT_IN } from '../lib/i18n/whatsappOptIn'
 import type { CountryCode } from 'libphonenumber-js'
 
@@ -26,6 +27,10 @@ function PhoneIcon({ className }: { className: string }) {
 // Between signup and the onboarding quiz — gated by Dashboard.tsx's
 // needsWhatsapp check (whatsappNumber null) and only ever left behind once
 // a number is actually saved, so a returning user never sees this again.
+// The number itself is optional (see "Essayer sans compte" audit — this
+// used to be a hard block with no way past it): leaving the field blank
+// and continuing (or the explicit skip link) moves on with nothing saved,
+// exactly like never having been asked.
 // Styled like Connexion.tsx/Onboarding.tsx's literal black/orange/white
 // identity (not the app's theme-aware chrome) since it sits in that same
 // pre-dashboard flow.
@@ -41,9 +46,25 @@ export function WhatsappOptIn() {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
+  const hasPhoneDraft = phoneDraft.trim().length > 0
+  // A number only means anything with consent attached to it — no number
+  // at all means there's nothing to consent to, so the checkbox doesn't
+  // block continuing in that case.
+  const canContinue = !hasPhoneDraft || consent
+
+  function proceed() {
+    navigate('/onboarding', { replace: true })
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!consent || submitting) return
+    if (submitting) return
+
+    if (!hasPhoneDraft) {
+      proceed()
+      return
+    }
+    if (!consent) return
 
     const e164 = toE164(phoneDraft, country)
     if (!e164) {
@@ -54,7 +75,7 @@ export function WhatsappOptIn() {
     setError(null)
     setSubmitting(true)
     preferences.setWhatsappOptIn(e164)
-    navigate('/onboarding', { replace: true })
+    proceed()
   }
 
   return (
@@ -86,61 +107,67 @@ export function WhatsappOptIn() {
         <p className="mt-2 text-white/60">{t.subtitle}</p>
 
         <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
-          <div className="flex gap-2">
-            <select
-              value={country}
-              onChange={(e) => setCountry(e.target.value as CountryCode)}
-              aria-label={t.countryLabel}
-              className={`${fieldClass} w-[7.5rem] shrink-0`}
-            >
-              {DIAL_COUNTRIES.map((c) => (
-                <option key={c.iso} value={c.iso} className="bg-[#1a1a1a]">
-                  {c.dial} {c.label[lang]}
-                </option>
-              ))}
-            </select>
+          <div>
             <label className="sr-only" htmlFor="whatsapp-number">
               {t.phoneLabel}
             </label>
-            <input
-              id="whatsapp-number"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              autoFocus
-              value={phoneDraft}
-              onChange={(e) => setPhoneDraft(e.target.value)}
-              placeholder={t.phonePlaceholder}
-              // Keeps the number out of Clarity's session-replay recordings
-              // — see https://learn.microsoft.com/clarity/setup-and-installation/masking.
-              data-clarity-mask="true"
-              className={`${fieldClass} min-w-0 flex-1`}
-            />
+            <div className="flex gap-2">
+              <CountrySelect
+                value={country}
+                onChange={setCountry}
+                label={t.countryLabel}
+                searchPlaceholder={t.countrySearchPlaceholder}
+                lang={lang}
+              />
+              <input
+                id="whatsapp-number"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                autoFocus
+                value={phoneDraft}
+                onChange={(e) => setPhoneDraft(e.target.value)}
+                placeholder={t.phonePlaceholder}
+                // Keeps the number out of Clarity's session-replay recordings
+                // — see https://learn.microsoft.com/clarity/setup-and-installation/masking.
+                data-clarity-mask="true"
+                className={`${fieldClass} min-w-0 flex-1`}
+              />
+            </div>
+            <p className="mt-1.5 text-xs text-white/50">{t.privacyNote}</p>
           </div>
 
-          <p className="text-xs text-white/50">{t.privacyNote}</p>
-
-          <label className="flex items-start gap-2.5 text-sm text-white/80">
-            <input
-              type="checkbox"
-              checked={consent}
-              onChange={(e) => setConsent(e.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0"
-              style={{ accentColor: ORANGE }}
-            />
-            {t.consentLabel}
-          </label>
+          {hasPhoneDraft && (
+            <label className="flex items-start gap-2.5 text-sm text-white/80">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0"
+                style={{ accentColor: ORANGE }}
+              />
+              {t.consentLabel}
+            </label>
+          )}
 
           {error && <p className="text-sm text-red-400">{error}</p>}
           {preferences.error && <p className="text-sm text-red-400">{t.errors.saveFailed}</p>}
 
           <button
             type="submit"
-            disabled={!consent || submitting}
+            disabled={!canContinue || submitting}
             className="mt-2 rounded-xl px-4 py-3 text-center font-semibold text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
             style={{ backgroundColor: ORANGE }}
           >
             {submitting ? t.submitting : t.continueButton}
+          </button>
+
+          <button
+            type="button"
+            onClick={proceed}
+            className="text-center text-sm text-white/50 transition-colors hover:text-white"
+          >
+            {t.skipButton}
           </button>
         </form>
       </div>

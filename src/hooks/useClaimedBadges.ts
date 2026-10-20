@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
 
 // A tier's underlying achievement is always computed live (see
 // lib/rewards.ts getUnlockedTiers) — this only tracks the separate,
@@ -8,12 +9,20 @@ import { useAuth } from './useAuth'
 // on later visits instead of showing the claim button again.
 export function useClaimedBadges() {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [claimedIds, setClaimedIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
+    // A guest hasn't claimed anything — badges unlock live from real
+    // progress (lib/rewards.ts), this hook only tracks the separate
+    // "clicked reveal" action, which has no guest-mode equivalent yet.
+    if (guest.active) {
+      setLoading(false)
+      return
+    }
     if (!userId) return
     let cancelled = false
 
@@ -36,7 +45,7 @@ export function useClaimedBadges() {
     return () => {
       cancelled = true
     }
-  }, [userId])
+  }, [userId, guest.active])
 
   const claim = useCallback(
     async (tierId: string): Promise<boolean> => {

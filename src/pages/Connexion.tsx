@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useGuestMode } from '../hooks/useGuestMode'
 import { useLanguage } from '../hooks/useLanguage'
 import { CONNEXION } from '../lib/i18n/connexion'
 import type { Lang } from '../lib/i18n/language'
@@ -104,6 +105,7 @@ export function Connexion() {
     updatePassword,
     resendConfirmationEmail,
   } = useAuth()
+  const guestMode = useGuestMode()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from ?? '/dashboard'
@@ -129,10 +131,6 @@ export function Connexion() {
   const [noAccountHint, setNoAccountHint] = useState(false)
   const [confirmationSent, setConfirmationSent] = useState(false)
   const [resetLinkSent, setResetLinkSent] = useState(false)
-  // Google is the recommended path (fewer stuck signups — see the "ou
-  // utiliser un courriel" link below) — the email/password form stays
-  // collapsed until the visitor deliberately asks for it.
-  const [showEmailForm, setShowEmailForm] = useState(false)
   const [resending, setResending] = useState(false)
   const [resendMessage, setResendMessage] = useState<string | null>(null)
 
@@ -215,6 +213,10 @@ export function Connexion() {
       setError(result.error)
       return
     }
+    // Only migrates the sample goal (if any) once the account creation
+    // itself is confirmed to have worked — see lib/guestStore.ts. If this
+    // was never a guest session, exit() with nothing pending is a no-op.
+    if (guestMode.active) guestMode.exit(true)
     if (result.needsEmailConfirmation) {
       setConfirmationSent(true)
       return
@@ -233,7 +235,17 @@ export function Connexion() {
     if (result.error) {
       setError(result.error)
       setGoogleSubmitting(false)
+      return
     }
+    if (guestMode.active) guestMode.exit(true)
+  }
+
+  // "Essayer sans compte" — seeds the sample data (lib/guestStore.ts) and
+  // drops straight into the real Dashboard; RequireAuth lets guest.active
+  // through with no Supabase session at all.
+  function handleTryGuest() {
+    guestMode.activate()
+    navigate('/dashboard', { replace: true })
   }
 
   async function handleForgotPassword(e: React.FormEvent) {
@@ -515,85 +527,103 @@ export function Connexion() {
                 </div>
               )}
 
-              {!showEmailForm ? (
+              {/* Email/password is always visible now, right alongside
+                  Google — not a second-class option hidden behind a link.
+                  Google stays first/bigger above since it's the faster
+                  path for most people, but this is a real, equally-usable
+                  alternative, never a dead end. */}
+              <div className="my-6 flex items-center gap-3 text-xs text-white/40">
+                <div className="h-px flex-1 bg-white/15" />
+                {t.signInUp.orWithEmail}
+                <div className="h-px flex-1 bg-white/15" />
+              </div>
+
+              <form onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} className="flex flex-col gap-3">
+                <label className="flex flex-col gap-1 text-sm text-white/60">
+                  {t.common.emailLabel}
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t.common.emailPlaceholder}
+                    className={inputClasses}
+                  />
+                  <span className="text-xs font-normal text-white/40">{t.signInUp.emailHint}</span>
+                </label>
+
+                <label className="flex flex-col gap-1 text-sm text-white/60">
+                  <span className="flex items-center justify-between">
+                    {t.common.passwordLabel}
+                    {mode === 'signin' && (
+                      <button
+                        type="button"
+                        onClick={() => switchMode('forgot')}
+                        className="text-xs font-normal text-[#ff6b00] hover:text-[#ff6b00]/80"
+                      >
+                        {t.signInUp.forgotPasswordLink}
+                      </button>
+                    )}
+                  </span>
+                  <input
+                    type="password"
+                    autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={inputClasses}
+                  />
+                  <span className="text-xs font-normal text-white/40">{t.signInUp.passwordHint}</span>
+                </label>
+
+                {mode === 'signup' && (
+                  <label className="flex flex-col gap-1 text-sm text-white/60">
+                    {t.common.confirmPasswordLabel}
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className={inputClasses}
+                    />
+                  </label>
+                )}
+
                 <button
-                  type="button"
-                  onClick={() => setShowEmailForm(true)}
-                  className="mx-auto mt-5 block text-center text-sm text-white/50 hover:text-white"
+                  type="submit"
+                  disabled={submitting}
+                  className="mt-2 w-full rounded-lg bg-[#ff6b00] px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
                 >
-                  {t.signInUp.useEmailInstead}
+                  {submitting
+                    ? t.common.submitting
+                    : mode === 'signin'
+                      ? t.signInUp.signInSubmit
+                      : t.signInUp.signUpSubmit}
                 </button>
-              ) : (
+              </form>
+
+              {mode === 'signup' && (
                 <>
                   <div className="my-6 flex items-center gap-3 text-xs text-white/40">
                     <div className="h-px flex-1 bg-white/15" />
-                    {t.signInUp.orWithEmail}
+                    {lang === 'fr' ? 'ou' : 'or'}
                     <div className="h-px flex-1 bg-white/15" />
                   </div>
 
-                  <form onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} className="flex flex-col gap-3">
-                    <label className="flex flex-col gap-1 text-sm text-white/60">
-                      {t.common.emailLabel}
-                      <input
-                        type="email"
-                        autoComplete="email"
-                        autoFocus
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder={t.common.emailPlaceholder}
-                        className={inputClasses}
-                      />
-                    </label>
-
-                    <label className="flex flex-col gap-1 text-sm text-white/60">
-                      <span className="flex items-center justify-between">
-                        {t.common.passwordLabel}
-                        {mode === 'signin' && (
-                          <button
-                            type="button"
-                            onClick={() => switchMode('forgot')}
-                            className="text-xs font-normal text-[#ff6b00] hover:text-[#ff6b00]/80"
-                          >
-                            {t.signInUp.forgotPasswordLink}
-                          </button>
-                        )}
-                      </span>
-                      <input
-                        type="password"
-                        autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className={inputClasses}
-                      />
-                    </label>
-
-                    {mode === 'signup' && (
-                      <label className="flex flex-col gap-1 text-sm text-white/60">
-                        {t.common.confirmPasswordLabel}
-                        <input
-                          type="password"
-                          autoComplete="new-password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="••••••••"
-                          className={inputClasses}
-                        />
-                      </label>
-                    )}
-
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="mt-2 w-full rounded-lg bg-[#ff6b00] px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
-                    >
-                      {submitting
-                        ? t.common.submitting
-                        : mode === 'signin'
-                          ? t.signInUp.signInSubmit
-                          : t.signInUp.signUpSubmit}
-                    </button>
-                  </form>
+                  {/* "Essayer sans compte" — bien visible (full-width,
+                      outlined so it reads as a real third option, not an
+                      afterthought link), right below the two real signup
+                      paths. Directly addresses testers who couldn't get
+                      past Google/phone before seeing anything. */}
+                  <button
+                    type="button"
+                    onClick={handleTryGuest}
+                    className="w-full rounded-xl border border-white/20 px-5 py-4 text-base font-semibold text-white transition-colors hover:bg-white/5"
+                  >
+                    {t.guest.tryButton}
+                  </button>
+                  <p className="mt-2 text-center text-xs text-white/40">{t.guest.tryHint}</p>
                 </>
               )}
 

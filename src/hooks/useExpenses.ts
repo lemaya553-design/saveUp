@@ -4,8 +4,10 @@ import { emitExpensesChanged, onExpensesChanged } from '../lib/events'
 import { pickCategory } from '../lib/importParsing'
 import { FALLBACK_CATEGORY } from '../lib/categories'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
 import { useLanguage } from './useLanguage'
 import { COMMON } from '../lib/i18n/common'
+import { addGuestExpense, getGuestExpenses, removeGuestExpense, updateGuestExpense } from '../lib/guestStore'
 
 export interface Expense {
   id: string
@@ -18,6 +20,7 @@ export interface Expense {
 
 export function useExpenses() {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const { lang } = useLanguage()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
@@ -30,6 +33,12 @@ export function useExpenses() {
   const hasLoadedOnce = useRef(false)
 
   const load = useCallback(async () => {
+    if (guest.active) {
+      setExpenses(getGuestExpenses().slice(0, 50))
+      setLoading(false)
+      hasLoadedOnce.current = true
+      return
+    }
     if (!userId) return
     if (!hasLoadedOnce.current) setLoading(true)
     setError(null)
@@ -45,7 +54,7 @@ export function useExpenses() {
     }
     setLoading(false)
     hasLoadedOnce.current = true
-  }, [userId])
+  }, [userId, guest.active])
 
   useEffect(() => {
     load()
@@ -54,6 +63,11 @@ export function useExpenses() {
 
   const addExpense = useCallback(
     async (description: string, amount: number, category = 'Autre') => {
+      if (guest.active) {
+        const created = addGuestExpense(description, amount, category)
+        setExpenses((prev) => [created, ...prev])
+        return
+      }
       if (!userId) return
       const { data, error: insertError } = await supabase
         .from('expenses')
@@ -67,7 +81,7 @@ export function useExpenses() {
       setExpenses((prev) => [data, ...prev])
       emitExpensesChanged()
     },
-    [userId, lang],
+    [userId, lang, guest.active],
   )
 
   // Used by CSV/Excel import: inserted in batches (PostgREST payloads stay
@@ -223,6 +237,10 @@ export function useExpenses() {
       setExpenses((prev) =>
         prev.map((e) => (e.id === id ? { ...e, description, amount, category } : e)),
       )
+      if (guest.active) {
+        updateGuestExpense(id, description, amount, category)
+        return
+      }
       const { error: updateError } = await supabase
         .from('expenses')
         .update({ description, amount, category })
@@ -230,15 +248,22 @@ export function useExpenses() {
       if (updateError) setError(updateError.message)
       emitExpensesChanged()
     },
-    [],
+    [guest.active],
   )
 
-  const removeExpense = useCallback(async (id: string) => {
-    setExpenses((prev) => prev.filter((e) => e.id !== id))
-    const { error: deleteError } = await supabase.from('expenses').delete().eq('id', id)
-    if (deleteError) setError(deleteError.message)
-    emitExpensesChanged()
-  }, [])
+  const removeExpense = useCallback(
+    async (id: string) => {
+      setExpenses((prev) => prev.filter((e) => e.id !== id))
+      if (guest.active) {
+        removeGuestExpense(id)
+        return
+      }
+      const { error: deleteError } = await supabase.from('expenses').delete().eq('id', id)
+      if (deleteError) setError(deleteError.message)
+      emitExpensesChanged()
+    },
+    [guest.active],
+  )
 
   return {
     loading,

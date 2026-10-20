@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { onExpensesChanged } from '../lib/events'
+import { useGuestMode } from './useGuestMode'
+import { getGuestExpenses } from '../lib/guestStore'
 
 export interface ExpenseRecord {
   id: string
@@ -17,6 +19,7 @@ export interface ExpenseRecord {
 // exist. Default (2 → 3 months total) matches Budget's own 3-month views;
 // Statistiques asks for more (5 → 6 months) for its longer trend line.
 export function useExpenseHistory(monthsBack = 2) {
+  const guest = useGuestMode()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [records, setRecords] = useState<ExpenseRecord[]>([])
@@ -25,6 +28,15 @@ export function useExpenseHistory(monthsBack = 2) {
   const hasLoadedOnce = useRef(false)
 
   const load = useCallback(async () => {
+    if (guest.active) {
+      const now = new Date()
+      const start = new Date(now.getFullYear(), now.getMonth() - monthsBack, 1)
+      setRecords(getGuestExpenses().filter((e) => new Date(e.spent_at) >= start))
+      setLoading(false)
+      hasLoadedOnce.current = true
+      return
+    }
+
     if (!hasLoadedOnce.current) setLoading(true)
     setError(null)
 
@@ -43,7 +55,7 @@ export function useExpenseHistory(monthsBack = 2) {
     }
     setLoading(false)
     hasLoadedOnce.current = true
-  }, [monthsBack])
+  }, [monthsBack, guest.active])
 
   useEffect(() => {
     load()

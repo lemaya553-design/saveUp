@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState, type ReactElement } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactElement } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { HelpButton } from '../components/HelpButton'
 import { AlertBanner } from '../components/AlertBanner'
@@ -20,6 +20,7 @@ import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { useSubscription } from '../hooks/useSubscription'
 import { usePreferences } from '../hooks/usePreferences'
 import { useAuth } from '../hooks/useAuth'
+import { useGuestMode } from '../hooks/useGuestMode'
 import { useLoginStreak } from '../hooks/useLoginStreak'
 import { useClaimedBadges } from '../hooks/useClaimedBadges'
 import { useLanguage } from '../hooks/useLanguage'
@@ -30,6 +31,7 @@ import { getBudgetPaceAlert, getSavingsGoalLateAlert } from '../lib/alerts'
 import { generatePersonalizedTips } from '../lib/tips'
 import { STARTER_BADGE, isStarterBadgeUnlocked } from '../lib/rewards'
 import { hasViewedStats, markStatsViewed } from '../lib/gettingStarted'
+import { consumePendingGuestGoal } from '../lib/guestStore'
 import { DASHBOARD } from '../lib/i18n/dashboard'
 
 // Cutoff for the WhatsApp opt-in gate below — only accounts created at or
@@ -104,6 +106,7 @@ const FEATURE_ICONS: Record<string, (props: { className: string }) => ReactEleme
 export function Dashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const guest = useGuestMode()
   const { lang } = useLanguage()
   const t = DASHBOARD[lang]
   const formatMoney = useMoneyFormat()
@@ -185,8 +188,11 @@ export function Dashboard() {
   // there and would just bounce back here again — an invisible loop.
   // Falling through to the normal Dashboard with the error banner below is
   // more honest about what's actually wrong.
+  // A guest never goes through the quiz (there's no account to attach the
+  // result to) — the sample data already has an income and a goal, so
+  // there's nothing "unfinished" to send them off to set up.
   const needsOnboarding =
-    !loading && !quiz.error && !health.error && (!quiz.completed || !health.hasIncomeRecord)
+    !guest.active && !loading && !quiz.error && !health.error && (!quiz.completed || !health.hasIncomeRecord)
 
   // Gates even earlier than onboarding — same data-driven, no-flag
   // reasoning as needsOnboarding above, but scoped to accounts created on
@@ -213,6 +219,24 @@ export function Dashboard() {
       navigate('/onboarding', { replace: true })
     }
   }, [loading, needsWhatsapp, needsOnboarding, navigate])
+
+  // Connexion.tsx queues this when a guest who tried the sample goal signs
+  // up for real (see lib/guestStore.ts) — picked up here, once, on the
+  // first real Dashboard load after that. Only adopts it into a genuinely
+  // empty account (never overwrites/duplicates goals the person already
+  // created some other way, e.g. finishing onboarding before this effect
+  // got a chance to run). A missing/failed migration just leaves the new
+  // account with no goal — same as any other fresh signup, never an error.
+  const migratedGuestGoal = useRef(false)
+  useEffect(() => {
+    if (!user || guest.active || loading || goals.loading || migratedGuestGoal.current) return
+    migratedGuestGoal.current = true
+    if (goals.goals.length > 0) return
+    const pending = consumePendingGuestGoal()
+    if (!pending) return
+    goals.addGoal(pending.name, pending.targetAmount, pending.targetDate)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, guest.active, loading, goals.loading, goals.goals.length])
 
   if (loading) {
     return <PageSkeleton cards={4} />

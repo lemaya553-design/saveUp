@@ -63,8 +63,9 @@ export interface ConnexionContent {
     googleReassurance: string
     noAccountHint: string
     createAccount: string
-    useEmailInstead: string
     orWithEmail: string
+    emailHint: string
+    passwordHint: string
     forgotPasswordLink: string
     signInSubmit: string
     signUpSubmit: string
@@ -77,6 +78,10 @@ export interface ConnexionContent {
     // form and use longer phrasing ("Créer mon compte").
     toggleSignIn: string
     toggleSignUp: string
+  }
+  guest: {
+    tryButton: string
+    tryHint: string
   }
   visual: {
     phoneAlt: string
@@ -139,8 +144,9 @@ export const CONNEXION: Record<Lang, ConnexionContent> = {
       googleReassurance: 'On ne demande que ton nom et ton courriel — rien n\'est jamais publié en ton nom.',
       noAccountHint: 'Aucun compte avec ce courriel — tu veux en créer un ?',
       createAccount: 'Créer un compte',
-      useEmailInstead: 'ou utiliser un courriel',
       orWithEmail: 'ou avec un courriel',
+      emailHint: 'Sert seulement à te connecter — jamais partagé ni revendu.',
+      passwordHint: 'Connu de toi seul. On ne peut pas le voir, même nous.',
       forgotPasswordLink: 'Mot de passe oublié ?',
       signInSubmit: 'Se connecter',
       signUpSubmit: 'Créer mon compte',
@@ -150,6 +156,10 @@ export const CONNEXION: Record<Lang, ConnexionContent> = {
       signInLink: 'Connecte-toi',
       toggleSignIn: 'Se connecter',
       toggleSignUp: "S'inscrire",
+    },
+    guest: {
+      tryButton: 'Essayer sans compte',
+      tryHint: 'Explore l’app avec des données d’exemple — rien n’est envoyé nulle part tant que tu n’as pas créé de compte.',
     },
     visual: {
       phoneAlt: "Aperçu de l'application SaveUp",
@@ -210,8 +220,9 @@ export const CONNEXION: Record<Lang, ConnexionContent> = {
       googleReassurance: "We only ask for your name and email — nothing is ever posted on your behalf.",
       noAccountHint: "No account with this email — want to create one?",
       createAccount: 'Create account',
-      useEmailInstead: 'or use an email',
       orWithEmail: 'or with an email',
+      emailHint: 'Only used to sign you in — never shared or sold.',
+      passwordHint: "Known to you only. We can't see it, not even us.",
       forgotPasswordLink: 'Forgot password?',
       signInSubmit: 'Sign in',
       signUpSubmit: 'Create my account',
@@ -221,6 +232,10 @@ export const CONNEXION: Record<Lang, ConnexionContent> = {
       signInLink: 'Sign in',
       toggleSignIn: 'Sign in',
       toggleSignUp: 'Sign up',
+    },
+    guest: {
+      tryButton: 'Try it without an account',
+      tryHint: 'Explore the app with sample data — nothing is sent anywhere until you create an account.',
     },
     visual: {
       phoneAlt: 'Preview of the SaveUp app',

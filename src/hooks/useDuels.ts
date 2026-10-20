@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { mapDuelErrorCode, type Duel, type DuelDurationDays, type DuelParticipant } from '../lib/duels'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
 import { useLanguage } from './useLanguage'
 import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
 
@@ -30,6 +31,7 @@ function toParticipant(row: {
 
 export function useDuels() {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const { lang } = useLanguage()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
@@ -48,6 +50,12 @@ export function useDuels() {
   // against, and no other hook in this codebase relies on embedded selects
   // either.
   const load = useCallback(async () => {
+    // Duels are a social feature between real accounts — no guest-mode
+    // equivalent. Just resolves loading (empty list) instead of hanging.
+    if (guest.active) {
+      setLoading(false)
+      return
+    }
     if (!userId) return
     setLoading(true)
     setError(null)
@@ -124,7 +132,7 @@ export function useDuels() {
 
     setDuels(mapped)
     setLoading(false)
-  }, [userId])
+  }, [userId, guest.active])
 
   useEffect(() => {
     load()

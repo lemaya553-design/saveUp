@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { toDateString } from '../lib/format'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
+import { getGuestContributions } from '../lib/guestStore'
 
 // Distinct from useSavingsContributions.ts (a rolling "last N days" window
 // for Dashboard/Budget/Épargne/Statistiques) — Calendrier can navigate to
@@ -9,6 +11,7 @@ import { useAuth } from './useAuth'
 // fetch instead of a fixed daysBack window.
 export function useMonthSavingsContributions(monthStart: Date, monthEnd: Date) {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -21,6 +24,13 @@ export function useMonthSavingsContributions(monthStart: Date, monthEnd: Date) {
   const endIso = monthEnd.toISOString()
 
   useEffect(() => {
+    if (guest.active) {
+      const rows = getGuestContributions().filter((c) => c.created_at >= startIso && c.created_at < endIso)
+      setContributionDays(new Set(rows.map((r) => toDateString(new Date(r.created_at)))))
+      setTotal(rows.reduce((sum, r) => sum + r.amount, 0))
+      setLoading(false)
+      return
+    }
     if (!userId) return
     let cancelled = false
 
@@ -47,7 +57,7 @@ export function useMonthSavingsContributions(monthStart: Date, monthEnd: Date) {
     return () => {
       cancelled = true
     }
-  }, [userId, startIso, endIso])
+  }, [userId, guest.active, startIso, endIso])
 
   return { loading, error, contributionDays, total }
 }

@@ -4,14 +4,17 @@ import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 import { QuickAddFab } from './QuickAddFab'
 import { PwaInstallBanner } from './PwaInstallBanner'
+import { GuestModeBanner } from './GuestModeBanner'
 import { useLoginStreak } from '../hooks/useLoginStreak'
 import { useAuth } from '../hooks/useAuth'
+import { useGuestMode } from '../hooks/useGuestMode'
 import { useLanguage } from '../hooks/useLanguage'
 import { COMMON } from '../lib/i18n/common'
 
 export function Layout() {
   const location = useLocation()
   const { user } = useAuth()
+  const guest = useGuestMode()
   const { lang } = useLanguage()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   // /tarifs is the one route that's genuinely both: a public marketing page
@@ -62,6 +65,7 @@ export function Layout() {
           <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <div className="flex min-h-screen flex-col lg:pl-60">
             <TopBar title={pageTitle} onOpenMenu={() => setSidebarOpen(true)} />
+            {guest.active && <GuestModeBanner />}
             <main className="flex-1">
               <Outlet />
             </main>

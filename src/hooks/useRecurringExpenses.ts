@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { emitExpensesChanged } from '../lib/events'
 import type { RecurringExpense, RecurringFrequency } from '../lib/recurringExpenses'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
 
 function fromRow(row: {
   id: string
@@ -30,6 +31,7 @@ function fromRow(row: {
 
 export function useRecurringExpenses() {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -52,6 +54,14 @@ export function useRecurringExpenses() {
   }, [userId])
 
   useEffect(() => {
+    // Recurring-expense rules (Budget → Récurrences) aren't part of the
+    // sample dataset and have no guest-mode equivalent yet — just resolves
+    // loading (empty list) instead of hanging forever, same reasoning as
+    // the other secondary hooks (see useSubscription.ts etc.).
+    if (guest.active) {
+      setLoading(false)
+      return
+    }
     if (!userId) return
     let cancelled = false
 
@@ -75,7 +85,7 @@ export function useRecurringExpenses() {
     return () => {
       cancelled = true
     }
-  }, [userId, load])
+  }, [userId, guest.active, load])
 
   const addRecurringExpense = useCallback(
     async (

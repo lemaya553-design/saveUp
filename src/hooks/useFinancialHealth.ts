@@ -5,6 +5,7 @@ import { useFixedExpenses } from './useFixedExpenses'
 import { useMonthlyExpenses } from './useMonthlyExpenses'
 import { useSavingsContributions } from './useSavingsContributions'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
 import { computeFinancialHealth } from '../lib/financialHealth'
 import { toDateString } from '../lib/format'
 
@@ -17,6 +18,7 @@ export type ScoreTrend = 'up' | 'down' | 'flat' | null
 
 export function useFinancialHealth() {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const userId = user?.id
   const income = useIncome()
   const fixed = useFixedExpenses()
@@ -49,6 +51,13 @@ export function useFinancialHealth() {
   )
 
   useEffect(() => {
+    // No history to track for a guest — there's no account for a snapshot
+    // to belong to, and nothing should ever be written to Supabase before
+    // one exists. Resolves historyLoading so `loading` doesn't hang.
+    if (guest.active) {
+      setHistoryLoading(false)
+      return
+    }
     if (inputsLoading || !userId) return
     const uid = userId
     let cancelled = false
@@ -84,7 +93,7 @@ export function useFinancialHealth() {
     }
     // Re-run only when the computed score actually changes, not on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputsLoading, breakdown.score, userId])
+  }, [inputsLoading, breakdown.score, userId, guest.active])
 
   const trend: ScoreTrend = useMemo(() => {
     if (history.length < 2) return null

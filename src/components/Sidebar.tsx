@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useAuth } from '../hooks/useAuth'
+import { useGuestMode } from '../hooks/useGuestMode'
 import { useLanguage } from '../hooks/useLanguage'
 import { useSubscription } from '../hooks/useSubscription'
 import { REWARD_TIERS, getUnlockedTiers } from '../lib/rewards'
@@ -132,6 +133,7 @@ function getInitials(email: string | null | undefined): string {
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const goals = useSavingsGoals()
   const { user, signOut } = useAuth()
+  const guest = useGuestMode()
   const { lang } = useLanguage()
   const subscription = useSubscription()
   const navigate = useNavigate()
@@ -164,6 +166,11 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 
   async function handleSignOut() {
     onClose()
+    if (guest.active) {
+      guest.exit(false)
+      navigate('/', { replace: true })
+      return
+    }
     await signOut()
     navigate('/', { replace: true })
   }
@@ -219,7 +226,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 
         <div className="border-t border-overlay/10 p-3">
           <Link
-            to="/parametres"
+            to={guest.active ? '/connexion' : '/parametres'}
             onClick={onClose}
             className="flex items-center gap-2.5 rounded-xl px-2 py-2 transition-colors hover:bg-overlay/5"
           >
@@ -227,22 +234,28 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
               style={{ color: ACTIVE_ORANGE, backgroundColor: `${ACTIVE_ORANGE}26` }}
             >
-              {getInitials(user?.email)}
+              {guest.active ? '?' : getInitials(user?.email)}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-ink">{user?.email ?? ''}</span>
-              <span className="block truncate text-xs text-muted">{planName}</span>
+              <span className="block truncate text-sm font-medium text-ink">
+                {guest.active ? t.guestBadge : (user?.email ?? '')}
+              </span>
+              <span className="block truncate text-xs text-muted">
+                {guest.active ? t.guestCreateAccount : planName}
+              </span>
             </span>
           </Link>
 
-          <button
-            type="button"
-            onClick={() => setFeedbackOpen(true)}
-            className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-overlay/5 hover:text-ink"
-          >
-            <IconFeedback className="h-5 w-5 shrink-0" />
-            <span>{tFeedback.buttonLabel}</span>
-          </button>
+          {!guest.active && (
+            <button
+              type="button"
+              onClick={() => setFeedbackOpen(true)}
+              className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-overlay/5 hover:text-ink"
+            >
+              <IconFeedback className="h-5 w-5 shrink-0" />
+              <span>{tFeedback.buttonLabel}</span>
+            </button>
+          )}
 
           <button
             type="button"
@@ -250,7 +263,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
             className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-overlay/5 hover:text-red-400"
           >
             <IconLogout className="h-5 w-5 shrink-0" />
-            <span>{t.signOut}</span>
+            <span>{guest.active ? t.exitGuest : t.signOut}</span>
           </button>
         </div>
       </aside>

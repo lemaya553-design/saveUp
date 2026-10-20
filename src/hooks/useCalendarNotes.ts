@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { toDateString } from '../lib/format'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
 
 export interface CalendarNote {
   dateStr: string
@@ -17,6 +18,7 @@ export interface CalendarNote {
 // filter needed on the select, same convention as useIncome.ts/useExpenseHistory.ts.
 export function useCalendarNotes(rangeStart: Date, rangeEnd: Date) {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -26,6 +28,15 @@ export function useCalendarNotes(rangeStart: Date, rangeEnd: Date) {
   const endStr = toDateString(rangeEnd)
 
   const load = useCallback(async () => {
+    // Calendar notes aren't part of the sample dataset and aren't persisted
+    // for a guest (unlike the budget/goal data in lib/guestStore.ts) — a
+    // guest can still try rating a day while exploring, it just won't
+    // survive leaving this page. Just resolves loading so the page doesn't
+    // hang; saveNote/deleteNote below handle the actual in-session edits.
+    if (guest.active) {
+      setLoading(false)
+      return
+    }
     if (!userId) return
     setLoading(true)
     setError(null)
@@ -45,7 +56,7 @@ export function useCalendarNotes(rangeStart: Date, rangeEnd: Date) {
     }
     setLoading(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, startStr, endStr])
+  }, [userId, guest.active, startStr, endStr])
 
   useEffect(() => {
     load()
@@ -57,6 +68,10 @@ export function useCalendarNotes(rangeStart: Date, rangeEnd: Date) {
   // your data" situation), so failures here are NOT written to `error`.
   const saveNote = useCallback(
     async (dateStr: string, rating: number, description: string): Promise<boolean> => {
+      if (guest.active) {
+        setNotes((prev) => new Map(prev).set(dateStr, { dateStr, rating, description }))
+        return true
+      }
       if (!userId) return false
       const { error: upsertError } = await supabase
         .from('calendar_notes')
@@ -68,11 +83,19 @@ export function useCalendarNotes(rangeStart: Date, rangeEnd: Date) {
       setNotes((prev) => new Map(prev).set(dateStr, { dateStr, rating, description }))
       return true
     },
-    [userId],
+    [userId, guest.active],
   )
 
   const deleteNote = useCallback(
     async (dateStr: string): Promise<boolean> => {
+      if (guest.active) {
+        setNotes((prev) => {
+          const next = new Map(prev)
+          next.delete(dateStr)
+          return next
+        })
+        return true
+      }
       if (!userId) return false
       const { error: deleteError } = await supabase.from('calendar_notes').delete().eq('note_date', dateStr)
       if (deleteError) return false
@@ -83,7 +106,7 @@ export function useCalendarNotes(rangeStart: Date, rangeEnd: Date) {
       })
       return true
     },
-    [userId],
+    [userId, guest.active],
   )
 
   return { loading, error, notes, saveNote, deleteNote }

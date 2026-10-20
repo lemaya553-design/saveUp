@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
 import type { Archetype, QuizAnswers } from '../lib/onboardingQuiz'
 
 // One row per user (primary key user_id) — same "no row = default" shape
@@ -10,6 +11,7 @@ import type { Archetype, QuizAnswers } from '../lib/onboardingQuiz'
 // expenses/goals anymore, so hasIncomeRecord can't signal "done" on its own.
 export function useOnboardingQuiz() {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -18,6 +20,13 @@ export function useOnboardingQuiz() {
   const [archetype, setArchetype] = useState<Archetype | null>(null)
 
   useEffect(() => {
+    // Dashboard.tsx never consults `completed` for a guest (it bypasses the
+    // onboarding gate entirely) — this just resolves `loading` instead of
+    // leaving it stuck at its initial `true` forever.
+    if (guest.active) {
+      setLoading(false)
+      return
+    }
     if (!userId) return
     let cancelled = false
 
@@ -43,7 +52,7 @@ export function useOnboardingQuiz() {
     return () => {
       cancelled = true
     }
-  }, [userId])
+  }, [userId, guest.active])
 
   // Returns whether the write actually succeeded — `completed`/`score`/
   // `archetype` only update AFTER that's confirmed, never optimistically.

@@ -3,9 +3,11 @@ import { supabase } from '../lib/supabase'
 import { emitGoalsChanged, onGoalsChanged } from '../lib/events'
 import { deleteGoalPhoto, signGoalPhotoUrls, uploadGoalPhoto } from '../lib/goalPhoto'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
 import { useLanguage } from './useLanguage'
 import { COMMON } from '../lib/i18n/common'
 import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
+import { addGuestContribution, addGuestGoal, getGuestGoals, removeGuestGoal, updateGuestGoal } from '../lib/guestStore'
 
 export interface SavingsGoal {
   id: string
@@ -41,6 +43,7 @@ function fromRow(row: {
 
 export function useSavingsGoals() {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const { lang } = useLanguage()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
@@ -52,6 +55,12 @@ export function useSavingsGoals() {
   const hasLoadedOnce = useRef(false)
 
   const load = useCallback(async () => {
+    if (guest.active) {
+      setGoals(getGuestGoals())
+      setLoading(false)
+      hasLoadedOnce.current = true
+      return
+    }
     if (!userId) return
     if (!hasLoadedOnce.current) setLoading(true)
     setError(null)
@@ -72,7 +81,7 @@ export function useSavingsGoals() {
     setGoals(loaded.map((g) => (g.photoPath ? { ...g, photoUrl: signedUrls[g.photoPath] ?? null } : g)))
     setLoading(false)
     hasLoadedOnce.current = true
-  }, [userId])
+  }, [userId, guest.active])
 
   useEffect(() => {
     load()
@@ -81,6 +90,11 @@ export function useSavingsGoals() {
 
   const addGoal = useCallback(
     async (name: string, targetAmount: number, targetDate: string | null): Promise<SavingsGoal | null> => {
+      if (guest.active) {
+        const goal = addGuestGoal(name, targetAmount, targetDate)
+        setGoals((prev) => [...prev, goal])
+        return goal
+      }
       if (!userId) return null
       const { data, error: insertError } = await supabase
         .from('savings_goals')
@@ -96,7 +110,7 @@ export function useSavingsGoals() {
       emitGoalsChanged()
       return goal
     },
-    [userId, lang],
+    [userId, lang, guest.active],
   )
 
   const updateGoal = useCallback(
@@ -104,6 +118,10 @@ export function useSavingsGoals() {
       setGoals((prev) =>
         prev.map((g) => (g.id === id ? { ...g, name, targetAmount, targetDate } : g)),
       )
+      if (guest.active) {
+        updateGuestGoal(id, name, targetAmount, targetDate)
+        return
+      }
       const { error: updateError } = await supabase
         .from('savings_goals')
         .update({
@@ -116,7 +134,7 @@ export function useSavingsGoals() {
       if (updateError) setError(updateError.message)
       emitGoalsChanged()
     },
-    [],
+    [guest.active],
   )
 
   // Cleans up the storage object first (if any) — a goal row can't be
@@ -127,11 +145,15 @@ export function useSavingsGoals() {
       const photoPath = goals.find((g) => g.id === id)?.photoPath
       if (photoPath) await deleteGoalPhoto(photoPath)
       setGoals((prev) => prev.filter((g) => g.id !== id))
+      if (guest.active) {
+        removeGuestGoal(id)
+        return
+      }
       const { error: deleteError } = await supabase.from('savings_goals').delete().eq('id', id)
       if (deleteError) setError(deleteError.message)
       emitGoalsChanged()
     },
-    [goals],
+    [goals, guest.active],
   )
 
   // Reads the current_amount fresh right before writing (rather than trusting
@@ -141,6 +163,13 @@ export function useSavingsGoals() {
   // doesn't yet reflect the first write.
   const addContribution = useCallback(
     async (goalId: string, amount: number) => {
+      if (guest.active) {
+        addGuestContribution(goalId, amount)
+        setGoals((prev) =>
+          prev.map((g) => (g.id === goalId ? { ...g, currentAmount: g.currentAmount + amount } : g)),
+        )
+        return
+      }
       if (!userId) return
       setGoals((prev) =>
         prev.map((g) => (g.id === goalId ? { ...g, currentAmount: g.currentAmount + amount } : g)),
@@ -171,7 +200,7 @@ export function useSavingsGoals() {
       if (insertError) setError(insertError.message)
       emitGoalsChanged()
     },
-    [userId],
+    [userId, guest.active],
   )
 
   // Uploads (Premium-only — enforced by Storage RLS, see

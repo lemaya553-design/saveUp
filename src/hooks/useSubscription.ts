@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { PLAN_LIMITS, type Plan } from '../lib/plans'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
 import { useLanguage } from './useLanguage'
 import { COMMON } from '../lib/i18n/common'
 import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
@@ -11,6 +12,7 @@ import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
 // one after a real checkout, so absence of a row means `free`, not an error.
 export function useSubscription() {
   const { user, session } = useAuth()
+  const guest = useGuestMode()
   const { lang } = useLanguage()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
@@ -21,6 +23,13 @@ export function useSubscription() {
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null)
 
   const load = useCallback(async () => {
+    // A guest is always on the free plan — no checkout has ever happened,
+    // nothing to fetch. Just resolve loading so the rest of the app
+    // doesn't wait on this forever.
+    if (guest.active) {
+      setLoading(false)
+      return
+    }
     if (!userId) return
     setLoading(true)
     setError(null)
@@ -38,7 +47,7 @@ export function useSubscription() {
       setCurrentPeriodEnd(data?.current_period_end ?? null)
     }
     setLoading(false)
-  }, [userId])
+  }, [userId, guest.active])
 
   useEffect(() => {
     load()

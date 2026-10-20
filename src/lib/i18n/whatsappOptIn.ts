@@ -10,9 +10,11 @@ export interface WhatsappOptInContent {
   phoneLabel: string
   phonePlaceholder: string
   countryLabel: string
+  countrySearchPlaceholder: string
   privacyNote: string
   consentLabel: string
   continueButton: string
+  skipButton: string
   submitting: string
   errors: {
     invalidNumber: string
@@ -22,14 +24,17 @@ export interface WhatsappOptInContent {
 
 export const WHATSAPP_OPT_IN: Record<Lang, WhatsappOptInContent> = {
   fr: {
-    heading: 'Mets ton numéro WhatsApp',
-    subtitle: 'On s’en sert pour t’aider à démarrer avec SaveUp.',
+    heading: 'Ton numéro WhatsApp (optionnel)',
+    subtitle: 'Si tu le donnes, on peut t’aider à démarrer directement sur WhatsApp. Sinon, aucun problème.',
     phoneLabel: 'Numéro de téléphone',
     phonePlaceholder: '514 555 0199',
     countryLabel: 'Indicatif',
-    privacyNote: 'On t’écrit sur WhatsApp pour t’aider à démarrer. Pas de spam.',
+    countrySearchPlaceholder: 'Rechercher un pays...',
+    privacyNote:
+      'On ne s’en sert que pour t’écrire sur WhatsApp, jamais pour autre chose, et jamais revendu. Laisse ce champ vide si tu préfères ne pas le donner.',
     consentLabel: 'J’accepte d’être contacté par WhatsApp par l’équipe SaveUp.',
     continueButton: 'Continuer',
+    skipButton: 'Passer cette étape',
     submitting: 'Enregistrement...',
     errors: {
       invalidNumber: 'Ce numéro ne semble pas valide — vérifie l’indicatif et le numéro.',
@@ -37,14 +42,17 @@ export const WHATSAPP_OPT_IN: Record<Lang, WhatsappOptInContent> = {
     },
   },
   en: {
-    heading: 'Add your WhatsApp number',
-    subtitle: 'We use it to help you get started with SaveUp.',
+    heading: 'Your WhatsApp number (optional)',
+    subtitle: 'If you give it, we can help you get started right on WhatsApp. If not, that’s totally fine.',
     phoneLabel: 'Phone number',
     phonePlaceholder: '514 555 0199',
     countryLabel: 'Country code',
-    privacyNote: 'We text you on WhatsApp to help you get started. No spam.',
+    countrySearchPlaceholder: 'Search for a country...',
+    privacyNote:
+      'Only ever used to message you on WhatsApp, never for anything else, never sold. Leave this blank if you’d rather not share it.',
     consentLabel: 'I agree to be contacted on WhatsApp by the SaveUp team.',
     continueButton: 'Continue',
+    skipButton: 'Skip this step',
     submitting: 'Saving...',
     errors: {
       invalidNumber: 'This number doesn’t look valid — check the country code and number.',

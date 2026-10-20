@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
+import { useGuestMode } from './useGuestMode'
 import { applyAccentColor, applyTheme, type AccentColor, type Theme } from '../lib/theme'
 import type { Currency } from '../lib/format'
 import type { MainGoal, TrackingFrequency } from '../lib/onboardingProfile'
@@ -56,6 +57,7 @@ const PreferencesContext = createContext<PreferencesContextValue | null>(null)
 // avatar/accent there is reflected in Nav immediately, without a reload.
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
+  const guest = useGuestMode()
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -77,6 +79,17 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [whatsappConsentAt, setWhatsappConsentAtState] = useState<string | null>(null)
 
   const load = useCallback(async () => {
+    // Guest mode never persists preferences anywhere — theme/accent/avatar
+    // stay whatever index.html's bootstrap script already applied from
+    // localStorage (or the defaults above), and every setter below still
+    // updates the in-memory state immediately either way. This branch only
+    // exists so `loading` actually resolves to false for a guest, instead
+    // of staying stuck at its initial `true` forever (the real-user path
+    // below never runs without a userId).
+    if (guest.active) {
+      setLoading(false)
+      return
+    }
     if (!userId) return
     setLoading(true)
     setError(null)
@@ -115,7 +128,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       applyTheme(nextTheme)
     }
     setLoading(false)
-  }, [userId])
+  }, [userId, guest.active])
 
   useEffect(() => {
     load()
