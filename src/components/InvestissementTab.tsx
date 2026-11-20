@@ -24,8 +24,8 @@ import {
 
 // Self-contained (own hook instances) — was its own route, now the
 // Investissement tab on Épargne. Kept independent of the Objectifs tab's
-// already-loaded goals rather than threaded through props, same tradeoff as
-// every other self-contained tab in this app (RecategorizeCard, etc.).
+// already-loaded goals rather than threaded through props, same
+// self-contained-tab tradeoff used elsewhere in this app.
 export function InvestissementTab() {
   const { lang } = useLanguage()
   const t = EPARGNE[lang].investissementTab

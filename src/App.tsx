@@ -18,13 +18,6 @@ import { Dashboard } from './pages/Dashboard'
 import { Epargne } from './pages/Epargne'
 import { Parametres } from './pages/Parametres'
 import { Onboarding } from './pages/Onboarding'
-import { DuelAccept } from './pages/DuelAccept'
-
-// libphonenumber-js's metadata is sizeable for a single one-time screen —
-// loaded on demand so no other route pays for it.
-const WhatsappOptIn = lazy(() =>
-  import('./pages/WhatsappOptIn').then((m) => ({ default: m.WhatsappOptIn })),
-)
 
 // Recharts is sizeable and used across every chart on this page — loaded on
 // demand so no other route pays for it in the initial bundle.
@@ -88,11 +81,13 @@ function App() {
 
                         <Route path="epargne" element={<Navigate to="/epargne/objectifs" replace />} />
                         <Route path="epargne/:tab" element={<Epargne />} />
-                        {/* Simulateur, Duels and Investissement merged into Épargne as tabs — keep old links/bookmarks working. */}
-                        <Route path="simulateur" element={<Navigate to="/epargne/simulateur" replace />} />
+                        {/* Investissement merged into Épargne as a tab — keep old links/bookmarks working.
+                            Simulateur and Duels (old tabs, now removed from the UI) redirect here too —
+                            an old invite/bookmark link should land somewhere real, not 404. */}
                         <Route path="investissement" element={<Navigate to="/epargne/investissement" replace />} />
-                        <Route path="duels" element={<Navigate to="/epargne/duels" replace />} />
-                        <Route path="duels/rejoindre/:token" element={<DuelAccept />} />
+                        <Route path="simulateur" element={<Navigate to="/epargne/objectifs" replace />} />
+                        <Route path="duels" element={<Navigate to="/epargne/objectifs" replace />} />
+                        <Route path="duels/rejoindre/:token" element={<Navigate to="/epargne/objectifs" replace />} />
 
                         <Route path="statistiques" element={<Navigate to="/statistiques/apercu" replace />} />
                         <Route
@@ -128,14 +123,6 @@ function App() {
                         <Route path="parametres/:tab" element={<Parametres />} />
 
                         <Route path="onboarding" element={<Onboarding />} />
-                        <Route
-                          path="numero-whatsapp"
-                          element={
-                            <Suspense fallback={<PageSkeleton cards={1} />}>
-                              <WhatsappOptIn />
-                            </Suspense>
-                          }
-                        />
                       </Route>
                     </Route>
                   </Routes>

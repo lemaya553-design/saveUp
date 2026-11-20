@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { emitExpensesChanged, onExpensesChanged } from '../lib/events'
-import { pickCategory } from '../lib/importParsing'
 import { FALLBACK_CATEGORY } from '../lib/categories'
 import { useAuth } from './useAuth'
 import { useGuestMode } from './useGuestMode'
@@ -157,67 +156,9 @@ export function useExpenses() {
     return { rows, error: null }
   }, [userId])
 
-  // Re-runs the same merchant-keyword guess used by the import wizard
-  // (pickCategory) against every existing expense still sitting in the
-  // fallback category — e.g. after the user adds new categories, or after
-  // this guessing logic itself improves. Only ever writes the `category`
-  // column on rows that already exist; never inserts or deletes anything.
-  const recategorizeExpenses = useCallback(
-    async (
-      categoryNames: string[],
-      customKeywords: { keyword: string; category: string }[] = [],
-    ): Promise<{
-      checked: number
-      updated: number
-      error: string | null
-      sample: { description: string; guessedCategory: string | null }[]
-    }> => {
-      if (!userId) return { checked: 0, updated: 0, error: null, sample: [] }
-
-      const { rows, error: fetchError } = await fetchFallbackExpenses()
-      if (fetchError) return { checked: rows.length, updated: 0, error: fetchError, sample: [] }
-
-      const guesses = rows.map((row) => ({
-        id: row.id,
-        description: row.description,
-        category: pickCategory(undefined, row.description, categoryNames, FALLBACK_CATEGORY, customKeywords)
-          .category,
-      }))
-
-      // What the matcher actually saw and decided, for a handful of rows —
-      // shown in the UI so a 0-match run is diagnosable without database
-      // access. "No keyword fired" and "matched but the write silently
-      // no-op'd" look identical from the outside otherwise.
-      const sample = guesses.slice(0, 8).map((g) => ({
-        description: g.description,
-        guessedCategory: g.category === FALLBACK_CATEGORY ? null : g.category,
-      }))
-
-      const changes = guesses.filter((row) => row.category !== FALLBACK_CATEGORY)
-
-      // .select('id') on the update is what makes `updated` trustworthy: a
-      // row an RLS policy silently excludes from the write (wrong owner, a
-      // stale id) comes back as { data: [], error: null } — no error, but
-      // nothing was actually changed. Counting on `!error` alone would
-      // report success for writes that touched zero rows.
-      const results = await Promise.all(
-        changes.map((change) =>
-          supabase.from('expenses').update({ category: change.category }).eq('id', change.id).select('id'),
-        ),
-      )
-      const updated = results.filter((r) => !r.error && (r.data?.length ?? 0) > 0).length
-      const firstError = results.find((r) => r.error)?.error?.message ?? null
-
-      if (updated > 0) emitExpensesChanged()
-      return { checked: rows.length, updated, error: firstError, sample }
-    },
-    [userId, fetchFallbackExpenses],
-  )
-
   // Reassigns a specific set of expense ids to `category` in one shot — used
   // by the category-suggestion confirm flow (Paramètres), which already
-  // knows exactly which transactions a cluster covers, unlike
-  // recategorizeExpenses which re-guesses from scratch.
+  // knows exactly which transactions a cluster covers.
   const reassignExpenses = useCallback(
     async (ids: string[], category: string): Promise<{ updated: number; error: string | null }> => {
       if (!userId || ids.length === 0) return { updated: 0, error: null }
@@ -272,7 +213,6 @@ export function useExpenses() {
     addExpense,
     addExpensesBulk,
     fetchFallbackExpenses,
-    recategorizeExpenses,
     reassignExpenses,
     updateExpense,
     removeExpense,

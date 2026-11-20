@@ -364,6 +364,16 @@ export interface Database {
           whatsapp_number: string | null
           whatsapp_consent: boolean
           whatsapp_consent_at: string | null
+          whatsapp_status: string | null
+          first_name: string | null
+          work_status: string | null
+          income_range: string | null
+          fixed_expenses_range: string | null
+          money_leaks: string[]
+          savings_goal_type: string | null
+          savings_goal_name: string | null
+          financial_mood: string | null
+          onboarding_completed_at: string | null
           updated_at: string
         }
         Insert: {
@@ -384,6 +394,16 @@ export interface Database {
           whatsapp_number?: string | null
           whatsapp_consent?: boolean
           whatsapp_consent_at?: string | null
+          whatsapp_status?: string | null
+          first_name?: string | null
+          work_status?: string | null
+          income_range?: string | null
+          fixed_expenses_range?: string | null
+          money_leaks?: string[]
+          savings_goal_type?: string | null
+          savings_goal_name?: string | null
+          financial_mood?: string | null
+          onboarding_completed_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -404,6 +424,16 @@ export interface Database {
           whatsapp_number?: string | null
           whatsapp_consent?: boolean
           whatsapp_consent_at?: string | null
+          whatsapp_status?: string | null
+          first_name?: string | null
+          work_status?: string | null
+          income_range?: string | null
+          fixed_expenses_range?: string | null
+          money_leaks?: string[]
+          savings_goal_type?: string | null
+          savings_goal_name?: string | null
+          financial_mood?: string | null
+          onboarding_completed_at?: string | null
           updated_at?: string
         }
         Relationships: []

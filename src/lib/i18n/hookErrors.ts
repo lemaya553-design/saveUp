@@ -16,21 +16,6 @@ export interface HookErrorsContent {
     // never user-entered data.
     cannotDeleteFallback: (name: string) => string
   }
-  duels: {
-    // Generic fallbacks when the RPC error doesn't match one of the known
-    // codes below (or has no message at all).
-    createFailed: string
-    acceptFailed: string
-    declineFailed: string
-    // Exact matches against the short codes raised by create_duel_invite /
-    // accept_duel_invite_by_id / decline_duel_invite (supabase/schema.sql) —
-    // see lib/duels.ts's mapDuelErrorCode.
-    invalidEmail: string
-    inviteeNotFound: string
-    cannotInviteSelf: string
-    goalNotFound: string
-    inviteNotFound: string
-  }
   savingsGoals: {
     notSignedIn: string
     photoUploadFailed: string
@@ -53,16 +38,6 @@ export const HOOK_ERRORS: Record<Lang, HookErrorsContent> = {
     categories: {
       cannotDeleteFallback: (name) => `La catégorie « ${name} » ne peut pas être supprimée.`,
     },
-    duels: {
-      createFailed: 'Impossible de créer le duel.',
-      acceptFailed: "Impossible d'accepter ce duel.",
-      declineFailed: "Impossible de refuser cette invitation.",
-      invalidEmail: "Cette adresse courriel n'est pas valide.",
-      inviteeNotFound: 'Aucun compte SaveUp ne correspond à ce courriel.',
-      cannotInviteSelf: "Tu ne peux pas t'inviter toi-même.",
-      goalNotFound: 'Objectif introuvable.',
-      inviteNotFound: 'Cette invitation est introuvable ou a déjà été traitée.',
-    },
     savingsGoals: {
       notSignedIn: 'Non connecté.',
       photoUploadFailed: "Impossible d'envoyer la photo — réessaie.",
@@ -83,16 +58,6 @@ export const HOOK_ERRORS: Record<Lang, HookErrorsContent> = {
     },
     categories: {
       cannotDeleteFallback: (name) => `The "${name}" category can't be deleted.`,
-    },
-    duels: {
-      createFailed: "Couldn't create the duel.",
-      acceptFailed: "Couldn't accept this duel.",
-      declineFailed: "Couldn't decline this invite.",
-      invalidEmail: "That email address isn't valid.",
-      inviteeNotFound: 'No SaveUp account matches that email.',
-      cannotInviteSelf: "You can't invite yourself.",
-      goalNotFound: 'Goal not found.',
-      inviteNotFound: 'This invite could not be found, or was already handled.',
     },
     savingsGoals: {
       notSignedIn: 'Not signed in.',

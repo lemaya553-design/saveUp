@@ -1,56 +1,66 @@
 import type { Lang } from './language'
-import type { Archetype, InsightId, PayFrequency, SetupCategoryId } from '../onboardingQuiz'
-import type { Currency } from '../format'
+import type {
+  FinancialMood,
+  FixedExpensesRange,
+  IncomeRange,
+  MoneyLeak,
+  PayFrequency,
+  SavingsGoalType,
+  WorkStatus,
+} from '../onboardingQuiz'
 
-export interface QuizQuestionContent {
-  text: string
-  options: { id: 'a' | 'b' | 'c' | 'd'; label: string }[]
+// Content for Onboarding.tsx's 10-question flow (Q1-10) plus the kept
+// plan-selection step after it. File/export names kept as "onboardingQuiz"
+// for low churn — see lib/onboardingQuiz.ts's header comment. payFrequencies
+// is shared with Paramètres' PayScheduleSettings.tsx (pill button labels
+// there) — relabeling it here changes both screens at once, which is the
+// point: one source of truth for those 4 labels.
+export interface SingleChoiceOption<T extends string> {
+  id: T
+  label: string
 }
 
 export interface OnboardingQuizContent {
-  // Index 0..14 matches QUIZ_QUESTION_IDS (q1..q15) in lib/onboardingQuiz.ts.
-  questions: QuizQuestionContent[]
   progressLabel: (current: number, total: number) => string
   back: string
-  skipLater: string
-  result: {
-    badge: string
-    scoreSuffix: string
-    insightsHeading: string
-    insights: Record<InsightId, string>
+  q1: { title: string; placeholder: string; continueButton: string; emptyError: string }
+  q2: { title: string; options: SingleChoiceOption<WorkStatus>[] }
+  q3: { title: string; options: SingleChoiceOption<IncomeRange>[] }
+  q4: { title: string; options: SingleChoiceOption<PayFrequency>[] }
+  payFrequencies: Record<PayFrequency, string>
+  q5: { title: string; options: SingleChoiceOption<FixedExpensesRange>[] }
+  q6: { title: string; options: SingleChoiceOption<MoneyLeak>[]; continueButton: string }
+  q7: {
+    title: string
+    // `name` is the clean (no-emoji) goal name saved to savings_goals when
+    // this option is picked — `label` (with emoji) is only ever shown on
+    // the button itself. Empty for 'autre', which uses the typed custom
+    // name instead.
+    options: (SingleChoiceOption<SavingsGoalType> & { name: string })[]
+    customNamePlaceholder: string
+    customNameEmptyError: string
     continueButton: string
-    archetypes: Record<Archetype, { name: string; description: string }>
   }
-  setup: {
-    heading: string
-    subtitle: string
-    stepLabel: (current: number, total: number) => string
-    card1Title: string
-    incomeLabel: string
-    incomePlaceholder: string
-    payFrequencyLabel: string
-    payFrequencies: Record<PayFrequency, string>
-    nextPaydayLabel: string
-    currencyLabel: string
-    currencies: Record<Currency, string>
-    card2Title: string
-    savingsLabel: string
-    savingsHint: string
-    goalHeading: string
-    goalNameLabel: string
-    goalNamePlaceholder: string
-    defaultGoalName: string
-    goalAmountLabel: string
-    whyLabel: string
-    whyPlaceholder: string
-    card3Title: string
-    categoriesHeading: string
-    categoriesHint: string
-    categories: Record<SetupCategoryId, string>
-    nextButton: string
-    backButton: string
+  q8: {
+    title: string
+    amountPlaceholder: string
+    dateLabel: string
+    perPayLine: (amount: string) => string
     continueButton: string
-    savingButton: string
+    amountEmptyError: string
+  }
+  q9: { title: string; options: SingleChoiceOption<FinancialMood>[] }
+  q10: {
+    title: string
+    phonePlaceholder: string
+    continueButton: string
+    declineButton: string
+    privacyNote: string
+    countryLabel: string
+    countrySearchPlaceholder: string
+    consentLabel: string
+    invalidNumberError: string
+    saveFailedError: string
   }
   plans: {
     heading: string
@@ -70,235 +80,108 @@ export interface OnboardingQuizContent {
 
 export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
   fr: {
-    questions: [
-      {
-        text: 'À quelle fréquence regardes-tu ton solde bancaire ?',
-        options: [
-          { id: 'a', label: 'Chaque jour' },
-          { id: 'b', label: 'Quelques fois par semaine' },
-          { id: 'c', label: 'Une fois par mois' },
-          { id: 'd', label: "Jamais, j'ai peur de regarder" },
-        ],
-      },
-      {
-        text: 'Quand tu reçois ta paie, qu’est-ce que tu fais en premier ?',
-        options: [
-          { id: 'a', label: 'Je mets de l’argent de côté direct' },
-          { id: 'b', label: 'Je paie mes factures' },
-          { id: 'c', label: 'Je me fais plaisir un peu' },
-          { id: 'd', label: 'Je ne regarde même pas' },
-        ],
-      },
-      {
-        text: 'Combien de fois par mois tu achètes quelque chose sur un coup de tête ?',
-        options: [
-          { id: 'a', label: 'Jamais' },
-          { id: 'b', label: '1-2 fois' },
-          { id: 'c', label: '3-5 fois' },
-          { id: 'd', label: 'Je perds le compte' },
-        ],
-      },
-      {
-        text: 'Tu sais environ combien tu dépenses en nourriture/sorties chaque mois ?',
-        options: [
-          { id: 'a', label: 'Oui, exactement' },
-          { id: 'b', label: 'Approximativement' },
-          { id: 'c', label: 'Aucune idée' },
-        ],
-      },
-      {
-        text: 'As-tu un montant d’épargne de côté présentement ?',
-        options: [
-          { id: 'a', label: 'Oui, un bon coussin' },
-          { id: 'b', label: 'Un peu' },
-          { id: 'c', label: 'Rien du tout' },
-        ],
-      },
-      {
-        text: 'As-tu un objectif précis en tête (voyage, achat, urgence) ?',
-        options: [
-          { id: 'a', label: 'Oui, précis' },
-          { id: 'b', label: 'Vague idée' },
-          { id: 'c', label: 'Aucun objectif' },
-        ],
-      },
-      {
-        text: 'Si une dépense imprévue de 500 $ arrivait demain, tu ferais quoi ?',
-        options: [
-          { id: 'a', label: 'Je paie cash' },
-          { id: 'b', label: 'Je pige dans mon épargne' },
-          { id: 'c', label: 'Carte de crédit' },
-          { id: 'd', label: 'Je paniquerais' },
-        ],
-      },
-      {
-        text: 'Tu épargnes en moyenne combien de ton revenu chaque mois ?',
-        options: [
-          { id: 'a', label: 'Plus de 20%' },
-          { id: 'b', label: '10-20%' },
-          { id: 'c', label: 'Moins de 10%' },
-          { id: 'd', label: '0%' },
-        ],
-      },
-      {
-        text: 'Penser à ton argent te stresse-t-il ?',
-        options: [
-          { id: 'a', label: 'Jamais' },
-          { id: 'b', label: 'Parfois' },
-          { id: 'c', label: 'Souvent' },
-          { id: 'd', label: 'Constamment' },
-        ],
-      },
-      {
-        text: 'Compares-tu souvent tes finances à celles des autres ?',
-        options: [
-          { id: 'a', label: 'Jamais' },
-          { id: 'b', label: 'De temps en temps' },
-          { id: 'c', label: 'Souvent' },
-        ],
-      },
-      {
-        text: 'As-tu déjà évité d’ouvrir une facture par peur du montant ?',
-        options: [
-          { id: 'a', label: 'Jamais' },
-          { id: 'b', label: 'Une fois ou deux' },
-          { id: 'c', label: 'Régulièrement' },
-        ],
-      },
-      {
-        text: 'Qu’est-ce qui te stresse le plus avec l’argent ?',
-        options: [
-          { id: 'a', label: 'Ne pas savoir où il va' },
-          { id: 'b', label: 'Pas en avoir assez' },
-          { id: 'c', label: 'Trop de dettes' },
-          { id: 'd', label: 'Rien, je suis en contrôle' },
-        ],
-      },
-      {
-        text: 'Utilises-tu présentement un outil pour suivre ton budget ?',
-        options: [
-          { id: 'a', label: 'Oui, religieusement' },
-          { id: 'b', label: 'J’ai essayé, j’ai lâché' },
-          { id: 'c', label: 'Jamais essayé' },
-        ],
-      },
-      {
-        text: 'Qu’est-ce qui t’empêche le plus de bien gérer ton argent ?',
-        options: [
-          { id: 'a', label: 'Manque de temps' },
-          { id: 'b', label: 'Trop compliqué' },
-          { id: 'c', label: 'Manque de motivation' },
-          { id: 'd', label: 'Je sais pas par où commencer' },
-        ],
-      },
-      {
-        text: 'C’est quoi ton objectif principal en ce moment ?',
-        options: [
-          { id: 'a', label: 'Sortir de mes dettes' },
-          { id: 'b', label: 'Me bâtir un coussin de sécurité' },
-          { id: 'c', label: 'Épargner pour un projet précis' },
-          { id: 'd', label: 'Avoir une vue claire sur mes finances' },
-        ],
-      },
-    ],
-    progressLabel: (current, total) => `Question ${current} sur ${total}`,
-    back: 'Précédent',
-    skipLater: 'Passer le quiz',
-    result: {
-      badge: 'Ton profil financier',
-      scoreSuffix: '/100',
-      insightsHeading: 'Pourquoi ce score',
-      insights: {
-        'stress-high':
-          'Ton stress financier est élevé en ce moment — une vue claire sur tes finances peut vraiment t’aider à y voir plus clair.',
-        'stress-low': 'Tu gères ton argent sans trop de stress — un vrai atout.',
-        'tracking-none':
-          'Tu n’as pas d’outil de suivi en place actuellement — c’est exactement ce que SaveUp vient régler.',
-        'tracking-good': 'Tu suis déjà ton budget avec discipline — impressionnant.',
-        'savings-strong': 'Tu épargnes régulièrement, ce qui est excellent.',
-        'savings-weak':
-          'Tu n’as pas encore de coussin d’épargne — SaveUp peut t’aider à en bâtir un, petit à petit.',
-        'impulsive-high':
-          'Les achats impulsifs reviennent souvent dans ton quotidien — un peu de structure peut faire une grosse différence.',
-        'impulsive-low': 'Tu résistes bien aux achats impulsifs — beau contrôle.',
-        'goal-none':
-          'Tu n’as pas encore d’objectif précis en tête — s’en fixer un rend l’épargne beaucoup plus motivante.',
-        'goal-clear': 'Tu as un objectif clair en tête, ça aide énormément à rester motivé·e.',
-        'emergency-ready': 'Tu peux absorber une dépense imprévue sans problème.',
-        'emergency-not-ready':
-          'Une dépense imprévue te mettrait en difficulté — se bâtir un coussin de sécurité devrait être une priorité.',
-      },
-      continueButton: 'Configurer mon compte',
-      archetypes: {
-        stressed: {
-          name: 'Le Stressé',
-          description:
-            "L'argent occupe beaucoup de place dans ta tête ces temps-ci. La bonne nouvelle : une vue claire sur tes finances suffit souvent à faire retomber la pression.",
-        },
-        impulsive: {
-          name: "L'Impulsif",
-          description:
-            "Tu dépenses au gré de tes envies, sans trop suivre où ça va. Un peu de structure, sans te priver de tout, peut changer beaucoup de choses.",
-        },
-        cautious: {
-          name: 'Le Prudent',
-          description:
-            "Tu as déjà de bonnes habitudes, mais il te manque les bons outils pour vraiment voir où tu t'en vas.",
-        },
-        master: {
-          name: 'Le Maître',
-          description:
-            "Tu gères déjà ton argent avec discipline et une vue claire sur tes objectifs. SaveUp t'aide à aller encore plus loin.",
-        },
-      },
-    },
-    setup: {
-      heading: 'Configure ton compte',
-      subtitle: 'Quelques infos de base pour que ton Dashboard affiche déjà quelque chose de concret.',
-      stepLabel: (current, total) => `Étape ${current} sur ${total}`,
-      card1Title: 'Tes revenus',
-      incomeLabel: 'Revenu mensuel approximatif',
-      incomePlaceholder: '0.00',
-      payFrequencyLabel: 'Fréquence de paie',
-      payFrequencies: {
-        hebdomadaire: 'Hebdomadaire',
-        aux_deux_semaines: 'Aux 2 semaines',
-        mensuelle: 'Mensuelle',
-      },
-      nextPaydayLabel: 'Date du prochain versement',
-      currencyLabel: 'Devise principale',
-      currencies: {
-        CAD: 'CAD — Dollar canadien',
-        USD: 'USD — Dollar américain',
-        EUR: 'EUR — Euro',
-        GBP: 'GBP — Livre sterling',
-        CHF: 'CHF — Franc suisse',
-      },
-      card2Title: 'Ton épargne',
-      savingsLabel: 'Combien aimerais-tu épargner par mois ?',
-      savingsHint: 'Pré-rempli selon tes réponses — ajuste si tu veux.',
-      goalHeading: 'Ton premier objectif d’épargne',
-      goalNameLabel: 'Nom de l’objectif',
-      goalNamePlaceholder: 'Ex : Fonds d’urgence, Voyage',
-      defaultGoalName: 'Fonds d’urgence',
-      goalAmountLabel: 'Montant cible',
-      whyLabel: 'Pourquoi veux-tu épargner ?',
-      whyPlaceholder: 'Ex : Pour me sentir en sécurité, pour partir en voyage, pour sortir de mes dettes...',
-      card3Title: 'Tes catégories',
-      categoriesHeading: 'Catégories à suivre en priorité',
-      categoriesHint: 'Choisis 2 à 3 catégories',
-      categories: {
-        epicerie: 'Épicerie',
-        transport: 'Transport',
-        loisirs: 'Loisirs',
-        logement: 'Logement',
-        sante: 'Santé',
-        abonnements: 'Abonnements',
-      },
-      nextButton: 'Suivant',
-      backButton: 'Précédent',
+    progressLabel: (current, total) => `${current}/${total}`,
+    back: 'Retour',
+    q1: {
+      title: 'Comment on t’appelle ? 👋',
+      placeholder: 'Ton prénom',
       continueButton: 'Continuer',
-      savingButton: 'Un instant...',
+      emptyError: 'Dis-nous comment t’appeler.',
+    },
+    q2: {
+      title: 'T’es plus…',
+      options: [
+        { id: 'etudiant', label: '🎓 Étudiant' },
+        { id: 'travail', label: '💼 Je travaille' },
+        { id: 'les_deux', label: '⚡ Les deux' },
+      ],
+    },
+    q3: {
+      title: 'Il rentre combien d’argent par mois, à peu près ?',
+      options: [
+        { id: 'moins_500', label: 'Moins de 500 $' },
+        { id: '500_1500', label: '500 $ - 1 500 $' },
+        { id: '1500_3000', label: '1 500 $ - 3 000 $' },
+        { id: '3000_plus', label: '3 000 $ et plus' },
+      ],
+    },
+    q4: {
+      title: 'Ta paye rentre…',
+      options: [
+        { id: 'hebdomadaire', label: 'Chaque semaine' },
+        { id: 'aux_deux_semaines', label: 'Aux 2 semaines' },
+        { id: 'mensuelle', label: 'Une fois par mois' },
+        { id: 'ca_change', label: 'Ça change' },
+      ],
+    },
+    payFrequencies: {
+      hebdomadaire: 'Chaque semaine',
+      aux_deux_semaines: 'Aux 2 semaines',
+      mensuelle: 'Une fois par mois',
+      ca_change: 'Ça change',
+    },
+    q5: {
+      title: 'Tes dépenses fixes par mois (loyer, cell, char…) ?',
+      options: [
+        { id: 'chez_parents', label: 'Je vis chez mes parents' },
+        { id: 'moins_500', label: 'Moins de 500 $' },
+        { id: '500_1500', label: '500 $ - 1 500 $' },
+        { id: 'plus_1500', label: 'Plus de 1 500 $' },
+      ],
+    },
+    q6: {
+      title: 'Où ton argent disparaît sans que tu le remarques ? 👀',
+      options: [
+        { id: 'restos', label: '🍔 Restos/livraison' },
+        { id: 'shopping', label: '🛍️ Shopping' },
+        { id: 'abonnements', label: '📺 Abonnements' },
+        { id: 'sorties', label: '🎉 Sorties' },
+        { id: 'jeux', label: '🎮 Jeux' },
+        { id: 'sais_pas', label: '🤷 Je sais pas' },
+      ],
+      continueButton: 'Continuer',
+    },
+    q7: {
+      title: 'T’épargnes pour quoi en premier ? 🎯',
+      options: [
+        { id: 'voyage', label: '✈️ Voyage', name: 'Voyage' },
+        { id: 'auto', label: '🚗 Char', name: 'Char' },
+        { id: 'appart', label: '🏠 Appart', name: 'Appart' },
+        { id: 'urgence', label: '🛟 Fonds d’urgence', name: 'Fonds d’urgence' },
+        { id: 'autre', label: '✏️ Autre', name: '' },
+      ],
+      customNamePlaceholder: 'Nom de ton objectif',
+      customNameEmptyError: 'Donne un nom à ton objectif.',
+      continueButton: 'Continuer',
+    },
+    q8: {
+      title: 'Combien, et pour quand ?',
+      amountPlaceholder: 'Montant total',
+      dateLabel: 'Pour quand ?',
+      perPayLine: (amount) => `Ça fait ${amount} par paye 💥`,
+      continueButton: 'Continuer',
+      amountEmptyError: 'Entre un montant plus grand que 0 $.',
+    },
+    q9: {
+      title: 'Tu te sens comment avec ton argent en ce moment ?',
+      options: [
+        { id: 'en_controle', label: '😌 En contrôle' },
+        { id: 'correct', label: '😐 Correct' },
+        { id: 'stresse', label: '😰 Stressé' },
+      ],
+    },
+    q10: {
+      title: 'Veux-tu des rappels sur WhatsApp ? 📲',
+      phonePlaceholder: '514 555 0199',
+      continueButton: 'Continuer',
+      declineButton: 'Non merci',
+      privacyNote:
+        'On ne s’en sert que pour t’écrire sur WhatsApp, jamais pour autre chose, et jamais revendu. Laisse ce champ vide si tu préfères ne pas le donner.',
+      countryLabel: 'Indicatif',
+      countrySearchPlaceholder: 'Rechercher un pays...',
+      consentLabel: 'J’accepte d’être contacté par WhatsApp par l’équipe SaveUp.',
+      invalidNumberError: 'Ce numéro ne semble pas valide — vérifie l’indicatif et le numéro.',
+      saveFailedError: 'Impossible d’enregistrer ton numéro — réessaie.',
     },
     plans: {
       heading: 'Choisis ton plan',
@@ -317,233 +200,107 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
     },
   },
   en: {
-    questions: [
-      {
-        text: 'How often do you check your bank balance?',
-        options: [
-          { id: 'a', label: 'Every day' },
-          { id: 'b', label: 'A few times a week' },
-          { id: 'c', label: 'Once a month' },
-          { id: 'd', label: "Never, I'm afraid to look" },
-        ],
-      },
-      {
-        text: 'When you get paid, what do you do first?',
-        options: [
-          { id: 'a', label: 'I set money aside right away' },
-          { id: 'b', label: 'I pay my bills' },
-          { id: 'c', label: 'I treat myself a little' },
-          { id: 'd', label: "I don't even check" },
-        ],
-      },
-      {
-        text: 'How many times a month do you buy something on impulse?',
-        options: [
-          { id: 'a', label: 'Never' },
-          { id: 'b', label: '1-2 times' },
-          { id: 'c', label: '3-5 times' },
-          { id: 'd', label: "I lose count" },
-        ],
-      },
-      {
-        text: 'Do you know roughly how much you spend on food/going out each month?',
-        options: [
-          { id: 'a', label: 'Yes, exactly' },
-          { id: 'b', label: 'Roughly' },
-          { id: 'c', label: 'No idea' },
-        ],
-      },
-      {
-        text: 'Do you currently have any savings set aside?',
-        options: [
-          { id: 'a', label: 'Yes, a solid cushion' },
-          { id: 'b', label: 'A little' },
-          { id: 'c', label: 'Nothing at all' },
-        ],
-      },
-      {
-        text: 'Do you have a specific goal in mind (trip, purchase, emergency fund)?',
-        options: [
-          { id: 'a', label: 'Yes, a specific one' },
-          { id: 'b', label: 'A vague idea' },
-          { id: 'c', label: 'No goal' },
-        ],
-      },
-      {
-        text: 'If an unexpected $500 expense came up tomorrow, what would you do?',
-        options: [
-          { id: 'a', label: 'Pay cash' },
-          { id: 'b', label: 'Dip into my savings' },
-          { id: 'c', label: 'Credit card' },
-          { id: 'd', label: 'Panic' },
-        ],
-      },
-      {
-        text: 'On average, how much of your income do you save each month?',
-        options: [
-          { id: 'a', label: 'More than 20%' },
-          { id: 'b', label: '10-20%' },
-          { id: 'c', label: 'Less than 10%' },
-          { id: 'd', label: '0%' },
-        ],
-      },
-      {
-        text: 'Does thinking about your money stress you out?',
-        options: [
-          { id: 'a', label: 'Never' },
-          { id: 'b', label: 'Sometimes' },
-          { id: 'c', label: 'Often' },
-          { id: 'd', label: 'Constantly' },
-        ],
-      },
-      {
-        text: 'Do you often compare your finances to other people\'s?',
-        options: [
-          { id: 'a', label: 'Never' },
-          { id: 'b', label: 'Sometimes' },
-          { id: 'c', label: 'Often' },
-        ],
-      },
-      {
-        text: "Have you ever avoided opening a bill out of fear of the amount?",
-        options: [
-          { id: 'a', label: 'Never' },
-          { id: 'b', label: 'Once or twice' },
-          { id: 'c', label: 'Regularly' },
-        ],
-      },
-      {
-        text: 'What stresses you out most about money?',
-        options: [
-          { id: 'a', label: "Not knowing where it goes" },
-          { id: 'b', label: "Not having enough" },
-          { id: 'c', label: 'Too much debt' },
-          { id: 'd', label: "Nothing, I'm in control" },
-        ],
-      },
-      {
-        text: 'Do you currently use a tool to track your budget?',
-        options: [
-          { id: 'a', label: 'Yes, religiously' },
-          { id: 'b', label: 'I tried, I gave up' },
-          { id: 'c', label: 'Never tried' },
-        ],
-      },
-      {
-        text: "What's holding you back most from managing your money well?",
-        options: [
-          { id: 'a', label: 'Lack of time' },
-          { id: 'b', label: 'Too complicated' },
-          { id: 'c', label: 'Lack of motivation' },
-          { id: 'd', label: "Don't know where to start" },
-        ],
-      },
-      {
-        text: "What's your main goal right now?",
-        options: [
-          { id: 'a', label: 'Get out of debt' },
-          { id: 'b', label: 'Build a safety cushion' },
-          { id: 'c', label: 'Save up for a specific project' },
-          { id: 'd', label: 'Get a clear view of my finances' },
-        ],
-      },
-    ],
-    progressLabel: (current, total) => `Question ${current} of ${total}`,
+    progressLabel: (current, total) => `${current}/${total}`,
     back: 'Back',
-    skipLater: 'Skip the quiz',
-    result: {
-      badge: 'Your financial profile',
-      scoreSuffix: '/100',
-      insightsHeading: 'Why this score',
-      insights: {
-        'stress-high':
-          'Your financial stress is high right now — a clear view of your finances can really help ease that.',
-        'stress-low': 'You manage your money without much stress — a real asset.',
-        'tracking-none': "You don't have a tracking tool in place right now — that's exactly what SaveUp fixes.",
-        'tracking-good': 'You already track your budget with discipline — impressive.',
-        'savings-strong': 'You save regularly, which is excellent.',
-        'savings-weak':
-          "You don't have a savings cushion yet — SaveUp can help you build one, little by little.",
-        'impulsive-high': 'Impulse purchases come up often — a bit of structure can make a big difference.',
-        'impulsive-low': 'You resist impulse purchases well — great control.',
-        'goal-none':
-          "You don't have a specific goal in mind yet — setting one makes saving a lot more motivating.",
-        'goal-clear': 'You have a clear goal in mind, which helps a lot with staying motivated.',
-        'emergency-ready': 'You can absorb an unexpected expense without trouble.',
-        'emergency-not-ready':
-          'An unexpected expense would put you in a tough spot — building a safety cushion should be a priority.',
-      },
-      continueButton: 'Set up my account',
-      archetypes: {
-        stressed: {
-          name: 'The Stressed',
-          description:
-            "Money is taking up a lot of headspace right now. The good news: a clear view of your finances is often enough to take the pressure off.",
-        },
-        impulsive: {
-          name: 'The Impulsive',
-          description:
-            "You spend on a whim without really tracking where it goes. A bit of structure, without giving up everything, can change a lot.",
-        },
-        cautious: {
-          name: 'The Cautious',
-          description:
-            "You already have good habits, but you're missing the right tools to really see where you stand.",
-        },
-        master: {
-          name: 'The Master',
-          description:
-            "You already manage your money with discipline and a clear view of your goals. SaveUp helps you go even further.",
-        },
-      },
-    },
-    setup: {
-      heading: 'Set up your account',
-      subtitle: 'A few basics so your Dashboard already shows something real.',
-      stepLabel: (current, total) => `Step ${current} of ${total}`,
-      card1Title: 'Your income',
-      incomeLabel: 'Approximate monthly income',
-      incomePlaceholder: '0.00',
-      payFrequencyLabel: 'Pay frequency',
-      payFrequencies: {
-        hebdomadaire: 'Weekly',
-        aux_deux_semaines: 'Every 2 weeks',
-        mensuelle: 'Monthly',
-      },
-      nextPaydayLabel: 'Next payday',
-      currencyLabel: 'Main currency',
-      currencies: {
-        CAD: 'CAD — Canadian dollar',
-        USD: 'USD — US dollar',
-        EUR: 'EUR — Euro',
-        GBP: 'GBP — British pound',
-        CHF: 'CHF — Swiss franc',
-      },
-      card2Title: 'Your savings',
-      savingsLabel: 'How much would you like to save per month?',
-      savingsHint: 'Pre-filled from your answers — adjust as you like.',
-      goalHeading: 'Your first savings goal',
-      goalNameLabel: 'Goal name',
-      goalNamePlaceholder: 'E.g. Emergency fund, Trip',
-      defaultGoalName: 'Emergency fund',
-      goalAmountLabel: 'Target amount',
-      whyLabel: 'Why do you want to save?',
-      whyPlaceholder: 'E.g. To feel more secure, to take a trip, to get out of debt...',
-      card3Title: 'Your categories',
-      categoriesHeading: 'Categories to track first',
-      categoriesHint: 'Pick 2 to 3 categories',
-      categories: {
-        epicerie: 'Groceries',
-        transport: 'Transport',
-        loisirs: 'Entertainment',
-        logement: 'Housing',
-        sante: 'Health',
-        abonnements: 'Subscriptions',
-      },
-      nextButton: 'Next',
-      backButton: 'Back',
+    q1: {
+      title: 'What should we call you? 👋',
+      placeholder: 'Your first name',
       continueButton: 'Continue',
-      savingButton: 'One sec...',
+      emptyError: 'Tell us what to call you.',
+    },
+    q2: {
+      title: 'You’re more…',
+      options: [
+        { id: 'etudiant', label: '🎓 A student' },
+        { id: 'travail', label: '💼 Working' },
+        { id: 'les_deux', label: '⚡ Both' },
+      ],
+    },
+    q3: {
+      title: 'Roughly how much comes in per month?',
+      options: [
+        { id: 'moins_500', label: 'Less than $500' },
+        { id: '500_1500', label: '$500 - $1,500' },
+        { id: '1500_3000', label: '$1,500 - $3,000' },
+        { id: '3000_plus', label: '$3,000 and up' },
+      ],
+    },
+    q4: {
+      title: 'Your pay comes in…',
+      options: [
+        { id: 'hebdomadaire', label: 'Every week' },
+        { id: 'aux_deux_semaines', label: 'Every 2 weeks' },
+        { id: 'mensuelle', label: 'Once a month' },
+        { id: 'ca_change', label: 'It varies' },
+      ],
+    },
+    payFrequencies: {
+      hebdomadaire: 'Every week',
+      aux_deux_semaines: 'Every 2 weeks',
+      mensuelle: 'Once a month',
+      ca_change: 'It varies',
+    },
+    q5: {
+      title: 'Your fixed monthly costs (rent, phone, car…)?',
+      options: [
+        { id: 'chez_parents', label: 'I live with my parents' },
+        { id: 'moins_500', label: 'Less than $500' },
+        { id: '500_1500', label: '$500 - $1,500' },
+        { id: 'plus_1500', label: 'More than $1,500' },
+      ],
+    },
+    q6: {
+      title: 'Where does your money disappear without you noticing? 👀',
+      options: [
+        { id: 'restos', label: '🍔 Takeout/delivery' },
+        { id: 'shopping', label: '🛍️ Shopping' },
+        { id: 'abonnements', label: '📺 Subscriptions' },
+        { id: 'sorties', label: '🎉 Going out' },
+        { id: 'jeux', label: '🎮 Gaming' },
+        { id: 'sais_pas', label: '🤷 Not sure' },
+      ],
+      continueButton: 'Continue',
+    },
+    q7: {
+      title: 'What are you saving for first? 🎯',
+      options: [
+        { id: 'voyage', label: '✈️ A trip', name: 'Trip' },
+        { id: 'auto', label: '🚗 A car', name: 'Car' },
+        { id: 'appart', label: '🏠 An apartment', name: 'Apartment' },
+        { id: 'urgence', label: '🛟 Emergency fund', name: 'Emergency fund' },
+        { id: 'autre', label: '✏️ Something else', name: '' },
+      ],
+      customNamePlaceholder: 'Name your goal',
+      customNameEmptyError: 'Give your goal a name.',
+      continueButton: 'Continue',
+    },
+    q8: {
+      title: 'How much, and by when?',
+      amountPlaceholder: 'Total amount',
+      dateLabel: 'By when?',
+      perPayLine: (amount) => `That's ${amount} per paycheck 💥`,
+      continueButton: 'Continue',
+      amountEmptyError: 'Enter an amount greater than $0.',
+    },
+    q9: {
+      title: 'How are you feeling about money right now?',
+      options: [
+        { id: 'en_controle', label: '😌 In control' },
+        { id: 'correct', label: '😐 Okay' },
+        { id: 'stresse', label: '😰 Stressed' },
+      ],
+    },
+    q10: {
+      title: 'Want reminders on WhatsApp? 📲',
+      phonePlaceholder: '514 555 0199',
+      continueButton: 'Continue',
+      declineButton: 'No thanks',
+      privacyNote: 'Only ever used to message you on WhatsApp, never for anything else, never sold. Leave this blank if you’d rather not share it.',
+      countryLabel: 'Country code',
+      countrySearchPlaceholder: 'Search for a country...',
+      consentLabel: 'I agree to be contacted on WhatsApp by the SaveUp team.',
+      invalidNumberError: 'This number doesn’t look valid — check the country code and number.',
+      saveFailedError: 'Could not save your number — try again.',
     },
     plans: {
       heading: 'Choose your plan',

@@ -1,7 +1,7 @@
 import type { Lang } from './language'
 
 export interface DashboardContent {
-  pageHeader: { title: string; subtitle: string }
+  pageHeader: { title: string; subtitle: string; reassuranceStressed: string }
   help: { purpose: string; actions: string[] }
   freshUser: {
     title: string
@@ -93,6 +93,60 @@ export interface DashboardContent {
       description: string
       exitButton: string
     }
+    // Same copy as Épargne's own goal-card quick-add (lib/i18n/epargne.ts)
+    // — same interaction, just a second place it's reachable from.
+    quickAdd: {
+      ariaLabel: (name: string) => string
+      placeholder: string
+      confirm: string
+      emptyError: string
+      invalidError: string
+    }
+  }
+  needsLimit: {
+    title: string
+    hint: string
+    needsLabel: string
+    needsAriaLabel: string
+    savingsLabel: string
+    savingsAriaLabel: string
+    ofLimit: (amount: string) => string
+    barAriaLabel: string
+    pctUsed: (pct: number) => string
+    savingsTargetLine: (amount: string) => string
+    disclaimer: string
+  }
+  subscriptionsFound: {
+    title: string
+    hint: (monthlyTotal: string) => string
+    moreCount: (n: number) => string
+    viewAll: string
+  }
+  welcomeTutorial: {
+    modalTitle: string
+    stepLabel: (step: number) => string
+    skip: string
+    back: string
+    next: string
+    step1Title: string
+    step1Hint: string
+    presets: { id: 'urgence' | 'vacances' | 'achat' | 'autre'; label: string; name: string }[]
+    customNamePlaceholder: string
+    customNameEmptyError: string
+    step2Title: string
+    step2Hint: string
+    amountPlaceholder: string
+    amountAriaLabel: string
+    amountEmptyError: string
+    step3Title: string
+    step3Hint: string
+    demoOutOf: (amount: string) => string
+    barAriaLabel: string
+    previewBadge: string
+    previewNote: string
+    create: string
+    creating: string
+    createError: string
   }
 }
 
@@ -101,6 +155,7 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
     pageHeader: {
       title: "Comment tu t'en sors",
       subtitle: 'Ton portrait financier en un coup d’œil.',
+      reassuranceStressed: 'Tu es au bon endroit — on y va un pas à la fois. 💙',
     },
     help: {
       purpose:
@@ -234,12 +289,70 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
         description: 'Données fictives — rien n’est enregistré dans ton compte.',
         exitButton: 'Revenir à mes données',
       },
+      quickAdd: {
+        ariaLabel: (name) => `Ajouter un montant à ${name}`,
+        placeholder: 'Montant à ajouter',
+        confirm: 'Ajouter',
+        emptyError: 'Entre un montant.',
+        invalidError: 'Le montant doit être plus grand que 0 $.',
+      },
+    },
+    needsLimit: {
+      title: 'Limite du mois',
+      hint: 'Repères généraux pour tes besoins et ton épargne, à partir de ton revenu.',
+      needsLabel: 'Besoins',
+      needsAriaLabel: 'Pourcentage du revenu réservé aux besoins',
+      savingsLabel: 'Épargne',
+      savingsAriaLabel: "Pourcentage du revenu réservé à l'épargne",
+      ofLimit: (amount) => `sur ${amount} alloués`,
+      barAriaLabel: 'Dépenses de besoins par rapport à la limite',
+      pctUsed: (pct) => `${pct}% de ta limite de besoins utilisée`,
+      savingsTargetLine: (amount) => `Objectif d'épargne suggéré ce mois-ci : ${amount}.`,
+      disclaimer: 'Repère général, pas un conseil financier.',
+    },
+    subscriptionsFound: {
+      title: 'Abonnements trouvés',
+      hint: (monthlyTotal) => `Détectés automatiquement dans tes dépenses — ${monthlyTotal} par mois.`,
+      moreCount: (n) => `+ ${n} autre${n > 1 ? 's' : ''}`,
+      viewAll: 'Voir et gérer sur Premium',
+    },
+    welcomeTutorial: {
+      modalTitle: 'Bienvenue sur SaveUp',
+      stepLabel: (step) => `Étape ${step} sur 3`,
+      skip: 'Passer',
+      back: 'Retour',
+      next: 'Suivant',
+      step1Title: 'Choisis un objectif',
+      step1Hint: "Tu pourras en ajouter d'autres plus tard.",
+      presets: [
+        { id: 'urgence', label: "🛟 Fonds d'urgence", name: "Fonds d'urgence" },
+        { id: 'vacances', label: '✈️ Vacances', name: 'Vacances' },
+        { id: 'achat', label: '🛍️ Achat important', name: 'Achat important' },
+        { id: 'autre', label: '🎯 Autre', name: '' },
+      ],
+      customNamePlaceholder: 'Nom de ton objectif',
+      customNameEmptyError: 'Donne un nom à ton objectif.',
+      step2Title: 'Combien veux-tu économiser ?',
+      step2Hint: 'Tu pourras changer ce montant à tout moment.',
+      amountPlaceholder: 'Montant total',
+      amountAriaLabel: 'Montant à économiser',
+      amountEmptyError: 'Entre un montant plus grand que 0 $.',
+      step3Title: 'Regarde ta barre se remplir',
+      step3Hint: 'Chaque fois que tu ajoutes un montant, ta barre avance — jusqu\'à 100 %.',
+      demoOutOf: (amount) => `sur ${amount}`,
+      barAriaLabel: 'Aperçu de la progression de ton objectif',
+      previewBadge: 'Aperçu',
+      previewNote: 'Ton objectif commencera à 0 $ une fois créé.',
+      create: 'Créer mon objectif',
+      creating: 'Création…',
+      createError: "Impossible de créer l'objectif. Réessaie.",
     },
   },
   en: {
     pageHeader: {
       title: "How you're doing",
       subtitle: 'Your whole financial picture, at a glance.',
+      reassuranceStressed: "You're in the right place — one step at a time. 💙",
     },
     help: {
       purpose:
@@ -373,6 +486,63 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
         description: 'Sample data — nothing is saved to your account.',
         exitButton: 'Back to my data',
       },
+      quickAdd: {
+        ariaLabel: (name) => `Add an amount to ${name}`,
+        placeholder: 'Amount to add',
+        confirm: 'Add',
+        emptyError: 'Enter an amount.',
+        invalidError: 'The amount must be greater than $0.',
+      },
+    },
+    needsLimit: {
+      title: 'Monthly limit',
+      hint: 'General reference points for your needs and savings, based on your income.',
+      needsLabel: 'Needs',
+      needsAriaLabel: 'Percentage of income set aside for needs',
+      savingsLabel: 'Savings',
+      savingsAriaLabel: 'Percentage of income set aside for savings',
+      ofLimit: (amount) => `of ${amount} allotted`,
+      barAriaLabel: 'Needs spending relative to the limit',
+      pctUsed: (pct) => `${pct}% of your needs limit used`,
+      savingsTargetLine: (amount) => `Suggested savings target this month: ${amount}.`,
+      disclaimer: 'General reference point, not financial advice.',
+    },
+    subscriptionsFound: {
+      title: 'Subscriptions found',
+      hint: (monthlyTotal) => `Detected automatically in your expenses — ${monthlyTotal} a month.`,
+      moreCount: (n) => `+ ${n} more`,
+      viewAll: 'View and manage on Premium',
+    },
+    welcomeTutorial: {
+      modalTitle: 'Welcome to SaveUp',
+      stepLabel: (step) => `Step ${step} of 3`,
+      skip: 'Skip',
+      back: 'Back',
+      next: 'Next',
+      step1Title: 'Choose a goal',
+      step1Hint: 'You can add more later.',
+      presets: [
+        { id: 'urgence', label: '🛟 Emergency fund', name: 'Emergency fund' },
+        { id: 'vacances', label: '✈️ Vacation', name: 'Vacation' },
+        { id: 'achat', label: '🛍️ Big purchase', name: 'Big purchase' },
+        { id: 'autre', label: '🎯 Other', name: '' },
+      ],
+      customNamePlaceholder: 'Name your goal',
+      customNameEmptyError: 'Give your goal a name.',
+      step2Title: 'How much do you want to save?',
+      step2Hint: 'You can change this amount any time.',
+      amountPlaceholder: 'Total amount',
+      amountAriaLabel: 'Amount to save',
+      amountEmptyError: 'Enter an amount greater than $0.',
+      step3Title: 'Watch your bar fill up',
+      step3Hint: 'Every time you add an amount, your bar moves forward — all the way to 100%.',
+      demoOutOf: (amount) => `out of ${amount}`,
+      barAriaLabel: 'Preview of your goal progress',
+      previewBadge: 'Preview',
+      previewNote: 'Your goal will start at $0 once created.',
+      create: 'Create my goal',
+      creating: 'Creating…',
+      createError: 'Could not create the goal. Try again.',
     },
   },
 }

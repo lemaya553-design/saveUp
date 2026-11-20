@@ -9,6 +9,7 @@ import { getGoalEncouragementTier } from '../lib/goalEncouragement'
 import { hasCelebratedGoal, markGoalCelebrated } from '../lib/goalCelebration'
 import { DEMO_GOALS } from '../lib/demoGoals'
 import { DASHBOARD } from '../lib/i18n/dashboard'
+import { COMMON } from '../lib/i18n/common'
 import type { SavingsGoal } from '../hooks/useSavingsGoals'
 
 const ANIMATION_DURATION_MS = 1000
@@ -24,6 +25,14 @@ function TargetIcon({ className }: { className: string }) {
       <circle cx="12" cy="12" r="8" />
       <circle cx="12" cy="12" r="4" />
       <circle cx="12" cy="12" r="0.75" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function PlusIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className={className}>
+      <path strokeLinecap="round" d="M12 5v14M5 12h14" />
     </svg>
   )
 }
@@ -175,11 +184,24 @@ function AnimatedGoalStats({
   )
 }
 
-export function DashboardGoalCard({ goals }: { goals: SavingsGoal[] }) {
+export function DashboardGoalCard({
+  goals,
+  onAddContribution,
+}: {
+  goals: SavingsGoal[]
+  // Optional: guest mode's own useSavingsGoals().addContribution works
+  // exactly the same way (writes to lib/guestStore.ts instead of
+  // Supabase), so this card needs no guest-specific branching of its own.
+  onAddContribution?: (goalId: string, amount: number) => Promise<void>
+}) {
   const { lang } = useLanguage()
   const t = DASHBOARD[lang].goalCard
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null)
   const [demoMode, setDemoMode] = useState(false)
+  const [addingAmount, setAddingAmount] = useState(false)
+  const [contributeAmount, setContributeAmount] = useState('')
+  const [contributeError, setContributeError] = useState<string | null>(null)
+  const [contributing, setContributing] = useState(false)
 
   // The only two places DEMO_GOALS is read — everything below this line
   // (sorting, the active-goal lookup, the card's own JSX) treats
@@ -189,6 +211,15 @@ export function DashboardGoalCard({ goals }: { goals: SavingsGoal[] }) {
   // reach Supabase even by accident.
   const displayGoals = demoMode ? DEMO_GOALS : goals
 
+  // Bumped after a successful quick-add so AnimatedGoalStats (keyed on
+  // `${activeGoal.id}-${animationKey}` below) remounts and its useCountUp
+  // tweens/bar replays from 0 to the new total — useCountUp only ever
+  // animates once per mount by design, so this is what makes "the bar
+  // fills with the animation" actually happen a second time, same trick
+  // the goal-reached confetti effect already relies on elsewhere in this
+  // file.
+  const [animationKey, setAnimationKey] = useState(0)
+
   function enterDemoMode() {
     setSelectedGoalId(null)
     setDemoMode(true)
@@ -197,6 +228,37 @@ export function DashboardGoalCard({ goals }: { goals: SavingsGoal[] }) {
   function exitDemoMode() {
     setSelectedGoalId(null)
     setDemoMode(false)
+  }
+
+  function cancelAddAmount() {
+    setAddingAmount(false)
+    setContributeAmount('')
+    setContributeError(null)
+  }
+
+  function selectGoal(id: string) {
+    setSelectedGoalId(id)
+    cancelAddAmount()
+  }
+
+  async function submitAddAmount(e: React.FormEvent, goalId: string) {
+    e.preventDefault()
+    if (!onAddContribution) return
+    if (contributeAmount.trim() === '') {
+      setContributeError(t.quickAdd.emptyError)
+      return
+    }
+    const parsed = Number(contributeAmount)
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      setContributeError(t.quickAdd.invalidError)
+      return
+    }
+    setContributeError(null)
+    setContributing(true)
+    await onAddContribution(goalId, parsed)
+    setContributing(false)
+    setAnimationKey((k) => k + 1)
+    cancelAddAmount()
   }
 
   // Most-advanced-first — an exactly-100% goal naturally surfaces first
@@ -275,7 +337,7 @@ export function DashboardGoalCard({ goals }: { goals: SavingsGoal[] }) {
 
       <div className="mt-4">
         <AnimatedGoalStats
-          key={activeGoal.id}
+          key={`${activeGoal.id}-${animationKey}`}
           goalId={activeGoal.id}
           currentAmount={activeGoal.currentAmount}
           targetAmount={activeGoal.targetAmount}
@@ -292,9 +354,15 @@ export function DashboardGoalCard({ goals }: { goals: SavingsGoal[] }) {
     </>
   )
 
+  // Lives outside the <Link> below (a nested interactive element would
+  // either be invalid/unreliable HTML or hijack the whole card's click),
+  // positioned on top of it instead — same reasoning the demo-mode plain
+  // <div> fallback already follows for the same card.
+  const showQuickAdd = !demoMode && !!onAddContribution
+
   return (
     <div
-      className="hover-lift mb-6 min-w-0 overflow-hidden rounded-2xl border shadow-sm"
+      className="hover-lift relative mb-6 min-w-0 overflow-hidden rounded-2xl border shadow-sm"
       style={{ borderColor: CARD_BORDER, background: CARD_BACKGROUND }}
     >
       {demoMode && (
@@ -315,13 +383,62 @@ export function DashboardGoalCard({ goals }: { goals: SavingsGoal[] }) {
         </Link>
       )}
 
+      {showQuickAdd && !addingAmount && (
+        <button
+          type="button"
+          onClick={() => setAddingAmount(true)}
+          aria-label={t.quickAdd.ariaLabel(activeGoal.name)}
+          className="absolute right-5 top-5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FF7A00]/15 text-[#FF7A00] transition-colors hover:bg-[#FF7A00]/25 sm:right-6 sm:top-6"
+        >
+          <PlusIcon className="h-5 w-5" />
+        </button>
+      )}
+
+      {showQuickAdd && addingAmount && (
+        <form
+          onSubmit={(e) => submitAddAmount(e, activeGoal.id)}
+          noValidate
+          className="flex flex-wrap items-start gap-2 px-5 pb-5 sm:px-6 sm:pb-6"
+        >
+          <input
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.01"
+            value={contributeAmount}
+            onChange={(e) => {
+              setContributeAmount(e.target.value)
+              setContributeError(null)
+            }}
+            placeholder={t.quickAdd.placeholder}
+            autoFocus
+            className="min-w-0 flex-1 rounded-lg budget-field px-3 py-2 text-sm text-ink placeholder-muted"
+          />
+          <button
+            type="submit"
+            disabled={contributing}
+            className="min-h-[44px] rounded-lg budget-btn-primary px-4 py-2 text-sm font-medium transition-all disabled:opacity-60"
+          >
+            {t.quickAdd.confirm}
+          </button>
+          <button
+            type="button"
+            onClick={cancelAddAmount}
+            className="min-h-[44px] rounded-lg px-3 py-2 text-sm text-muted hover:text-ink"
+          >
+            {COMMON[lang].app.cancel}
+          </button>
+          {contributeError && <p className="w-full text-xs text-red-400">{contributeError}</p>}
+        </form>
+      )}
+
       {sortedGoals.length > 1 && (
         <div className="flex flex-wrap gap-2 px-5 pb-5 sm:px-6 sm:pb-6">
           {sortedGoals.map((g) => (
             <button
               key={g.id}
               type="button"
-              onClick={() => setSelectedGoalId(g.id)}
+              onClick={() => selectGoal(g.id)}
               aria-pressed={g.id === activeGoal.id}
               className={`flex min-h-[44px] max-w-[9rem] items-center truncate rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                 g.id === activeGoal.id ? 'border-transparent text-white' : 'border-overlay/15 text-muted hover:text-ink'

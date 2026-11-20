@@ -1,259 +1,115 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { useCategories } from '../hooks/useCategories'
 import { useIncome } from '../hooks/useIncome'
 import { useLanguage } from '../hooks/useLanguage'
-import { useOnboardingQuiz } from '../hooks/useOnboardingQuiz'
+import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { usePreferences } from '../hooks/usePreferences'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSubscription } from '../hooks/useSubscription'
 import { useToast } from '../components/ToastProvider'
+import { CountrySelect } from '../components/CountrySelect'
+import { DEFAULT_DIAL_COUNTRY, toE164 } from '../lib/phone'
 import { ONBOARDING_QUIZ } from '../lib/i18n/onboardingQuiz'
 import { TARIFS } from '../lib/i18n/tarifs'
+import { computeAmountPerPay } from '../lib/onboardingGoalPace'
 import {
-  QUIZ_QUESTION_IDS,
-  INSIGHT_POLARITY,
+  INCOME_RANGE_MIDPOINT,
   PAY_FREQUENCIES,
-  SETUP_CATEGORY_IDS,
-  SETUP_CATEGORY_INCOME_PCT,
-  computeQuizInsights,
-  computeQuizResult,
-  mainGoalFromQuiz,
-  suggestedSavingsPct,
+  type FinancialMood,
+  type FixedExpensesRange,
+  type IncomeRange,
+  type MoneyLeak,
   type PayFrequency,
-  type QuizAnswers,
-  type QuizResult,
-  type SetupCategoryId,
+  type SavingsGoalType,
+  type WorkStatus,
 } from '../lib/onboardingQuiz'
 import { PLAN_LIMITS, TRIAL_DAYS, type Plan } from '../lib/plans'
-import { CURRENCIES, formatBillingAmount, type Currency } from '../lib/format'
+import { formatBillingAmount } from '../lib/format'
+import type { CountryCode } from 'libphonenumber-js'
 
-// Three-phase flow replacing the old income/expenses/goal wizard: a
-// 15-question quiz, a scored archetype result (shareable as an image), then
-// plan selection with Premium's "first month at $7.99" launch offer. Styled
-// black/orange throughout, independent of the app's own theme tokens — the
-// same literal-color approach Connexion.tsx uses, so this reads as a
-// continuation of the landing page / connexion visual identity rather than
-// switching to the app's internal (currently dark-blue) chrome right after
-// signup.
+// 10-question onboarding (replaces the old 15-question archetype quiz +
+// "Configure ton compte" setup phase — see lib/onboardingQuiz.ts's header
+// comment for where that went) followed by the same plan-selection step as
+// before. Styled black/orange throughout, independent of the app's own
+// theme tokens — same literal-color approach as Connexion.tsx, so this
+// reads as a continuation of the landing page / connexion visual identity
+// rather than switching to the app's internal chrome right after signup.
 //
-// Unlike the old flow, this one never collects income/expenses/goals — the
-// app's "fresh user" gate (Dashboard.tsx) now reads useOnboardingQuiz's
-// `completed` instead, so an account can reach a real, if mostly empty,
-// Dashboard straight after choosing a plan. Budget/Épargne's own empty
-// states pick up from there organically.
+// Answers are collected across all 10 screens in local state and only
+// written to Supabase once, at the very end (finishOnboarding, triggered by
+// Q10) — see usePreferences.tsx's completeOnboarding for why that specific
+// moment was chosen (abandoning the kept plan-selection step after Q10
+// must never replay the questions).
 
-type Phase = 'quiz' | 'result' | 'setup' | 'plans'
+type Phase = 'questions' | 'plans'
+const TOTAL_QUESTIONS = 10
 
-// 2 of the 6 come pre-checked so even someone who blitzes through without
-// touching anything still ends up with real, budgeted categories instead
-// of none at all — matches the "dashboard shows something concrete, not
-// zeros" goal driving this whole step.
-const DEFAULT_SETUP_CATEGORIES: SetupCategoryId[] = ['epicerie', 'transport']
-const MAX_SETUP_CATEGORIES = 3
-
-const inputCardClass =
-  'rounded-2xl border border-white/15 bg-white/5 p-4 text-left font-medium text-white transition-all hover:border-[#ff6b00]/50 hover:bg-white/10'
+const bigButtonClass = (active: boolean) =>
+  `rounded-2xl border px-4 py-4 text-left font-medium transition-all ${
+    active
+      ? 'border-[#ff6b00] bg-[#ff6b00]/15 text-white'
+      : 'border-white/15 bg-white/5 text-white hover:border-[#ff6b00]/50 hover:bg-white/10'
+  }`
 
 const fieldClass =
   'rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-white placeholder-white/35 focus:border-[#ff6b00] focus:outline-none'
 
-const pillButtonClass = (active: boolean) =>
-  `rounded-xl border px-3 py-2.5 text-center text-sm font-medium transition-all ${
-    active ? 'border-[#ff6b00] bg-[#ff6b00]/15 text-white' : 'border-white/15 bg-white/5 text-white/70 hover:bg-white/10'
-  }`
-
-// Small orange icon chip next to each field label — part of the "look more
-// premium/soigné" ask: an un-decorated stacked list of inputs reads as
-// plain, a consistent icon treatment reads as considered.
-function FieldIcon({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#ff6b00]/15 text-[#ff6b00]">
-      {children}
-    </span>
-  )
-}
-
-function FieldLabel({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <span className="flex items-center gap-2">
-      <FieldIcon>{icon}</FieldIcon>
-      <span className="text-white/80">{children}</span>
-    </span>
-  )
-}
-
-const iconProps = {
-  viewBox: '0 0 24 24',
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 1.75,
-  strokeLinecap: 'round' as const,
-  strokeLinejoin: 'round' as const,
-  className: 'h-4 w-4',
-}
-
-function IncomeIcon() {
-  return (
-    <svg {...iconProps}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7.5v9M9.25 9.75h3.5a1.75 1.75 0 0 1 0 3.5h-1.5a1.75 1.75 0 0 0 0 3.5h3.5" />
-    </svg>
-  )
-}
-
-function RepeatIcon() {
-  return (
-    <svg {...iconProps}>
-      <path d="M17 2.5l4 4-4 4" />
-      <path d="M3 11.5v-2a4 4 0 0 1 4-4h14" />
-      <path d="M7 21.5l-4-4 4-4" />
-      <path d="M21 12.5v2a4 4 0 0 1-4 4H3" />
-    </svg>
-  )
-}
-
-function CalendarIcon() {
-  return (
-    <svg {...iconProps}>
-      <rect x="3" y="4.5" width="18" height="16" rx="2" />
-      <path d="M16 2.5v4M8 2.5v4M3 10.5h18" />
-    </svg>
-  )
-}
-
-function CurrencyIcon() {
-  return (
-    <svg {...iconProps}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3 12h18M12 3a13.5 13.5 0 0 1 0 18M12 3a13.5 13.5 0 0 0 0 18" />
-    </svg>
-  )
-}
-
-function TrendIcon() {
-  return (
-    <svg {...iconProps}>
-      <path d="M3 17l6-6 4 4 8-8" />
-      <path d="M15 7h6v6" />
-    </svg>
-  )
-}
-
-function GoalIcon() {
-  return (
-    <svg {...iconProps}>
-      <circle cx="12" cy="12" r="8" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="12" cy="12" r="0.75" fill="currentColor" stroke="none" />
-    </svg>
-  )
-}
-
-function HeartIcon() {
-  return (
-    <svg {...iconProps}>
-      <path d="M12 20.5s-7.5-4.6-9.8-9.1A5.3 5.3 0 0 1 12 6.1a5.3 5.3 0 0 1 9.8 5.3C19.5 15.9 12 20.5 12 20.5z" />
-    </svg>
-  )
-}
-
-function TagIcon() {
-  return (
-    <svg {...iconProps}>
-      <path d="M20.5 13.1L13.1 20.5a2 2 0 0 1-2.8 0L2.5 12.7V3h9.7l8.3 8.3a2 2 0 0 1 0 2.8z" />
-      <circle cx="7.5" cy="7.5" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  )
-}
+const primaryButtonClass =
+  'w-full rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50'
 
 export function Onboarding() {
   const navigate = useNavigate()
   const { lang } = useLanguage()
   const t = ONBOARDING_QUIZ[lang]
   const tarifs = TARIFS[lang]
-  const quiz = useOnboardingQuiz()
   const preferences = usePreferences()
   const subscription = useSubscription()
   const income = useIncome()
   const goals = useSavingsGoals()
-  const categories = useCategories()
+  const formatMoney = useMoneyFormat()
   const { showToast } = useToast()
   const fmt = (amount: number) => formatBillingAmount(amount, lang)
 
-  const [phase, setPhase] = useState<Phase>('quiz')
-  const [questionIndex, setQuestionIndex] = useState(0)
-  const [answers, setAnswers] = useState<QuizAnswers>({})
-  const [result, setResult] = useState<QuizResult | null>(null)
-  const [pendingPlan, setPendingPlan] = useState<Plan | null>(null)
-  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
+  const [phase, setPhase] = useState<Phase>('questions')
+  const [qIndex, setQIndex] = useState(0)
   const [exiting, setExiting] = useState(false)
   const [transitioning, setTransitioning] = useState(false)
+  const [pendingPlan, setPendingPlan] = useState<Plan | null>(null)
 
-  // Setup step (between result and plans) — income drives the savings
-  // suggestion, which drives the goal-amount suggestion, each only
-  // auto-updating until the user actually edits that specific field
-  // themselves (the *Touched flags), so typing an income doesn't stomp on
-  // a goal amount someone already customized. Split across 3 small cards
-  // (setupStep) rather than one long form.
-  const [setupStep, setSetupStep] = useState(0)
-  const [incomeDraft, setIncomeDraft] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [firstNameError, setFirstNameError] = useState<string | null>(null)
+  const [workStatus, setWorkStatus] = useState<WorkStatus | null>(null)
+  const [incomeRange, setIncomeRange] = useState<IncomeRange | null>(null)
   const [payFrequency, setPayFrequency] = useState<PayFrequency | null>(null)
-  const [nextPayday, setNextPayday] = useState('')
-  const [currencyDraft, setCurrencyDraft] = useState<Currency>(preferences.currency)
-  const [savingsDraft, setSavingsDraft] = useState('')
-  const [savingsTouched, setSavingsTouched] = useState(false)
-  const [goalName, setGoalName] = useState(t.setup.defaultGoalName)
+  const [fixedExpensesRange, setFixedExpensesRange] = useState<FixedExpensesRange | null>(null)
+  const [moneyLeaks, setMoneyLeaks] = useState<MoneyLeak[]>([])
+  const [savingsGoalType, setSavingsGoalType] = useState<SavingsGoalType | null>(null)
+  const [customGoalName, setCustomGoalName] = useState('')
+  const [customGoalNameError, setCustomGoalNameError] = useState<string | null>(null)
   const [goalAmount, setGoalAmount] = useState('')
-  const [goalAmountTouched, setGoalAmountTouched] = useState(false)
-  const [savingsWhy, setSavingsWhy] = useState('')
-  const [setupCategories, setSetupCategories] = useState<SetupCategoryId[]>(DEFAULT_SETUP_CATEGORIES)
-  const [submittingSetup, setSubmittingSetup] = useState(false)
+  const [goalAmountError, setGoalAmountError] = useState<string | null>(null)
+  const [goalDate, setGoalDate] = useState('')
+  const [financialMood, setFinancialMood] = useState<FinancialMood | null>(null)
 
-  useEffect(() => {
-    if (savingsTouched) return
-    const incomeValue = Number(incomeDraft) || 0
-    setSavingsDraft(incomeValue > 0 ? String(Math.round(incomeValue * suggestedSavingsPct(answers))) : '')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [incomeDraft, savingsTouched])
+  const [country, setCountry] = useState<CountryCode>(DEFAULT_DIAL_COUNTRY)
+  const [phoneDraft, setPhoneDraft] = useState('')
+  const [consent, setConsent] = useState(false)
+  const [phoneError, setPhoneError] = useState<string | null>(null)
+  const [finishing, setFinishing] = useState(false)
 
-  useEffect(() => {
-    if (goalAmountTouched) return
-    const savingsValue = Number(savingsDraft) || 0
-    // A modest, concrete starter goal — roughly 3 months of the savings
-    // rate just suggested, not a specific real-world target (the user
-    // renames/retargets this immediately on the Épargne page if they want).
-    setGoalAmount(savingsValue > 0 ? String(savingsValue * 3) : '')
-  }, [savingsDraft, goalAmountTouched])
-
-  // Where to land is checked ONCE, when loading first resolves, and locked
-  // into a ref/one-time phase jump rather than read reactively off
-  // quiz.completed — completing the quiz THIS session also flips
-  // quiz.completed to true (saveResult sets it before its own network
-  // write finishes), and reading it reactively here used to fire the
-  // "already done" redirect right after the last question, before
-  // setPhase('result') ever ran. Three outcomes once both quiz and income
-  // have loaded:
-  //  - quiz not completed: normal flow, starts at the quiz (default state).
-  //  - quiz completed, no income on file yet: they have an account but
-  //    never finished "Configure ton compte" — most commonly because they
-  //    picked Standard/Premium, cancelled on Stripe's page, and Stripe's
-  //    cancel_url sent them back to /onboarding (see handleChoosePlan).
-  //    Resume directly on the setup step instead of replaying the
-  //    already-seen quiz/result.
-  //  - quiz completed AND income on file: fully done, straight to the app.
+  // Checked once, when preferences first resolves — an account that
+  // already has onboardingCompletedAt set skips straight to /dashboard, the
+  // same way the old quiz/setup flow did once quiz+income were both on
+  // file. No mid-flow resume: the 10 questions are quick enough that
+  // restarting from Q1 if abandoned early isn't worth the extra state.
   const [initialCheckDone, setInitialCheckDone] = useState(false)
-  const alreadyCompletedRef = useRef(false)
+  const alreadyDoneRef = useRef(false)
 
   useEffect(() => {
-    if (quiz.loading || income.loading || initialCheckDone) return
-    if (quiz.completed && income.hasIncomeRecord) {
-      alreadyCompletedRef.current = true
-    } else if (quiz.completed && !income.hasIncomeRecord) {
-      setPhase('setup')
-    }
+    if (preferences.loading || initialCheckDone) return
+    if (preferences.onboardingCompletedAt) alreadyDoneRef.current = true
     setInitialCheckDone(true)
-  }, [quiz.loading, quiz.completed, income.loading, income.hasIncomeRecord, initialCheckDone])
+  }, [preferences.loading, preferences.onboardingCompletedAt, initialCheckDone])
 
   if (!initialCheckDone) {
     return (
@@ -263,88 +119,74 @@ export function Onboarding() {
     )
   }
 
-  // Already done this before (revisited the URL, or came back after
-  // abandoning before picking a plan) — the quiz/result moment doesn't
-  // replay, straight to the app. They can always upgrade later from
-  // /tarifs.
-  if (alreadyCompletedRef.current) {
+  if (alreadyDoneRef.current) {
     return <Navigate to="/dashboard" replace />
   }
 
-  async function finishQuiz(finalAnswers: QuizAnswers) {
-    const computed = computeQuizResult(finalAnswers)
-    setResult(computed)
-    // Still shows the result/plans screens even if this fails (the score
-    // and archetype are computed client-side, not dependent on the write)
-    // — if it really did fail, quiz.error now surfaces on Dashboard instead
-    // of silently bouncing back here, see useOnboardingQuiz.ts.
-    await quiz.saveResult({ ...computed, answers: finalAnswers })
-    const mainGoal = mainGoalFromQuiz(finalAnswers)
-    if (mainGoal) preferences.setOnboardingProfile(mainGoal, false, 'hebdomadaire')
-    setPhase('result')
-  }
-
-  // Selecting an answer pulses the clicked button orange and slides/fades
-  // the question out before the next one slides/fades in (CSS classes
-  // .answer-pulse / .question-exit / .question-enter in index.css) — the
-  // actual data update and advance are deliberately delayed until that
-  // plays out, skipped entirely under prefers-reduced-motion.
-  async function selectAnswer(optionId: string) {
+  // Same pulse-then-slide transition as the old quiz (.question-exit/
+  // .question-enter in index.css), skipped under prefers-reduced-motion.
+  // `mutate` (if given) runs before the exit delay so a single-choice
+  // button's selected state visibly updates before the question slides
+  // away; omitted for explicit "Continuer" buttons, which already applied
+  // their state change before calling this.
+  async function advance(mutate?: () => void) {
     if (transitioning) return
     setTransitioning(true)
-    setSelectedOptionId(optionId)
+    mutate?.()
     setExiting(true)
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       await new Promise((resolve) => setTimeout(resolve, 340))
     }
-    const questionId = QUIZ_QUESTION_IDS[questionIndex]
-    const nextAnswers = { ...answers, [questionId]: optionId }
-    setAnswers(nextAnswers)
-    if (questionIndex < QUIZ_QUESTION_IDS.length - 1) {
-      setQuestionIndex((i) => i + 1)
-    } else {
-      await finishQuiz(nextAnswers)
-    }
-    setSelectedOptionId(null)
+    setQIndex((i) => Math.min(TOTAL_QUESTIONS - 1, i + 1))
     setExiting(false)
     setTransitioning(false)
   }
 
   function goBack() {
-    setQuestionIndex((i) => Math.max(0, i - 1))
+    setQIndex((i) => Math.max(0, i - 1))
   }
 
-  // Escape hatch for anyone who doesn't want to answer 15 questions —
-  // unanswered questions default to their 2nd option (a middling, neither
-  // best-nor-worst answer) so the score isn't artificially tanked by
-  // treating "skipped" as "worst possible", then the normal result/plans
-  // phases still play out instead of dumping them straight on the
-  // (currently empty) Dashboard.
-  async function skipQuiz() {
-    const filled: QuizAnswers = { ...answers }
-    for (const id of QUIZ_QUESTION_IDS) {
-      if (!filled[id]) filled[id] = 'b'
+  function toggleMoneyLeak(leak: MoneyLeak) {
+    setMoneyLeaks((prev) => (prev.includes(leak) ? prev.filter((l) => l !== leak) : [...prev, leak]))
+  }
+
+  function submitQ1(e: React.FormEvent) {
+    e.preventDefault()
+    if (!firstName.trim()) {
+      setFirstNameError(t.q1.emptyError)
+      return
     }
-    setAnswers(filled)
-    await finishQuiz(filled)
+    setFirstNameError(null)
+    advance()
+  }
+
+  function submitQ7Custom(e: React.FormEvent) {
+    e.preventDefault()
+    if (!customGoalName.trim()) {
+      setCustomGoalNameError(t.q7.customNameEmptyError)
+      return
+    }
+    setCustomGoalNameError(null)
+    advance()
+  }
+
+  function submitQ8(e: React.FormEvent) {
+    e.preventDefault()
+    if (!(Number(goalAmount) > 0)) {
+      setGoalAmountError(t.q8.amountEmptyError)
+      return
+    }
+    setGoalAmountError(null)
+    advance()
   }
 
   async function handleChoosePlan(planId: Exclude<Plan, 'free'>) {
     setPendingPlan(planId)
     try {
-      // cancelPath: '/onboarding' so cancelling on Stripe's page comes back
-      // here (not /tarifs) — this account already exists at this point, and
-      // the initial-load check above resumes it directly on the setup step
-      // rather than stranding it on a page with no path back to finishing
-      // account setup.
       const url = await subscription.startCheckout(planId, { promo: planId === 'premium', cancelPath: '/onboarding' })
       if (url) {
         window.location.href = url
       } else {
-        // startCheckout already set subscription.error (rendered inline
-        // below) — the toast is a second, harder-to-miss signal that the
-        // click genuinely failed rather than just doing nothing, since
-        // "disabled button + no page change" alone reads as unresponsive.
         console.error('startCheckout returned no url', { planId, error: subscription.error })
         showToast(subscription.error ?? t.plans.checkoutFailed)
       }
@@ -353,62 +195,75 @@ export function Onboarding() {
     }
   }
 
-  function toggleSetupCategory(categoryId: SetupCategoryId) {
-    setSetupCategories((prev) => {
-      if (prev.includes(categoryId)) return prev.filter((id) => id !== categoryId)
-      if (prev.length >= MAX_SETUP_CATEGORIES) return prev
-      return [...prev, categoryId]
-    })
-  }
-
-  // Creates the real records the rest of the app reads from — an active
-  // savings goal and budgeted categories — so Dashboard/Budget/Épargne show
-  // actual numbers on first visit instead of empty states everywhere. Income
-  // is the only hard requirement (everything else here derives from it);
-  // goal/categories are skipped individually if left empty rather than
-  // blocking the whole step on them.
-  async function handleSetupSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const incomeValue = Math.max(0, Number(incomeDraft) || 0)
-    if (incomeValue <= 0 || submittingSetup) return
-    setSubmittingSetup(true)
+  // The single write-everything-to-Supabase moment for Q1-Q9 (via
+  // completeOnboarding), Q10's own WhatsApp opt-in/decline, the real
+  // numeric income (derived from the Q3 bracket — see
+  // INCOME_RANGE_MIDPOINT's header comment), and the first savings goal —
+  // then hands off to the kept plan-selection screen.
+  async function finishOnboarding(whatsappE164: string | null) {
+    if (finishing) return
+    setFinishing(true)
     try {
-      await income.setMonthlyIncome(incomeValue)
-      if (currencyDraft !== preferences.currency) preferences.setCurrency(currencyDraft)
-      preferences.setAccountSetupExtras(payFrequency, nextPayday || null, savingsWhy.trim() || null)
+      preferences.completeOnboarding({
+        firstName: firstName.trim(),
+        workStatus: workStatus as WorkStatus,
+        incomeRange: incomeRange as IncomeRange,
+        payFrequency: payFrequency as PayFrequency,
+        fixedExpensesRange: fixedExpensesRange as FixedExpensesRange,
+        moneyLeaks,
+        savingsGoalType: savingsGoalType as SavingsGoalType,
+        savingsGoalName: savingsGoalType === 'autre' ? customGoalName.trim() : null,
+        financialMood: financialMood as FinancialMood,
+      })
+      if (whatsappE164) {
+        preferences.setWhatsappOptIn(whatsappE164)
+      } else {
+        preferences.setWhatsappDeclined()
+      }
+      await income.setMonthlyIncome(INCOME_RANGE_MIDPOINT[incomeRange as IncomeRange])
 
       const targetAmount = Math.max(0, Number(goalAmount) || 0)
-      if (goalName.trim() && targetAmount > 0) {
-        await goals.addGoal(goalName.trim(), targetAmount, null)
-      }
-
-      for (const categoryId of setupCategories) {
-        const created = await categories.addCategory(t.setup.categories[categoryId])
-        if (created) {
-          const allocated = Math.round(incomeValue * SETUP_CATEGORY_INCOME_PCT[categoryId])
-          await categories.setCategoryBudget(created.id, allocated)
-        }
+      const goalOption = t.q7.options.find((o) => o.id === savingsGoalType)
+      const finalGoalName = savingsGoalType === 'autre' ? customGoalName.trim() : (goalOption?.name ?? '')
+      if (finalGoalName && targetAmount > 0) {
+        await goals.addGoal(finalGoalName, targetAmount, goalDate || null)
       }
 
       setPhase('plans')
     } finally {
-      setSubmittingSetup(false)
+      setFinishing(false)
     }
   }
 
-  const question = t.questions[questionIndex]
-  const archetypeContent = result ? t.result.archetypes[result.archetype] : null
-  const insights = result ? computeQuizInsights(answers) : []
+  function handleQ10Submit(e: React.FormEvent) {
+    e.preventDefault()
+    if (finishing) return
+    const trimmed = phoneDraft.trim()
+    if (!trimmed) {
+      finishOnboarding(null)
+      return
+    }
+    if (!consent) return
+    const e164 = toE164(trimmed, country)
+    if (!e164) {
+      setPhoneError(t.q10.invalidNumberError)
+      return
+    }
+    setPhoneError(null)
+    finishOnboarding(e164)
+  }
+
+  function handleQ10Decline() {
+    if (finishing) return
+    finishOnboarding(null)
+  }
+
+  const perPayAmount = computeAmountPerPay(Number(goalAmount) || 0, goalDate || null, payFrequency)
+  const hasPhoneDraft = phoneDraft.trim().length > 0
+  const canSubmitQ10 = !hasPhoneDraft || consent
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0a0a0c]">
-      {/* Same black-gradient/blur texture as the landing page's "Pourquoi
-          SaveUp" / "Comment ça marche" sections — one diagonal sheen plus
-          two blurred glow blobs on this single outer wrapper so there's no
-          seam between phases (see Home.tsx's own fix for exactly that bug:
-          two separately-painted black sections each clipping their own glow
-          at their own edge produces a visible line even with identical base
-          colors — one shared wrapper owning the texture avoids it). */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent"
@@ -422,44 +277,292 @@ export function Onboarding() {
         className="mesh-blob-b pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-[#ff6b00]/10 blur-[120px]"
       />
 
-      {phase === 'quiz' && (
+      {phase === 'questions' && (
         <div className="relative mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-10">
           <div className="mb-8">
             <div className="mb-2 flex items-center justify-between text-xs text-white/50">
-              <span>{t.progressLabel(questionIndex + 1, QUIZ_QUESTION_IDS.length)}</span>
-              <button type="button" onClick={skipQuiz} className="text-white/50 transition-colors hover:text-white">
-                {t.skipLater}
-              </button>
+              <span>{t.progressLabel(qIndex + 1, TOTAL_QUESTIONS)}</span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
               <div
                 className="h-full rounded-full bg-[#ff6b00] transition-[width] duration-500 ease-out"
-                style={{ width: `${((questionIndex + 1) / QUIZ_QUESTION_IDS.length) * 100}%` }}
+                style={{ width: `${((qIndex + 1) / TOTAL_QUESTIONS) * 100}%` }}
               />
             </div>
           </div>
 
-          <div key={questionIndex} className={exiting ? 'question-exit' : 'question-enter'}>
-            <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{question.text}</h1>
-
-            <div className="mt-8 grid gap-3">
-              {question.options.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => selectAnswer(option.id)}
-                  disabled={transitioning}
-                  className={`${inputCardClass} disabled:cursor-default ${
-                    selectedOptionId === option.id ? 'answer-pulse' : ''
-                  }`}
-                >
-                  {option.label}
+          <div key={qIndex} className={exiting ? 'question-exit' : 'question-enter'}>
+            {qIndex === 0 && (
+              <form onSubmit={submitQ1}>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q1.title}</h1>
+                <input
+                  type="text"
+                  autoFocus
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder={t.q1.placeholder}
+                  className={`${fieldClass} mt-6 w-full`}
+                />
+                {firstNameError && <p className="mt-2 text-sm text-red-400">{firstNameError}</p>}
+                <button type="submit" className={`${primaryButtonClass} mt-6`}>
+                  {t.q1.continueButton}
                 </button>
-              ))}
-            </div>
+              </form>
+            )}
+
+            {qIndex === 1 && (
+              <div>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q2.title}</h1>
+                <div className="mt-8 grid gap-3">
+                  {t.q2.options.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      disabled={transitioning}
+                      onClick={() => advance(() => setWorkStatus(option.id))}
+                      className={bigButtonClass(workStatus === option.id)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {qIndex === 2 && (
+              <div>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q3.title}</h1>
+                <div className="mt-8 grid gap-3">
+                  {t.q3.options.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      disabled={transitioning}
+                      onClick={() => advance(() => setIncomeRange(option.id))}
+                      className={bigButtonClass(incomeRange === option.id)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {qIndex === 3 && (
+              <div>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q4.title}</h1>
+                <div className="mt-8 grid gap-3">
+                  {PAY_FREQUENCIES.map((freq) => (
+                    <button
+                      key={freq}
+                      type="button"
+                      disabled={transitioning}
+                      onClick={() => advance(() => setPayFrequency(freq))}
+                      className={bigButtonClass(payFrequency === freq)}
+                    >
+                      {t.payFrequencies[freq]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {qIndex === 4 && (
+              <div>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q5.title}</h1>
+                <div className="mt-8 grid gap-3">
+                  {t.q5.options.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      disabled={transitioning}
+                      onClick={() => advance(() => setFixedExpensesRange(option.id))}
+                      className={bigButtonClass(fixedExpensesRange === option.id)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {qIndex === 5 && (
+              <div>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q6.title}</h1>
+                <div className="mt-8 grid grid-cols-2 gap-3">
+                  {t.q6.options.map((option) => {
+                    const checked = moneyLeaks.includes(option.id)
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        aria-pressed={checked}
+                        onClick={() => toggleMoneyLeak(option.id)}
+                        className={bigButtonClass(checked)}
+                      >
+                        {option.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                <button type="button" onClick={() => advance()} className={`${primaryButtonClass} mt-6`}>
+                  {t.q6.continueButton}
+                </button>
+              </div>
+            )}
+
+            {qIndex === 6 && (
+              <div>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q7.title}</h1>
+                <div className="mt-8 grid gap-3">
+                  {t.q7.options.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      disabled={transitioning}
+                      onClick={() => {
+                        if (option.id === 'autre') {
+                          setSavingsGoalType('autre')
+                          return
+                        }
+                        advance(() => setSavingsGoalType(option.id))
+                      }}
+                      className={bigButtonClass(savingsGoalType === option.id)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                {savingsGoalType === 'autre' && (
+                  <form onSubmit={submitQ7Custom} className="mt-4">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={customGoalName}
+                      onChange={(e) => setCustomGoalName(e.target.value)}
+                      placeholder={t.q7.customNamePlaceholder}
+                      className={`${fieldClass} w-full`}
+                    />
+                    {customGoalNameError && <p className="mt-2 text-sm text-red-400">{customGoalNameError}</p>}
+                    <button type="submit" className={`${primaryButtonClass} mt-4`}>
+                      {t.q7.continueButton}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+
+            {qIndex === 7 && (
+              <form onSubmit={submitQ8}>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q8.title}</h1>
+                <div className="mt-6 flex flex-col gap-4">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    step="0.01"
+                    autoFocus
+                    value={goalAmount}
+                    onChange={(e) => setGoalAmount(e.target.value)}
+                    placeholder={t.q8.amountPlaceholder}
+                    className={fieldClass}
+                  />
+                  <label className="flex flex-col gap-1.5 text-sm text-white/60">
+                    {t.q8.dateLabel}
+                    <input
+                      type="date"
+                      value={goalDate}
+                      onChange={(e) => setGoalDate(e.target.value)}
+                      style={{ colorScheme: 'dark' }}
+                      className={fieldClass}
+                    />
+                  </label>
+                </div>
+                {goalAmountError && <p className="mt-2 text-sm text-red-400">{goalAmountError}</p>}
+                {perPayAmount !== null && (
+                  <p className="mt-3 text-sm font-semibold text-[#ff6b00]">{t.q8.perPayLine(formatMoney(perPayAmount))}</p>
+                )}
+                <button type="submit" className={`${primaryButtonClass} mt-6`}>
+                  {t.q8.continueButton}
+                </button>
+              </form>
+            )}
+
+            {qIndex === 8 && (
+              <div>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q9.title}</h1>
+                <div className="mt-8 grid gap-3">
+                  {t.q9.options.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      disabled={transitioning}
+                      onClick={() => advance(() => setFinancialMood(option.id))}
+                      className={bigButtonClass(financialMood === option.id)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {qIndex === 9 && (
+              <form onSubmit={handleQ10Submit}>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q10.title}</h1>
+                <div className="mt-6 flex gap-2">
+                  <CountrySelect
+                    value={country}
+                    onChange={setCountry}
+                    label={t.q10.countryLabel}
+                    searchPlaceholder={t.q10.countrySearchPlaceholder}
+                    lang={lang}
+                  />
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    value={phoneDraft}
+                    onChange={(e) => setPhoneDraft(e.target.value)}
+                    placeholder={t.q10.phonePlaceholder}
+                    data-clarity-mask="true"
+                    className={`${fieldClass} min-w-0 flex-1`}
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-white/50">{t.q10.privacyNote}</p>
+
+                {hasPhoneDraft && (
+                  <label className="mt-3 flex items-start gap-2.5 text-sm text-white/80">
+                    <input
+                      type="checkbox"
+                      checked={consent}
+                      onChange={(e) => setConsent(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 shrink-0"
+                      style={{ accentColor: '#ff6b00' }}
+                    />
+                    {t.q10.consentLabel}
+                  </label>
+                )}
+
+                {phoneError && <p className="mt-2 text-sm text-red-400">{phoneError}</p>}
+                {preferences.error && <p className="mt-2 text-sm text-red-400">{t.q10.saveFailedError}</p>}
+
+                <button type="submit" disabled={!canSubmitQ10 || finishing} className={`${primaryButtonClass} mt-6`}>
+                  {t.q10.continueButton}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleQ10Decline}
+                  disabled={finishing}
+                  className="mt-3 w-full text-center text-sm text-white/50 transition-colors hover:text-white disabled:opacity-50"
+                >
+                  {t.q10.declineButton}
+                </button>
+              </form>
+            )}
           </div>
 
-          {questionIndex > 0 && (
+          {qIndex > 0 && qIndex < TOTAL_QUESTIONS - 1 && (
             <button
               type="button"
               onClick={goBack}
@@ -468,291 +571,6 @@ export function Onboarding() {
               ← {t.back}
             </button>
           )}
-        </div>
-      )}
-
-      {phase === 'result' && result && archetypeContent && (
-        <div className="relative mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-6 py-14 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#ff6b00]">{t.result.badge}</p>
-
-          {/* The score is the focal point of the page — big enough that
-              everything else (archetype name, insights, CTA) reads as
-              supporting detail underneath it. */}
-          <p className="mt-4 text-[clamp(5.5rem,22vw,9rem)] font-black leading-none text-[#ff6b00]">
-            {result.score}
-            <span className="text-3xl font-bold text-white/40">{t.result.scoreSuffix}</span>
-          </p>
-          <h1 className="mt-2 text-3xl font-bold text-white">{archetypeContent.name}</h1>
-          <p className="mt-3 text-white/70">{archetypeContent.description}</p>
-
-          <div className="mt-8 w-full rounded-3xl border border-white/10 bg-white/5 p-6 text-left">
-            <p className="text-xs font-semibold uppercase tracking-wide text-white/50">{t.result.insightsHeading}</p>
-            <ul className="mt-4 flex flex-col gap-3">
-              {insights.map((insightId) => (
-                <li key={insightId} className="flex items-start gap-3 text-sm text-white/80">
-                  <span
-                    aria-hidden="true"
-                    className={`mt-0.5 font-bold ${
-                      INSIGHT_POLARITY[insightId] === 'positive' ? 'text-[#ff6b00]' : 'text-white/40'
-                    }`}
-                  >
-                    {INSIGHT_POLARITY[insightId] === 'positive' ? '✓' : '→'}
-                  </span>
-                  {t.result.insights[insightId]}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setPhase('setup')}
-            className="mt-8 w-full rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110"
-          >
-            {t.result.continueButton}
-          </button>
-        </div>
-      )}
-
-      {phase === 'setup' && (
-        <div className="relative mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-14">
-          <div className="mb-6">
-            <div className="mb-2 flex items-center justify-between text-xs text-white/50">
-              <span>{t.setup.stepLabel(setupStep + 1, 3)}</span>
-            </div>
-            <div className="flex gap-2">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
-                    i <= setupStep ? 'bg-[#ff6b00]' : 'bg-white/10'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-
-          <h1 className="text-2xl font-bold text-white sm:text-3xl">{t.setup.heading}</h1>
-          <p className="mt-1 text-white/60">{t.setup.subtitle}</p>
-
-          <form onSubmit={handleSetupSubmit} className="mt-6">
-            {setupStep === 0 && (
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                <h2 className="text-lg font-semibold text-white">{t.setup.card1Title}</h2>
-
-                <div className="mt-5 flex flex-col gap-4">
-                  <label className="flex flex-col gap-1.5 text-sm text-white/60">
-                    <FieldLabel icon={<IncomeIcon />}>{t.setup.incomeLabel}</FieldLabel>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      min={0}
-                      step="0.01"
-                      autoFocus
-                      required
-                      value={incomeDraft}
-                      onChange={(e) => setIncomeDraft(e.target.value)}
-                      placeholder={t.setup.incomePlaceholder}
-                      className={fieldClass}
-                    />
-                  </label>
-
-                  <div className="flex flex-col gap-1.5 text-sm text-white/60">
-                    <FieldLabel icon={<RepeatIcon />}>{t.setup.payFrequencyLabel}</FieldLabel>
-                    <div className="grid grid-cols-3 gap-2">
-                      {PAY_FREQUENCIES.map((freq) => (
-                        <button
-                          key={freq}
-                          type="button"
-                          onClick={() => setPayFrequency(freq)}
-                          aria-pressed={payFrequency === freq}
-                          className={pillButtonClass(payFrequency === freq)}
-                        >
-                          {t.setup.payFrequencies[freq]}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <label className="flex flex-col gap-1.5 text-sm text-white/60">
-                    <FieldLabel icon={<CalendarIcon />}>{t.setup.nextPaydayLabel}</FieldLabel>
-                    <input
-                      type="date"
-                      value={nextPayday}
-                      onChange={(e) => setNextPayday(e.target.value)}
-                      style={{ colorScheme: 'dark' }}
-                      className={fieldClass}
-                    />
-                  </label>
-
-                  <div className="flex flex-col gap-1.5 text-sm text-white/60">
-                    <FieldLabel icon={<CurrencyIcon />}>{t.setup.currencyLabel}</FieldLabel>
-                    <select
-                      value={currencyDraft}
-                      onChange={(e) => setCurrencyDraft(e.target.value as Currency)}
-                      className={fieldClass}
-                    >
-                      {CURRENCIES.map((code) => (
-                        <option key={code} value={code} className="bg-[#1a1a1a]">
-                          {t.setup.currencies[code]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setSetupStep(1)}
-                  disabled={Number(incomeDraft) <= 0}
-                  className="mt-6 w-full rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110 disabled:opacity-60"
-                >
-                  {t.setup.nextButton}
-                </button>
-              </div>
-            )}
-
-            {setupStep === 1 && (
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                <h2 className="text-lg font-semibold text-white">{t.setup.card2Title}</h2>
-
-                <div className="mt-5 flex flex-col gap-4">
-                  <label className="flex flex-col gap-1.5 text-sm text-white/60">
-                    <FieldLabel icon={<TrendIcon />}>{t.setup.savingsLabel}</FieldLabel>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      min={0}
-                      step="0.01"
-                      value={savingsDraft}
-                      onChange={(e) => {
-                        setSavingsDraft(e.target.value)
-                        setSavingsTouched(true)
-                      }}
-                      className={fieldClass}
-                    />
-                    <span className="text-xs text-white/40">{t.setup.savingsHint}</span>
-                  </label>
-
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="flex items-center gap-2 text-sm font-semibold text-white">
-                      <FieldIcon>
-                        <GoalIcon />
-                      </FieldIcon>
-                      {t.setup.goalHeading}
-                    </p>
-                    <div className="mt-4 flex flex-col gap-4">
-                      <label className="flex flex-col gap-1.5 text-sm text-white/60">
-                        {t.setup.goalNameLabel}
-                        <input
-                          type="text"
-                          value={goalName}
-                          onChange={(e) => setGoalName(e.target.value)}
-                          placeholder={t.setup.goalNamePlaceholder}
-                          className={fieldClass}
-                        />
-                      </label>
-                      <label className="flex flex-col gap-1.5 text-sm text-white/60">
-                        {t.setup.goalAmountLabel}
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          min={0}
-                          step="0.01"
-                          value={goalAmount}
-                          onChange={(e) => {
-                            setGoalAmount(e.target.value)
-                            setGoalAmountTouched(true)
-                          }}
-                          className={fieldClass}
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  <label className="flex flex-col gap-1.5 text-sm text-white/60">
-                    <FieldLabel icon={<HeartIcon />}>{t.setup.whyLabel}</FieldLabel>
-                    <textarea
-                      value={savingsWhy}
-                      onChange={(e) => setSavingsWhy(e.target.value)}
-                      placeholder={t.setup.whyPlaceholder}
-                      rows={2}
-                      className={`${fieldClass} resize-none`}
-                    />
-                  </label>
-                </div>
-
-                <div className="mt-6 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setSetupStep(0)}
-                    className="rounded-xl border border-white/20 px-5 py-3 font-medium text-white transition-colors hover:bg-white/10"
-                  >
-                    {t.setup.backButton}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSetupStep(2)}
-                    className="flex-1 rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110"
-                  >
-                    {t.setup.nextButton}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {setupStep === 2 && (
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
-                  <FieldIcon>
-                    <TagIcon />
-                  </FieldIcon>
-                  {t.setup.card3Title}
-                </h2>
-                <p className="mt-1 text-xs text-white/40">{t.setup.categoriesHint}</p>
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  {SETUP_CATEGORY_IDS.map((categoryId) => {
-                    const checked = setupCategories.includes(categoryId)
-                    const disabled = !checked && setupCategories.length >= MAX_SETUP_CATEGORIES
-                    return (
-                      <button
-                        key={categoryId}
-                        type="button"
-                        onClick={() => toggleSetupCategory(categoryId)}
-                        disabled={disabled}
-                        aria-pressed={checked}
-                        className={`rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
-                          checked
-                            ? 'border-[#ff6b00] bg-[#ff6b00]/15 text-white'
-                            : 'border-white/15 bg-white/5 text-white/70 hover:bg-white/10'
-                        }`}
-                      >
-                        {checked ? '✓ ' : ''}
-                        {t.setup.categories[categoryId]}
-                      </button>
-                    )
-                  })}
-                </div>
-
-                <div className="mt-6 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setSetupStep(1)}
-                    className="rounded-xl border border-white/20 px-5 py-3 font-medium text-white transition-colors hover:bg-white/10"
-                  >
-                    {t.setup.backButton}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submittingSetup || Number(incomeDraft) <= 0}
-                    className="flex-1 rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110 disabled:opacity-60"
-                  >
-                    {submittingSetup ? t.setup.savingButton : t.setup.continueButton}
-                  </button>
-                </div>
-              </div>
-            )}
-          </form>
         </div>
       )}
 
@@ -856,7 +674,6 @@ export function Onboarding() {
           </p>
         </div>
       )}
-
     </div>
   )
 }

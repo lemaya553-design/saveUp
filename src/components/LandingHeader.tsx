@@ -22,7 +22,13 @@ function CloseIcon({ className }: { className: string }) {
   )
 }
 
-export function LandingHeader() {
+// logoGradient: overrides LogoMark's default orange gradient — Home.tsx
+// (the only page wrapped in .landing-classic's blue/black/white palette)
+// passes its blue shades explicitly here, so every OTHER page that reuses
+// this same shared header (Tarifs.tsx, pre-login) keeps today's orange
+// mark unchanged, rather than silently inheriting a color meant for Home
+// alone.
+export function LandingHeader({ logoGradient }: { logoGradient?: { from: string; to: string } } = {}) {
   const [open, setOpen] = useState(false)
   const { lang } = useLanguage()
   const t = COMMON[lang].header
@@ -37,7 +43,11 @@ export function LandingHeader() {
     <header className="sticky top-0 z-20 border-b border-overlay/10 bg-canvas/80 backdrop-blur-md">
       <div className="mx-auto grid max-w-6xl grid-cols-[auto_1fr_auto] items-center gap-4 px-2 py-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2 justify-self-start">
-          <LogoMark className="h-7 w-7" />
+          <LogoMark
+            className="h-7 w-7"
+            gradientFrom={logoGradient?.from}
+            gradientTo={logoGradient?.to}
+          />
           <span className="text-xl font-bold">
             <span className="text-ink">save</span>
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Up</span>

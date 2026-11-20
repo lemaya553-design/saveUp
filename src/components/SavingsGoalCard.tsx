@@ -75,7 +75,6 @@ export function SavingsGoalCard({
   onSetPhoto,
   onRemovePhoto,
   onAddContribution,
-  isDueling = false,
   locked = false,
 }: {
   goal: SavingsGoal
@@ -88,11 +87,6 @@ export function SavingsGoalCard({
   // ContributeForm (which has its own goal picker + budget-exhaustion
   // warnings) — this one is just "add an amount to THIS goal, right here."
   onAddContribution: (goalId: string, amount: number) => Promise<void>
-  // True while this goal is already committed to a pending/active duel —
-  // a goal can only be in one duel at a time (also enforced server-side).
-  // Duels are now only ever started from the Duels tab, so this card just
-  // reflects that state — no more "start a duel" entry point here.
-  isDueling?: boolean
   // True once this goal is beyond the account's current plan limit — data
   // stays visible (nothing is deleted), but editing and new contributions
   // are blocked until either the account upgrades or an active goal is
@@ -481,17 +475,6 @@ export function SavingsGoalCard({
             ))}
           </div>
         </div>
-
-        {!locked && isDueling && (
-          <Link
-            to="/epargne/duels"
-            className={`mt-3 inline-flex w-fit items-center gap-1.5 text-xs font-medium ${
-              showPhoto ? 'text-white/80 hover:text-white' : 'text-muted hover:text-ink'
-            }`}
-          >
-            {t.duelActiveLink}
-          </Link>
-        )}
       </div>
     </div>
   )

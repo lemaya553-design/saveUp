@@ -2,11 +2,12 @@ import type { Lang } from './language'
 
 // Covers Statistiques.tsx itself plus every component exclusively mounted
 // under it (SpendingBreakdownCard, CategoryDonutChart, CategorySpendingChart,
-// MonthComparison, MonthOverlayChart, MonthlyTrendChart,
-// IncomeExpenseTrendChart, BudgetVsActualChart, CategoryMomList,
-// DataExportCard, RecompensesTab, PersonalizedTips) — centralized here since
-// they're all one page's worth of UI and share a handful of strings (month
-// nav arrows, "empty" states, transaction counts).
+// BudgetVsActualChart, DataExportCard, RecompensesTab, PersonalizedTips) —
+// centralized here since they're all one page's worth of UI and share a
+// handful of strings (month nav arrows, "empty" states, transaction
+// counts). The Tendances tab (MonthComparison/MonthOverlayChart/
+// MonthlyTrendChart/IncomeExpenseTrendChart/CategoryMomList) was removed
+// from the UI — see git history if it's ever needed again.
 export interface StatistiquesContent {
   page: {
     title: string
@@ -14,12 +15,10 @@ export interface StatistiquesContent {
   }
   tabs: {
     apercu: string
-    tendances: string
     recompenses: string
   }
   help: {
     apercu: { title: string; purpose: string; actions: string[] }
-    tendances: { title: string; purpose: string; actions: string[] }
     recompenses: { title: string; purpose: string; actions: string[] }
   }
   statCards: {
@@ -57,14 +56,6 @@ export interface StatistiquesContent {
       exporting: string
       download: string
     }
-  }
-  tendances: {
-    comparisonCard: { title: string; hint: string }
-    trendCard: { title: string; hint: string }
-    momCard: { title: string; hint: string }
-    incomeExpenseCard: { title: string; hint: string }
-    upgradeTrends: { title: string; description: string }
-    upgradeIncomeExpense: { title: string; description: string }
   }
   newTrendCharts: {
     weeklySpending: {
@@ -244,7 +235,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
     },
     tabs: {
       apercu: 'Aperçu',
-      tendances: 'Tendances',
       recompenses: 'Récompenses',
     },
     help: {
@@ -255,15 +245,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
           'Consulte la répartition de tes dépenses par catégorie, mois par mois.',
           'Compare ton budget par catégorie à ce que tu as réellement dépensé.',
           'Exporte tes données en CSV ou en rapport PDF/Excel.',
-        ],
-      },
-      tendances: {
-        title: 'Tendances',
-        purpose: "Analyse tes tendances de dépenses sur plusieurs mois et compare-les d'un mois à l'autre.",
-        actions: [
-          'Consulte tes tendances de dépenses sur les 6 derniers mois.',
-          'Compare ce mois-ci au mois précédent, par catégorie.',
-          'Vois ton revenu et tes dépenses évoluer côte à côte.',
         ],
       },
       recompenses: {
@@ -307,32 +288,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
         hint: "Toutes tes dépenses et contributions d'épargne, en CSV.",
         exporting: 'Export en cours...',
         download: 'Télécharger le CSV',
-      },
-    },
-    tendances: {
-      comparisonCard: {
-        title: 'Comparaison avec le mois dernier, par catégorie',
-        hint: 'La grande colonne est ce que tu as dépensé le mois dernier ; la portion colorée montre combien de ce montant est déjà dépensé ce mois-ci.',
-      },
-      trendCard: {
-        title: 'Tendance sur 6 mois',
-        hint: 'Total de tes dépenses ponctuelles, mois par mois.',
-      },
-      momCard: {
-        title: 'Comparaison au mois dernier',
-        hint: 'Variation de tes dépenses par catégorie par rapport au mois précédent.',
-      },
-      incomeExpenseCard: {
-        title: 'Revenu vs dépenses',
-        hint: "Tendance sur 6 mois, et le taux d'épargne qui en résulte chaque mois.",
-      },
-      upgradeTrends: {
-        title: 'Tendances et comparaisons mensuelles — fonctionnalité Standard',
-        description: "Vois l'évolution de tes dépenses mois après mois et compare chaque catégorie au mois précédent.",
-      },
-      upgradeIncomeExpense: {
-        title: 'Revenu vs dépenses — fonctionnalité Standard',
-        description: "Vois ton revenu et tes dépenses évoluer côte à côte sur 6 mois, avec le taux d'épargne que ça donne chaque mois.",
       },
     },
     newTrendCharts: {
@@ -511,7 +466,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
     },
     tabs: {
       apercu: 'Overview',
-      tendances: 'Trends',
       recompenses: 'Rewards',
     },
     help: {
@@ -522,15 +476,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
           'Check your spending breakdown by category, month by month.',
           'Compare your budget by category to what you actually spent.',
           'Export your data as CSV, or a PDF/Excel report.',
-        ],
-      },
-      tendances: {
-        title: 'Trends',
-        purpose: 'Analyze your spending trends over several months and compare them month to month.',
-        actions: [
-          'Check your spending trends over the last 6 months.',
-          'Compare this month to last month, by category.',
-          'Watch your income and expenses move side by side.',
         ],
       },
       recompenses: {
@@ -574,32 +519,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
         hint: 'All your expenses and savings contributions, as CSV.',
         exporting: 'Exporting...',
         download: 'Download CSV',
-      },
-    },
-    tendances: {
-      comparisonCard: {
-        title: 'Comparison with last month, by category',
-        hint: 'The tall bar is what you spent last month; the colored portion shows how much of that amount is already spent this month.',
-      },
-      trendCard: {
-        title: '6-month trend',
-        hint: 'Total one-off expenses, month by month.',
-      },
-      momCard: {
-        title: 'Comparison to last month',
-        hint: 'Change in your spending by category compared to the previous month.',
-      },
-      incomeExpenseCard: {
-        title: 'Income vs. expenses',
-        hint: '6-month trend, and the resulting savings rate each month.',
-      },
-      upgradeTrends: {
-        title: 'Monthly trends and comparisons — Standard feature',
-        description: 'See your spending evolve month after month and compare each category to the previous month.',
-      },
-      upgradeIncomeExpense: {
-        title: 'Income vs. expenses — Standard feature',
-        description: 'See your income and expenses evolve side by side over 6 months, with the savings rate that gives you each month.',
       },
     },
     newTrendCharts: {

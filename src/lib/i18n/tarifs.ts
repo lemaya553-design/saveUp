@@ -69,7 +69,6 @@ export const TARIFS: Record<Lang, TarifsContent> = {
           'Tout ce qui est dans Gratuit',
           'Catégories de budget illimitées',
           'Objectifs d’épargne illimités',
-          'Statistiques complètes (tendances, comparaisons)',
           'Import CSV de tes relevés bancaires',
           'Tous les badges',
         ],
@@ -79,7 +78,6 @@ export const TARIFS: Record<Lang, TarifsContent> = {
         description: 'Pour optimiser chaque dollar, jusque dans le détail.',
         features: [
           'Tout ce qui est dans Standard',
-          'Simulateur financier avancé',
           'Alertes personnalisées',
           'Export des données en PDF/Excel',
         ],
@@ -134,7 +132,6 @@ export const TARIFS: Record<Lang, TarifsContent> = {
           'Everything in Free',
           'Unlimited budget categories',
           'Unlimited savings goals',
-          'Full statistics (trends, comparisons)',
           'CSV import for your bank statements',
           'All badges',
         ],
@@ -144,7 +141,6 @@ export const TARIFS: Record<Lang, TarifsContent> = {
         description: 'To optimize every dollar, down to the detail.',
         features: [
           'Everything in Standard',
-          'Advanced financial simulator',
           'Custom alerts',
           'PDF/Excel data export',
         ],

@@ -15,8 +15,9 @@ function normalize(value: string): string {
 // Searchable dropdown over the full DIAL_COUNTRIES list (~245 entries) — a
 // plain <select> with that many <option>s is usable but slow to scan on a
 // phone; this adds a filter-as-you-type search on top of the same list.
-// Styled to match WhatsappOptIn.tsx's literal black/orange pre-dashboard
-// look (not the app's theme-aware chrome), the one place this is used.
+// Styled to match Onboarding.tsx's literal black/orange pre-dashboard look
+// (not the app's theme-aware chrome) — Q10's WhatsApp number field, the one
+// place this is used.
 export function CountrySelect({
   value,
   onChange,

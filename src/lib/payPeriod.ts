@@ -40,6 +40,10 @@ function occurrenceAtStep(anchor: Date, frequency: PayFrequency, k: number): Dat
     case 'aux_deux_semaines':
       return new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() + 14 * k)
     case 'mensuelle':
+    // Variable pay has no period length of its own — falls back to a
+    // monthly cadence, same as lib/onboardingGoalPace.ts's "per paycheck"
+    // preview on Onboarding.tsx's Q8 does for the same frequency value.
+    case 'ca_change':
       return addMonthsClamped(anchor, k)
   }
 }

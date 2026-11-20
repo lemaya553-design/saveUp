@@ -42,7 +42,6 @@ import { PageSkeleton } from '../components/PageSkeleton'
 import { TabBar, type TabDef } from '../components/TabBar'
 import { CategoryManager } from '../components/CategoryManager'
 import { CategorySuggestions } from '../components/CategorySuggestions'
-import { RecategorizeCard } from '../components/RecategorizeCard'
 import { ImportTransactionsModal } from '../components/ImportTransactionsModal'
 import { UpgradePrompt } from '../components/UpgradePrompt'
 
@@ -345,7 +344,6 @@ export function Budget() {
         <div className="grid gap-6">
           <CategoryManager />
           <CategorySuggestions />
-          <RecategorizeCard />
         </div>
       )}
 

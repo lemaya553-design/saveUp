@@ -5,7 +5,16 @@ import { useGuestMode } from './useGuestMode'
 import { applyAccentColor, applyTheme, type AccentColor, type Theme } from '../lib/theme'
 import type { Currency } from '../lib/format'
 import type { MainGoal, TrackingFrequency } from '../lib/onboardingProfile'
-import type { PayFrequency } from '../lib/onboardingQuiz'
+import type {
+  FinancialMood,
+  FixedExpensesRange,
+  IncomeRange,
+  MoneyLeak,
+  PayFrequency,
+  SavingsGoalType,
+  WhatsappStatus,
+  WorkStatus,
+} from '../lib/onboardingQuiz'
 
 interface PreferencesContextValue {
   loading: boolean
@@ -31,12 +40,30 @@ interface PreferencesContextValue {
   payFrequency: PayFrequency | null
   nextPayday: string | null
   savingsWhy: string | null
-  // Set together, once, by the WhatsApp opt-in step (src/pages/WhatsappOptIn.tsx)
-  // — Dashboard.tsx's gate reads whatsappNumber: null = not collected yet,
-  // same "no value = never set" convention as payFrequency/nextPayday.
+  // Set together, once, by the WhatsApp opt-in step — Q10 of Onboarding.tsx.
+  // whatsappStatus is the authoritative "did we ask" signal (null = never
+  // asked, 'given'/'declined' = asked, answered either way) — unlike
+  // whatsappNumber null, 'declined' means never ask again. whatsappNumber/
+  // whatsappConsent/whatsappConsentAt stay null when declined.
   whatsappNumber: string | null
   whatsappConsent: boolean
   whatsappConsentAt: string | null
+  whatsappStatus: WhatsappStatus | null
+  // Everything below is set together, once, at the end of Onboarding.tsx's
+  // 10-question flow (see completeOnboarding) — null = never completed
+  // (brand-new account, or pre-dates this onboarding and was never
+  // backfilled). Dashboard.tsx's needsOnboarding gate reads
+  // onboardingCompletedAt only; the rest are informational/personalization
+  // fields (e.g. financialMood tilts the Dashboard welcome message).
+  firstName: string | null
+  workStatus: WorkStatus | null
+  incomeRange: IncomeRange | null
+  fixedExpensesRange: FixedExpensesRange | null
+  moneyLeaks: MoneyLeak[]
+  savingsGoalType: SavingsGoalType | null
+  savingsGoalName: string | null
+  financialMood: FinancialMood | null
+  onboardingCompletedAt: string | null
   setAccentColor: (value: AccentColor) => void
   setTheme: (value: Theme) => void
   setAvatarEmoji: (value: string | null) => void
@@ -44,6 +71,18 @@ interface PreferencesContextValue {
   setOnboardingProfile: (mainGoal: MainGoal, triedOtherApp: boolean, frequency: TrackingFrequency) => void
   setAccountSetupExtras: (payFrequency: PayFrequency | null, nextPayday: string | null, savingsWhy: string | null) => void
   setWhatsappOptIn: (e164Number: string) => void
+  setWhatsappDeclined: () => void
+  completeOnboarding: (fields: {
+    firstName: string
+    workStatus: WorkStatus
+    incomeRange: IncomeRange
+    payFrequency: PayFrequency
+    fixedExpensesRange: FixedExpensesRange
+    moneyLeaks: MoneyLeak[]
+    savingsGoalType: SavingsGoalType
+    savingsGoalName: string | null
+    financialMood: FinancialMood
+  }) => void
   incrementCsvImportCount: () => void
   setHourlyRate: (value: number | null) => void
   setWorkHoursEnabled: (value: boolean) => void
@@ -77,6 +116,16 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [whatsappNumber, setWhatsappNumberState] = useState<string | null>(null)
   const [whatsappConsent, setWhatsappConsentState] = useState(false)
   const [whatsappConsentAt, setWhatsappConsentAtState] = useState<string | null>(null)
+  const [whatsappStatus, setWhatsappStatusState] = useState<WhatsappStatus | null>(null)
+  const [firstName, setFirstNameState] = useState<string | null>(null)
+  const [workStatus, setWorkStatusState] = useState<WorkStatus | null>(null)
+  const [incomeRange, setIncomeRangeState] = useState<IncomeRange | null>(null)
+  const [fixedExpensesRange, setFixedExpensesRangeState] = useState<FixedExpensesRange | null>(null)
+  const [moneyLeaks, setMoneyLeaksState] = useState<MoneyLeak[]>([])
+  const [savingsGoalType, setSavingsGoalTypeState] = useState<SavingsGoalType | null>(null)
+  const [savingsGoalName, setSavingsGoalNameState] = useState<string | null>(null)
+  const [financialMood, setFinancialMoodState] = useState<FinancialMood | null>(null)
+  const [onboardingCompletedAt, setOnboardingCompletedAtState] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     // Guest mode never persists preferences anywhere — theme/accent/avatar
@@ -96,7 +145,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     const { data, error: fetchError } = await supabase
       .from('user_preferences')
       .select(
-        'accent_color, theme, avatar_emoji, currency, onboarding_main_goal, onboarding_tried_other_app, onboarding_frequency, csv_import_count, hourly_rate, work_hours_enabled, pay_frequency, next_payday, savings_why, whatsapp_number, whatsapp_consent, whatsapp_consent_at',
+        'accent_color, theme, avatar_emoji, currency, onboarding_main_goal, onboarding_tried_other_app, onboarding_frequency, csv_import_count, hourly_rate, work_hours_enabled, pay_frequency, next_payday, savings_why, whatsapp_number, whatsapp_consent, whatsapp_consent_at, whatsapp_status, first_name, work_status, income_range, fixed_expenses_range, money_leaks, savings_goal_type, savings_goal_name, financial_mood, onboarding_completed_at',
       )
       .eq('user_id', userId)
       .maybeSingle()
@@ -121,6 +170,16 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setWhatsappNumberState(data?.whatsapp_number ?? null)
       setWhatsappConsentState(data?.whatsapp_consent ?? false)
       setWhatsappConsentAtState(data?.whatsapp_consent_at ?? null)
+      setWhatsappStatusState((data?.whatsapp_status as WhatsappStatus | null) ?? null)
+      setFirstNameState(data?.first_name ?? null)
+      setWorkStatusState((data?.work_status as WorkStatus | null) ?? null)
+      setIncomeRangeState((data?.income_range as IncomeRange | null) ?? null)
+      setFixedExpensesRangeState((data?.fixed_expenses_range as FixedExpensesRange | null) ?? null)
+      setMoneyLeaksState((data?.money_leaks as MoneyLeak[] | null) ?? [])
+      setSavingsGoalTypeState((data?.savings_goal_type as SavingsGoalType | null) ?? null)
+      setSavingsGoalNameState(data?.savings_goal_name ?? null)
+      setFinancialMoodState((data?.financial_mood as FinancialMood | null) ?? null)
+      setOnboardingCompletedAtState(data?.onboarding_completed_at ?? null)
       // Reconciles with whatever index.html's bootstrap script guessed from
       // localStorage before this fetch resolved — a no-op on the common
       // path where they already matched.
@@ -152,6 +211,16 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       whatsapp_number?: string
       whatsapp_consent?: boolean
       whatsapp_consent_at?: string
+      whatsapp_status?: WhatsappStatus
+      first_name?: string
+      work_status?: WorkStatus
+      income_range?: IncomeRange
+      fixed_expenses_range?: FixedExpensesRange
+      money_leaks?: MoneyLeak[]
+      savings_goal_type?: SavingsGoalType
+      savings_goal_name?: string | null
+      financial_mood?: FinancialMood
+      onboarding_completed_at?: string
     }) => {
       if (!userId) return
       const { error: upsertError } = await supabase
@@ -250,22 +319,81 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [upsert],
   )
 
-  // Written once, by the WhatsApp opt-in step — the only path that can
-  // reach this setter already requires its consent checkbox to be checked
-  // (see WhatsappOptIn.tsx, whose Continue button stays disabled until it
-  // is), so consent is always true here. There's no opt-out UI: a user who
-  // wants to stop would do so by contacting support, same as any other
-  // consent withdrawal under Loi 25, not a toggle in Paramètres.
+  // Written once, by Onboarding.tsx's Q10 — the only path that can reach
+  // this setter already requires its consent checkbox to be checked (the
+  // Continue button stays disabled until it is), so consent is always true
+  // here. There's no opt-out UI: a user who wants to stop would do so by
+  // contacting support, same as any other consent withdrawal under Loi 25,
+  // not a toggle in Paramètres. The number itself stays editable from
+  // Paramètres (see setAccountSetupExtras-style direct edits there) even
+  // after whatsapp_status is set — only the ONBOARDING prompt never repeats.
   const setWhatsappOptIn = useCallback(
     (e164Number: string) => {
       const consentedAt = new Date().toISOString()
       setWhatsappNumberState(e164Number)
       setWhatsappConsentState(true)
       setWhatsappConsentAtState(consentedAt)
+      setWhatsappStatusState('given')
       upsert({
         whatsapp_number: e164Number,
         whatsapp_consent: true,
         whatsapp_consent_at: consentedAt,
+        whatsapp_status: 'given',
+      })
+    },
+    [upsert],
+  )
+
+  // Written once, when Onboarding.tsx's Q10 is answered "Non merci" (no
+  // number entered). This is the field that actually prevents re-asking —
+  // whatsappNumber alone staying null isn't enough, since that's also the
+  // state of an account that simply hasn't been asked yet.
+  const setWhatsappDeclined = useCallback(() => {
+    setWhatsappStatusState('declined')
+    upsert({ whatsapp_status: 'declined' })
+  }, [upsert])
+
+  // Written once, at the very end of Onboarding.tsx's 10-question flow (Q1
+  // through Q9 — WhatsApp/Q10 goes through setWhatsappOptIn/
+  // setWhatsappDeclined above instead, since it's consent-gated and
+  // optional on its own). onboarding_completed_at is the single field
+  // Dashboard.tsx's needsOnboarding gate reads — setting it here, before
+  // the kept plan-selection step, means abandoning that step never sends
+  // someone back through the 10 questions again.
+  const completeOnboarding = useCallback(
+    (fields: {
+      firstName: string
+      workStatus: WorkStatus
+      incomeRange: IncomeRange
+      payFrequency: PayFrequency
+      fixedExpensesRange: FixedExpensesRange
+      moneyLeaks: MoneyLeak[]
+      savingsGoalType: SavingsGoalType
+      savingsGoalName: string | null
+      financialMood: FinancialMood
+    }) => {
+      const completedAt = new Date().toISOString()
+      setFirstNameState(fields.firstName)
+      setWorkStatusState(fields.workStatus)
+      setIncomeRangeState(fields.incomeRange)
+      setPayFrequencyState(fields.payFrequency)
+      setFixedExpensesRangeState(fields.fixedExpensesRange)
+      setMoneyLeaksState(fields.moneyLeaks)
+      setSavingsGoalTypeState(fields.savingsGoalType)
+      setSavingsGoalNameState(fields.savingsGoalName)
+      setFinancialMoodState(fields.financialMood)
+      setOnboardingCompletedAtState(completedAt)
+      upsert({
+        first_name: fields.firstName,
+        work_status: fields.workStatus,
+        income_range: fields.incomeRange,
+        pay_frequency: fields.payFrequency,
+        fixed_expenses_range: fields.fixedExpensesRange,
+        money_leaks: fields.moneyLeaks,
+        savings_goal_type: fields.savingsGoalType,
+        savings_goal_name: fields.savingsGoalName ?? undefined,
+        financial_mood: fields.financialMood,
+        onboarding_completed_at: completedAt,
       })
     },
     [upsert],
@@ -301,6 +429,16 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     whatsappNumber,
     whatsappConsent,
     whatsappConsentAt,
+    whatsappStatus,
+    firstName,
+    workStatus,
+    incomeRange,
+    fixedExpensesRange,
+    moneyLeaks,
+    savingsGoalType,
+    savingsGoalName,
+    financialMood,
+    onboardingCompletedAt,
     setAccentColor,
     setTheme,
     setAvatarEmoji,
@@ -308,6 +446,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     setOnboardingProfile,
     setAccountSetupExtras,
     setWhatsappOptIn,
+    setWhatsappDeclined,
+    completeOnboarding,
     incrementCsvImportCount,
     setHourlyRate,
     setWorkHoursEnabled,

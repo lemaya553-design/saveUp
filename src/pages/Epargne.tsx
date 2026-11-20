@@ -5,10 +5,8 @@ import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useIncome } from '../hooks/useIncome'
 import { useFixedExpenses } from '../hooks/useFixedExpenses'
 import { useFinancialHealth } from '../hooks/useFinancialHealth'
-import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { sumThisMonth } from '../lib/budgetInsights'
 import { computeRequiredPace, estimateMonthlyRate } from '../lib/savingsProjection'
-import { computeCategorySpending } from '../lib/categorySpending'
 import { HelpButton } from '../components/HelpButton'
 import { Card } from '../components/Card'
 import { SavingsGoalCard } from '../components/SavingsGoalCard'
@@ -17,14 +15,11 @@ import { ContributeForm } from '../components/ContributeForm'
 import { ContributionHistory } from '../components/ContributionHistory'
 import { EpargneStatCards } from '../components/EpargneStatCards'
 import { PaceComparisonChart, type PaceComparisonEntry } from '../components/PaceComparisonChart'
-import { SimulateurTab } from '../components/SimulateurTab'
-import { DuelsTab } from '../components/DuelsTab'
 import { InvestissementTab } from '../components/InvestissementTab'
 import { UpgradePrompt } from '../components/UpgradePrompt'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { TabBar, type TabDef } from '../components/TabBar'
 import { useSubscription } from '../hooks/useSubscription'
-import { useDuels } from '../hooks/useDuels'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
 import { splitByLimit } from '../lib/plans'
@@ -32,8 +27,11 @@ import { EPARGNE } from '../lib/i18n/epargne'
 
 const CARD_BORDER = 'color-mix(in srgb, var(--color-overlay) 10%, transparent)'
 
-type Tab = 'objectifs' | 'simulateur' | 'duels' | 'investissement'
-const TABS: Tab[] = ['objectifs', 'simulateur', 'duels', 'investissement']
+// Simulateur and Duels tabs removed from the UI (their Supabase tables —
+// savings_duels, savings_duel_entries, savings_duel_participants — and all
+// existing data are untouched; see App.tsx's redirects for old links).
+type Tab = 'objectifs' | 'investissement'
+const TABS: Tab[] = ['objectifs', 'investissement']
 
 export function Epargne() {
   const { tab: tabParam } = useParams<{ tab: string }>()
@@ -43,48 +41,31 @@ export function Epargne() {
   const formatMoney = useMoneyFormat()
   const TAB_DEFS: TabDef<Tab>[] = [
     { key: 'objectifs', label: t.tabs.objectifs },
-    { key: 'simulateur', label: t.tabs.simulateur },
-    { key: 'duels', label: t.tabs.duels },
     { key: 'investissement', label: t.tabs.investissement },
   ]
   const HELP_BY_TAB: Record<Tab, { title: string; purpose: string; actions: string[] }> = {
     objectifs: t.help.objectifs,
-    simulateur: t.help.simulateur,
-    duels: t.help.duels,
     investissement: t.help.investissement,
   }
   const [showCreateForm, setShowCreateForm] = useState(false)
 
-  // Loaded once here and passed down to the Objectifs/Simulateur tabs, so
-  // switching between them never re-fetches — Duels and Investissement stay
-  // self-contained (own hook instances), same as every other standalone tab
-  // folded into this page.
+  // Loaded once here and passed down to the Objectifs tab — Investissement
+  // stays self-contained (own hook instance), same as every other
+  // standalone tab folded into this page.
   const goals = useSavingsGoals()
   const subscription = useSubscription()
-  const duels = useDuels()
   const contributions = useSavingsContributions()
   const income = useIncome()
   const fixed = useFixedExpenses()
   const health = useFinancialHealth()
-  // Only Simulateur needs this (per-category breakdown of this month's
-  // ad-hoc spending, to seed its category sliders) — loaded here anyway so
-  // switching tabs doesn't trigger a fetch, same rationale as the other
-  // hooks above. monthsBack=0 scopes the query to the current month only.
-  const history = useExpenseHistory(0)
 
-  const loading =
-    goals.loading || contributions.loading || income.loading || fixed.loading || health.loading || history.loading
-  const error =
-    goals.error || contributions.error || income.error || fixed.error || health.error || history.error
+  const loading = goals.loading || contributions.loading || income.loading || fixed.loading || health.loading
+  const error = goals.error || contributions.error || income.error || fixed.error || health.error
 
   const discretionaryBudget = Math.max(0, income.monthlyIncome - fixed.totalFixedExpenses)
   const savingsThisMonth = useMemo(
     () => sumThisMonth(contributions.contributions),
     [contributions.contributions],
-  )
-  const categorySpending = useMemo(
-    () => computeCategorySpending(history.records, income.monthlyIncome, new Date()),
-    [history.records, income.monthlyIncome],
   )
 
   // Goals beyond the account's current plan limit stay visible (nothing is
@@ -213,7 +194,6 @@ export function Epargne() {
                   onSetPhoto={goals.setGoalPhoto}
                   onRemovePhoto={goals.removeGoalPhoto}
                   onAddContribution={goals.addContribution}
-                  isDueling={duels.busyGoalIds.has(goal.id)}
                   locked={pausedGoalIds.has(goal.id)}
                 />
               ))}
@@ -248,30 +228,6 @@ export function Epargne() {
             )}
           </div>
         )
-      ) : tab === 'simulateur' ? (
-        subscription.limits.advancedSimulator ? (
-          <SimulateurTab
-            health={health}
-            fixed={fixed}
-            goals={goals}
-            contributions={contributions}
-            categorySpending={categorySpending}
-            onGoToObjectifs={() => {
-              navigate('/epargne/objectifs')
-              setShowCreateForm(true)
-            }}
-          />
-        ) : (
-          <UpgradePrompt
-            title={t.simulatorGate.title}
-            description={t.simulatorGate.description}
-            variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
-            linkClassName="text-[#FF7A00] hover:opacity-80"
-            minPlan="premium"
-          />
-        )
-      ) : tab === 'duels' ? (
-        <DuelsTab onGoToObjectifs={() => navigate('/epargne/objectifs')} />
       ) : (
         <InvestissementTab />
       )}

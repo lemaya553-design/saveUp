@@ -4,15 +4,18 @@ import { HelpButton } from '../components/HelpButton'
 import { AlertBanner } from '../components/AlertBanner'
 import { DashboardCard, CARD_BORDER } from '../components/DashboardCard'
 import { DashboardGoalCard } from '../components/DashboardGoalCard'
+import { NeedsLimitCard } from '../components/NeedsLimitCard'
+import { SubscriptionsFoundCard } from '../components/SubscriptionsFoundCard'
 import { DashboardFeedbackPrompt } from '../components/DashboardFeedbackPrompt'
 import { GettingStartedGuide } from '../components/GettingStartedGuide'
+import { WelcomeTutorial } from '../components/WelcomeTutorial'
 import { DashboardStatCards } from '../components/DashboardStatCards'
 import { DashboardScoreFactors } from '../components/DashboardScoreFactors'
 import { PersonalizedTips } from '../components/PersonalizedTips'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { TIER_ICONS, TIER_UNLOCKED_CLASS } from '../components/rewardIcons'
 import { useFinancialHealth } from '../hooks/useFinancialHealth'
-import { useOnboardingQuiz } from '../hooks/useOnboardingQuiz'
+import { useFixedExpenses } from '../hooks/useFixedExpenses'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useInvestmentBalance } from '../hooks/useInvestmentBalance'
@@ -31,13 +34,9 @@ import { getBudgetPaceAlert, getSavingsGoalLateAlert } from '../lib/alerts'
 import { generatePersonalizedTips } from '../lib/tips'
 import { STARTER_BADGE, isStarterBadgeUnlocked } from '../lib/rewards'
 import { hasViewedStats, markStatsViewed } from '../lib/gettingStarted'
+import { hasSeenWelcomeTutorial } from '../lib/welcomeTutorial'
 import { consumePendingGuestGoal } from '../lib/guestStore'
 import { DASHBOARD } from '../lib/i18n/dashboard'
-
-// Cutoff for the WhatsApp opt-in gate below — only accounts created at or
-// after this feature shipped are routed through /numero-whatsapp; accounts
-// older than this were never asked and stay that way (see needsWhatsapp).
-const WHATSAPP_OPT_IN_LAUNCH = new Date('2026-10-09T00:00:00Z')
 
 // Recharts is sizeable — Dashboard itself stays eager (it's the first page
 // most sessions land on) but the one chart on it that needs the library is
@@ -112,11 +111,11 @@ export function Dashboard() {
   const formatMoney = useMoneyFormat()
   const workHours = useWorkHours()
   const health = useFinancialHealth()
-  const quiz = useOnboardingQuiz()
   const goals = useSavingsGoals()
   const contributions = useSavingsContributions()
   const investmentBalance = useInvestmentBalance()
   const expenseHistory = useExpenseHistory()
+  const fixed = useFixedExpenses()
   const subscription = useSubscription()
   const preferences = usePreferences()
   const streak = useLoginStreak()
@@ -129,14 +128,20 @@ export function Dashboard() {
 
   const loading =
     health.loading ||
-    quiz.loading ||
     goals.loading ||
     contributions.loading ||
     investmentBalance.loading ||
     expenseHistory.loading ||
-    preferences.loading
+    preferences.loading ||
+    fixed.loading
   const error =
-    health.error || quiz.error || goals.error || contributions.error || investmentBalance.error || expenseHistory.error
+    health.error ||
+    goals.error ||
+    contributions.error ||
+    investmentBalance.error ||
+    expenseHistory.error ||
+    fixed.error ||
+    preferences.error
 
   const starterEarned = isStarterBadgeUnlocked(health.hasIncomeRecord)
   const starterClaimed = claimedBadges.claimedIds.has(STARTER_BADGE.id)
@@ -170,55 +175,31 @@ export function Dashboard() {
   // Data-driven, not a localStorage flag: a flag would be scoped to this
   // browser, not this account, and would wrongly skip onboarding for a
   // brand-new account that happens to share a browser with an old one.
-  // Two things send someone back to /onboarding, not just one:
-  //  - the quiz was never completed (brand-new account), or
-  //  - the quiz WAS completed but account setup (income/goal/categories)
-  //    never happened — most commonly someone who picked Standard/Premium,
-  //    cancelled on Stripe's page before finishing the "Configure ton
-  //    compte" step, and landed here with an account that exists but was
-  //    never actually set up. hasIncomeRecord is the signal for that (the
-  //    one field the setup step requires; see Onboarding.tsx) — same
-  //    convention the old wizard used for exactly this purpose.
-  // Onboarding.tsx's own initial-load check resumes directly on the right
-  // step in either case, so this never replays the quiz for someone who
-  // already finished it.
-  // `!quiz.error`/`!health.error` matter here: if the read itself failed
-  // (a real backend problem), treating that the same as "genuinely not
-  // done" would redirect to /onboarding, which can't succeed any better
+  // onboardingCompletedAt is set once, at the end of Onboarding.tsx's 10
+  // questions (before the plan-selection step, which is never required to
+  // reach the app) — so an account that abandons on the plan screen still
+  // counts as onboarded next time it lands here. Existing accounts that
+  // finished the OLD onboarding (pre-dating this column) were backfilled by
+  // this feature's migration, so they're never sent through it again; only
+  // accounts that truly never onboarded see it.
+  // `!preferences.error`/`!health.error` matter here: if the read itself
+  // failed (a real backend problem), treating that the same as "genuinely
+  // not done" would redirect to /onboarding, which can't succeed any better
   // there and would just bounce back here again — an invisible loop.
   // Falling through to the normal Dashboard with the error banner below is
   // more honest about what's actually wrong.
-  // A guest never goes through the quiz (there's no account to attach the
+  // A guest never goes through onboarding (there's no account to attach the
   // result to) — the sample data already has an income and a goal, so
   // there's nothing "unfinished" to send them off to set up.
   const needsOnboarding =
-    !guest.active && !loading && !quiz.error && !health.error && (!quiz.completed || !health.hasIncomeRecord)
-
-  // Gates even earlier than onboarding — same data-driven, no-flag
-  // reasoning as needsOnboarding above, but scoped to accounts created on
-  // or after this feature's launch: existing users signed up before we had
-  // anywhere to collect Loi 25/LCAP consent, and are intentionally never
-  // asked for it retroactively — only brand-new signups go through this
-  // screen. created_at comes from Supabase auth (not spoofable client-side
-  // the way a localStorage flag would be, and unlike a flag, correctly
-  // scopes to the account rather than the browser).
-  // WhatsappOptIn.tsx always sends a successful submit to /onboarding
-  // next, which immediately bounces an already-onboarded account straight
-  // back to /dashboard via its own resume check — so this never replays
-  // the quiz for someone who already finished it.
-  const isNewAccount = !!user?.created_at && new Date(user.created_at) >= WHATSAPP_OPT_IN_LAUNCH
-  const needsWhatsapp = !loading && !preferences.error && !preferences.whatsappNumber && isNewAccount
+    !guest.active && !loading && !preferences.error && !health.error && !preferences.onboardingCompletedAt
 
   useEffect(() => {
     if (loading) return
-    if (needsWhatsapp) {
-      navigate('/numero-whatsapp', { replace: true })
-      return
-    }
     if (needsOnboarding) {
       navigate('/onboarding', { replace: true })
     }
-  }, [loading, needsWhatsapp, needsOnboarding, navigate])
+  }, [loading, needsOnboarding, navigate])
 
   // Connexion.tsx queues this when a guest who tried the sample goal signs
   // up for real (see lib/guestStore.ts) — picked up here, once, on the
@@ -227,22 +208,44 @@ export function Dashboard() {
   // created some other way, e.g. finishing onboarding before this effect
   // got a chance to run). A missing/failed migration just leaves the new
   // account with no goal — same as any other fresh signup, never an error.
+  // `guestGoalMigrationChecked` only flips true once this has fully
+  // settled (including the async addGoal, if any) — the welcome tutorial
+  // effect below waits on it so it never flashes open for someone whose
+  // migrated goal just hasn't landed yet.
   const migratedGuestGoal = useRef(false)
+  const [guestGoalMigrationChecked, setGuestGoalMigrationChecked] = useState(false)
   useEffect(() => {
     if (!user || guest.active || loading || goals.loading || migratedGuestGoal.current) return
     migratedGuestGoal.current = true
-    if (goals.goals.length > 0) return
+    if (goals.goals.length > 0) {
+      setGuestGoalMigrationChecked(true)
+      return
+    }
     const pending = consumePendingGuestGoal()
-    if (!pending) return
-    goals.addGoal(pending.name, pending.targetAmount, pending.targetDate)
+    if (!pending) {
+      setGuestGoalMigrationChecked(true)
+      return
+    }
+    goals.addGoal(pending.name, pending.targetAmount, pending.targetDate).finally(() => setGuestGoalMigrationChecked(true))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, guest.active, loading, goals.loading, goals.goals.length])
 
-  if (loading) {
-    return <PageSkeleton cards={4} />
-  }
+  // Brand-new-user-in-3-steps explainer (choose a goal -> set an amount ->
+  // watch the bar fill) — shown once per account, only when there's truly
+  // no goal yet (covers both a fresh signup where onboarding's optional
+  // goal field was left empty, and any older account that never had one).
+  // Guests always start with a seeded sample goal, so this never fires for
+  // them. Gated on guestGoalMigrationChecked so it can't flash open while
+  // a migrated guest goal is still in flight.
+  const [welcomeTutorialOpen, setWelcomeTutorialOpen] = useState(false)
+  useEffect(() => {
+    if (!user || guest.active || loading || !guestGoalMigrationChecked) return
+    if (goals.goals.length > 0) return
+    if (hasSeenWelcomeTutorial(user.id)) return
+    setWelcomeTutorialOpen(true)
+  }, [user, guest.active, loading, guestGoalMigrationChecked, goals.goals.length])
 
-  if (needsWhatsapp) {
+  if (loading) {
     return <PageSkeleton cards={4} />
   }
 
@@ -321,13 +324,21 @@ export function Dashboard() {
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 pb-16 sm:px-6 lg:px-8">
-      <div className="mb-6 flex items-center gap-2 pt-6">
-        <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{t.pageHeader.title}</h1>
-        <HelpButton title={t.pageHeader.title} purpose={t.help.purpose} actions={t.help.actions} />
-        <DashboardFeedbackPrompt />
+      <div className="mb-6 pt-6">
+        <div className="flex items-center gap-2">
+          <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{t.pageHeader.title}</h1>
+          <HelpButton title={t.pageHeader.title} purpose={t.help.purpose} actions={t.help.actions} />
+          <DashboardFeedbackPrompt />
+        </div>
+        {/* Onboarding Q9 ("how are you feeling about money?") tilts this one
+            line more reassuring when the answer was "stressed" — every other
+            answer gets no extra line here, just the cards below. */}
+        {preferences.financialMood === 'stresse' && (
+          <p className="mt-1 text-sm text-muted">{t.pageHeader.reassuranceStressed}</p>
+        )}
       </div>
 
-      <DashboardGoalCard goals={goals.goals} />
+      <DashboardGoalCard goals={goals.goals} onAddContribution={goals.addContribution} />
 
       {/* Streak + starter badge — surfaced here (not just on Récompenses,
           which nothing else points a new user toward) so day one has a
@@ -410,6 +421,18 @@ export function Dashboard() {
         formatMoney={formatMoney}
       />
 
+      <div className="mt-6 grid gap-6 sm:grid-cols-2">
+        <NeedsLimitCard
+          userId={user?.id ?? 'guest'}
+          monthlyIncome={health.monthlyIncome}
+          hasIncomeRecord={health.hasIncomeRecord}
+          onSetIncome={health.setMonthlyIncome}
+          fixedExpenses={fixed.fixedExpenses}
+          expenseRecords={expenseHistory.records}
+        />
+        <SubscriptionsFoundCard records={expenseHistory.records} />
+      </div>
+
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <div className="flex flex-col gap-6">
           <DashboardCard title={t.scoreChart.title} hint={t.scoreChart.hint}>
@@ -460,6 +483,17 @@ export function Dashboard() {
       <Suspense fallback={null}>
         <ImportTransactionsModal open={importOpen} onClose={() => setImportOpen(false)} />
       </Suspense>
+
+      {user && (
+        <WelcomeTutorial
+          open={welcomeTutorialOpen}
+          userId={user.id}
+          onClose={() => setWelcomeTutorialOpen(false)}
+          onCreateGoal={async (name, targetAmount) => {
+            await goals.addGoal(name, targetAmount, null)
+          }}
+        />
+      )}
     </div>
   )
 }

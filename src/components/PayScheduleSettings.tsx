@@ -34,7 +34,7 @@ export function PayScheduleSettings() {
   const { payFrequency, nextPayday, savingsWhy, setAccountSetupExtras } = usePreferences()
   const { lang } = useLanguage()
   const t = PARAMETRES[lang].paySchedule
-  const freqLabels = ONBOARDING_QUIZ[lang].setup.payFrequencies
+  const freqLabels = ONBOARDING_QUIZ[lang].payFrequencies
 
   const [nextPaydayDraft, setNextPaydayDraft] = useState(nextPayday ?? '')
 

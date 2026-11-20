@@ -17,6 +17,11 @@ export interface HomeContent {
     titleStart: string
     titleHighlight: string
     subtitle: string
+    // A plain one-line reassurance, distinct from `subtitle` above (which
+    // sells the feature) — says what SaveUp IS and, just as importantly,
+    // what it explicitly is NOT (a bank, something that touches your
+    // money). Shown small/muted right under the subtitle.
+    reassurance: string
     // Icon key resolved to a component in Home.tsx — real app behavior
     // only (no invented metrics), see the task that introduced this. Only
     // 2 entries (not 4) — the other 2, plus this section's own CTA, were
@@ -127,6 +132,8 @@ export const HOME: Record<Lang, HomeContent> = {
       titleHighlight: 'Enfin simplement.',
       subtitle:
         'SaveUp importe ton relevé bancaire et organise tes finances en 3 clics — budget, épargne et stats, automatiquement.',
+      reassurance:
+        "Un outil de budget pour atteindre tes objectifs. SaveUp ne touche jamais à ton argent et n'est pas une banque.",
       floatingCards: [
         { icon: 'goal', text: "Objectif d'épargne atteint ✅" },
         { icon: 'trend', text: 'Santé financière : Bonne' },
@@ -312,6 +319,7 @@ export const HOME: Record<Lang, HomeContent> = {
       titleHighlight: 'Finally simple.',
       subtitle:
         'SaveUp imports your bank statement and organizes your finances in 3 clicks — budget, savings, and stats, automatically.',
+      reassurance: "A budgeting tool to reach your goals. SaveUp never touches your money and isn't a bank.",
       floatingCards: [
         { icon: 'goal', text: 'Savings goal reached ✅' },
         { icon: 'trend', text: 'Financial health: Good' },

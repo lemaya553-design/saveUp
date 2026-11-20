@@ -2,11 +2,11 @@ import type { Lang } from './language'
 
 // Everything rendered by the Budget page (src/pages/Budget.tsx) and the
 // components it mounts across its 4 tabs: FixedExpenses, RecurringExpenses,
-// CategoryManager, CategorySuggestions, RecategorizeCard,
-// ImportTransactionsModal, ConvertToRecurringModal, RecentExpenses,
-// AddExpenseForm, CategoryBreakdown, ExpenseTrendChart. Kept as one big
-// dictionary (rather than one per component) since most of these pieces are
-// tiny and only ever mounted from this one page.
+// CategoryManager, CategorySuggestions, ImportTransactionsModal,
+// ConvertToRecurringModal, RecentExpenses, AddExpenseForm,
+// CategoryBreakdown, ExpenseTrendChart. Kept as one big dictionary (rather
+// than one per component) since most of these pieces are tiny and only
+// ever mounted from this one page.
 export interface BudgetContent {
   pageHeader: { title: string; subtitle: string }
   heroAddButton: string
@@ -143,24 +143,6 @@ export interface BudgetContent {
     limitReached: (max: number) => string
     limitDescription: string
     limitErrorMessage: (max: number) => string
-  }
-  recategorizeCard: {
-    cardTitle: string
-    cardHint: string
-    button: string
-    running: string
-    errorPrefix: (err: string) => string
-    none: (fallbackLabel: string) => string
-    result: (updated: number, checked: number) => string
-    previewTitle: string
-    noMatch: string
-    recurring: {
-      sectionTitle: string
-      itemLabel: (description: string, category: string) => string
-      applyFutureOnly: string
-      applyAll: string
-      applying: string
-    }
   }
   recentExpenses: {
     cardTitle: string
@@ -458,25 +440,6 @@ export const BUDGET: Record<Lang, BudgetContent> = {
       limitReached: (max) => `Limite de ${max} catégories atteinte`,
       limitDescription: 'Tu peux toujours réassigner vers une catégorie existante ci-dessous, mais créer une nouvelle catégorie demande de passer à Standard.',
       limitErrorMessage: (max) => `Limite de ${max} catégories atteinte — passe à Standard pour en créer d'autres.`,
-    },
-    recategorizeCard: {
-      cardTitle: 'Recatégorisation automatique',
-      cardHint: 'Ré-essaie de deviner la catégorie de tes dépenses classées « Autre », à partir du nom du commerçant.',
-      button: 'Recatégoriser mes dépenses existantes',
-      running: 'Recatégorisation en cours...',
-      errorPrefix: (err) => `Une erreur est survenue : ${err}`,
-      none: (fallbackLabel) => `Aucune dépense classée « ${fallbackLabel} » à recatégoriser.`,
-      result: (updated, checked) =>
-        `${updated} transaction${updated > 1 ? 's' : ''} recatégorisée${updated > 1 ? 's' : ''} sur ${checked}.`,
-      previewTitle: 'Aperçu de ce qui a été vérifié',
-      noMatch: 'aucune correspondance',
-      recurring: {
-        sectionTitle: 'Dépenses récurrentes',
-        itemLabel: (description, category) => `« ${description} » ressemble à : ${category}`,
-        applyFutureOnly: 'Appliquer aux prochaines seulement',
-        applyAll: 'Appliquer à toutes (passées et futures)',
-        applying: 'Application...',
-      },
     },
     recentExpenses: {
       cardTitle: 'Dépenses récentes',
@@ -782,25 +745,6 @@ export const BUDGET: Record<Lang, BudgetContent> = {
       limitReached: (max) => `Limit of ${max} categories reached`,
       limitDescription: 'You can still reassign to an existing category below, but creating a new one requires upgrading to Standard.',
       limitErrorMessage: (max) => `Limit of ${max} categories reached — upgrade to Standard to create more.`,
-    },
-    recategorizeCard: {
-      cardTitle: 'Automatic recategorization',
-      cardHint: 'Try again to guess the category of your expenses classified as "Other", based on the merchant name.',
-      button: 'Recategorize my existing expenses',
-      running: 'Recategorizing...',
-      errorPrefix: (err) => `Something went wrong: ${err}`,
-      none: (fallbackLabel) => `No expenses classified as "${fallbackLabel}" to recategorize.`,
-      result: (updated, checked) =>
-        `${updated} transaction${updated > 1 ? 's' : ''} recategorized out of ${checked}.`,
-      previewTitle: 'Preview of what was checked',
-      noMatch: 'no match',
-      recurring: {
-        sectionTitle: 'Recurring expenses',
-        itemLabel: (description, category) => `"${description}" looks like: ${category}`,
-        applyFutureOnly: 'Apply to upcoming only',
-        applyAll: 'Apply to all (past and future)',
-        applying: 'Applying...',
-      },
     },
     recentExpenses: {
       cardTitle: 'Recent expenses',

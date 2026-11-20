@@ -236,8 +236,8 @@ export const COMMON: Record<Lang, CommonContent> = {
       screenshots: [
         { key: 'dashboard', label: 'Dashboard', description: 'Ton portrait financier en un coup d’œil.' },
         { key: 'budget', label: 'Budget', description: 'Chaque dépense, chaque catégorie, à jour automatiquement.' },
-        { key: 'epargne', label: 'Épargne', description: 'Tes objectifs, et le simulateur « et si » pour les tester.' },
-        { key: 'statistiques', label: 'Statistiques', description: 'Tendances et comparaisons mensuelles, visualisées.' },
+        { key: 'epargne', label: 'Épargne', description: 'Tes objectifs d’épargne et tes placements, suivis automatiquement.' },
+        { key: 'statistiques', label: 'Statistiques', description: 'Ta répartition de dépenses par catégorie, visualisée clairement.' },
         { key: 'recompenses', label: 'Récompenses', description: 'Des badges qui se méritent, pas des points arbitraires.' },
       ],
     },
@@ -367,8 +367,8 @@ export const COMMON: Record<Lang, CommonContent> = {
       screenshots: [
         { key: 'dashboard', label: 'Dashboard', description: 'Your whole financial picture, at a glance.' },
         { key: 'budget', label: 'Budget', description: 'Every expense, every category, updated automatically.' },
-        { key: 'epargne', label: 'Savings', description: 'Your goals, and the "what if" simulator to test them.' },
-        { key: 'statistiques', label: 'Statistics', description: 'Monthly trends and comparisons, visualized.' },
+        { key: 'epargne', label: 'Savings', description: 'Your savings goals and investments, tracked automatically.' },
+        { key: 'statistiques', label: 'Statistics', description: 'Your spending by category, clearly visualized.' },
         { key: 'recompenses', label: 'Rewards', description: 'Badges you actually earn — not arbitrary points.' },
       ],
     },

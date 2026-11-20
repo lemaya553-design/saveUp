@@ -1,5 +1,14 @@
-import { getMonthRange, getPreviousMonthRange, getWeekStart, toDateString } from './format'
+import { getMonthRange, getWeekStart, toDateString } from './format'
 import type { Lang } from './i18n/language'
+
+// Note: Tendances tab's income-expense trend and this-vs-last-month charts
+// (computeIncomeExpenseTrend/computeThisVsLastMonth) were removed along
+// with that tab — see git history if they're ever needed again.
+// computeMonthlySpendingTrend below survives: computeIncomeExpenseSavingsTrend
+// (Aperçu's kept "Revenus, dépenses et épargne" chart) depends on it.
+// computeCategoryMonthOverMonth further down survives too: lib/tips.ts uses
+// it for personalized tips, independent of the tab that used to also
+// display it.
 
 // ---------------------------------------------------------------------------
 // 6-month (or fewer) spending trend
@@ -52,71 +61,6 @@ export function computeMonthlySpendingTrend(
     })
   }
   return points
-}
-
-// ---------------------------------------------------------------------------
-// Income vs. expenses trend, with the resulting savings rate — Standard+.
-// Income and fixed expenses have no history of their own (budget_settings/
-// fixed_expenses each hold only their CURRENT value, never past ones), so
-// both are held constant across every month here and applied retroactively
-// — same "current data as the best available proxy for the past" trade-off
-// this page's month picker already makes for pctOfIncome. Only the ad-hoc
-// portion of expenses is real per-month history.
-
-export interface IncomeExpenseTrendPoint {
-  label: string
-  monthStart: string
-  income: number
-  expenses: number
-  // Can go negative (a month spent more than the current income) —
-  // deliberately not clamped, since hiding that is worse than showing it.
-  savingsRatePct: number
-}
-
-export function computeIncomeExpenseTrend(
-  adHocRecords: { amount: number; spent_at: string }[],
-  currentFixedExpensesTotal: number,
-  monthlyIncome: number,
-  lang: Lang,
-  now = new Date(),
-  maxMonths = 6,
-): IncomeExpenseTrendPoint[] {
-  const monthlyAdHoc = computeMonthlySpendingTrend(adHocRecords, lang, now, maxMonths)
-
-  return monthlyAdHoc.map((point) => {
-    const expenses = currentFixedExpensesTotal + point.amount
-    const savingsRatePct = monthlyIncome > 0 ? ((monthlyIncome - expenses) / monthlyIncome) * 100 : 0
-    return {
-      label: point.label,
-      monthStart: point.monthStart,
-      income: monthlyIncome,
-      expenses,
-      savingsRatePct,
-    }
-  })
-}
-
-// ---------------------------------------------------------------------------
-// This month vs. last month, total ad-hoc spending — powers the
-// "Ce mois vs le mois passé" card. Always the real current/previous
-// calendar month, independent of any month picker elsewhere on the page.
-
-export function computeThisVsLastMonth(
-  records: { amount: number; spent_at: string }[],
-  now = new Date(),
-): { thisMonth: number; lastMonth: number } {
-  const { start: thisStart, end: thisEnd } = getMonthRange(now)
-  const { start: lastStart, end: lastEnd } = getPreviousMonthRange(now)
-
-  const sumInRange = (start: Date, end: Date) =>
-    records
-      .filter((r) => {
-        const d = new Date(r.spent_at)
-        return d >= start && d < end
-      })
-      .reduce((sum, r) => sum + r.amount, 0)
-
-  return { thisMonth: sumInRange(thisStart, thisEnd), lastMonth: sumInRange(lastStart, lastEnd) }
 }
 
 // ---------------------------------------------------------------------------

@@ -5,14 +5,9 @@ import { Card } from '../components/Card'
 import { StatCard } from '../components/StatCard'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { TabBar, type TabDef } from '../components/TabBar'
-import { MonthComparison } from '../components/MonthComparison'
 import { CategorySpendingChart } from '../components/CategorySpendingChart'
 import { SpendingBreakdownCard } from '../components/SpendingBreakdownCard'
-import { MonthlyTrendChart } from '../components/MonthlyTrendChart'
-import { MonthOverlayChart } from '../components/MonthOverlayChart'
-import { IncomeExpenseTrendChart } from '../components/IncomeExpenseTrendChart'
 import { BudgetVsActualChart } from '../components/BudgetVsActualChart'
-import { CategoryMomList } from '../components/CategoryMomList'
 import { WeeklySpendingChart } from '../components/WeeklySpendingChart'
 import { GoalsProgressChart } from '../components/GoalsProgressChart'
 import { IncomeExpenseSavingsChart } from '../components/IncomeExpenseSavingsChart'
@@ -21,7 +16,6 @@ import { AddExpenseModal } from '../components/AddExpenseModal'
 import { DataExportCard } from '../components/DataExportCard'
 import { RecompensesTab } from '../components/RecompensesTab'
 import { StatistiquesStatCards } from '../components/StatistiquesStatCards'
-import { UpgradePrompt } from '../components/UpgradePrompt'
 import { useExpenseHistory } from '../hooks/useExpenseHistory'
 import { useExpenses } from '../hooks/useExpenses'
 import { useFixedExpenses } from '../hooks/useFixedExpenses'
@@ -38,19 +32,18 @@ import { getMonthRange } from '../lib/format'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import {
   computeBudgetVsActual,
-  computeCategoryMonthOverMonth,
   computeGoalsProgress,
   computeIncomeExpenseSavingsTrend,
-  computeIncomeExpenseTrend,
-  computeMonthlySpendingTrend,
   computePeriodDelta,
-  computeThisVsLastMonth,
   computeWeeklySpending,
   computeWeekdaySpending,
 } from '../lib/statistics'
 
-type Tab = 'apercu' | 'tendances' | 'recompenses'
-const TABS: Tab[] = ['apercu', 'tendances', 'recompenses']
+// Tendances tab removed from the UI — see git history for
+// MonthComparison/MonthOverlayChart/MonthlyTrendChart/IncomeExpenseTrendChart/
+// CategoryMomList if it's ever needed again. No Supabase data was touched.
+type Tab = 'apercu' | 'recompenses'
+const TABS: Tab[] = ['apercu', 'recompenses']
 
 // Covers MAX_MONTHS_BACK below with margin (6 months × 31 days + slack).
 const CONTRIBUTIONS_DAYS_BACK = 200
@@ -67,12 +60,10 @@ export function Statistiques() {
   const formatMoney = useMoneyFormat()
   const TAB_DEFS: TabDef<Tab>[] = [
     { key: 'apercu', label: t.tabs.apercu },
-    { key: 'tendances', label: t.tabs.tendances },
     { key: 'recompenses', label: t.tabs.recompenses },
   ]
   const HELP_BY_TAB: Record<Tab, { title: string; purpose: string; actions: string[] }> = {
     apercu: t.help.apercu,
-    tendances: t.help.tendances,
     recompenses: t.help.recompenses,
   }
   const history = useExpenseHistory(5) // 5 months back + current = 6 total
@@ -116,14 +107,6 @@ export function Statistiques() {
   const categorySpending = useMemo(
     () => computeCategorySpending(history.records, income.monthlyIncome, selectedMonth),
     [history.records, income.monthlyIncome, selectedMonth],
-  )
-  const monthlyTrend = useMemo(
-    () => computeMonthlySpendingTrend(history.records, lang),
-    [history.records, lang],
-  )
-  const incomeExpenseTrend = useMemo(
-    () => computeIncomeExpenseTrend(history.records, fixed.totalFixedExpenses, income.monthlyIncome, lang),
-    [history.records, fixed.totalFixedExpenses, income.monthlyIncome, lang],
   )
   const weeklySpending = useMemo(() => computeWeeklySpending(history.records, lang), [history.records, lang])
   const goalsProgress = useMemo(() => computeGoalsProgress(goals.goals), [goals.goals])
@@ -200,31 +183,10 @@ export function Statistiques() {
       delta: computePeriodDelta(iesLast?.savings ?? 0, iesPrev?.savings ?? null),
     },
   ]
-  const momChanges = useMemo(() => computeCategoryMonthOverMonth(history.records), [history.records])
-  // Same data as momChanges, just re-sorted biggest-last-month-first and
-  // limited to categories that actually had a last month to compare
-  // against — a category with $0 last month has no reference to overlay
-  // against and is already covered by CategoryMomList's "nouveau" case.
-  const lastMonthOverlay = useMemo(
-    () =>
-      momChanges
-        .filter((c) => c.lastMonth > 0)
-        .slice()
-        .sort((a, b) => b.lastMonth - a.lastMonth),
-    [momChanges],
-  )
   const budgetVsActual = useMemo(
     () => computeBudgetVsActual(categories.categories, fixed.fixedExpenses, history.records),
     [categories.categories, fixed.fixedExpenses, history.records],
   )
-  const thisVsLastMonth = useMemo(() => computeThisVsLastMonth(history.records), [history.records])
-  const lastMonthLabel = useMemo(() => {
-    const now = new Date()
-    return new Date(now.getFullYear(), now.getMonth() - 1, 1).toLocaleDateString(
-      lang === 'fr' ? 'fr-CA' : 'en-CA',
-      { month: 'long' },
-    )
-  }, [lang])
 
   // Contributions made during the selected month — same window the category
   // chart's own picker uses, so clicking prev/next moves both together.
@@ -426,56 +388,6 @@ export function Statistiques() {
               </Card>
             </div>
           </div>
-        </div>
-      )}
-
-      {tab === 'tendances' && (
-        <div className="grid gap-6">
-          {subscription.limits.fullStatistics && (
-            <MonthComparison
-              currentAmount={thisVsLastMonth.thisMonth}
-              previousAmount={thisVsLastMonth.lastMonth}
-              previousLabel={lastMonthLabel}
-            />
-          )}
-
-          {subscription.limits.fullStatistics ? (
-            <>
-              <Card title={t.tendances.comparisonCard.title} hint={t.tendances.comparisonCard.hint}>
-                <MonthOverlayChart entries={lastMonthOverlay} />
-              </Card>
-
-              <Card title={t.tendances.trendCard.title} hint={t.tendances.trendCard.hint}>
-                <MonthlyTrendChart points={monthlyTrend} />
-              </Card>
-            </>
-          ) : (
-            <UpgradePrompt
-              title={t.tendances.upgradeTrends.title}
-              description={t.tendances.upgradeTrends.description}
-              variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
-              linkClassName="text-[#FF7A00] hover:opacity-80"
-              minPlan="standard"
-            />
-          )}
-
-          <Card title={t.tendances.momCard.title} hint={t.tendances.momCard.hint}>
-            <CategoryMomList changes={momChanges} />
-          </Card>
-
-          {subscription.limits.incomeExpenseTrend ? (
-            <Card title={t.tendances.incomeExpenseCard.title} hint={t.tendances.incomeExpenseCard.hint}>
-              <IncomeExpenseTrendChart points={incomeExpenseTrend} />
-            </Card>
-          ) : (
-            <UpgradePrompt
-              title={t.tendances.upgradeIncomeExpense.title}
-              description={t.tendances.upgradeIncomeExpense.description}
-              variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
-              linkClassName="text-[#FF7A00] hover:opacity-80"
-              minPlan="standard"
-            />
-          )}
         </div>
       )}
 

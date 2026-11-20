@@ -269,7 +269,7 @@ export function Home() {
   return (
     <div className="landing-classic">
       <MetaTags />
-      <LandingHeader />
+      <LandingHeader logoGradient={{ from: '#1E3A8A', to: '#4A6CF7' }} />
 
       {accountDeleted && (
         <div className="flex items-center justify-center gap-3 border-b border-overlay/10 bg-primary/10 px-4 py-3 text-center text-sm font-medium text-ink sm:px-6">
@@ -284,11 +284,22 @@ export function Home() {
         </div>
       )}
 
-      {/* 1. Hero — badge, two-tone title, search-bar-style CTA, and 4
-          floating "real feature" cards (no invented metrics) scattered
-          around the content on large screens, collapsing to a static grid
-          below lg. */}
-      <section className="relative overflow-hidden px-4 pb-20 pt-16 text-center sm:px-6 sm:pb-28 sm:pt-24">
+      {/* 1. Hero — full viewport height, vertically centered. Badge, a
+          huge fluid edge-to-edge title (clamp(3rem,9vw,13rem), one line
+          per row on desktop), search-bar-style CTA, and 2 floating "real
+          feature" cards (no invented metrics) on large screens, collapsing
+          to a static grid below lg. The rest of the page (reviews, etc.)
+          only ever appears once the visitor scrolls past this section. */}
+      {/* overflow-x-hidden (not overflow-hidden) on purpose: the blobs
+          below are wider than a narrow phone viewport, so the X axis
+          still needs clipping to avoid a horizontal scrollbar. But on
+          narrow screens the title + subtitle + goal picker + static card
+          grid can add up to taller than 100svh, and flex's vertical
+          centering then overflows equally top and bottom — clipping the Y
+          axis too would silently cut off that bottom content (the static
+          floating-card grid) instead of just letting the section grow
+          past 100svh and the page scroll, which is what should happen. */}
+      <section className="relative flex min-h-[100svh] flex-col justify-center overflow-x-hidden px-4 py-16 text-center sm:px-6">
         {/* Subtle orange glow behind the title — two soft blobs drifting
             gently (mesh-blob-a/b, defined in index.css) rather than one
             static circle, for a touch of ambient life. */}
@@ -301,7 +312,7 @@ export function Home() {
           className="mesh-blob-b pointer-events-none absolute right-[10%] top-1/3 -z-10 h-72 w-72 rounded-full bg-primary/10 blur-[100px]"
         />
 
-        <Reveal className="relative mx-auto max-w-2xl">
+        <Reveal>
           <div className="mx-auto inline-flex items-center gap-2.5 rounded-full border border-overlay/10 bg-surface px-4 py-1.5 shadow-sm">
             <div className="flex -space-x-2" aria-hidden="true">
               {[0, 1, 2].map((i) => (
@@ -316,12 +327,26 @@ export function Home() {
             <span className="text-xs font-medium text-muted">{t.hero.trustBadge}</span>
           </div>
 
-          <h1 className="mx-auto mt-6 text-balance text-[clamp(2.25rem,6vw,3.75rem)] font-extrabold leading-[1.08] tracking-tight text-ink">
-            {t.hero.titleStart}
-            <br />
-            <span className="text-primary">{t.hero.titleHighlight}</span>
+          {/* Deliberately NOT inside the max-w-2xl column below — this is
+              the one element on the page meant to visibly touch both
+              edges of the viewport, per the brief. clamp(3rem,9vw,13rem)
+              scales with viewport width between a 48px floor (phones) and
+              a 208px ceiling (very wide desktops), so it never needs a
+              separate mobile override. */}
+          <h1
+            className="mx-auto mt-6 w-full text-balance font-extrabold leading-[0.95] tracking-tight text-ink"
+            style={{ fontSize: 'clamp(3rem, 9vw, 13rem)' }}
+          >
+            <span className="block sm:whitespace-nowrap">{t.hero.titleStart}</span>
+            <span className="block bg-gradient-to-r from-[#4A6CF7] to-[#0B0B12] bg-clip-text text-transparent sm:whitespace-nowrap">
+              {t.hero.titleHighlight}
+            </span>
           </h1>
-          <p className="mx-auto mt-5 max-w-xl text-lg text-muted">{t.hero.subtitle}</p>
+        </Reveal>
+
+        <Reveal delayMs={80} className="relative mx-auto mt-5 max-w-xl">
+          <p className="mx-auto max-w-xl text-lg text-muted">{t.hero.subtitle}</p>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-muted/80">{t.hero.reassurance}</p>
 
           <p className="mt-8 text-sm font-medium text-muted">{t.hero.goalPicker.label}</p>
           <div className="mx-auto mt-3 flex max-w-xl flex-wrap items-center justify-center gap-2">
@@ -339,12 +364,16 @@ export function Home() {
         </Reveal>
 
         {/* Floating cards — large screens only, absolutely positioned
-            around the hero content. Only the top 2 (of the original 4) —
-            the bottom 2 plus the search-bar CTA were removed (see the task
-            that trimmed this): they sat low enough in this section to
-            visually crowd the showcase section's phone mockup right below,
-            reading as clutter rather than two distinct sections. */}
-        <div className="pointer-events-none absolute inset-0 z-0 mx-auto hidden max-w-5xl lg:block">
+            around the hero content, clear of both the sticky nav above and
+            the title block beside them (verified at 1280/1920px). Only 2
+            cards (of an original 4) — the bottom 2 plus the search-bar CTA
+            were removed in an earlier pass: they sat low enough in this
+            section to visually crowd the showcase section's phone mockup
+            right below, reading as clutter rather than two distinct
+            sections. Hidden on phones — the static grid below (same 2
+            cards) replaces them there instead of floating, so there's
+            nothing that could overlap the title on a small screen. */}
+        <div className="pointer-events-none absolute inset-x-0 top-24 z-0 mx-auto hidden max-w-6xl lg:block">
           {t.hero.floatingCards.map((card, i) => (
             <Reveal
               key={card.text}
@@ -356,12 +385,19 @@ export function Home() {
           ))}
         </div>
 
-        {/* Same cards, static row below lg. */}
-        <Reveal delayMs={160} className="mx-auto mt-10 grid max-w-md grid-cols-2 gap-3 lg:hidden">
+        {/* Same cards, static row below lg — a plain div, not Reveal: this
+            sits inside the hero's own full-height first screen (nothing to
+            scroll to reveal), and on phones short enough that the hero's
+            content fills ~100svh, this row ends up flush against the very
+            bottom edge — squarely inside Reveal's `-10%` bottom rootMargin
+            exclusion band, which silently never fires without an explicit
+            scroll. Immediately visible is correct here anyway: it's part
+            of the first thing a visitor sees, not a below-the-fold reveal. */}
+        <div className="mx-auto mt-10 grid max-w-md grid-cols-2 gap-3 lg:hidden">
           {t.hero.floatingCards.map((card) => (
             <FloatingCard key={card.text} icon={card.icon} text={card.text} className="text-left" />
           ))}
-        </Reveal>
+        </div>
       </section>
 
       {/* 2. Témoignages — real customer reviews (lib/testimonials.ts), used
@@ -461,7 +497,7 @@ export function Home() {
             so it reads as "a little depth," not a distraction. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_55%_at_50%_30%,rgba(255,107,0,0.03),transparent_70%)]"
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_55%_at_50%_30%,rgba(74,108,247,0.03),transparent_70%)]"
         />
 
         <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-10 lg:flex-row lg:items-center lg:justify-center lg:gap-14">
@@ -556,12 +592,12 @@ export function Home() {
 
       {/* 5+6. Storytelling and Solution-en-3-étapes share ONE continuous
           black background (wrapper div below) instead of each having its
-          own bg-[#0a0a0c] — two separate elements painting the identical
+          own bg-[#0B0B12] — two separate elements painting the identical
           hex still produced a visible seam at the boundary, because each
           section's glow blobs were clipped by ITS OWN overflow-hidden
           edge, so the glow brightness didn't match right at the seam even
           though the base color did. One wrapper = no boundary to seam. */}
-      <div className="relative overflow-hidden bg-[#0a0a0c]">
+      <div className="relative overflow-hidden bg-[#0B0B12]">
         {/* Single diagonal glass-sheen gradient spanning BOTH sections below.
             Previously each section had its own `absolute inset-0` sheen, so
             the gradient restarted fresh at the top of the second section —

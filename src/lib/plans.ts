@@ -1,7 +1,7 @@
 // Single source of truth for what each plan unlocks — every gating point in
-// the app (categories, goals, CSV import, statistics, simulator, alerts,
-// badges, data export) reads from PLAN_LIMITS rather than checking `plan`
-// directly, so the actual numbers/flags only ever live in one place.
+// the app (categories, goals, CSV import, alerts, badges, data export)
+// reads from PLAN_LIMITS rather than checking `plan` directly, so the
+// actual numbers/flags only ever live in one place.
 
 export type Plan = 'free' | 'standard' | 'premium'
 
@@ -16,13 +16,10 @@ export interface PlanLimits {
   maxGoals: number | null
   maxRecurringExpenses: number | null
   csvImport: boolean
-  fullStatistics: boolean
-  advancedSimulator: boolean
   alerts: boolean
   dataExport: boolean
   allBadges: boolean
   goalPhotos: boolean
-  incomeExpenseTrend: boolean
 }
 
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
@@ -33,13 +30,10 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     maxGoals: 1,
     maxRecurringExpenses: 2,
     csvImport: false,
-    fullStatistics: false,
-    advancedSimulator: false,
     alerts: false,
     dataExport: false,
     allBadges: false,
     goalPhotos: false,
-    incomeExpenseTrend: false,
   },
   standard: {
     label: 'Standard',
@@ -48,13 +42,10 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     maxGoals: null,
     maxRecurringExpenses: null,
     csvImport: true,
-    fullStatistics: true,
-    advancedSimulator: false,
     alerts: false,
     dataExport: false,
     allBadges: true,
     goalPhotos: false,
-    incomeExpenseTrend: true,
   },
   premium: {
     label: 'Premium',
@@ -63,13 +54,10 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     maxGoals: null,
     maxRecurringExpenses: null,
     csvImport: true,
-    fullStatistics: true,
-    advancedSimulator: true,
     alerts: true,
     dataExport: true,
     allBadges: true,
     goalPhotos: true,
-    incomeExpenseTrend: true,
   },
 }
 
