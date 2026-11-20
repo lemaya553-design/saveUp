@@ -89,7 +89,7 @@ export function StatCard({
               </>
             )
             const className = `min-w-[7rem] border-t-2 px-0.5 pb-3 pt-2 text-left transition-colors ${
-              active ? 'border-[#FF7A00]' : 'border-transparent'
+              active ? 'border-primary' : 'border-transparent'
             } ${clickable ? 'cursor-pointer hover:bg-overlay/5' : ''}`
 
             return clickable ? (

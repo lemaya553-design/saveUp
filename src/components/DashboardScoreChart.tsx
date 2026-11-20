@@ -6,7 +6,7 @@ import { DASHBOARD } from '../lib/i18n/dashboard'
 import type { ScoreSnapshot } from '../hooks/useFinancialHealth'
 import { BudgetEmptyChart } from './BudgetEmptyChart'
 
-const ORANGE_VIF = '#FF7A00'
+const ORANGE_VIF = '#4A6CF7'
 
 function ChartIcon({ className }: { className: string }) {
   return (

@@ -59,7 +59,7 @@ export function BudgetPayPeriodCard({
         <div className="flex flex-col items-center gap-2 py-4 text-center">
           <span
             className="flex h-10 w-10 items-center justify-center rounded-full"
-            style={{ color: '#FF7A00', backgroundColor: 'rgba(255, 122, 0, 0.15)' }}
+            style={{ color: '#4A6CF7', backgroundColor: 'rgba(74, 108, 247, 0.15)' }}
           >
             <CalendarIcon className="h-5 w-5" />
           </span>
@@ -68,7 +68,7 @@ export function BudgetPayPeriodCard({
           <Link
             to="/parametres/preferences"
             className="mt-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
-            style={{ backgroundColor: '#FF7A00' }}
+            style={{ backgroundColor: '#4A6CF7' }}
           >
             {t.emptyCta}
           </Link>
@@ -135,8 +135,8 @@ export function BudgetPayPeriodCard({
           style={{
             width: `${Math.min(100, spentPct)}%`,
             backgroundImage: isOverBudget
-              ? 'linear-gradient(to right, #E5484D, #CC5F00)'
-              : 'linear-gradient(to right, #CC5F00, #FF7A00)',
+              ? 'linear-gradient(to right, #E5484D, #1E3A8A)'
+              : 'linear-gradient(to right, #1E3A8A, #4A6CF7)',
           }}
         />
       </div>

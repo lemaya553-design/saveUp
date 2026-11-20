@@ -1,17 +1,21 @@
-// Blue / mauve — the app's palette — at three lightnesses each, so there's
-// enough spread for more than 3-4 categories without leaving that family.
-// Shared by every category chart on Statistiques (bar chart, donut) so the
-// same category always renders the same color everywhere on the page.
-// Green and gray are deliberately excluded here — reserved below for
-// "Épargne" and "Disponible" respectively, so neither can ever collide with
-// a real spending category by coincidence of the hash.
+// Six shades/tints within the app's single blue brand color (plus one
+// teal accent), so there's enough spread to tell apart more than 3-4
+// categories without ever leaving that family — this used to mix in a
+// second mauve hue for exactly that spread, back when the app had two
+// accent colors; now there's only the one, so every entry stays blue (or
+// blue-adjacent teal). Shared by every category chart on Statistiques (bar
+// chart, donut) so the same category always renders the same color
+// everywhere on the page. Green and gray are deliberately excluded here —
+// reserved below for "Épargne" and "Disponible" respectively, so neither
+// can ever collide with a real spending category by coincidence of the
+// hash.
 export const CATEGORY_COLORS = [
-  '#4a6cf7', // primary blue
-  '#8b5cf6', // accent mauve
-  '#3e5fe0', // deep blue (primary-strong)
-  '#7c3aed', // deep mauve
-  '#93c5fd', // light blue
-  '#c4b5fd', // light mauve
+  '#4a6cf7', // bleu principal
+  '#3e5fe0', // bleu profond (primary-strong)
+  '#8da9ff', // bleu clair
+  '#1e3a8a', // bleu foncé
+  '#2dd4bf', // sarcelle (teal) — pour une 5e/6e catégorie bien distincte
+  '#5b6b9e', // bleu ardoise
 ]
 
 // Matches the 'Épargne' → success-green convention already established on

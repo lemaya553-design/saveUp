@@ -42,6 +42,8 @@ export interface CommonContent {
     ctaStartShort: string
     openMenu: string
     closeMenu: string
+    switchToLight: string
+    switchToDark: string
   }
   // Shared by Budget.tsx and Parametres.tsx (Compte tab) — same component,
   // same copy in both places.
@@ -56,8 +58,6 @@ export interface CommonContent {
     budget: string
     epargne: string
     statistiques: string
-    calendrier: string
-    premium: string
     tarifs: string
     parametres: string
     signOut: string
@@ -179,6 +179,8 @@ export const COMMON: Record<Lang, CommonContent> = {
       ctaStartShort: 'Essayer',
       openMenu: 'Ouvrir le menu',
       closeMenu: 'Fermer le menu',
+      switchToLight: 'Passer au mode clair',
+      switchToDark: 'Passer au mode sombre',
     },
     incomeInput: {
       title: 'Revenu mensuel',
@@ -189,8 +191,6 @@ export const COMMON: Record<Lang, CommonContent> = {
       budget: 'Budget',
       epargne: 'Épargne',
       statistiques: 'Statistiques',
-      calendrier: 'Calendrier',
-      premium: 'Premium',
       tarifs: 'Tarifs',
       parametres: 'Paramètres',
       signOut: 'Déconnexion',
@@ -310,6 +310,8 @@ export const COMMON: Record<Lang, CommonContent> = {
       ctaStartShort: 'Try it',
       openMenu: 'Open menu',
       closeMenu: 'Close menu',
+      switchToLight: 'Switch to light mode',
+      switchToDark: 'Switch to dark mode',
     },
     incomeInput: {
       title: 'Monthly income',
@@ -320,8 +322,6 @@ export const COMMON: Record<Lang, CommonContent> = {
       budget: 'Budget',
       epargne: 'Savings',
       statistiques: 'Statistics',
-      calendrier: 'Calendar',
-      premium: 'Premium',
       tarifs: 'Pricing',
       parametres: 'Settings',
       signOut: 'Sign out',

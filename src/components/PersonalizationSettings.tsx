@@ -1,14 +1,16 @@
 import { AvatarCircle } from './AvatarCircle'
 import { usePreferences } from '../hooks/usePreferences'
 import { useLanguage } from '../hooks/useLanguage'
-import { ACCENT_COLORS, AVATAR_EMOJIS, type AccentColor, type Theme } from '../lib/theme'
+import { AVATAR_EMOJIS, type Theme } from '../lib/theme'
 import { PARAMETRES } from '../lib/i18n/parametres'
 
 const CARD_BORDER = 'color-mix(in srgb, var(--color-overlay) 10%, transparent)'
 
+// The blue/green/purple/orange accent-color picker that used to live here
+// is gone — the app is a single fixed blue brand now, nothing left to
+// choose between. Only the dark/light toggle and avatar picker remain.
 export function PersonalizationSettings() {
-  const { loading, error, accentColor, theme, avatarEmoji, setAccentColor, setTheme, setAvatarEmoji } =
-    usePreferences()
+  const { loading, error, theme, avatarEmoji, setTheme, setAvatarEmoji } = usePreferences()
   const { lang } = useLanguage()
   const t = PARAMETRES[lang].personalization
 
@@ -22,31 +24,6 @@ export function PersonalizationSettings() {
       {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
 
       <div className="flex flex-col gap-6">
-        <div>
-          <p className="mb-2 text-sm font-medium text-ink">{t.accentColor}</p>
-          <div className="flex flex-wrap gap-3">
-            {ACCENT_COLORS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                disabled={loading}
-                onClick={() => setAccentColor(option.value as AccentColor)}
-                aria-pressed={accentColor === option.value}
-                aria-label={option.label[lang]}
-                className={`flex h-11 w-11 items-center justify-center rounded-full transition-all disabled:opacity-60 ${
-                  accentColor === option.value ? 'ring-2 ring-ink ring-offset-2 ring-offset-surface' : ''
-                }`}
-              >
-                <span
-                  className="h-8 w-8 rounded-full"
-                  style={{ backgroundColor: option.swatch }}
-                  aria-hidden="true"
-                />
-              </button>
-            ))}
-          </div>
-        </div>
-
         <div>
           <p className="mb-2 text-sm font-medium text-ink">{t.theme}</p>
           <div className="glass inline-flex gap-1 rounded-full p-1">
@@ -81,7 +58,7 @@ export function PersonalizationSettings() {
                   aria-pressed={avatarEmoji === emoji}
                   aria-label={t.avatarAriaLabel(emoji)}
                   className={`flex h-10 w-10 items-center justify-center rounded-full text-lg transition-colors disabled:opacity-60 ${
-                    avatarEmoji === emoji ? 'bg-[#FF7A00]/20 ring-1 ring-inset ring-[#FF7A00]/40' : 'hover:bg-overlay/10'
+                    avatarEmoji === emoji ? 'bg-primary/20 ring-1 ring-inset ring-primary/40' : 'hover:bg-overlay/10'
                   }`}
                 >
                   {emoji}

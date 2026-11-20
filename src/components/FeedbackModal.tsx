@@ -43,7 +43,7 @@ export function FeedbackModal({ open, onClose }: { open: boolean; onClose: () =>
         <div className="flex flex-col items-center gap-3 py-4 text-center">
           <span
             className="flex h-12 w-12 items-center justify-center rounded-full text-2xl"
-            style={{ color: '#FF7A00', backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
+            style={{ color: '#4A6CF7', backgroundColor: 'rgba(74, 108, 247, 0.14)' }}
             aria-hidden="true"
           >
             ✓

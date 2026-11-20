@@ -29,7 +29,7 @@ export function GoalPhotoPicker({
     return (
       <Link
         to="/tarifs"
-        className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#FF7A00]/15 px-3 py-1.5 text-xs font-semibold text-[#FF7A00] transition-colors hover:bg-[#FF7A00]/25"
+        className="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/25"
       >
         {t.premiumBadge}
       </Link>

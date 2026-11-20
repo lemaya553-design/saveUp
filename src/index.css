@@ -8,7 +8,12 @@
      text. Solid button fills use this slightly deeper shade instead; links, borders,
      icons and the hero gradient keep the exact requested #4a6cf7. */
   --color-primary-strong: #3e5fe0;
-  --color-accent: #8b5cf6;
+  /* Single fixed blue palette app-wide now — no more per-feature accent
+     hue (this used to be violet, #8b5cf6). --color-accent exists as its
+     own token rather than being deleted so call sites that reach for "the
+     accent, not quite the primary CTA color" (badges, chart highlights)
+     keep working — it's just equal to primary now. */
+  --color-accent: #4a6cf7;
   --color-success: #22c55e;
   --color-ink: #f5f5f7;
   --color-muted: #9ca3af;
@@ -32,24 +37,6 @@
   --glass-bg: var(--color-surface);
   --glass-border: #2a2a2a;
   --slider-track-bg: rgba(255, 255, 255, 0.1);
-}
-
-/* Accent color presets (Paramètres > Personnalisation). "Bleu" is the
-   original default palette above — no override block needed for it. */
-:root[data-accent='vert'] {
-  --color-primary: #22c55e;
-  --color-primary-strong: #16a34a;
-  --color-accent: #14b8a6;
-}
-:root[data-accent='violet'] {
-  --color-primary: #8b5cf6;
-  --color-primary-strong: #7c3aed;
-  --color-accent: #ec4899;
-}
-:root[data-accent='orange'] {
-  --color-primary: #f97316;
-  --color-primary-strong: #ea580c;
-  --color-accent: #eab308;
 }
 
 /* Light theme (Paramètres > Personnalisation). Semantic colors (success,
@@ -78,39 +65,84 @@
   --color-red-300: #b91c1c;
 }
 
-/* Landing page (Home.tsx) recolor — same structure/sections/copy as the
-   app's original landing page, just a white/black/blue palette instead of
-   orange. Scoped to a wrapper class rather than :root[data-theme='light']
-   on purpose: that selector only ever matches the actual <html> element
-   (the user's real in-app light/dark preference), so it can't be used to
-   theme one route's subtree without also hijacking the global attribute
-   for every other page.
-   --color-primary/--color-accent/--color-success all collapse to the same
-   blue here — the app normally uses 3 distinct hues (blue primary, violet
-   accent, green success) across badges, gradients and checkmarks, but the
-   requested palette is a single accent color, so every one of those roles
-   maps to it instead of leaving stray violet/green on an otherwise
-   black-on-white page. --color-primary-strong (solid button fills, where
-   white text needs more contrast than the primary blue alone gives it)
-   uses the requested "bleu foncé" shade instead of repeating primary.
-   --color-overlay (borders, low-opacity hover washes) uses "bleu nuit"
-   rather than a plain near-black, the one natural slot for that 4th color
-   in a UI that otherwise has no dedicated dark-navy element. */
+/* Landing page (Home.tsx) recolor — white/black/blue palette, with its own
+   light/dark toggle independent of the signed-in app's theme preference
+   (see lib/landingTheme.ts). Scoped to a wrapper class rather than
+   :root[data-theme='light'] on purpose: that selector only ever matches
+   the actual <html> element (the user's real in-app light/dark
+   preference), so it can't be used to theme one route's subtree without
+   also hijacking the global attribute for every other page.
+   --color-primary/--color-accent collapse to the same blue (this is a
+   single-accent-color brand, not the app's old blue/violet/green split) —
+   but --color-success stays real green: status colors (goal reached,
+   positive deltas) read as green/red regardless of the brand accent,
+   everywhere in the app. --color-primary-strong (solid button fills,
+   where white text needs more contrast than the primary blue alone gives
+   it) uses the requested "bleu foncé" shade in light mode; dark mode uses
+   the brighter primary blue itself instead, since a backdrop that's
+   already near-black gives plenty of contrast margin on its own and a
+   second, darker navy button would barely read as a button against it.
+   --color-overlay (borders, low-opacity hover washes) uses "bleu nuit" in
+   light mode — the one natural slot for that 4th palette color in a UI
+   that otherwise has no dedicated dark-navy element — and flips to white
+   in dark mode (border-overlay/N needs to be LIGHTER than the surface
+   it's outlining there, same convention the signed-in app's own dark mode
+   already uses). */
 .landing-classic {
   --color-canvas: #ffffff;
   --color-surface: #ffffff;
   --color-primary: #4a6cf7;
   --color-primary-strong: #1e3a8a;
   --color-accent: #4a6cf7;
-  --color-success: #4a6cf7;
+  --color-success: #22c55e;
   --color-ink: #0b0b12;
   --color-muted: #555555;
   --color-overlay: #0b1a3a;
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(11, 26, 58, 0.08);
+  /* landing-hero-bg's gradient stops (light mode) — pale blue fading to
+     white, with a soft blue halo at the very top of the hero. */
+  --hero-bg-from: #e8eeff;
+  --hero-bg-via: #ffffff;
+  --hero-bg-halo: rgba(74, 108, 247, 0.16);
 
   background-color: var(--color-canvas);
   color: var(--color-ink);
+}
+
+.landing-classic.landing-dark {
+  --color-canvas: #0b0b12;
+  /* A notch lighter than canvas so cards (testimonials, problem/solution,
+     floating labels/notification, pricing) read as a distinct surface —
+     same reasoning as the signed-in app's own --color-surface vs
+     --color-canvas split, just a lighter delta since this page's canvas
+     is darker (pure near-black) than the app's own dark canvas. */
+  --color-surface: #13141f;
+  --color-primary: #4a6cf7;
+  --color-primary-strong: #4a6cf7;
+  --color-accent: #4a6cf7;
+  --color-success: #22c55e;
+  --color-ink: #f5f5f7;
+  --color-muted: #9ca3af;
+  --color-overlay: #ffffff;
+  --glass-bg: rgba(19, 20, 31, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  /* landing-hero-bg's gradient stops (dark mode) — bleu nuit fading to
+     the page's black canvas, same blue halo on top. */
+  --hero-bg-from: #0b1a3a;
+  --hero-bg-via: #0b0b12;
+  --hero-bg-halo: rgba(74, 108, 247, 0.28);
+}
+
+/* Soft halo/gradient at the top of the hero section, fading down into the
+   page's own canvas color by the time it reaches the rest of the content —
+   the "dégradé bleu dans le fond" the hero itself asks for, distinct from
+   the mesh-blob-a/b drifting blobs layered on top of it (those add motion;
+   this is the static backdrop both themes share the same structure for). */
+.landing-hero-bg {
+  background-image:
+    radial-gradient(ellipse 90% 60% at 50% -10%, var(--hero-bg-halo), transparent 65%),
+    linear-gradient(to bottom, var(--hero-bg-from), var(--hero-bg-via) 65%);
 }
 
 html {
@@ -132,14 +164,13 @@ body {
   border: 1px solid var(--glass-border);
 }
 
-/* Subtle blue-to-mauve wash for hero sections and page headers. Left as a
-   fixed blue/mauve wash regardless of accent choice — a deliberately
-   decorative constant, like the landing page's own brand identity, rather
-   than something that should chase every accent preset. */
+/* Subtle two-tone blue wash for hero sections and page headers (PageHeader,
+   Calculateur). Both radial gradients use the same blue now — there's no
+   second accent hue left to blend it with. */
 .hero-gradient {
   background-image:
     radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74, 108, 247, 0.22), transparent 70%),
-    radial-gradient(ellipse 60% 50% at 100% 0%, rgba(139, 92, 246, 0.16), transparent 70%);
+    radial-gradient(ellipse 60% 50% at 100% 0%, rgba(74, 108, 247, 0.16), transparent 70%);
 }
 
 /* Plays once when a reward badge transitions from locked to unlocked. */
@@ -201,7 +232,7 @@ body {
 .hover-lift:hover {
   transform: translateY(-6px);
   box-shadow: 0 24px 48px -16px rgba(74, 108, 247, 0.28);
-  border-color: rgba(139, 92, 246, 0.35);
+  border-color: rgba(74, 108, 247, 0.35);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -382,8 +413,8 @@ body {
 
 .bento-tile:hover {
   transform: translateY(-4px);
-  border-color: var(--tile-glow, rgba(139, 92, 246, 0.4));
-  box-shadow: 0 20px 45px -20px var(--tile-glow, rgba(139, 92, 246, 0.4));
+  border-color: var(--tile-glow, rgba(74, 108, 247, 0.4));
+  box-shadow: 0 20px 45px -20px var(--tile-glow, rgba(74, 108, 247, 0.4));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -575,34 +606,37 @@ body {
 }
 
 /* Budget page redesign — solid white/black form fields (not the translucent
-   overlay tint used everywhere else), with the page's fixed orange focus
-   ring instead of the app's default accent. Shared by every Budget-page-only
+   overlay tint used everywhere else). Shared by every Budget-page-only
    component (FixedExpenses, RecentExpenses, RecurringExpenses,
    CategoryManager, CategorySuggestions, AddExpenseModal) — never used
-   outside this page, so it can't recolor any other page's inputs. */
+   outside this page, so it can't recolor any other page's inputs. Now
+   token-driven (var(--color-primary)) rather than a hand-picked hex: this
+   class used to intentionally diverge from the app's per-feature accent
+   system (orange here, regardless of whatever hue the rest of the app was
+   using), but there's only one accent color left app-wide, so that
+   divergence no longer does anything — referencing the token directly
+   means this never needs touching again if the brand color ever changes. */
 .budget-field {
   background-color: var(--color-canvas);
   border: 1px solid color-mix(in srgb, var(--color-overlay) 12%, transparent);
 }
 
 .budget-field:focus {
-  border-color: #ff7a00;
+  border-color: var(--color-primary);
   outline: none;
 }
 
-/* Same idea for the small text-only action links (Modifier/Récurrence...)
-   that default to the app's violet accent — orange here instead. */
 .budget-action-link {
-  color: #ff7a00;
+  color: var(--color-primary);
 }
 
 .budget-action-link:hover {
-  background-color: rgba(255, 122, 0, 0.1);
-  color: #ff7a00;
+  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
 }
 
 .budget-btn-primary {
-  background-color: #ff7a00;
+  background-color: var(--color-primary-strong);
   color: #fff;
 }
 
@@ -634,26 +668,26 @@ body {
 }
 
 /* Onboarding quiz (Onboarding.tsx) — the selected answer briefly pulses
-   orange before the question transitions (JS delays the actual advance
+   blue before the question transitions (JS delays the actual advance
    until this finishes, see .question-exit below), and each new question
    fades/slides in as its own freshly-mounted element (key={questionIndex}
    forces a new DOM node, which is what lets the CSS animation replay on
    every question instead of only once). */
 @keyframes answer-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.45);
-    border-color: rgba(255, 107, 0, 0.5);
-    background-color: rgba(255, 107, 0, 0.08);
+    box-shadow: 0 0 0 0 rgba(74, 108, 247, 0.45);
+    border-color: rgba(74, 108, 247, 0.5);
+    background-color: rgba(74, 108, 247, 0.08);
   }
   60% {
-    box-shadow: 0 0 0 10px rgba(255, 107, 0, 0);
-    border-color: rgba(255, 107, 0, 0.9);
-    background-color: rgba(255, 107, 0, 0.16);
+    box-shadow: 0 0 0 10px rgba(74, 108, 247, 0);
+    border-color: rgba(74, 108, 247, 0.9);
+    background-color: rgba(74, 108, 247, 0.16);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 107, 0, 0);
-    border-color: rgba(255, 107, 0, 0.5);
-    background-color: rgba(255, 107, 0, 0.08);
+    box-shadow: 0 0 0 0 rgba(74, 108, 247, 0);
+    border-color: rgba(74, 108, 247, 0.5);
+    background-color: rgba(74, 108, 247, 0.08);
   }
 }
 

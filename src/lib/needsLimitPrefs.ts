@@ -2,7 +2,7 @@ import { DEFAULT_NEEDS_PCT, DEFAULT_SAVINGS_PCT, clampPct } from './needsLimit'
 
 // The needs/savings percentages are reference points, not financial data —
 // kept per-user in localStorage only (same lightweight pattern as
-// subscriptionReview.ts/gettingStarted.ts), never synced to Supabase.
+// gettingStarted.ts), never synced to Supabase.
 // Scoped by user.id so switching accounts on the same browser never leaks
 // one person's edited percentages into another's view.
 

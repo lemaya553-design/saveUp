@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 import { useGuestMode } from './useGuestMode'
-import { applyAccentColor, applyTheme, type AccentColor, type Theme } from '../lib/theme'
+import { applyTheme, type Theme } from '../lib/theme'
 import type { Currency } from '../lib/format'
 import type { MainGoal, TrackingFrequency } from '../lib/onboardingProfile'
 import type {
@@ -19,7 +19,6 @@ import type {
 interface PreferencesContextValue {
   loading: boolean
   error: string | null
-  accentColor: AccentColor
   theme: Theme
   avatarEmoji: string | null
   currency: Currency
@@ -64,7 +63,11 @@ interface PreferencesContextValue {
   savingsGoalName: string | null
   financialMood: FinancialMood | null
   onboardingCompletedAt: string | null
-  setAccentColor: (value: AccentColor) => void
+  // /100, computed once by lib/onboardingScore.ts at the end of the
+  // 10-question flow and saved alongside everything else — null for
+  // accounts onboarded before this existed (score screen is a one-time
+  // reveal, not recomputed later, so there's nothing to backfill it with).
+  onboardingScore: number | null
   setTheme: (value: Theme) => void
   setAvatarEmoji: (value: string | null) => void
   setCurrency: (value: Currency) => void
@@ -82,6 +85,7 @@ interface PreferencesContextValue {
     savingsGoalType: SavingsGoalType
     savingsGoalName: string | null
     financialMood: FinancialMood
+    onboardingScore: number
   }) => void
   incrementCsvImportCount: () => void
   setHourlyRate: (value: number | null) => void
@@ -100,7 +104,6 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const userId = user?.id
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [accentColor, setAccentColorState] = useState<AccentColor>('bleu')
   const [theme, setThemeState] = useState<Theme>('dark')
   const [avatarEmoji, setAvatarEmojiState] = useState<string | null>(null)
   const [currency, setCurrencyState] = useState<Currency>('CAD')
@@ -126,6 +129,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [savingsGoalName, setSavingsGoalNameState] = useState<string | null>(null)
   const [financialMood, setFinancialMoodState] = useState<FinancialMood | null>(null)
   const [onboardingCompletedAt, setOnboardingCompletedAtState] = useState<string | null>(null)
+  const [onboardingScore, setOnboardingScoreState] = useState<number | null>(null)
 
   const load = useCallback(async () => {
     // Guest mode never persists preferences anywhere — theme/accent/avatar
@@ -145,16 +149,14 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     const { data, error: fetchError } = await supabase
       .from('user_preferences')
       .select(
-        'accent_color, theme, avatar_emoji, currency, onboarding_main_goal, onboarding_tried_other_app, onboarding_frequency, csv_import_count, hourly_rate, work_hours_enabled, pay_frequency, next_payday, savings_why, whatsapp_number, whatsapp_consent, whatsapp_consent_at, whatsapp_status, first_name, work_status, income_range, fixed_expenses_range, money_leaks, savings_goal_type, savings_goal_name, financial_mood, onboarding_completed_at',
+        'theme, avatar_emoji, currency, onboarding_main_goal, onboarding_tried_other_app, onboarding_frequency, csv_import_count, hourly_rate, work_hours_enabled, pay_frequency, next_payday, savings_why, whatsapp_number, whatsapp_consent, whatsapp_consent_at, whatsapp_status, first_name, work_status, income_range, fixed_expenses_range, money_leaks, savings_goal_type, savings_goal_name, financial_mood, onboarding_completed_at, onboarding_score',
       )
       .eq('user_id', userId)
       .maybeSingle()
     if (fetchError) {
       setError(fetchError.message)
     } else {
-      const nextAccent = (data?.accent_color as AccentColor | undefined) ?? 'bleu'
       const nextTheme = (data?.theme as Theme | undefined) ?? 'dark'
-      setAccentColorState(nextAccent)
       setThemeState(nextTheme)
       setAvatarEmojiState(data?.avatar_emoji ?? null)
       setCurrencyState((data?.currency as Currency | undefined) ?? 'CAD')
@@ -180,10 +182,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setSavingsGoalNameState(data?.savings_goal_name ?? null)
       setFinancialMoodState((data?.financial_mood as FinancialMood | null) ?? null)
       setOnboardingCompletedAtState(data?.onboarding_completed_at ?? null)
+      setOnboardingScoreState(data?.onboarding_score ?? null)
       // Reconciles with whatever index.html's bootstrap script guessed from
       // localStorage before this fetch resolved — a no-op on the common
       // path where they already matched.
-      applyAccentColor(nextAccent)
       applyTheme(nextTheme)
     }
     setLoading(false)
@@ -195,7 +197,6 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
   const upsert = useCallback(
     async (fields: {
-      accent_color?: AccentColor
       theme?: Theme
       avatar_emoji?: string | null
       currency?: Currency
@@ -221,6 +222,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       savings_goal_name?: string | null
       financial_mood?: FinancialMood
       onboarding_completed_at?: string
+      onboarding_score?: number
     }) => {
       if (!userId) return
       const { error: upsertError } = await supabase
@@ -229,15 +231,6 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       if (upsertError) setError(upsertError.message)
     },
     [userId],
-  )
-
-  const setAccentColor = useCallback(
-    (value: AccentColor) => {
-      setAccentColorState(value)
-      applyAccentColor(value)
-      upsert({ accent_color: value })
-    },
-    [upsert],
   )
 
   const setTheme = useCallback(
@@ -357,9 +350,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   // through Q9 — WhatsApp/Q10 goes through setWhatsappOptIn/
   // setWhatsappDeclined above instead, since it's consent-gated and
   // optional on its own). onboarding_completed_at is the single field
-  // Dashboard.tsx's needsOnboarding gate reads — setting it here, before
-  // the kept plan-selection step, means abandoning that step never sends
-  // someone back through the 10 questions again.
+  // Dashboard.tsx's needsOnboarding gate reads. onboardingScore is the
+  // /100 computed by lib/onboardingScore.ts from these same answers, shown
+  // once on the result screen right after this call and saved alongside
+  // everything else so it's on record even though nothing re-reads it today.
   const completeOnboarding = useCallback(
     (fields: {
       firstName: string
@@ -371,6 +365,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       savingsGoalType: SavingsGoalType
       savingsGoalName: string | null
       financialMood: FinancialMood
+      onboardingScore: number
     }) => {
       const completedAt = new Date().toISOString()
       setFirstNameState(fields.firstName)
@@ -383,6 +378,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setSavingsGoalNameState(fields.savingsGoalName)
       setFinancialMoodState(fields.financialMood)
       setOnboardingCompletedAtState(completedAt)
+      setOnboardingScoreState(fields.onboardingScore)
       upsert({
         first_name: fields.firstName,
         work_status: fields.workStatus,
@@ -392,6 +388,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         money_leaks: fields.moneyLeaks,
         savings_goal_type: fields.savingsGoalType,
         savings_goal_name: fields.savingsGoalName ?? undefined,
+        onboarding_score: fields.onboardingScore,
         financial_mood: fields.financialMood,
         onboarding_completed_at: completedAt,
       })
@@ -413,7 +410,6 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const value: PreferencesContextValue = {
     loading,
     error,
-    accentColor,
     theme,
     avatarEmoji,
     currency,
@@ -439,7 +435,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     savingsGoalName,
     financialMood,
     onboardingCompletedAt,
-    setAccentColor,
+    onboardingScore,
     setTheme,
     setAvatarEmoji,
     setCurrency,

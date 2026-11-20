@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { getNeedsLimitPcts, setNeedsLimitPcts } from './needsLimitPrefs'
 
 // Vitest's default (node) environment has no `localStorage` global — same
-// in-memory stand-in used by gettingStarted.test.ts/subscriptionReview.test.ts.
+// in-memory stand-in used by gettingStarted.test.ts.
 function installMemoryLocalStorage() {
   const store = new Map<string, string>()
   globalThis.localStorage = {

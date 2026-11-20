@@ -8,8 +8,8 @@ import type { Tip } from '../lib/tips'
 // problem" elsewhere in this redesign.
 const TONE_STYLES: Record<Tip['tone'], { border: string; bg: string; text: string; icon: string }> = {
   warning: { border: 'border-red-900/40', bg: 'bg-red-950/30', text: 'text-red-200', icon: '⚠' },
-  positive: { border: 'border-[#FF7A00]/30', bg: 'bg-[#FF7A00]/10', text: 'text-ink', icon: '✓' },
-  neutral: { border: 'border-[#FF7A00]/30', bg: 'bg-[#FF7A00]/10', text: 'text-ink', icon: '💡' },
+  positive: { border: 'border-primary/30', bg: 'bg-primary/10', text: 'text-ink', icon: '✓' },
+  neutral: { border: 'border-primary/30', bg: 'bg-primary/10', text: 'text-ink', icon: '💡' },
 }
 
 export function PersonalizedTips({ tips }: { tips: Tip[] }) {

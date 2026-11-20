@@ -180,7 +180,7 @@ export function Calculateur() {
           <LogoMark className="h-24 w-24" />
           <p className="text-4xl font-medium text-[#9ca3af]">{t.shareCard.tagline}</p>
           <p className="text-8xl font-black text-[#f5f5f7]">{formattedAmount}</p>
-          <p className="text-6xl font-bold text-[#8b5cf6]">{resultLabel}</p>
+          <p className="text-6xl font-bold text-primary">{resultLabel}</p>
           <p className="mt-8 text-3xl text-[#9ca3af]">saveup.store</p>
         </div>
       </div>

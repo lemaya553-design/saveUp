@@ -18,8 +18,8 @@ import { getMonthRange } from '../lib/format'
 import { BUDGET } from '../lib/i18n/budget'
 import { BudgetEmptyChart } from './BudgetEmptyChart'
 
-const ORANGE_VIF = '#FF7A00'
-const ORANGE_FONCE = '#CC5F00'
+const ORANGE_VIF = '#4A6CF7'
+const ORANGE_FONCE = '#1E3A8A'
 
 // Below this many distinct spending days this month, a daily cumulative
 // curve reads as a jagged staircase rather than a trend — a weekly bar

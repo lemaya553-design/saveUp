@@ -28,7 +28,7 @@ export function TestimonialCarousel() {
           {track.map((testimonial, i) => (
             <div
               key={`${testimonial.name}-${i}`}
-              className="flex w-[340px] shrink-0 flex-col gap-3 rounded-2xl bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.08)]"
+              className="flex w-[340px] shrink-0 flex-col gap-3 rounded-2xl bg-surface p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.08)]"
             >
               <div className="flex gap-0.5 text-primary" role="img" aria-label={`${testimonial.rating} étoiles sur 5`}>
                 {Array.from({ length: testimonial.rating }).map((_, starIndex) => (

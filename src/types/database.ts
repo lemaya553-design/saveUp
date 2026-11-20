@@ -374,6 +374,7 @@ export interface Database {
           savings_goal_name: string | null
           financial_mood: string | null
           onboarding_completed_at: string | null
+          onboarding_score: number | null
           updated_at: string
         }
         Insert: {
@@ -404,6 +405,7 @@ export interface Database {
           savings_goal_name?: string | null
           financial_mood?: string | null
           onboarding_completed_at?: string | null
+          onboarding_score?: number | null
           updated_at?: string
         }
         Update: {
@@ -434,6 +436,7 @@ export interface Database {
           savings_goal_name?: string | null
           financial_mood?: string | null
           onboarding_completed_at?: string | null
+          onboarding_score?: number | null
           updated_at?: string
         }
         Relationships: []

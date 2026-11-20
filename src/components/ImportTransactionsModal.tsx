@@ -276,7 +276,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
         <div className="flex flex-col gap-4">
           <p className="text-sm text-muted">{t.upload.intro(translateCategoryLabel(FALLBACK_CATEGORY, lang))}</p>
 
-          <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-overlay/15 p-6 text-center text-sm text-muted transition-colors hover:border-[#FF7A00]/40 hover:text-ink">
+          <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-overlay/15 p-6 text-center text-sm text-muted transition-colors hover:border-primary/40 hover:text-ink">
             <input
               ref={fileInputRef}
               type="file"
@@ -439,7 +439,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               noneLabel={t.mapping.noneOption}
             />
             <p className="self-end pb-2 text-xs text-muted">
-              {t.mapping.categoryHintPrefix} <span className="text-[#FF7A00]">{t.mapping.suggestedBadge}</span>{' '}
+              {t.mapping.categoryHintPrefix} <span className="text-primary">{t.mapping.suggestedBadge}</span>{' '}
               {t.mapping.categoryHintSuffix}
             </p>
           </div>
@@ -558,7 +558,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
                             type="checkbox"
                             checked={selected.has(row.index)}
                             onChange={() => toggleRow(row.index)}
-                            className="h-4 w-4 accent-[#FF7A00]"
+                            className="h-4 w-4 accent-primary"
                           />
                         )}
                       </td>
@@ -573,7 +573,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
                           <span className="text-ink">
                             {translateCategoryLabel(row.category, lang)}
                             {row.categoryGuessed && (
-                              <span className="ml-1.5 text-xs text-[#FF7A00]">{t.mapping.suggestedBadge}</span>
+                              <span className="ml-1.5 text-xs text-primary">{t.mapping.suggestedBadge}</span>
                             )}
                           </span>
                         )}
@@ -585,7 +585,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
                         {row.skipReason ? (
                           <span className="text-xs text-muted">{SKIP_LABELS[row.skipReason]}</span>
                         ) : row.isDuplicate ? (
-                          <span className="text-xs text-[#FF7A00]">{t.mapping.duplicateBadge}</span>
+                          <span className="text-xs text-primary">{t.mapping.duplicateBadge}</span>
                         ) : (
                           <span className="text-xs text-success">{t.mapping.readyBadge}</span>
                         )}
@@ -619,7 +619,7 @@ export function ImportTransactionsModal({ open, onClose }: { open: boolean; onCl
               {importing ? t.mapping.importing : t.mapping.importButton(selectedCount)}
             </button>
           </div>
-          {!isMappingValid && <p className="text-xs text-[#FF7A00]">{t.mapping.invalidHint}</p>}
+          {!isMappingValid && <p className="text-xs text-primary">{t.mapping.invalidHint}</p>}
         </div>
       )}
 

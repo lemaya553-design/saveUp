@@ -1,11 +1,11 @@
 import type { ScoreTrend } from '../hooks/useFinancialHealth'
 
-// A falling score reads as a real problem signal (coral), same philosophy
-// as "red only for over-budget" elsewhere in the redesign — up/flat stay
-// in the orange family rather than reaching for green.
+// Green/red only for genuine positive/negative signals — a rising score
+// is good news (green), a falling one is a real problem signal (red),
+// flat stays neutral gray.
 const CONFIG: Record<Exclude<ScoreTrend, null>, { icon: string; label: string; color: string }> = {
-  up: { icon: '↑', label: 'en hausse', color: '#FF7A00' },
-  down: { icon: '↓', label: 'en baisse', color: '#E5484D' },
+  up: { icon: '↑', label: 'en hausse', color: '#22c55e' },
+  down: { icon: '↓', label: 'en baisse', color: '#ef4444' },
   flat: { icon: '→', label: 'stable', color: 'var(--color-muted)' },
 }
 

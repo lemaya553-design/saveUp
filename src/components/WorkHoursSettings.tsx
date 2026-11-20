@@ -51,7 +51,7 @@ export function WorkHoursSettings() {
           type="checkbox"
           checked={workHoursEnabled}
           onChange={(e) => setWorkHoursEnabled(e.target.checked)}
-          className="h-4 w-4 accent-[#FF7A00]"
+          className="h-4 w-4 accent-primary"
         />
         {t.enableLabel}
       </label>

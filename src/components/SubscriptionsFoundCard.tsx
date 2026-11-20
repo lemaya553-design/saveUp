@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import { DashboardCard } from './DashboardCard'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormat } from '../hooks/useMoneyFormat'
@@ -8,10 +7,13 @@ import { detectRecurringCharges, type DetectedSubscription } from '../lib/subscr
 import { DASHBOARD } from '../lib/i18n/dashboard'
 import type { ExpenseRecord } from '../hooks/useExpenseHistory'
 
-const ORANGE = '#FF7A00'
-// Only the top few on a Dashboard summary card — the full, manageable list
-// (with "Je garde"/"À vérifier") already lives on the Premium page; this is
-// a teaser pointing there, not a second copy of that UI.
+const ORANGE = '#4A6CF7'
+// Only the top few on a Dashboard summary card — this used to be a teaser
+// pointing at the full "Je garde"/"À vérifier" review UI on the Premium
+// page; that page is gone now (menu item removed), so this is just a
+// short, capped preview on its own rather than a teaser for something
+// else — "+N autres" (below) says there's more without a dead link to get
+// there.
 const MAX_SHOWN = 4
 
 function RepeatIcon({ className }: { className: string }) {
@@ -34,7 +36,7 @@ function SubscriptionRow({ item }: { item: DetectedSubscription }) {
       <div className="flex min-w-0 items-center gap-2.5">
         <span
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-          style={{ color: ORANGE, backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
+          style={{ color: ORANGE, backgroundColor: 'rgba(74, 108, 247, 0.14)' }}
         >
           <RepeatIcon className="h-4 w-4" />
         </span>
@@ -48,13 +50,12 @@ function SubscriptionRow({ item }: { item: DetectedSubscription }) {
   )
 }
 
-// Reuses lib/subscriptionDetection.ts as-is (the exact same pure, tested
-// function that powers the full Premium page) — this card does no
-// detection of its own, it just surfaces a short preview of what that
-// function already found, from the same expense history Dashboard already
-// loads. Returns null (renders nothing) when nothing is detected, rather
-// than an empty state — a Dashboard summary card isn't the place to
-// explain/invite for a feature that has its own full page for that.
+// Reuses lib/subscriptionDetection.ts as-is (the same pure, tested function
+// that used to power the full Premium page) — this card does no detection
+// of its own, it just surfaces a short preview from the same expense
+// history Dashboard already loads. Returns null (renders nothing) when
+// nothing is detected, rather than an empty state — a Dashboard summary
+// card isn't the place to explain/invite for this.
 export function SubscriptionsFoundCard({ records }: { records: ExpenseRecord[] }) {
   const { lang } = useLanguage()
   const t = DASHBOARD[lang].subscriptionsFound
@@ -75,14 +76,6 @@ export function SubscriptionsFoundCard({ records }: { records: ExpenseRecord[] }
         ))}
       </div>
       {remaining > 0 && <p className="mt-3 text-xs text-muted">{t.moreCount(remaining)}</p>}
-      <Link
-        to="/premium"
-        className="mt-4 inline-flex items-center gap-1 text-sm font-medium"
-        style={{ color: ORANGE }}
-      >
-        {t.viewAll}
-        <span aria-hidden="true">→</span>
-      </Link>
     </DashboardCard>
   )
 }

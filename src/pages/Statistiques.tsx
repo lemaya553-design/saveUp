@@ -237,7 +237,7 @@ export function Statistiques() {
           tabs={TAB_DEFS}
           active={tab}
           onChange={(next) => navigate(`/statistiques/${next}`)}
-          activeClassName="bg-[#FF7A00] text-white shadow-md"
+          activeClassName="bg-primary text-white shadow-md"
         />
       </div>
 

@@ -31,10 +31,6 @@ const MAX_GAP_DAYS = 36
 // Same-merchant charges within this band count as "the same price" (tax
 // rounding, minor FX drift) — wider than that, and it reads as a
 // coincidentally-similar but different purchase, not a repeating bill.
-// Exported so other code that needs to recognize "is this specific
-// transaction one of the subscriptions already detected above" (see
-// categoryBenchmark.ts) uses the exact same tolerance rather than a second,
-// possibly-drifting copy of these numbers.
 export const AMOUNT_TOLERANCE_RATIO = 0.08
 export const AMOUNT_TOLERANCE_MIN_DOLLARS = 1
 

@@ -207,7 +207,7 @@ export function CategoryManager() {
       )}
 
       {pendingDelete && (
-        <div className="mt-3 rounded-lg border border-[#FF7A00]/30 bg-[#FF7A00]/10 px-4 py-3 text-sm">
+        <div className="mt-3 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm">
           <p className="text-ink">
             {t.confirmDelete(
               translateCategoryLabel(pendingDelete.name, lang),
@@ -239,8 +239,8 @@ export function CategoryManager() {
           <UpgradePrompt
             title={t.limitReached(limits.maxCategories ?? 0)}
             description={t.limitDescription}
-            variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
-            linkClassName="text-[#FF7A00] hover:opacity-80"
+            variantClassName="border-primary/30 bg-primary/10"
+            linkClassName="text-primary hover:opacity-80"
             minPlan="standard"
           />
         </div>

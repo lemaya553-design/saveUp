@@ -4,15 +4,14 @@ const RADIUS = 80
 const ARC_LENGTH = Math.PI * RADIUS
 const ARC_PATH = `M 20 100 A ${RADIUS} ${RADIUS} 0 0 1 180 100`
 
-// Orange-family 3-tier read instead of lib/financialHealth.ts's shared
-// getScoreColorClass (green/violet/red) — that function is also used by
-// the landing page's demo simulator, which keeps its original colors;
-// this component is Dashboard-only, so it gets its own tiers instead of
-// overriding a function other pages still rely on.
+// Same 3-tier read as lib/financialHealth.ts's shared getScoreColorClass
+// (green/blue/red) — this component needs real hex (SVG stroke, not a
+// Tailwind class) so it can't call that function directly, but mirrors its
+// exact thresholds and colors rather than inventing its own.
 function scoreColor(score: number): string {
-  if (score >= 70) return '#FF7A00'
-  if (score >= 40) return '#FFB347'
-  return '#E5484D'
+  if (score >= 70) return '#22c55e'
+  if (score >= 40) return '#4A6CF7'
+  return '#ef4444'
 }
 
 export function ScoreGauge({

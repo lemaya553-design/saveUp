@@ -39,9 +39,9 @@ function GoogleIcon({ className }: { className: string }) {
 function OrangeLogoMark({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 465 465" className={className} aria-hidden="true">
-      <rect x="70" y="260" width="85" height="180" rx="32" fill="#ff6b00" />
-      <rect x="195" y="165" width="85" height="275" rx="32" fill="#ff6b00" />
-      <rect x="320" y="70" width="85" height="370" rx="32" fill="#ff6b00" />
+      <rect x="70" y="260" width="85" height="180" rx="32" fill="#4A6CF7" />
+      <rect x="195" y="165" width="85" height="275" rx="32" fill="#4A6CF7" />
+      <rect x="320" y="70" width="85" height="370" rx="32" fill="#4A6CF7" />
     </svg>
   )
 }
@@ -91,7 +91,7 @@ function PhoneVisual({ alt }: { alt: string }) {
 }
 
 const inputClasses =
-  'rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-white/35 focus:border-[#ff6b00] focus:outline-none'
+  'rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-white/35 focus:border-primary focus:outline-none'
 
 export function Connexion() {
   const {
@@ -303,7 +303,7 @@ export function Connexion() {
             <OrangeLogoMark className="h-7 w-7" />
             <span className="text-xl font-bold">
               <span className="text-white">save</span>
-              <span className="text-[#ff6b00]">Up</span>
+              <span className="text-primary">Up</span>
             </span>
           </Link>
 
@@ -318,7 +318,7 @@ export function Connexion() {
                 onClick={() => switchMode('signin')}
                 className={`flex-1 rounded-full px-4 py-2.5 text-sm font-semibold transition-all ${
                   mode === 'signin'
-                    ? 'bg-[#ff6b00] text-white shadow-lg shadow-[#ff6b00]/20'
+                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
                     : 'text-white/60 hover:bg-white/5 hover:text-white'
                 }`}
               >
@@ -329,7 +329,7 @@ export function Connexion() {
                 onClick={() => switchMode('signup')}
                 className={`flex-1 rounded-full px-4 py-2.5 text-sm font-semibold transition-all ${
                   mode === 'signup'
-                    ? 'bg-[#ff6b00] text-white shadow-lg shadow-[#ff6b00]/20'
+                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
                     : 'text-white/60 hover:bg-white/5 hover:text-white'
                 }`}
               >
@@ -377,7 +377,7 @@ export function Connexion() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="mt-2 w-full rounded-lg bg-[#ff6b00] px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                  className="mt-2 w-full rounded-lg bg-primary px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
                 >
                   {submitting ? t.common.submitting : t.recovery.submit}
                 </button>
@@ -391,7 +391,7 @@ export function Connexion() {
                 <span className="text-white">{email}</span>
                 {t.confirmationSent.bodySuffix}
               </p>
-              <p className="mt-3 rounded-lg border border-[#ff6b00]/30 bg-[#ff6b00]/10 px-3 py-2.5 text-xs text-white/90">
+              <p className="mt-3 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2.5 text-xs text-white/90">
                 {t.confirmationSent.spamPrefix}
                 <span className="font-medium">{t.confirmationSent.spamBold}</span>
                 {t.confirmationSent.spamSuffix}
@@ -410,7 +410,7 @@ export function Connexion() {
               <button
                 type="button"
                 onClick={() => switchMode('signin')}
-                className="mt-2 w-full rounded-lg bg-[#ff6b00] px-5 py-3 font-medium text-white transition-all hover:brightness-110"
+                className="mt-2 w-full rounded-lg bg-primary px-5 py-3 font-medium text-white transition-all hover:brightness-110"
               >
                 {t.common.backToSignIn}
               </button>
@@ -427,7 +427,7 @@ export function Connexion() {
                 <button
                   type="button"
                   onClick={() => switchMode('signin')}
-                  className="mt-6 w-full rounded-lg bg-[#ff6b00] px-5 py-3 font-medium text-white transition-all hover:brightness-110"
+                  className="mt-6 w-full rounded-lg bg-primary px-5 py-3 font-medium text-white transition-all hover:brightness-110"
                 >
                   {t.common.backToSignIn}
                 </button>
@@ -460,14 +460,14 @@ export function Connexion() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="mt-2 w-full rounded-lg bg-[#ff6b00] px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                    className="mt-2 w-full rounded-lg bg-primary px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
                   >
                     {submitting ? t.common.submitting : t.forgot.submit}
                   </button>
                 </form>
 
                 <p className="mt-6 text-center text-sm text-white/60">
-                  <button type="button" onClick={() => switchMode('signin')} className="text-[#ff6b00] hover:text-[#ff6b00]/80">
+                  <button type="button" onClick={() => switchMode('signin')} className="text-primary hover:text-primary/80">
                     {t.common.backToSignIn}
                   </button>
                 </p>
@@ -515,12 +515,12 @@ export function Connexion() {
               )}
 
               {noAccountHint && (
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#ff6b00]/30 bg-[#ff6b00]/10 px-3 py-2.5 text-sm text-white">
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2.5 text-sm text-white">
                   <span>{t.signInUp.noAccountHint}</span>
                   <button
                     type="button"
                     onClick={() => switchMode('signup')}
-                    className="whitespace-nowrap rounded-lg bg-[#ff6b00] px-3 py-1.5 text-xs font-medium text-white transition-all hover:brightness-110"
+                    className="whitespace-nowrap rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition-all hover:brightness-110"
                   >
                     {t.signInUp.createAccount}
                   </button>
@@ -559,7 +559,7 @@ export function Connexion() {
                       <button
                         type="button"
                         onClick={() => switchMode('forgot')}
-                        className="text-xs font-normal text-[#ff6b00] hover:text-[#ff6b00]/80"
+                        className="text-xs font-normal text-primary hover:text-primary/80"
                       >
                         {t.signInUp.forgotPasswordLink}
                       </button>
@@ -593,7 +593,7 @@ export function Connexion() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="mt-2 w-full rounded-lg bg-[#ff6b00] px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
+                  className="mt-2 w-full rounded-lg bg-primary px-5 py-3 font-medium text-white transition-all hover:brightness-110 disabled:opacity-60"
                 >
                   {submitting
                     ? t.common.submitting
@@ -631,14 +631,14 @@ export function Connexion() {
                 {mode === 'signin' ? (
                   <>
                     {t.signInUp.noAccountYet}{' '}
-                    <button type="button" onClick={() => switchMode('signup')} className="text-[#ff6b00] hover:text-[#ff6b00]/80">
+                    <button type="button" onClick={() => switchMode('signup')} className="text-primary hover:text-primary/80">
                       {t.signInUp.signUpLink}
                     </button>
                   </>
                 ) : (
                   <>
                     {t.signInUp.alreadyAccount}{' '}
-                    <button type="button" onClick={() => switchMode('signin')} className="text-[#ff6b00] hover:text-[#ff6b00]/80">
+                    <button type="button" onClick={() => switchMode('signin')} className="text-primary hover:text-primary/80">
                       {t.signInUp.signInLink}
                     </button>
                   </>
@@ -657,11 +657,11 @@ export function Connexion() {
       <div className="relative hidden flex-1 items-start justify-center overflow-hidden border-l border-white/10 bg-gradient-to-br from-[#0a0a0c] via-black to-[#0a0a0c] pt-14 lg:flex xl:pt-20">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-24 top-0 h-[32rem] w-[32rem] rounded-full bg-[#ff6b00]/15 blur-[140px]"
+          className="pointer-events-none absolute -right-24 top-0 h-[32rem] w-[32rem] rounded-full bg-primary/15 blur-[140px]"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -left-24 bottom-0 h-[28rem] w-[28rem] rounded-full bg-[#ff6b00]/10 blur-[120px]"
+          className="pointer-events-none absolute -left-24 bottom-0 h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-[120px]"
         />
         <div
           aria-hidden="true"

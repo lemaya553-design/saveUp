@@ -43,7 +43,7 @@ export function ContributionHistory({
                     })}
                   </p>
                 </div>
-                <span className="font-medium text-[#FF7A00]">
+                <span className="font-medium text-primary">
                   +{formatMoney(contribution.amount)}
                 </span>
               </li>

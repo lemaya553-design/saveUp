@@ -12,14 +12,11 @@ import { HOOK_ERRORS } from '../lib/i18n/hookErrors'
 // The 3-card plan grid, extracted out of Tarifs.tsx so the landing page's
 // pricing section and the standalone /tarifs page render from the exact
 // same real data and the exact same checkout logic — never two copies that
-// can quietly drift apart on price, features, or trial terms.
-//
-// accentOverride: the /tarifs redesign wants its fixed orange regardless of
-// the app's default accent (same "always orange" rule as the rest of that
-// redesign); the landing page's own pricing section (Home.tsx) keeps the
-// app's normal accent-driven look, so this defaults to false and only
-// Tarifs.tsx opts in.
-export function PricingCards({ accentOverride = false }: { accentOverride?: boolean } = {}) {
+// can quietly drift apart on price, features, or trial terms. Both pages
+// share the same fixed blue palette now (no more per-page accent override —
+// the app only ever has one accent color), so every class below is
+// token-driven rather than hand-picked per call site.
+export function PricingCards() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const subscription = useSubscription()
@@ -29,12 +26,10 @@ export function PricingCards({ accentOverride = false }: { accentOverride?: bool
   const t = TARIFS[lang]
   const fmt = (amount: number) => formatBillingAmount(amount, lang)
 
-  const highlightBorder = accentOverride ? 'border-[#FF7A00]/40' : 'border-accent/40'
-  const badgeClass = accentOverride ? 'bg-[#FF7A00]/15 text-[#FF7A00]' : 'bg-accent/15 text-accent'
-  const checkClass = accentOverride ? 'text-[#FF7A00]' : 'text-success'
-  const ctaClass = accentOverride
-    ? 'bg-[#FF7A00] hover:brightness-110'
-    : 'bg-primary-strong hover:brightness-110'
+  const highlightBorder = 'border-accent/40'
+  const badgeClass = 'bg-accent/15 text-accent'
+  const checkClass = 'text-success'
+  const ctaClass = 'bg-primary-strong hover:brightness-110'
 
   // Both handlers below used to leave a click looking like it did nothing
   // whenever startCheckout/openBillingPortal resolved to null without

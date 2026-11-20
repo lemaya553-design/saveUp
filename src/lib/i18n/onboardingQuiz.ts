@@ -62,6 +62,40 @@ export interface OnboardingQuizContent {
     invalidNumberError: string
     saveFailedError: string
   }
+  // Score screen — shown once, right after Q10, before the kept
+  // plan-selection step. scoreHeading takes the first name typed in Q1.
+  result: {
+    scoreHeading: (firstName: string) => string
+    scoreSuffix: string
+    scoreCaption: string
+    goalSummary: (goalName: string, amount: string, date: string, perPay: string) => string
+    goalSummaryNoDate: (goalName: string, amount: string) => string
+    goodHeading: string
+    watchHeading: string
+    helpHeading: string
+    good: {
+      fixedExpenses: string
+      goalPace: string
+      leaksAware: string
+      moodGood: string
+      fallback: string
+    }
+    watch: {
+      fixedExpenses: string
+      goalPace: string
+      leaksUnknown: string
+      leaksTop: (leakLabel: string) => string
+      moodStressed: string
+    }
+    help: {
+      goalCreated: (goalName: string) => string
+      budgetCategories: string
+      statsAndRewards: string
+      importStatement: string
+    }
+    leakLabels: Record<MoneyLeak, string>
+    continueButton: string
+  }
   plans: {
     heading: string
     subtitle: string
@@ -183,6 +217,46 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
       invalidNumberError: 'Ce numéro ne semble pas valide — vérifie l’indicatif et le numéro.',
       saveFailedError: 'Impossible d’enregistrer ton numéro — réessaie.',
     },
+    result: {
+      scoreHeading: (firstName) => `${firstName}, voici ton score`,
+      scoreSuffix: '/100',
+      scoreCaption: 'Score SaveUp',
+      goalSummary: (goalName, amount, date, perPay) =>
+        `${goalName} : ${amount} d’ici ${date} = ${perPay} par paye`,
+      goalSummaryNoDate: (goalName, amount) => `${goalName} : ${amount}`,
+      goodHeading: '✅ Ce qui va bien',
+      watchHeading: '⚠️ À surveiller',
+      helpHeading: '🚀 Comment SaveUp t’aide',
+      good: {
+        fixedExpenses: 'Tes dépenses fixes laissent une bonne marge de manœuvre.',
+        goalPace: 'Ton objectif est réaliste par rapport à ton revenu.',
+        leaksAware: 'Tu as une bonne idée de où part ton argent.',
+        moodGood: 'Tu te sens en contrôle de tes finances — un bel atout.',
+        fallback: 'Tu as pris le temps de faire le point sur tes finances — c’est déjà un pas important.',
+      },
+      watch: {
+        fixedExpenses: 'Tes dépenses fixes prennent une grosse partie de ton revenu.',
+        goalPace: 'Ton objectif demande un effort important par paye — rien d’obligatoire, tu pourras l’ajuster.',
+        leaksUnknown: 'Tu ne sais pas trop où ton argent part en ce moment — on va éclaircir ça ensemble.',
+        leaksTop: (leakLabel) => `Les ${leakLabel} sont ton piège principal.`,
+        moodStressed: 'Tu te sens stressé·e par l’argent en ce moment — c’est fréquent, et ça s’allège avec un portrait clair.',
+      },
+      help: {
+        goalCreated: (goalName) => `On vient de créer ton objectif « ${goalName} » — tu verras sa progression en temps réel.`,
+        budgetCategories: 'Le budget par catégories te montre exactement où va chaque dollar, mois après mois.',
+        statsAndRewards: 'Les Statistiques et les Récompenses suivent ta progression au fil du temps.',
+        importStatement: 'Importe ton relevé bancaire et SaveUp repère tes dépenses récurrentes automatiquement.',
+      },
+      leakLabels: {
+        restos: 'restos/livraison',
+        shopping: 'achats impulsifs',
+        abonnements: 'abonnements oubliés',
+        sorties: 'sorties',
+        jeux: 'jeux et achats in-app',
+        sais_pas: 'dépenses non identifiées',
+      },
+      continueButton: 'Voir mon tableau de bord',
+    },
     plans: {
       heading: 'Choisis ton plan',
       subtitle: 'Commence gratuitement, ou débloque tout dès maintenant.',
@@ -301,6 +375,45 @@ export const ONBOARDING_QUIZ: Record<Lang, OnboardingQuizContent> = {
       consentLabel: 'I agree to be contacted on WhatsApp by the SaveUp team.',
       invalidNumberError: 'This number doesn’t look valid — check the country code and number.',
       saveFailedError: 'Could not save your number — try again.',
+    },
+    result: {
+      scoreHeading: (firstName) => `${firstName}, here's your score`,
+      scoreSuffix: '/100',
+      scoreCaption: 'SaveUp Score',
+      goalSummary: (goalName, amount, date, perPay) => `${goalName}: ${amount} by ${date} = ${perPay} per paycheck`,
+      goalSummaryNoDate: (goalName, amount) => `${goalName}: ${amount}`,
+      goodHeading: '✅ What’s going well',
+      watchHeading: '⚠️ Worth watching',
+      helpHeading: '🚀 How SaveUp helps',
+      good: {
+        fixedExpenses: 'Your fixed expenses leave you good breathing room.',
+        goalPace: 'Your goal is realistic given your income.',
+        leaksAware: 'You have a good sense of where your money goes.',
+        moodGood: 'You feel in control of your finances — a real asset.',
+        fallback: 'You took the time to take stock of your finances — that’s already an important step.',
+      },
+      watch: {
+        fixedExpenses: 'Your fixed expenses take up a big share of your income.',
+        goalPace: 'Your goal asks for a sizeable chunk of each paycheck — nothing is locked in, you can adjust it.',
+        leaksUnknown: 'You’re not quite sure where your money goes right now — we’ll help clear that up together.',
+        leaksTop: (leakLabel) => `${leakLabel} is your main leak.`,
+        moodStressed: 'You’re feeling stressed about money right now — that’s common, and a clear picture helps ease it.',
+      },
+      help: {
+        goalCreated: (goalName) => `We just created your "${goalName}" goal — you'll see its progress in real time.`,
+        budgetCategories: 'Budget by category shows you exactly where every dollar goes, month after month.',
+        statsAndRewards: 'Statistics and Rewards track your progress over time.',
+        importStatement: 'Import your bank statement and SaveUp automatically spots your recurring expenses.',
+      },
+      leakLabels: {
+        restos: 'Takeout/delivery',
+        shopping: 'Impulse shopping',
+        abonnements: 'Forgotten subscriptions',
+        sorties: 'Going out',
+        jeux: 'Gaming and in-app purchases',
+        sais_pas: 'Unidentified spending',
+      },
+      continueButton: 'See my dashboard',
     },
     plans: {
       heading: 'Choose your plan',

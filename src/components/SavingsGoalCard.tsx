@@ -54,9 +54,9 @@ function PlusIcon({ className }: { className: string }) {
 // deterministic on the name so it doesn't shuffle every render as goals
 // reorder. No green/blue/violet anywhere on this page.
 const ICON_STYLES = [
-  { bg: 'bg-[#FF7A00]/15', text: 'text-[#FF7A00]' },
-  { bg: 'bg-[#CC5F00]/15', text: 'text-[#CC5F00]' },
-  { bg: 'bg-[#FFB347]/20', text: 'text-[#CC5F00]' },
+  { bg: 'bg-primary/15', text: 'text-primary' },
+  { bg: 'bg-[#1E3A8A]/15', text: 'text-[#1E3A8A]' },
+  { bg: 'bg-[#8DA9FF]/20', text: 'text-[#1E3A8A]' },
 ]
 
 function iconStyleForGoal(name: string): { bg: string; text: string } {
@@ -368,7 +368,7 @@ export function SavingsGoalCard({
         {locked && (
           <Link
             to="/tarifs"
-            className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-[#FF7A00]/15 px-2.5 py-1 text-xs font-semibold text-[#FF7A00] hover:bg-[#FF7A00]/25"
+            className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/25"
           >
             {t.pausedBadge}
           </Link>
@@ -387,7 +387,7 @@ export function SavingsGoalCard({
               onClick={() => setAddingAmount(true)}
               aria-label={t.addAmountAriaLabel(goal.name)}
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${
-                showPhoto ? 'bg-white/15 text-white hover:bg-white/25' : 'bg-[#FF7A00]/15 text-[#FF7A00] hover:bg-[#FF7A00]/25'
+                showPhoto ? 'bg-white/15 text-white hover:bg-white/25' : 'bg-primary/15 text-primary hover:bg-primary/25'
               }`}
             >
               <PlusIcon className="h-5 w-5" />
@@ -436,7 +436,7 @@ export function SavingsGoalCard({
         )}
 
         <div className="mt-3">
-          <ProgressBar value={progress} colorClass={progress >= 100 ? 'bg-[#FF7A00]' : 'bg-[#CC5F00]'} />
+          <ProgressBar value={progress} colorClass={progress >= 100 ? 'bg-primary' : 'bg-[#1E3A8A]'} />
         </div>
         <p className={`mt-1.5 text-xs ${textSecondary}`}>
           {t.percentReached(Math.round(progress))}
@@ -445,7 +445,7 @@ export function SavingsGoalCard({
         </p>
 
         {remaining <= 0 ? (
-          <p className="mt-3 text-xs text-[#FF7A00]">{t.goalReached}</p>
+          <p className="mt-3 text-xs text-primary">{t.goalReached}</p>
         ) : !hasEstimate ? (
           <p className={`mt-3 text-xs ${textSecondary}`}>{t.notEnoughHistory}</p>
         ) : exceedsSanityCeiling ? (
@@ -454,7 +454,7 @@ export function SavingsGoalCard({
           <div className={`mt-3 rounded-lg ${paceBg} px-3 py-2`}>
             <p className={`text-sm font-medium ${textPrimary}`}>{t.estimateIn(displayDuration)}</p>
             {targetComparisonText && (
-              <p className={`mt-0.5 text-xs font-medium ${targetAhead ? 'text-[#FF7A00]' : 'text-red-400'}`}>
+              <p className={`mt-0.5 text-xs font-medium ${targetAhead ? 'text-primary' : 'text-red-400'}`}>
                 {targetComparisonText}
               </p>
             )}
@@ -469,7 +469,7 @@ export function SavingsGoalCard({
             {weeklyDots.map((hasContribution, i) => (
               <span
                 key={i}
-                className={`h-2.5 w-2.5 rounded-full ${hasContribution ? 'bg-[#FF7A00]' : dotOff}`}
+                className={`h-2.5 w-2.5 rounded-full ${hasContribution ? 'bg-primary' : dotOff}`}
                 aria-hidden="true"
               />
             ))}

@@ -46,7 +46,7 @@ function DemoBar({ amount }: { amount: number }) {
       >
         <div
           className="h-full rounded-full"
-          style={{ width: `${demoPct}%`, backgroundImage: 'linear-gradient(90deg, #FFB347, #FF7A00)' }}
+          style={{ width: `${demoPct}%`, backgroundImage: 'linear-gradient(90deg, #8DA9FF, #4A6CF7)' }}
         />
       </div>
       <p className="mt-1.5 text-xs text-muted">{Math.round(demoPct)}%</p>
@@ -162,7 +162,7 @@ export function WelcomeTutorial({
                   aria-pressed={presetId === preset.id}
                   className={`min-h-[44px] rounded-xl border px-3 py-3 text-sm font-medium transition-colors ${
                     presetId === preset.id
-                      ? 'border-[#FF7A00] bg-[#FF7A00]/15 text-ink'
+                      ? 'border-primary bg-primary/15 text-ink'
                       : 'border-overlay/10 bg-surface text-ink hover:bg-overlay/5'
                   }`}
                 >
@@ -243,7 +243,7 @@ export function WelcomeTutorial({
             <div className="mt-4 rounded-xl border border-overlay/10 bg-surface p-4">
               <span
                 className="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
-                style={{ color: '#FF7A00', backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
+                style={{ color: '#4A6CF7', backgroundColor: 'rgba(74, 108, 247, 0.14)' }}
               >
                 {t.previewBadge}
               </span>

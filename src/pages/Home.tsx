@@ -12,6 +12,7 @@ import { HOME } from '../lib/i18n/home'
 import { TARIFS } from '../lib/i18n/tarifs'
 import { COMMON } from '../lib/i18n/common'
 import { clearPendingGoalName, setPendingGoalName } from '../lib/pendingGoal'
+import { getInitialLandingTheme, persistLandingTheme, type LandingTheme } from '../lib/landingTheme'
 
 // Full landing page rewrite — white/black/orange (.landing-classic, see
 // index.css), new content throughout. Deliberately drops the previous
@@ -221,7 +222,7 @@ function FloatingLabel({
   const Icon = FLOATING_LABEL_ICONS[icon]
   return (
     <div
-      className={`label-loop flex items-center gap-2.5 rounded-full bg-white px-5 py-3 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.2)] ${className}`}
+      className={`label-loop flex items-center gap-2.5 rounded-full bg-surface px-5 py-3 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.2)] ${className}`}
       style={{ animationDelay: `${delayS}s` }}
     >
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -243,6 +244,18 @@ export function Home() {
   const header = COMMON[lang].header
   const goalCount = useLoopingCountUp(t.showcase.floatingLabels.goal.amount)
   const accountDeleted = searchParams.get('compte-supprime') === '1'
+  // Lazy initializer so this only ever reads localStorage/matchMedia once,
+  // not on every render — same convention as useLanguage's initial-state
+  // read. Independent of the signed-in app's own theme preference; see
+  // lib/landingTheme.ts's header comment for why.
+  const [landingTheme, setLandingTheme] = useState<LandingTheme>(getInitialLandingTheme)
+  const isDark = landingTheme === 'dark'
+
+  function toggleLandingTheme() {
+    const next: LandingTheme = isDark ? 'light' : 'dark'
+    setLandingTheme(next)
+    persistLandingTheme(next)
+  }
 
   useEffect(() => {
     if (!location.hash) return
@@ -267,9 +280,9 @@ export function Home() {
   }
 
   return (
-    <div className="landing-classic">
+    <div className={`landing-classic ${isDark ? 'landing-dark' : ''}`}>
       <MetaTags />
-      <LandingHeader logoGradient={{ from: '#1E3A8A', to: '#4A6CF7' }} />
+      <LandingHeader theme={landingTheme} onToggleTheme={toggleLandingTheme} />
 
       {accountDeleted && (
         <div className="flex items-center justify-center gap-3 border-b border-overlay/10 bg-primary/10 px-4 py-3 text-center text-sm font-medium text-ink sm:px-6">
@@ -292,17 +305,22 @@ export function Home() {
           only ever appears once the visitor scrolls past this section. */}
       {/* overflow-x-hidden (not overflow-hidden) on purpose: the blobs
           below are wider than a narrow phone viewport, so the X axis
-          still needs clipping to avoid a horizontal scrollbar. But on
-          narrow screens the title + subtitle + goal picker + static card
-          grid can add up to taller than 100svh, and flex's vertical
-          centering then overflows equally top and bottom — clipping the Y
-          axis too would silently cut off that bottom content (the static
-          floating-card grid) instead of just letting the section grow
-          past 100svh and the page scroll, which is what should happen. */}
-      <section className="relative flex min-h-[100svh] flex-col justify-center overflow-x-hidden px-4 py-16 text-center sm:px-6">
-        {/* Subtle orange glow behind the title — two soft blobs drifting
+          still needs clipping to avoid a horizontal scrollbar. No
+          justify-center: that used to vertically center the content inside
+          the full 100svh section, which reads as "a lot of empty space
+          above the title" whenever the content is shorter than the
+          viewport (the common case) — top-anchored with a modest pt
+          instead, any leftover space lands below the content, not split
+          evenly above and below it. The section still keeps min-h-[100svh]
+          so it occupies the full screen either way. */}
+      <section className="landing-hero-bg relative flex min-h-[100svh] flex-col overflow-x-hidden px-4 pb-16 pt-10 text-center sm:px-6 sm:pt-14">
+        {/* Subtle blue glow behind the title — two soft blobs drifting
             gently (mesh-blob-a/b, defined in index.css) rather than one
-            static circle, for a touch of ambient life. */}
+            static circle, for a touch of ambient life. Layered on top of
+            landing-hero-bg's own gradient+halo (index.css), which is the
+            bigger, softer "halo at the top of the section fading into the
+            page background" the brief asks for — these two blobs add a
+            bit of drift/movement on top of that static backdrop. */}
         <div
           aria-hidden="true"
           className="mesh-blob-a pointer-events-none absolute left-1/2 top-0 -z-10 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary/15 blur-[110px]"
@@ -338,7 +356,16 @@ export function Home() {
             style={{ fontSize: 'clamp(3rem, 9vw, 13rem)' }}
           >
             <span className="block sm:whitespace-nowrap">{t.hero.titleStart}</span>
-            <span className="block bg-gradient-to-r from-[#4A6CF7] to-[#0B0B12] bg-clip-text text-transparent sm:whitespace-nowrap">
+            {/* Gradient direction flips with the theme: blue-to-black reads
+                fine on the light background, but the same gradient would
+                fade to near-invisible black-on-near-black once the page
+                itself turns dark — blue-to-white keeps the tail end of the
+                word legible there instead. */}
+            <span
+              className={`block bg-gradient-to-r bg-clip-text text-transparent sm:whitespace-nowrap ${
+                isDark ? 'from-[#4A6CF7] to-white' : 'from-[#4A6CF7] to-[#0B0B12]'
+              }`}
+            >
               {t.hero.titleHighlight}
             </span>
           </h1>
@@ -373,7 +400,7 @@ export function Home() {
             sections. Hidden on phones — the static grid below (same 2
             cards) replaces them there instead of floating, so there's
             nothing that could overlap the title on a small screen. */}
-        <div className="pointer-events-none absolute inset-x-0 top-24 z-0 mx-auto hidden max-w-6xl lg:block">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-0 mx-auto hidden max-w-6xl lg:block">
           {t.hero.floatingCards.map((card, i) => (
             <Reveal
               key={card.text}
@@ -431,7 +458,7 @@ export function Home() {
         <div className="mx-auto mt-12 grid max-w-5xl gap-6 sm:grid-cols-2">
           <Reveal
             delayMs={60}
-            className="relative overflow-hidden rounded-2xl border border-ink/20 bg-[#FAFAFA] p-8 sm:p-10"
+            className="relative overflow-hidden rounded-2xl border border-ink/20 bg-surface p-8 sm:p-10"
           >
             <div
               aria-hidden="true"
@@ -452,7 +479,7 @@ export function Home() {
 
           <Reveal
             delayMs={120}
-            className="relative overflow-hidden rounded-2xl border border-ink/20 bg-[#FAFAFA] p-8 sm:p-10"
+            className="relative overflow-hidden rounded-2xl border border-ink/20 bg-surface p-8 sm:p-10"
           >
             <div
               aria-hidden="true"
@@ -491,8 +518,12 @@ export function Home() {
           composition. Pure white, no background shapes, nothing else
           around the phone — deliberately the one section on this page
           without a blob, per this section's own brief. */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-[#FAFAFA] to-white px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
-        {/* Very faint orange glow for depth — static (no drift animation
+      <section
+        className={`relative overflow-hidden bg-gradient-to-b px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24 ${
+          isDark ? 'from-[#0B0B12] via-[#13141f] to-[#0B0B12]' : 'from-white via-[#FAFAFA] to-white'
+        }`}
+      >
+        {/* Very faint blue glow for depth — static (no drift animation
             like other sections' blobs), kept at 2-3% opacity specifically
             so it reads as "a little depth," not a distraction. */}
         <div
@@ -503,20 +534,20 @@ export function Home() {
         <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-10 lg:flex-row lg:items-center lg:justify-center lg:gap-14">
           <Reveal
             delayMs={60}
-            className="order-2 w-full max-w-[320px] rounded-2xl bg-white p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.08)] sm:p-10 lg:order-1 lg:-translate-y-7"
+            className="order-2 w-full max-w-[320px] rounded-2xl bg-surface p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.08)] sm:p-10 lg:order-1 lg:-translate-y-7"
           >
             <h3 className="text-[26px] font-extrabold leading-snug text-ink">
               {t.showcase.cardLeft.before}
               <span className="text-primary">{t.showcase.cardLeft.highlight}</span>
               {t.showcase.cardLeft.after}
             </h3>
-            <p className="mt-3 font-normal text-[#666]">{t.showcase.cardLeft.body}</p>
+            <p className="mt-3 font-normal text-muted">{t.showcase.cardLeft.body}</p>
           </Reveal>
 
           <Reveal className="relative z-10 order-1 w-[280px] shrink-0 sm:w-[320px] lg:order-2">
             {/* iOS-style floating notification — true pill shape, crisp-but-
                 soft layered shadow, text centered both axes. */}
-            <div className="absolute -top-5 left-1/2 z-20 inline-flex -translate-x-1/2 items-center justify-center whitespace-nowrap rounded-full bg-white px-5 py-3 shadow-[0_2px_6px_rgba(0,0,0,0.08),0_10px_20px_-4px_rgba(0,0,0,0.18)] ring-1 ring-black/[0.04]">
+            <div className="absolute -top-5 left-1/2 z-20 inline-flex -translate-x-1/2 items-center justify-center whitespace-nowrap rounded-full bg-surface px-5 py-3 shadow-[0_2px_6px_rgba(0,0,0,0.08),0_10px_20px_-4px_rgba(0,0,0,0.18)] ring-1 ring-ink/[0.04]">
               <span className="text-sm font-semibold leading-none text-ink">{t.showcase.notification}</span>
             </div>
 
@@ -578,14 +609,14 @@ export function Home() {
 
           <Reveal
             delayMs={120}
-            className="order-3 w-full max-w-[320px] rounded-2xl bg-white p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.08)] sm:p-10 lg:translate-y-7"
+            className="order-3 w-full max-w-[320px] rounded-2xl bg-surface p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.08)] sm:p-10 lg:translate-y-7"
           >
             <h3 className="text-[26px] font-extrabold leading-snug text-ink">
               {t.showcase.cardRight.before}
               <span className="text-primary">{t.showcase.cardRight.highlight}</span>
               {t.showcase.cardRight.after}
             </h3>
-            <p className="mt-3 font-normal text-[#666]">{t.showcase.cardRight.body}</p>
+            <p className="mt-3 font-normal text-muted">{t.showcase.cardRight.body}</p>
           </Reveal>
         </div>
       </section>
@@ -748,7 +779,9 @@ export function Home() {
           white sections around it) plus the existing blob for depth. */}
       <section
         id="communaute"
-        className="relative overflow-hidden border-t border-overlay/10 bg-gradient-to-b from-white via-[#FFF8F2] to-white px-4 py-20 text-center sm:px-6 sm:py-28"
+        className={`relative overflow-hidden border-t border-overlay/10 bg-gradient-to-b px-4 py-20 text-center sm:px-6 sm:py-28 ${
+          isDark ? 'from-[#0B0B12] via-[#101a33] to-[#0B0B12]' : 'from-white via-[#FFF8F2] to-white'
+        }`}
       >
         <div
           aria-hidden="true"

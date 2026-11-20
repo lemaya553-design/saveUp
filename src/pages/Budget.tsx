@@ -258,7 +258,7 @@ export function Budget() {
           tabs={TAB_DEFS}
           active={tab}
           onChange={(next) => navigate(`/budget/${next}`)}
-          activeClassName="bg-[#FF7A00] text-white shadow-md"
+          activeClassName="bg-primary text-white shadow-md"
         />
       </div>
 
@@ -356,7 +356,7 @@ export function Budget() {
                   type="button"
                   onClick={() => setImportOpen(true)}
                   className="rounded-lg px-5 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110"
-                  style={{ backgroundColor: '#FF7A00' }}
+                  style={{ backgroundColor: '#4A6CF7' }}
                 >
                   {t.importTab.importButton}
                 </button>
@@ -374,8 +374,8 @@ export function Budget() {
                     ? t.importTab.upgradeUsedLimit(FREE_CSV_IMPORT_LIMIT)
                     : t.importTab.upgradeGeneric
                 }
-                variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
-                linkClassName="text-[#FF7A00] hover:opacity-80"
+                variantClassName="border-primary/30 bg-primary/10"
+                linkClassName="text-primary hover:opacity-80"
                 minPlan="standard"
               />
             )}
@@ -437,7 +437,7 @@ function BudgetHero({
           type="button"
           onClick={onAddExpense}
           className="flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110"
-          style={{ backgroundColor: '#FF7A00' }}
+          style={{ backgroundColor: '#4A6CF7' }}
         >
           <PlusIcon className="h-4 w-4" />
           {t.heroAddButton}

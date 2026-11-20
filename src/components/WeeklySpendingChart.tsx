@@ -7,7 +7,7 @@ import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { WeeklySpendingPoint } from '../lib/statistics'
 import { BudgetEmptyChart } from './BudgetEmptyChart'
 
-const ORANGE = '#FF7A00'
+const ORANGE = '#4A6CF7'
 const GRID_STROKE = 'color-mix(in srgb, var(--color-overlay) 8%, transparent)'
 
 function WeekIcon({ className }: { className: string }) {

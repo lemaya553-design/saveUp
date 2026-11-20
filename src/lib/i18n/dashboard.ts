@@ -120,7 +120,6 @@ export interface DashboardContent {
     title: string
     hint: (monthlyTotal: string) => string
     moreCount: (n: number) => string
-    viewAll: string
   }
   welcomeTutorial: {
     modalTitle: string
@@ -238,7 +237,7 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
       {
         to: '/statistiques',
         title: 'Statistiques',
-        description: 'Tendances et comparaisons mensuelles, en détail.',
+        description: 'Ta répartition de dépenses par catégorie, en détail.',
       },
       {
         to: '/statistiques/recompenses',
@@ -314,7 +313,6 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
       title: 'Abonnements trouvés',
       hint: (monthlyTotal) => `Détectés automatiquement dans tes dépenses — ${monthlyTotal} par mois.`,
       moreCount: (n) => `+ ${n} autre${n > 1 ? 's' : ''}`,
-      viewAll: 'Voir et gérer sur Premium',
     },
     welcomeTutorial: {
       modalTitle: 'Bienvenue sur SaveUp',
@@ -435,7 +433,7 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
       {
         to: '/statistiques',
         title: 'Statistics',
-        description: 'Monthly trends and comparisons, in detail.',
+        description: 'Your spending breakdown by category, in detail.',
       },
       {
         to: '/statistiques/recompenses',
@@ -511,7 +509,6 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
       title: 'Subscriptions found',
       hint: (monthlyTotal) => `Detected automatically in your expenses — ${monthlyTotal} a month.`,
       moreCount: (n) => `+ ${n} more`,
-      viewAll: 'View and manage on Premium',
     },
     welcomeTutorial: {
       modalTitle: 'Welcome to SaveUp',

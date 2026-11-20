@@ -6,7 +6,7 @@ import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { WeekdaySpendingPoint } from '../lib/statistics'
 import { BudgetEmptyChart } from './BudgetEmptyChart'
 
-const REGULAR_DAY_COLOR = '#FF7A00'
+const REGULAR_DAY_COLOR = '#4A6CF7'
 const BUSIEST_DAY_COLOR = '#B34D00'
 
 function CalendarIcon({ className }: { className: string }) {
@@ -21,13 +21,13 @@ function CalendarIcon({ className }: { className: string }) {
 function GhostBars() {
   return (
     <svg viewBox="0 0 160 100" className="h-full w-full" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-      <rect x="6" y="55" width="14" height="45" rx="4" fill="#FF7A00" />
-      <rect x="28" y="45" width="14" height="55" rx="4" fill="#FF7A00" />
-      <rect x="50" y="60" width="14" height="40" rx="4" fill="#FF7A00" />
-      <rect x="72" y="50" width="14" height="50" rx="4" fill="#FF7A00" />
+      <rect x="6" y="55" width="14" height="45" rx="4" fill="#4A6CF7" />
+      <rect x="28" y="45" width="14" height="55" rx="4" fill="#4A6CF7" />
+      <rect x="50" y="60" width="14" height="40" rx="4" fill="#4A6CF7" />
+      <rect x="72" y="50" width="14" height="50" rx="4" fill="#4A6CF7" />
       <rect x="94" y="20" width="14" height="80" rx="4" fill="#B34D00" />
-      <rect x="116" y="35" width="14" height="65" rx="4" fill="#FF7A00" />
-      <rect x="138" y="65" width="14" height="35" rx="4" fill="#FF7A00" />
+      <rect x="116" y="35" width="14" height="65" rx="4" fill="#4A6CF7" />
+      <rect x="138" y="65" width="14" height="35" rx="4" fill="#4A6CF7" />
     </svg>
   )
 }

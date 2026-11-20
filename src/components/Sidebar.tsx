@@ -11,11 +11,11 @@ import { TARIFS } from '../lib/i18n/tarifs'
 import { LogoMark } from './Logo'
 import { FeedbackModal } from './FeedbackModal'
 
-// Fixed regardless of the user's accent preset (Paramètres > Personnalisation
-// can be bleu/vert/violet/orange) — the active nav item should always read as
-// orange, by explicit design decision, so it's hardcoded here rather than
-// pulled from --color-primary/--color-accent like the rest of the app.
-const ACTIVE_ORANGE = '#FF7A00'
+// The app's single fixed brand blue — same value as --color-primary, kept
+// as a literal here (rather than a Tailwind token class) since this spot
+// needs a plain string to build the alpha-suffixed hex below
+// (`${ACTIVE_COLOR}1A`), not a className.
+const ACTIVE_COLOR = '#4A6CF7'
 
 function IconHome({ className }: { className: string }) {
   return (
@@ -52,27 +52,6 @@ function IconChart({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M4 19.5h16M7 19.5v-6M12 19.5v-10M17 19.5v-4" />
-    </svg>
-  )
-}
-
-function IconCalendar({ className }: { className: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
-      <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
-      <path strokeLinecap="round" d="M3.5 9.5h17M8 3v4M16 3v4" />
-    </svg>
-  )
-}
-
-function IconRepeat({ className }: { className: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M17 2.1l4 4-4 4M3 12.9v-1a4 4 0 0 1 4-4h14M7 21.9l-4-4 4-4M21 11.1v1a4 4 0 0 1-4 4H3"
-      />
     </svg>
   )
 }
@@ -149,8 +128,6 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
     { to: '/budget', label: t.budget, Icon: IconCard },
     { to: '/epargne', label: t.epargne, Icon: IconTarget },
     { to: '/statistiques', label: t.statistiques, Icon: IconChart },
-    { to: '/calendrier', label: t.calendrier, Icon: IconCalendar },
-    { to: '/premium', label: t.premium, Icon: IconRepeat },
     { to: '/tarifs', label: t.tarifs, Icon: IconTag },
     { to: '/parametres', label: t.parametres, Icon: IconGear },
   ]
@@ -212,7 +189,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
                     }`
                   }
                   style={({ isActive }) =>
-                    isActive ? { color: ACTIVE_ORANGE, backgroundColor: `${ACTIVE_ORANGE}1A` } : undefined
+                    isActive ? { color: ACTIVE_COLOR, backgroundColor: `${ACTIVE_COLOR}1A` } : undefined
                   }
                 >
                   <link.Icon className="h-5 w-5 shrink-0" />
@@ -232,7 +209,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
           >
             <span
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
-              style={{ color: ACTIVE_ORANGE, backgroundColor: `${ACTIVE_ORANGE}26` }}
+              style={{ color: ACTIVE_COLOR, backgroundColor: `${ACTIVE_COLOR}26` }}
             >
               {guest.active ? '?' : getInitials(user?.email)}
             </span>

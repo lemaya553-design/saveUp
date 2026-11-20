@@ -105,8 +105,8 @@ export function CategorySuggestions() {
           <UpgradePrompt
             title={t.limitReached(subscription.limits.maxCategories ?? 0)}
             description={t.limitDescription}
-            variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
-            linkClassName="text-[#FF7A00] hover:opacity-80"
+            variantClassName="border-primary/30 bg-primary/10"
+            linkClassName="text-primary hover:opacity-80"
             minPlan="standard"
           />
         </div>

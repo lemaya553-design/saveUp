@@ -21,13 +21,13 @@ function RingIcon({ className }: { className: string }) {
 function GhostRing() {
   return (
     <svg viewBox="0 0 120 120" className="mx-auto h-full max-h-48" aria-hidden="true">
-      <circle cx="60" cy="60" r="48" fill="none" stroke="#FFD9B0" strokeWidth="16" />
+      <circle cx="60" cy="60" r="48" fill="none" stroke="#D6E0FF" strokeWidth="16" />
       <circle
         cx="60"
         cy="60"
         r="48"
         fill="none"
-        stroke="#FF7A00"
+        stroke="#4A6CF7"
         strokeWidth="16"
         strokeDasharray="110 190"
         strokeLinecap="round"
@@ -38,7 +38,7 @@ function GhostRing() {
         cy="60"
         r="48"
         fill="none"
-        stroke="#CC5F00"
+        stroke="#1E3A8A"
         strokeWidth="16"
         strokeDasharray="60 240"
         strokeDashoffset="-110"

@@ -1,24 +1,24 @@
-// SaveUp's own orange-family palette for the Budget page's charts only —
+// SaveUp's own blue-family palette for the Budget page's charts only —
 // deliberately NOT shared with lib/categoryColors.ts (Statistiques/
-// Dashboard), which stays on the app's default blue/mauve accent so this
-// page-scoped redesign can't bleed into pages nobody asked to change.
-// Pure black is left out of the rotating hash palette on purpose: a
-// #0A0A0A slice/dot is nearly invisible against a dark-mode card (whose
-// surface is already a near-black #1a1a1a) — the brief's own "noir ou
-// orange foncé" phrasing for trend bars gave the explicit opening to prefer
-// the orange alternative everywhere contrast would otherwise suffer.
+// Dashboard), so this page-scoped palette can't bleed into pages nobody
+// asked to change. Was an orange-family palette before the app-wide blue
+// recolor (see git history) — same 5-slot rotation, same reasoning, just
+// every hue remapped to a shade/tint of the one brand blue instead of
+// orange. Pure black is left out of the rotating hash palette on purpose:
+// a #0A0A0A slice/dot is nearly invisible against a dark-mode card (whose
+// surface is already a near-black #1a1a1a).
 export const BUDGET_CHART_COLORS = [
-  '#FF7A00', // orange vif
-  '#CC5F00', // orange foncé
-  '#FFB347', // ambre
-  '#E5484D', // corail
-  '#FFD9B0', // pêche
+  '#4A6CF7', // bleu principal
+  '#8DA9FF', // bleu pâle
+  '#2DD4BF', // sarcelle (teal) — pour distinguer une 3e catégorie du bleu
+  '#5B6B9E', // bleu ardoise
+  '#D6E0FF', // bleu très pâle
 ]
 
 // Matches computeCategoryBreakdown's reserved 'Épargne' category (see
 // lib/budgetInsights.ts) — kept distinct from the hash palette so it can't
 // collide by coincidence, same convention as lib/categoryColors.ts.
-export const BUDGET_SAVINGS_COLOR = '#CC5F00'
+export const BUDGET_SAVINGS_COLOR = '#0B1A3A'
 const SAVINGS_CATEGORY = 'Épargne'
 
 // Deterministic hash of the category name (not list position), so a

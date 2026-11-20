@@ -50,7 +50,6 @@ export function Layout() {
       ['/budget', navT.budget],
       ['/epargne', navT.epargne],
       ['/statistiques', navT.statistiques],
-      ['/calendrier', navT.calendrier],
       ['/tarifs', navT.tarifs],
       ['/parametres', navT.parametres],
     ].find(([to]) => location.pathname === to || location.pathname.startsWith(`${to}/`))?.[1] ?? ''

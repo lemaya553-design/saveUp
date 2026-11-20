@@ -83,7 +83,7 @@ export function AddGoalCard({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="glass flex min-h-[96px] min-w-0 items-center justify-center rounded-2xl border-2 border-dashed border-overlay/15 p-5 text-sm font-medium text-muted transition-colors hover:border-[#FF7A00]/40 hover:text-ink"
+        className="glass flex min-h-[96px] min-w-0 items-center justify-center rounded-2xl border-2 border-dashed border-overlay/15 p-5 text-sm font-medium text-muted transition-colors hover:border-primary/40 hover:text-ink"
       >
         {t.newGoalButton}
       </button>
@@ -160,7 +160,7 @@ export function AddGoalCard({
       </form>
 
       {requiredPace && (
-        <p className="mt-3 text-xs text-[#FF7A00]">
+        <p className="mt-3 text-xs text-primary">
           {t.requiredPace(formatMoney(requiredPace.perWeek), formatMoney(requiredPace.perMonth))}
         </p>
       )}

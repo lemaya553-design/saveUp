@@ -351,7 +351,7 @@ export function Dashboard() {
       >
         <div
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl"
-          style={{ backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
+          style={{ backgroundColor: 'rgba(74, 108, 247, 0.14)' }}
         >
           🔥
         </div>
@@ -455,7 +455,7 @@ export function Dashboard() {
                   >
                     <span
                       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-                      style={{ color: '#FF7A00', backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
+                      style={{ color: '#4A6CF7', backgroundColor: 'rgba(74, 108, 247, 0.14)' }}
                     >
                       <Icon className="h-5 w-5" />
                     </span>
@@ -463,7 +463,7 @@ export function Dashboard() {
                       <p className="font-semibold text-ink">{title}</p>
                       <p className="truncate text-xs text-muted">{description}</p>
                     </div>
-                    <span className="shrink-0" style={{ color: '#FF7A00' }}>→</span>
+                    <span className="shrink-0" style={{ color: '#4A6CF7' }}>→</span>
                   </Link>
                 )
               })}

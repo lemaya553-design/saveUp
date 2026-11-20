@@ -31,7 +31,7 @@ function Step({
   const badge = (
     <span
       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-        done ? 'bg-[#FF7A00] text-white' : 'border-2 text-muted'
+        done ? 'bg-primary text-white' : 'border-2 text-muted'
       }`}
       style={!done ? { borderColor: CARD_BORDER } : undefined}
       aria-hidden="true"

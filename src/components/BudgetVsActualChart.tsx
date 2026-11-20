@@ -4,15 +4,17 @@ import { translateCategoryLabel } from '../lib/i18n/categoryLabels'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import type { CategoryBudgetStatus } from '../lib/statistics'
 
-// The track itself (the full-width band) IS the budget — a faint orange, so
+// The track itself (the full-width band) IS the budget — a faint blue, so
 // "how big is the bar" already reads as "how big is my budget" before any
-// fill is drawn on top. The fill on top is the actual spend: solid orange
-// while comfortably under, amber approaching the limit, red past it — the
-// app's established over-budget color, reused rather than inventing a new one.
+// fill is drawn on top. The fill on top is the actual spend: blue while
+// comfortably under, a lighter red approaching the limit, full red past it
+// — green/red are the only two status hues left in the app (no more
+// amber/orange "warning" tier), so "approaching" and "over" are two
+// intensities of the same red rather than a third color.
 function fillColorClass(status: CategoryBudgetStatus): string {
-  if (status.overBudget) return 'bg-red-400'
-  if (status.pctUsed >= 80) return 'bg-amber-400'
-  return 'bg-[#FF7A00]'
+  if (status.overBudget) return 'bg-red-500'
+  if (status.pctUsed >= 80) return 'bg-red-300'
+  return 'bg-primary'
 }
 
 export function BudgetVsActualChart({ statuses }: { statuses: CategoryBudgetStatus[] }) {
@@ -38,7 +40,7 @@ export function BudgetVsActualChart({ statuses }: { statuses: CategoryBudgetStat
             </div>
 
             <div
-              className="relative h-4 w-full overflow-hidden rounded-full bg-[#FF7A00]/30"
+              className="relative h-4 w-full overflow-hidden rounded-full bg-primary/30"
               role="progressbar"
               aria-valuenow={Math.round(status.pctUsed)}
               aria-valuemin={0}

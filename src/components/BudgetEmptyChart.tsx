@@ -32,7 +32,7 @@ export function BudgetEmptyChart({
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center">
         <span
           className="flex h-10 w-10 items-center justify-center rounded-full"
-          style={{ color: '#FF7A00', backgroundColor: 'rgba(255, 122, 0, 0.15)' }}
+          style={{ color: '#4A6CF7', backgroundColor: 'rgba(74, 108, 247, 0.15)' }}
         >
           {icon}
         </span>
@@ -43,7 +43,7 @@ export function BudgetEmptyChart({
             type="button"
             onClick={onAction}
             className="mt-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
-            style={{ backgroundColor: '#FF7A00' }}
+            style={{ backgroundColor: '#4A6CF7' }}
           >
             {actionLabel}
           </button>

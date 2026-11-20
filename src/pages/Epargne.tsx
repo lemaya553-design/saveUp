@@ -129,7 +129,7 @@ export function Epargne() {
           tabs={TAB_DEFS}
           active={tab}
           onChange={(next) => navigate(`/epargne/${next}`)}
-          activeClassName="bg-[#FF7A00] text-white shadow-md"
+          activeClassName="bg-primary text-white shadow-md"
         />
       </div>
 
@@ -201,8 +201,8 @@ export function Epargne() {
                 <UpgradePrompt
                   title={t.objectifsTab.limitReachedTitle(subscription.limits.maxGoals)}
                   description={t.objectifsTab.limitReachedDescription}
-                  variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
-                  linkClassName="text-[#FF7A00] hover:opacity-80"
+                  variantClassName="border-primary/30 bg-primary/10"
+                  linkClassName="text-primary hover:opacity-80"
                   minPlan="standard"
                 />
               ) : (

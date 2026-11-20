@@ -7,7 +7,7 @@ import { ScoreGauge } from './ScoreGauge'
 import { ScoreTrendBadge } from './ScoreTrendBadge'
 import type { ScoreTrend } from '../hooks/useFinancialHealth'
 
-const TINT = 'color-mix(in srgb, var(--color-surface) 92%, #FF7A00 8%)'
+const TINT = 'color-mix(in srgb, var(--color-surface) 92%, #4A6CF7 8%)'
 
 function cardStyle(): React.CSSProperties {
   return { background: TINT, borderColor: 'color-mix(in srgb, var(--color-overlay) 10%, transparent)' }
@@ -29,7 +29,7 @@ function CardHeader({ icon, label }: { icon: ReactNode; label: string }) {
     <div className="mb-2 flex items-center gap-2">
       <span
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-        style={{ color: '#FF7A00', backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
+        style={{ color: '#4A6CF7', backgroundColor: 'rgba(74, 108, 247, 0.14)' }}
       >
         {icon}
       </span>

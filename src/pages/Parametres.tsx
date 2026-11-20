@@ -106,7 +106,7 @@ export function Parametres() {
           tabs={TAB_DEFS}
           active={tab}
           onChange={(next) => navigate(`/parametres/${next}`)}
-          activeClassName="bg-[#FF7A00] text-white shadow-md"
+          activeClassName="bg-primary text-white shadow-md"
         />
       </div>
 
@@ -170,11 +170,11 @@ export function Parametres() {
           <ParametresCard title={t.abonnement.cardTitle} hint={t.abonnement.cardHint}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-[#FF7A00]/15 px-3 py-1 text-sm font-semibold text-[#FF7A00]">
+                <span className="rounded-full bg-primary/15 px-3 py-1 text-sm font-semibold text-primary">
                   {tarifsT.plans[subscription.plan].name}
                 </span>
                 {subscription.isTrialing && (
-                  <span className="rounded-full bg-[#FFB347]/20 px-3 py-1 text-xs font-semibold text-[#CC5F00]">
+                  <span className="rounded-full bg-[#8DA9FF]/20 px-3 py-1 text-xs font-semibold text-[#1E3A8A]">
                     {t.abonnement.trialBadge}
                   </span>
                 )}

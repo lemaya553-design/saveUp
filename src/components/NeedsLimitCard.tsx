@@ -8,10 +8,13 @@ import { clampPct, computeNeedsLimit, computeNeedsSpending, type CategorizedAmou
 import { getNeedsLimitPcts, setNeedsLimitPcts } from '../lib/needsLimitPrefs'
 import { DASHBOARD } from '../lib/i18n/dashboard'
 
+// green/red are the only two status hues left in the app (no more
+// amber/orange "warning" tier) — "approaching" and "over" the limit are two
+// intensities of the same red rather than a third color.
 function fillColorClass(pctOfLimit: number, overLimit: boolean): string {
-  if (overLimit) return 'bg-red-400'
-  if (pctOfLimit >= 80) return 'bg-amber-400'
-  return 'bg-[#FF7A00]'
+  if (overLimit) return 'bg-red-500'
+  if (pctOfLimit >= 80) return 'bg-red-300'
+  return 'bg-primary'
 }
 
 export function NeedsLimitCard({

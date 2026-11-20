@@ -29,12 +29,6 @@ const Statistiques = lazy(() =>
 // charts its spending/category/trend data with recharts too.
 const Budget = lazy(() => import('./pages/Budget').then((m) => ({ default: m.Budget })))
 
-// Pulls in ImportTransactionsModal (and transitively xlsx) just like
-// Budget.tsx does — code-split for the same reason.
-const Premium = lazy(() => import('./pages/Premium').then((m) => ({ default: m.Premium })))
-
-const Calendrier = lazy(() => import('./pages/Calendrier').then((m) => ({ default: m.Calendrier })))
-
 // Public, standalone, meant to be shared and opened cold on a phone —
 // code-split so nobody visiting the rest of the app pays for it, and it
 // pays for nothing else in return.
@@ -101,23 +95,13 @@ function App() {
                         {/* Récompenses merged into Statistiques as a tab — keep old links/bookmarks working. */}
                         <Route path="recompenses" element={<Navigate to="/statistiques/recompenses" replace />} />
 
-                        <Route
-                          path="calendrier"
-                          element={
-                            <Suspense fallback={<PageSkeleton cards={1} />}>
-                              <Calendrier />
-                            </Suspense>
-                          }
-                        />
-
-                        <Route
-                          path="premium"
-                          element={
-                            <Suspense fallback={<PageSkeleton cards={4} />}>
-                              <Premium />
-                            </Suspense>
-                          }
-                        />
+                        {/* Calendrier and Premium removed from the menu — old
+                            links/bookmarks redirect to the Dashboard instead
+                            of 404ing. No Supabase data touched (calendar_notes
+                            stays, subscription-review state was localStorage-
+                            only and was never touched either). */}
+                        <Route path="calendrier" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="premium" element={<Navigate to="/dashboard" replace />} />
 
                         <Route path="parametres" element={<Navigate to="/parametres/compte" replace />} />
                         <Route path="parametres/:tab" element={<Parametres />} />

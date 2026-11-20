@@ -85,7 +85,7 @@ function EditRow({
           type="checkbox"
           checked={applyToPast}
           onChange={(e) => setApplyToPast(e.target.checked)}
-          className="h-4 w-4 accent-[#FF7A00]"
+          className="h-4 w-4 accent-primary"
         />
         {t.applyToPast}
       </label>
@@ -233,7 +233,7 @@ function AddForm({
           type="checkbox"
           checked={hasEndDate}
           onChange={(e) => setHasEndDate(e.target.checked)}
-          className="h-4 w-4 accent-[#FF7A00]"
+          className="h-4 w-4 accent-primary"
         />
         {t.endDateLabel}
       </label>
@@ -347,8 +347,8 @@ export function RecurringExpenses({
         <UpgradePrompt
           title={t.limitReached(maxRecurringExpenses ?? 0)}
           description={t.limitDescription}
-          variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
-          linkClassName="text-[#FF7A00] hover:opacity-80"
+          variantClassName="border-primary/30 bg-primary/10"
+          linkClassName="text-primary hover:opacity-80"
           minPlan="standard"
         />
       ) : (

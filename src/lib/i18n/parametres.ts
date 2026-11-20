@@ -55,7 +55,6 @@ export interface ParametresContent {
   personalization: {
     cardTitle: string
     cardHint: string
-    accentColor: string
     theme: string
     dark: string
     light: string
@@ -174,7 +173,6 @@ export const PARAMETRES: Record<Lang, ParametresContent> = {
     personalization: {
       cardTitle: 'Personnalisation',
       cardHint: "L'apparence de SaveUp, juste pour toi.",
-      accentColor: "Couleur d'accent",
       theme: 'Thème',
       dark: 'Sombre',
       light: 'Clair',
@@ -292,7 +290,6 @@ export const PARAMETRES: Record<Lang, ParametresContent> = {
     personalization: {
       cardTitle: 'Personalization',
       cardHint: "SaveUp's look, just for you.",
-      accentColor: 'Accent color',
       theme: 'Theme',
       dark: 'Dark',
       light: 'Light',

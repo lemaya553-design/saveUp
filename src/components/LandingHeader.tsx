@@ -22,13 +22,38 @@ function CloseIcon({ className }: { className: string }) {
   )
 }
 
-// logoGradient: overrides LogoMark's default orange gradient — Home.tsx
-// (the only page wrapped in .landing-classic's blue/black/white palette)
-// passes its blue shades explicitly here, so every OTHER page that reuses
-// this same shared header (Tarifs.tsx, pre-login) keeps today's orange
-// mark unchanged, rather than silently inheriting a color meant for Home
-// alone.
-export function LandingHeader({ logoGradient }: { logoGradient?: { from: string; to: string } } = {}) {
+function SunIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <circle cx="12" cy="12" r="4.5" />
+      <path
+        strokeLinecap="round"
+        d="M12 2.5v2.5M12 19v2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12H5M19 12h2.5M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"
+      />
+    </svg>
+  )
+}
+
+function MoonIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20.5 14.3A8.5 8.5 0 1 1 9.7 3.5a7 7 0 0 0 10.8 10.8z" />
+    </svg>
+  )
+}
+
+// theme/onToggleTheme: only Home.tsx (the one page wrapped in
+// .landing-classic's light/dark-aware palette) passes these, which is what
+// renders the sun/moon button at all — every OTHER page reusing this same
+// shared header (Tarifs.tsx, pre-login) has nothing to toggle, so it's left
+// out there rather than rendering a button with nowhere to send its click.
+export function LandingHeader({
+  theme,
+  onToggleTheme,
+}: {
+  theme?: 'light' | 'dark'
+  onToggleTheme?: () => void
+} = {}) {
   const [open, setOpen] = useState(false)
   const { lang } = useLanguage()
   const t = COMMON[lang].header
@@ -43,11 +68,7 @@ export function LandingHeader({ logoGradient }: { logoGradient?: { from: string;
     <header className="sticky top-0 z-20 border-b border-overlay/10 bg-canvas/80 backdrop-blur-md">
       <div className="mx-auto grid max-w-6xl grid-cols-[auto_1fr_auto] items-center gap-4 px-2 py-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2 justify-self-start">
-          <LogoMark
-            className="h-7 w-7"
-            gradientFrom={logoGradient?.from}
-            gradientTo={logoGradient?.to}
-          />
+          <LogoMark className="h-7 w-7" />
           <span className="text-xl font-bold">
             <span className="text-ink">save</span>
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Up</span>
@@ -68,6 +89,16 @@ export function LandingHeader({ logoGradient }: { logoGradient?: { from: string;
               which meant an English-speaking visitor on a phone had no
               visible way to switch language without opening the menu
               first. */}
+          {theme && onToggleTheme && (
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              aria-label={theme === 'dark' ? t.switchToLight : t.switchToDark}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink transition-colors hover:bg-overlay/5"
+            >
+              {theme === 'dark' ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+            </button>
+          )}
           <LanguageSwitcher />
           {/* Was only ever wired into Nav.tsx (the signed-in app header) —
               a logged-out visitor on the public marketing site had no way

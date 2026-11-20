@@ -111,7 +111,7 @@ export function CountrySelect({
                   onClick={() => selectCountry(c.iso)}
                   aria-selected={c.iso === value}
                   className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors hover:bg-white/10 ${
-                    c.iso === value ? 'text-[#ff6b00]' : 'text-white/85'
+                    c.iso === value ? 'text-primary' : 'text-white/85'
                   }`}
                 >
                   <span className="truncate">{c.label[lang]}</span>

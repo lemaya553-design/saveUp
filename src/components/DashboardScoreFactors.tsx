@@ -1,6 +1,6 @@
 import { getScoreExplanations, type FinancialHealthBreakdown } from '../lib/financialHealth'
 
-const ORANGE_VIF = '#FF7A00'
+const ORANGE_VIF = '#4A6CF7'
 
 export function DashboardScoreFactors({ breakdown }: { breakdown: FinancialHealthBreakdown }) {
   const factors = getScoreExplanations(breakdown)

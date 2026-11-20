@@ -6,8 +6,8 @@ import { BUDGET } from '../lib/i18n/budget'
 import type { MonthlyTotal } from '../lib/budgetInsights'
 import { BudgetEmptyChart } from './BudgetEmptyChart'
 
-const CURRENT_MONTH_COLOR = '#FF7A00'
-const PAST_MONTH_COLOR = '#CC5F00'
+const CURRENT_MONTH_COLOR = '#4A6CF7'
+const PAST_MONTH_COLOR = '#1E3A8A'
 
 function TrendIcon({ className }: { className: string }) {
   return (
@@ -20,9 +20,9 @@ function TrendIcon({ className }: { className: string }) {
 function GhostBars() {
   return (
     <svg viewBox="0 0 160 100" className="h-full w-full" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-      <rect x="20" y="40" width="28" height="60" rx="6" fill="#CC5F00" />
-      <rect x="66" y="55" width="28" height="45" rx="6" fill="#CC5F00" />
-      <rect x="112" y="20" width="28" height="80" rx="6" fill="#FF7A00" />
+      <rect x="20" y="40" width="28" height="60" rx="6" fill="#1E3A8A" />
+      <rect x="66" y="55" width="28" height="45" rx="6" fill="#1E3A8A" />
+      <rect x="112" y="20" width="28" height="80" rx="6" fill="#4A6CF7" />
     </svg>
   )
 }

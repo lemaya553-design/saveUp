@@ -71,7 +71,7 @@ export function ContributeForm({
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-[#FF7A00] px-6 py-2 font-semibold text-canvas transition-all hover:brightness-110 disabled:opacity-60"
+          className="rounded-lg bg-primary px-6 py-2 font-semibold text-canvas transition-all hover:brightness-110 disabled:opacity-60"
         >
           {submitting ? t.submitting : t.submitButton}
         </button>

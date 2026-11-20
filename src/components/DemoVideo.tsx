@@ -29,7 +29,7 @@ export function DemoVideo({ src, poster, alt }: { src: string; poster: string; a
           aria-label={alt}
           className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors hover:bg-black/30"
         >
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 text-[#FF7A00] shadow-lg">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 text-primary shadow-lg">
             <PlayIcon className="h-6 w-6 translate-x-0.5" />
           </span>
         </button>

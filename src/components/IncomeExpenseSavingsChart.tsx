@@ -11,9 +11,9 @@ import { BudgetEmptyChart } from './BudgetEmptyChart'
 // green-for-income/red-for-expense scheme.
 const SERIES = ['income', 'expenses', 'savings'] as const
 const COLORS: Record<(typeof SERIES)[number], string> = {
-  income: '#FFB347',
-  expenses: '#FF7A00',
-  savings: '#CC5F00',
+  income: '#8DA9FF',
+  expenses: '#4A6CF7',
+  savings: '#1E3A8A',
 }
 const GRID_STROKE = 'color-mix(in srgb, var(--color-overlay) 8%, transparent)'
 
@@ -28,9 +28,9 @@ function GroupedBarsIcon({ className }: { className: string }) {
 function GhostLines() {
   return (
     <svg viewBox="0 0 300 120" className="h-full w-full" preserveAspectRatio="none" aria-hidden="true">
-      <path d="M0,70 60,55 120,60 180,40 240,45 300,25" fill="none" stroke="#FFB347" strokeWidth={2.5} />
-      <path d="M0,90 60,80 120,85 180,70 240,75 300,60" fill="none" stroke="#FF7A00" strokeWidth={2.5} />
-      <path d="M0,105 60,100 120,102 180,95 240,98 300,90" fill="none" stroke="#CC5F00" strokeWidth={2.5} />
+      <path d="M0,70 60,55 120,60 180,40 240,45 300,25" fill="none" stroke="#8DA9FF" strokeWidth={2.5} />
+      <path d="M0,90 60,80 120,85 180,70 240,75 300,60" fill="none" stroke="#4A6CF7" strokeWidth={2.5} />
+      <path d="M0,105 60,100 120,102 180,95 240,98 300,90" fill="none" stroke="#1E3A8A" strokeWidth={2.5} />
     </svg>
   )
 }

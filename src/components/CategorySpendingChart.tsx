@@ -107,7 +107,7 @@ function CategoryTick({
               onCancelEdit()
             }
           }}
-          className="w-full rounded border border-[#FF7A00] bg-surface px-1 py-0.5 text-center text-xs text-ink focus:outline-none"
+          className="w-full rounded border border-primary bg-surface px-1 py-0.5 text-center text-xs text-ink focus:outline-none"
         />
       </foreignObject>
     )
@@ -157,7 +157,7 @@ function ChartTooltip({
         </p>
       )}
       <p className="text-muted">{formatMoney(entry.total)}</p>
-      <p className="mt-1 text-[#FF7A00]">{t.tooltipClickDetail}</p>
+      <p className="mt-1 text-primary">{t.tooltipClickDetail}</p>
     </div>
   )
 }
@@ -383,7 +383,7 @@ export function CategorySpendingChart({
             style={{ top: anchor.top, left: anchor.centerX, transform: 'translateX(-50%)' }}
           >
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#FF7A00]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                 {translateCategoryLabel(expanded.category, lang)}
               </p>
               <button

@@ -40,8 +40,8 @@ export function DataExportCard({ canExport }: { canExport: boolean }) {
         <UpgradePrompt
           title={t.upgradeTitle}
           description={t.upgradeDescription}
-          variantClassName="border-[#FF7A00]/30 bg-[#FF7A00]/10"
-          linkClassName="text-[#FF7A00] hover:opacity-80"
+          variantClassName="border-primary/30 bg-primary/10"
+          linkClassName="text-primary hover:opacity-80"
           minPlan="premium"
         />
       )}

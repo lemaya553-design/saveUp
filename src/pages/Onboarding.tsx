@@ -8,10 +8,12 @@ import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSubscription } from '../hooks/useSubscription'
 import { useToast } from '../components/ToastProvider'
 import { CountrySelect } from '../components/CountrySelect'
+import { OnboardingScoreRing } from '../components/OnboardingScoreRing'
 import { DEFAULT_DIAL_COUNTRY, toE164 } from '../lib/phone'
-import { ONBOARDING_QUIZ } from '../lib/i18n/onboardingQuiz'
+import { ONBOARDING_QUIZ, type OnboardingQuizContent } from '../lib/i18n/onboardingQuiz'
 import { TARIFS } from '../lib/i18n/tarifs'
 import { computeAmountPerPay } from '../lib/onboardingGoalPace'
+import { computeOnboardingScore, type OnboardingScoreResult } from '../lib/onboardingScore'
 import {
   INCOME_RANGE_MIDPOINT,
   PAY_FREQUENCIES,
@@ -29,33 +31,77 @@ import type { CountryCode } from 'libphonenumber-js'
 
 // 10-question onboarding (replaces the old 15-question archetype quiz +
 // "Configure ton compte" setup phase — see lib/onboardingQuiz.ts's header
-// comment for where that went) followed by the same plan-selection step as
-// before. Styled black/orange throughout, independent of the app's own
-// theme tokens — same literal-color approach as Connexion.tsx, so this
-// reads as a continuation of the landing page / connexion visual identity
-// rather than switching to the app's internal chrome right after signup.
+// comment for where that went), followed by a score reveal screen. Styled
+// black/blue throughout, independent of the app's own theme tokens — same
+// literal-color approach as Connexion.tsx, so this reads as a continuation
+// of the landing page / connexion visual identity rather than switching to
+// the app's internal chrome right after signup.
 //
 // Answers are collected across all 10 screens in local state and only
 // written to Supabase once, at the very end (finishOnboarding, triggered by
 // Q10) — see usePreferences.tsx's completeOnboarding for why that specific
-// moment was chosen (abandoning the kept plan-selection step after Q10
-// must never replay the questions).
-
-type Phase = 'questions' | 'plans'
+// moment was chosen (onboardingCompletedAt is Dashboard.tsx's only gate, so
+// it must only be set once the flow has genuinely finished).
+//
+// The score result screen sits between the questions and the kept
+// plan-selection step (Free/Standard/Premium cards) — "Voir mon tableau de
+// bord" on the result screen advances to 'plans', whose own "Continuer
+// avec le plan gratuit" link is what actually reaches /dashboard (same
+// resume semantics as before: onboardingCompletedAt/the score are both
+// already saved by the time 'result' renders, so abandoning the plans step
+// never replays the questions).
+type Phase = 'questions' | 'result' | 'plans'
 const TOTAL_QUESTIONS = 10
 
 const bigButtonClass = (active: boolean) =>
-  `rounded-2xl border px-4 py-4 text-left font-medium transition-all ${
+  `rounded-2xl border px-4 py-4 text-left font-medium transition-all sm:px-6 sm:py-5 sm:text-lg ${
     active
-      ? 'border-[#ff6b00] bg-[#ff6b00]/15 text-white'
-      : 'border-white/15 bg-white/5 text-white hover:border-[#ff6b00]/50 hover:bg-white/10'
+      ? 'border-primary bg-primary/15 text-white'
+      : 'border-white/15 bg-white/5 text-white hover:border-primary/50 hover:bg-white/10'
   }`
 
 const fieldClass =
-  'rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-white placeholder-white/35 focus:border-[#ff6b00] focus:outline-none'
+  'rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-white placeholder-white/35 focus:border-primary focus:outline-none sm:px-4 sm:py-3.5 sm:text-lg'
 
 const primaryButtonClass =
-  'w-full rounded-xl bg-[#ff6b00] px-5 py-3 font-semibold text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50'
+  'w-full rounded-xl bg-primary px-5 py-3 font-semibold text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 sm:py-4 sm:text-lg'
+
+// Three simple, deterministic rule sets (no AI) turning the computed score
+// breakdown (lib/onboardingScore.ts) into 1-3 short, specific lines each —
+// every possible line is pre-written copy (see ONBOARDING_QUIZ[lang].result
+// for the French/English text), picked by which tier/condition matched,
+// never generated. "Good" always has a fallback: an account that happens
+// to land in the "tight" tier on every single factor should still see a
+// genuine, true (not spun) encouraging line, not an empty section.
+function buildGoodPoints(t: OnboardingQuizContent['result'], r: OnboardingScoreResult): string[] {
+  const points: string[] = []
+  if (r.fixedExpensesTier === 'great' || r.fixedExpensesTier === 'good') points.push(t.good.fixedExpenses)
+  if (r.goalPaceTier === 'great' || r.goalPaceTier === 'good') points.push(t.good.goalPace)
+  if (!r.leaksUnknown && r.leaksCount <= 2) points.push(t.good.leaksAware)
+  if (r.moodTier === 'great') points.push(t.good.moodGood)
+  if (points.length === 0) points.push(t.good.fallback)
+  return points.slice(0, 3)
+}
+
+function buildWatchPoints(t: OnboardingQuizContent['result'], r: OnboardingScoreResult): string[] {
+  const points: string[] = []
+  if (r.fixedExpensesTier === 'tight' || r.fixedExpensesTier === 'strained') points.push(t.watch.fixedExpenses)
+  if (r.goalPaceTier === 'tight' || r.goalPaceTier === 'strained') points.push(t.watch.goalPace)
+  if (r.leaksUnknown) points.push(t.watch.leaksUnknown)
+  else if (r.topLeak) points.push(t.watch.leaksTop(t.leakLabels[r.topLeak]))
+  if (r.moodTier === 'strained') points.push(t.watch.moodStressed)
+  return points.slice(0, 3)
+}
+
+// Always grounded in real, shipped features (never invented) — goal
+// creation always applies (it just happened), budget-by-category always
+// applies (every account has it); the third line depends on whether
+// there's anything to import/detect yet.
+function buildHelpPoints(t: OnboardingQuizContent['result'], goalName: string, r: OnboardingScoreResult): string[] {
+  const points = [t.help.goalCreated(goalName), t.help.budgetCategories]
+  points.push(r.leaksUnknown || r.leaksCount >= 1 ? t.help.importStatement : t.help.statsAndRewards)
+  return points.slice(0, 3)
+}
 
 export function Onboarding() {
   const navigate = useNavigate()
@@ -74,6 +120,7 @@ export function Onboarding() {
   const [qIndex, setQIndex] = useState(0)
   const [exiting, setExiting] = useState(false)
   const [transitioning, setTransitioning] = useState(false)
+  const [scoreResult, setScoreResult] = useState<OnboardingScoreResult | null>(null)
   const [pendingPlan, setPendingPlan] = useState<Plan | null>(null)
 
   const [firstName, setFirstName] = useState('')
@@ -114,7 +161,7 @@ export function Onboarding() {
   if (!initialCheckDone) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0a0a0c]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-[#ff6b00]" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-[#4A6CF7]" />
       </div>
     )
   }
@@ -199,11 +246,23 @@ export function Onboarding() {
   // completeOnboarding), Q10's own WhatsApp opt-in/decline, the real
   // numeric income (derived from the Q3 bracket — see
   // INCOME_RANGE_MIDPOINT's header comment), and the first savings goal —
-  // then hands off to the kept plan-selection screen.
+  // then computes the score from the same answers and hands off to the
+  // result screen.
   async function finishOnboarding(whatsappE164: string | null) {
     if (finishing) return
     setFinishing(true)
     try {
+      const targetAmount = Math.max(0, Number(goalAmount) || 0)
+      const score = computeOnboardingScore({
+        incomeRange: incomeRange as IncomeRange,
+        fixedExpensesRange: fixedExpensesRange as FixedExpensesRange,
+        moneyLeaks,
+        financialMood: financialMood as FinancialMood,
+        goalAmount: targetAmount,
+        goalDate: goalDate || null,
+        payFrequency,
+      })
+
       preferences.completeOnboarding({
         firstName: firstName.trim(),
         workStatus: workStatus as WorkStatus,
@@ -214,6 +273,7 @@ export function Onboarding() {
         savingsGoalType: savingsGoalType as SavingsGoalType,
         savingsGoalName: savingsGoalType === 'autre' ? customGoalName.trim() : null,
         financialMood: financialMood as FinancialMood,
+        onboardingScore: score.score,
       })
       if (whatsappE164) {
         preferences.setWhatsappOptIn(whatsappE164)
@@ -222,14 +282,14 @@ export function Onboarding() {
       }
       await income.setMonthlyIncome(INCOME_RANGE_MIDPOINT[incomeRange as IncomeRange])
 
-      const targetAmount = Math.max(0, Number(goalAmount) || 0)
       const goalOption = t.q7.options.find((o) => o.id === savingsGoalType)
       const finalGoalName = savingsGoalType === 'autre' ? customGoalName.trim() : (goalOption?.name ?? '')
       if (finalGoalName && targetAmount > 0) {
         await goals.addGoal(finalGoalName, targetAmount, goalDate || null)
       }
 
-      setPhase('plans')
+      setScoreResult(score)
+      setPhase('result')
     } finally {
       setFinishing(false)
     }
@@ -270,22 +330,22 @@ export function Onboarding() {
       />
       <div
         aria-hidden="true"
-        className="mesh-blob-c pointer-events-none absolute -left-24 top-0 h-96 w-96 rounded-full bg-[#ff6b00]/15 blur-[120px]"
+        className="mesh-blob-c pointer-events-none absolute -left-24 top-0 h-96 w-96 rounded-full bg-primary/15 blur-[120px]"
       />
       <div
         aria-hidden="true"
-        className="mesh-blob-b pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-[#ff6b00]/10 blur-[120px]"
+        className="mesh-blob-b pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-primary/10 blur-[120px]"
       />
 
       {phase === 'questions' && (
-        <div className="relative mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-10">
+        <div className="relative mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-10 sm:max-w-2xl sm:px-10 lg:max-w-3xl">
           <div className="mb-8">
             <div className="mb-2 flex items-center justify-between text-xs text-white/50">
               <span>{t.progressLabel(qIndex + 1, TOTAL_QUESTIONS)}</span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
               <div
-                className="h-full rounded-full bg-[#ff6b00] transition-[width] duration-500 ease-out"
+                className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
                 style={{ width: `${((qIndex + 1) / TOTAL_QUESTIONS) * 100}%` }}
               />
             </div>
@@ -294,7 +354,7 @@ export function Onboarding() {
           <div key={qIndex} className={exiting ? 'question-exit' : 'question-enter'}>
             {qIndex === 0 && (
               <form onSubmit={submitQ1}>
-                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q1.title}</h1>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-4xl lg:text-5xl">{t.q1.title}</h1>
                 <input
                   type="text"
                   autoFocus
@@ -312,7 +372,7 @@ export function Onboarding() {
 
             {qIndex === 1 && (
               <div>
-                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q2.title}</h1>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-4xl lg:text-5xl">{t.q2.title}</h1>
                 <div className="mt-8 grid gap-3">
                   {t.q2.options.map((option) => (
                     <button
@@ -331,7 +391,7 @@ export function Onboarding() {
 
             {qIndex === 2 && (
               <div>
-                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q3.title}</h1>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-4xl lg:text-5xl">{t.q3.title}</h1>
                 <div className="mt-8 grid gap-3">
                   {t.q3.options.map((option) => (
                     <button
@@ -350,7 +410,7 @@ export function Onboarding() {
 
             {qIndex === 3 && (
               <div>
-                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q4.title}</h1>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-4xl lg:text-5xl">{t.q4.title}</h1>
                 <div className="mt-8 grid gap-3">
                   {PAY_FREQUENCIES.map((freq) => (
                     <button
@@ -369,7 +429,7 @@ export function Onboarding() {
 
             {qIndex === 4 && (
               <div>
-                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q5.title}</h1>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-4xl lg:text-5xl">{t.q5.title}</h1>
                 <div className="mt-8 grid gap-3">
                   {t.q5.options.map((option) => (
                     <button
@@ -388,7 +448,7 @@ export function Onboarding() {
 
             {qIndex === 5 && (
               <div>
-                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q6.title}</h1>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-4xl lg:text-5xl">{t.q6.title}</h1>
                 <div className="mt-8 grid grid-cols-2 gap-3">
                   {t.q6.options.map((option) => {
                     const checked = moneyLeaks.includes(option.id)
@@ -413,7 +473,7 @@ export function Onboarding() {
 
             {qIndex === 6 && (
               <div>
-                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q7.title}</h1>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-4xl lg:text-5xl">{t.q7.title}</h1>
                 <div className="mt-8 grid gap-3">
                   {t.q7.options.map((option) => (
                     <button
@@ -454,7 +514,7 @@ export function Onboarding() {
 
             {qIndex === 7 && (
               <form onSubmit={submitQ8}>
-                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q8.title}</h1>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-4xl lg:text-5xl">{t.q8.title}</h1>
                 <div className="mt-6 flex flex-col gap-4">
                   <input
                     type="number"
@@ -480,7 +540,7 @@ export function Onboarding() {
                 </div>
                 {goalAmountError && <p className="mt-2 text-sm text-red-400">{goalAmountError}</p>}
                 {perPayAmount !== null && (
-                  <p className="mt-3 text-sm font-semibold text-[#ff6b00]">{t.q8.perPayLine(formatMoney(perPayAmount))}</p>
+                  <p className="mt-3 text-sm font-semibold text-primary">{t.q8.perPayLine(formatMoney(perPayAmount))}</p>
                 )}
                 <button type="submit" className={`${primaryButtonClass} mt-6`}>
                   {t.q8.continueButton}
@@ -490,7 +550,7 @@ export function Onboarding() {
 
             {qIndex === 8 && (
               <div>
-                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q9.title}</h1>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-4xl lg:text-5xl">{t.q9.title}</h1>
                 <div className="mt-8 grid gap-3">
                   {t.q9.options.map((option) => (
                     <button
@@ -509,7 +569,7 @@ export function Onboarding() {
 
             {qIndex === 9 && (
               <form onSubmit={handleQ10Submit}>
-                <h1 className="text-balance text-2xl font-bold text-white sm:text-3xl">{t.q10.title}</h1>
+                <h1 className="text-balance text-2xl font-bold text-white sm:text-4xl lg:text-5xl">{t.q10.title}</h1>
                 <div className="mt-6 flex gap-2">
                   <CountrySelect
                     value={country}
@@ -538,7 +598,7 @@ export function Onboarding() {
                       checked={consent}
                       onChange={(e) => setConsent(e.target.checked)}
                       className="mt-0.5 h-4 w-4 shrink-0"
-                      style={{ accentColor: '#ff6b00' }}
+                      style={{ accentColor: '#4A6CF7' }}
                     />
                     {t.q10.consentLabel}
                   </label>
@@ -574,6 +634,88 @@ export function Onboarding() {
         </div>
       )}
 
+      {phase === 'result' && scoreResult && (
+        <div className="relative mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-14 sm:max-w-2xl sm:px-10 lg:max-w-3xl">
+          {(() => {
+            const goalOption = t.q7.options.find((o) => o.id === savingsGoalType)
+            const goalName = savingsGoalType === 'autre' ? customGoalName.trim() : (goalOption?.name ?? '')
+            const targetAmount = Math.max(0, Number(goalAmount) || 0)
+            const perPay = computeAmountPerPay(targetAmount, goalDate || null, payFrequency)
+            const locale = lang === 'fr' ? 'fr-CA' : 'en-CA'
+            const dateLabel = goalDate
+              ? new Date(`${goalDate}T00:00:00`).toLocaleDateString(locale, { month: 'long', day: 'numeric', year: 'numeric' })
+              : null
+            const goodPoints = buildGoodPoints(t.result, scoreResult)
+            const watchPoints = buildWatchPoints(t.result, scoreResult)
+            const helpPoints = buildHelpPoints(t.result, goalName, scoreResult)
+
+            return (
+              <>
+                <h1 className="text-balance text-center text-2xl font-bold text-white sm:text-4xl">
+                  {t.result.scoreHeading(firstName.trim())}
+                </h1>
+                <div className="mt-6">
+                  <OnboardingScoreRing score={scoreResult.score} caption={t.result.scoreCaption} />
+                </div>
+
+                {goalName && targetAmount > 0 && (
+                  <p className="mx-auto mt-6 max-w-md text-balance text-center text-sm font-medium text-white/80 sm:text-base">
+                    {dateLabel && perPay !== null
+                      ? t.result.goalSummary(goalName, formatMoney(targetAmount), dateLabel, formatMoney(perPay))
+                      : t.result.goalSummaryNoDate(goalName, formatMoney(targetAmount))}
+                  </p>
+                )}
+
+                <div className="mt-10 grid gap-4 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                    <h2 className="text-sm font-semibold text-white">{t.result.goodHeading}</h2>
+                    <ul className="mt-3 flex flex-col gap-2.5">
+                      {goodPoints.map((point) => (
+                        <li key={point} className="text-sm text-white/70">
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {watchPoints.length > 0 && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                      <h2 className="text-sm font-semibold text-white">{t.result.watchHeading}</h2>
+                      <ul className="mt-3 flex flex-col gap-2.5">
+                        {watchPoints.map((point) => (
+                          <li key={point} className="text-sm text-white/70">
+                            {point}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="rounded-2xl border border-primary/30 bg-primary/10 p-5">
+                    <h2 className="text-sm font-semibold text-white">{t.result.helpHeading}</h2>
+                    <ul className="mt-3 flex flex-col gap-2.5">
+                      {helpPoints.map((point) => (
+                        <li key={point} className="text-sm text-white/80">
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setPhase('plans')}
+                  className={`${primaryButtonClass} mt-10`}
+                >
+                  {t.result.continueButton}
+                </button>
+              </>
+            )
+          })()}
+        </div>
+      )}
+
       {phase === 'plans' && (
         <div className="relative mx-auto min-h-screen max-w-5xl px-6 py-10 sm:py-16">
           <div className="text-center">
@@ -602,7 +744,7 @@ export function Onboarding() {
             <div className="flex flex-col rounded-3xl border border-white/10 bg-white/5 p-6">
               <h3 className="font-semibold text-white">{tarifs.plans.standard.name}</h3>
               <p className="mt-1 text-sm text-white/60">{tarifs.plans.standard.description}</p>
-              <span className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-[#ff6b00]/15 px-3 py-1 text-xs font-semibold text-[#ff6b00]">
+              <span className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">
                 {tarifs.trialBadge(TRIAL_DAYS)}
               </span>
               <p className="mt-3 text-3xl font-bold text-white">
@@ -612,7 +754,7 @@ export function Onboarding() {
               <ul className="mt-6 flex-1 space-y-2">
                 {tarifs.plans.standard.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm text-white/60">
-                    <span className="mt-0.5 text-[#ff6b00]">✓</span>
+                    <span className="mt-0.5 text-primary">✓</span>
                     {feature}
                   </li>
                 ))}
@@ -631,8 +773,8 @@ export function Onboarding() {
             </div>
 
             {/* Premium — visually emphasized with the launch-offer promo. */}
-            <div className="relative flex flex-col rounded-3xl border-2 border-[#ff6b00] bg-white/5 p-6 shadow-[0_0_40px_-10px_rgba(255,107,0,0.5)] sm:-translate-y-2">
-              <span className="absolute -top-3 left-6 rounded-full bg-[#ff6b00] px-3 py-1 text-xs font-bold text-white">
+            <div className="relative flex flex-col rounded-3xl border-2 border-primary bg-white/5 p-6 shadow-[0_0_40px_-10px_rgba(74,108,247,0.5)] sm:-translate-y-2">
+              <span className="absolute -top-3 left-6 rounded-full bg-primary px-3 py-1 text-xs font-bold text-white">
                 {t.plans.promoBadge}
               </span>
               <h3 className="font-semibold text-white">{tarifs.plans.premium.name}</h3>
@@ -647,7 +789,7 @@ export function Onboarding() {
               <ul className="mt-6 flex-1 space-y-2">
                 {tarifs.plans.premium.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm text-white/60">
-                    <span className="mt-0.5 text-[#ff6b00]">✓</span>
+                    <span className="mt-0.5 text-primary">✓</span>
                     {feature}
                   </li>
                 ))}
@@ -657,7 +799,7 @@ export function Onboarding() {
                 type="button"
                 onClick={() => handleChoosePlan('premium')}
                 disabled={pendingPlan === 'premium'}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff6b00] px-4 py-3 font-semibold text-white shadow-lg shadow-[#ff6b00]/30 transition-all hover:brightness-110 disabled:opacity-60"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-semibold text-white shadow-lg shadow-primary/30 transition-all hover:brightness-110 disabled:opacity-60"
               >
                 {pendingPlan === 'premium' && (
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />

@@ -26,7 +26,7 @@ export function Tarifs() {
         className="relative px-4 pb-24 pt-10 text-center sm:px-6"
         style={{
           backgroundImage:
-            'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 122, 0, 0.16), transparent 70%)',
+            'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74, 108, 247, 0.16), transparent 70%)',
         }}
       >
         <div className="absolute right-4 top-4 sm:right-6 sm:top-6">
@@ -39,11 +39,11 @@ export function Tarifs() {
         <p className="mx-auto mt-5 max-w-xl text-lg text-muted">{t.hero.subtitle}</p>
 
         <TrialBadge
-          className="mx-auto mt-6 inline-flex items-center gap-1.5 rounded-full bg-[#FF7A00]/15 px-4 py-2 text-sm font-semibold text-[#FF7A00]"
+          className="mx-auto mt-6 inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-4 py-2 text-sm font-semibold text-accent"
         />
 
         <div className="mt-14">
-          <PricingCards accentOverride />
+          <PricingCards />
         </div>
       </section>
     </div>

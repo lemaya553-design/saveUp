@@ -14,10 +14,10 @@ import type { SavingsGoal } from '../hooks/useSavingsGoals'
 
 const ANIMATION_DURATION_MS = 1000
 const CONFETTI_PIECES = 14
-const CONFETTI_COLORS = ['#FF7A00', '#FFB347', '#CC5F00']
+const CONFETTI_COLORS = ['#4A6CF7', '#8DA9FF', '#1E3A8A']
 // Soft two-stop tint — same 92/8 mix ratio DashboardStatCards already uses
 // for its own cards, just as a gradient instead of a flat fill.
-const CARD_BACKGROUND = `linear-gradient(135deg, var(--color-surface), color-mix(in srgb, var(--color-surface) 92%, #FF7A00 8%))`
+const CARD_BACKGROUND = `linear-gradient(135deg, var(--color-surface), color-mix(in srgb, var(--color-surface) 92%, #4A6CF7 8%))`
 
 function TargetIcon({ className }: { className: string }) {
   return (
@@ -73,10 +73,10 @@ function DemoBanner({ onExit }: { onExit: () => void }) {
   return (
     <div
       className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2"
-      style={{ borderColor: 'rgba(255, 122, 0, 0.35)', backgroundColor: 'rgba(255, 122, 0, 0.12)' }}
+      style={{ borderColor: 'rgba(74, 108, 247, 0.35)', backgroundColor: 'rgba(74, 108, 247, 0.12)' }}
     >
       <p className="text-xs font-medium text-ink">
-        <span className="font-bold" style={{ color: '#FF7A00' }}>
+        <span className="font-bold" style={{ color: '#4A6CF7' }}>
           🧪 {t.label}
         </span>{' '}
         — {t.description}
@@ -85,7 +85,7 @@ function DemoBanner({ onExit }: { onExit: () => void }) {
         type="button"
         onClick={onExit}
         className="min-h-[36px] shrink-0 rounded-md px-2.5 py-1 text-xs font-semibold underline-offset-2 hover:underline"
-        style={{ color: '#FF7A00' }}
+        style={{ color: '#4A6CF7' }}
       >
         {t.exitButton}
       </button>
@@ -150,7 +150,7 @@ function AnimatedGoalStats({
         </p>
         <span
           className="rounded-full px-2.5 py-1 text-xs font-bold text-white"
-          style={{ backgroundColor: '#FF7A00' }}
+          style={{ backgroundColor: '#4A6CF7' }}
         >
           {animatedPct} %
         </span>
@@ -173,7 +173,7 @@ function AnimatedGoalStats({
           className="h-full rounded-full"
           style={{
             width: `${animatedPct}%`,
-            backgroundImage: 'linear-gradient(90deg, #FFB347, #FF7A00)',
+            backgroundImage: 'linear-gradient(90deg, #8DA9FF, #4A6CF7)',
           }}
         />
       </div>
@@ -279,7 +279,7 @@ export function DashboardGoalCard({
         style={{ borderColor: CARD_BORDER, background: CARD_BACKGROUND }}
       >
         <p className="text-xs font-medium uppercase tracking-wide text-muted">{t.eyebrow}</p>
-        <div className="mx-auto mt-3 flex h-14 w-14 items-center justify-center rounded-full text-3xl" style={{ backgroundColor: 'rgba(255, 122, 0, 0.14)' }}>
+        <div className="mx-auto mt-3 flex h-14 w-14 items-center justify-center rounded-full text-3xl" style={{ backgroundColor: 'rgba(74, 108, 247, 0.14)' }}>
           🎯
         </div>
         <h2 className="mt-3 text-xl font-bold text-ink">{t.empty.title}</h2>
@@ -288,7 +288,7 @@ export function DashboardGoalCard({
           <Link
             to="/epargne/objectifs"
             className="inline-flex min-h-[44px] items-center justify-center rounded-lg px-6 py-2.5 font-medium text-white transition-all hover:brightness-110"
-            style={{ backgroundColor: '#FF7A00' }}
+            style={{ backgroundColor: '#4A6CF7' }}
           >
             {t.empty.actionLabel}
           </Link>
@@ -328,7 +328,7 @@ export function DashboardGoalCard({
       <div className="mt-1.5 flex min-w-0 items-center gap-2.5">
         <span
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-          style={{ color: '#FF7A00', backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
+          style={{ color: '#4A6CF7', backgroundColor: 'rgba(74, 108, 247, 0.14)' }}
         >
           <TargetIcon className="h-5 w-5" />
         </span>
@@ -346,7 +346,7 @@ export function DashboardGoalCard({
       </div>
 
       {!demoMode && (
-        <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium" style={{ color: '#FF7A00' }}>
+        <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium" style={{ color: '#4A6CF7' }}>
           {t.viewDetail}
           <span aria-hidden="true">→</span>
         </span>
@@ -388,7 +388,7 @@ export function DashboardGoalCard({
           type="button"
           onClick={() => setAddingAmount(true)}
           aria-label={t.quickAdd.ariaLabel(activeGoal.name)}
-          className="absolute right-5 top-5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FF7A00]/15 text-[#FF7A00] transition-colors hover:bg-[#FF7A00]/25 sm:right-6 sm:top-6"
+          className="absolute right-5 top-5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary transition-colors hover:bg-primary/25 sm:right-6 sm:top-6"
         >
           <PlusIcon className="h-5 w-5" />
         </button>
@@ -443,7 +443,7 @@ export function DashboardGoalCard({
               className={`flex min-h-[44px] max-w-[9rem] items-center truncate rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                 g.id === activeGoal.id ? 'border-transparent text-white' : 'border-overlay/15 text-muted hover:text-ink'
               }`}
-              style={g.id === activeGoal.id ? { backgroundColor: '#FF7A00' } : undefined}
+              style={g.id === activeGoal.id ? { backgroundColor: '#4A6CF7' } : undefined}
             >
               {g.name}
             </button>

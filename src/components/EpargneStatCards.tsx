@@ -3,7 +3,7 @@ import { useCountUp } from '../hooks/useCountUp'
 import { useLanguage } from '../hooks/useLanguage'
 import { EPARGNE } from '../lib/i18n/epargne'
 
-const TINT = 'color-mix(in srgb, var(--color-surface) 92%, #FF7A00 8%)'
+const TINT = 'color-mix(in srgb, var(--color-surface) 92%, #4A6CF7 8%)'
 
 function cardStyle(): React.CSSProperties {
   return { background: TINT, borderColor: 'color-mix(in srgb, var(--color-overlay) 10%, transparent)' }
@@ -25,7 +25,7 @@ function CardHeader({ icon, label }: { icon: React.ReactNode; label: string }) {
     <div className="mb-2 flex items-center gap-2">
       <span
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-        style={{ color: '#FF7A00', backgroundColor: 'rgba(255, 122, 0, 0.14)' }}
+        style={{ color: '#4A6CF7', backgroundColor: 'rgba(74, 108, 247, 0.14)' }}
       >
         {icon}
       </span>
@@ -101,7 +101,7 @@ export function EpargneStatCards({
             className="h-full rounded-full transition-all duration-700"
             style={{
               width: `${Math.min(100, overallProgress)}%`,
-              backgroundImage: 'linear-gradient(to right, #CC5F00, #FF7A00)',
+              backgroundImage: 'linear-gradient(to right, #1E3A8A, #4A6CF7)',
             }}
           />
         </div>

@@ -150,7 +150,7 @@ export function InvestissementTab() {
             ))}
           </div>
 
-          <p className="text-3xl font-bold text-[#FF7A00] sm:text-4xl">
+          <p className="text-3xl font-bold text-primary sm:text-4xl">
             {formatMoney(breakdown.finalValue)}
           </p>
           <p className="mb-4 text-xs text-muted">{t.estimatedValueIn(horizonYears)}</p>

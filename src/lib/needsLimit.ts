@@ -1,10 +1,7 @@
 // "Limite du mois" card (Dashboard) — a simplified, editable take on the
 // classic "50/30/20" budgeting rule of thumb: roughly needsPct% of income
-// for needs, savingsPct% toward savings goals. Deliberately NOT the same
-// thing as CategoryBenchmarkCard.tsx (Premium page) — that one compares 6
-// granular categories (loyer/épicerie/restaurants/transport/abonnements/
-// autre) each against its own benchmark; this is one aggregate "needs"
-// total against one limit, meant to be understood at a glance.
+// for needs, savingsPct% toward savings goals — one aggregate "needs" total
+// against one limit, meant to be understood at a glance.
 
 export const DEFAULT_NEEDS_PCT = 50
 export const DEFAULT_SAVINGS_PCT = 15
@@ -13,10 +10,8 @@ export const MAX_PCT = 100
 
 // The app's own seeded "needs" categories (supabase/schema.sql) — Loisirs
 // and Autre (plus anything the user renamed/created) are treated as
-// discretionary, same judgment call CategoryBenchmarkCard.ts already makes
-// for its own "autre" bucket. A category the user renamed won't match here
-// (string-keyed, like every other category-name lookup in this app — see
-// categoryBenchmark.ts's own CATEGORY_TO_BUCKET for the same tradeoff).
+// discretionary. A category the user renamed won't match here (string-keyed,
+// like every other category-name lookup in this app).
 export const NEEDS_CATEGORIES = ['Logement', 'Alimentation', 'Transport', 'Santé']
 
 export interface CategorizedAmount {

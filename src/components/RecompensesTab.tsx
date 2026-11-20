@@ -132,7 +132,7 @@ export function RecompensesTab() {
       )}
 
       <div className="mb-6 glass flex items-center gap-4 rounded-2xl p-5 shadow-lg shadow-black/30">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#FF7A00]/15 text-3xl">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/15 text-3xl">
           🔥
         </div>
         <div>
@@ -180,7 +180,7 @@ export function RecompensesTab() {
       )}
 
       {!hasGoal && (
-        <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-[#FF7A00]/30 bg-[#FF7A00]/10 px-4 py-3 text-sm">
+        <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm">
           <p className="text-ink">{t.noGoal.text}</p>
           <Link
             to="/epargne/objectifs"
@@ -197,7 +197,7 @@ export function RecompensesTab() {
             <div className="flex flex-col items-center">
               <ScoreGauge score={savingsBreakdown.score} label={t.savingsScore.title} />
               <p className="mt-1 text-xs uppercase tracking-wide text-muted">{t.savingsScore.totalSaved}</p>
-              <p className="text-2xl font-bold text-[#FF7A00]">{formatMoney(totalCurrentAmount)}</p>
+              <p className="text-2xl font-bold text-primary">{formatMoney(totalCurrentAmount)}</p>
               <p className="mt-2 max-w-[180px] text-center text-xs text-muted">
                 {t.savingsScore.caption}{' '}
                 <Link to="/dashboard" className="budget-action-link">
@@ -211,11 +211,11 @@ export function RecompensesTab() {
                 <li key={item.label} className="text-sm">
                   <div className="mb-1.5 flex items-center justify-between">
                     <span className="font-medium text-ink">{item.label}</span>
-                    <span className="rounded-full bg-[#FF7A00]/15 px-2.5 py-0.5 text-xs font-semibold text-[#FF7A00]">
+                    <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-semibold text-primary">
                       {item.value}/{item.max}
                     </span>
                   </div>
-                  <ProgressBar value={item.value} colorClass="bg-[#FF7A00]" />
+                  <ProgressBar value={item.value} colorClass="bg-primary" />
                   <p className="mt-1.5 text-xs text-muted">{item.detail}</p>
                 </li>
               ))}
@@ -250,14 +250,14 @@ export function RecompensesTab() {
                 const badgeAlreadyUnlocked = unlockedIds.has('goal-complete')
 
                 return goalComplete ? (
-                  <p className="text-sm text-[#FF7A00]">{t.goalComplete(selectedGoal.name)}</p>
+                  <p className="text-sm text-primary">{t.goalComplete(selectedGoal.name)}</p>
                 ) : (
                   <>
                     <div className="mb-1 flex items-center justify-between text-sm">
                       <span className="text-ink">{t.goalProgress(selectedGoal.name)}</span>
                       <span className="text-muted">{Math.round(goalRequirement.progressPct)}%</span>
                     </div>
-                    <ProgressBar value={goalRequirement.progressPct} colorClass="bg-[#FF7A00]" />
+                    <ProgressBar value={goalRequirement.progressPct} colorClass="bg-primary" />
                     <p className="mt-2 text-xs text-muted">
                       {t.missingToComplete(formatMoney(goalRequirement.missingAmount), selectedGoal.name)}
                       {badgeAlreadyUnlocked ? '.' : t.andUnlockGoalBadge}
@@ -266,14 +266,14 @@ export function RecompensesTab() {
                 )
               })()
             ) : allUnlocked ? (
-              <p className="text-sm text-[#FF7A00]">{t.allUnlocked}</p>
+              <p className="text-sm text-primary">{t.allUnlocked}</p>
             ) : nextTierProgress ? (
               <>
                 <div className="mb-1 flex items-center justify-between text-sm">
                   <span className="text-ink">{t.nextTier(nextTierProgress.tier.name[lang])}</span>
                   <span className="text-muted">{Math.round(nextTierProgress.progressPct)}%</span>
                 </div>
-                <ProgressBar value={nextTierProgress.progressPct} colorClass="bg-[#FF7A00]" />
+                <ProgressBar value={nextTierProgress.progressPct} colorClass="bg-primary" />
                 <p className="mt-2 text-xs text-muted">
                   {t.missingForTier(formatMoney(nextTierProgress.missingAmount), nextTierProgress.tier.name[lang])}
                   {nextTierProgress.goalName ? t.onGoal(nextTierProgress.goalName) : ''}.
@@ -291,7 +291,7 @@ export function RecompensesTab() {
             <p className="text-xs text-muted">
               {t.claimedCount(claimedCount, REWARD_TIERS.length)}
               {readyToClaimCount > 0 && (
-                <span className="ml-1.5 font-semibold text-[#FF7A00]">
+                <span className="ml-1.5 font-semibold text-primary">
                   {t.toClaimCount(readyToClaimCount)}
                 </span>
               )}
@@ -332,7 +332,7 @@ export function RecompensesTab() {
                     </Link>
                   ) : earned ? (
                     <>
-                      <p className="text-xs font-semibold text-[#FF7A00]">{t.badgeEarned}</p>
+                      <p className="text-xs font-semibold text-primary">{t.badgeEarned}</p>
                       <button
                         type="button"
                         onClick={() => handleClaim(tier.id)}
@@ -342,7 +342,7 @@ export function RecompensesTab() {
                       </button>
                     </>
                   ) : requirement ? (
-                    <p className="text-xs font-medium text-[#FF7A00]">
+                    <p className="text-xs font-medium text-primary">
                       {t.missingAmount(formatMoney(requirement.missingAmount))}
                     </p>
                   ) : (
@@ -363,7 +363,7 @@ export function RecompensesTab() {
             <p className="font-semibold text-ink">{t.continueSaving}</p>
             <p className="text-sm text-muted">{t.continueSavingHint}</p>
           </div>
-          <span className="text-[#FF7A00]">→</span>
+          <span className="text-primary">→</span>
         </Link>
       </div>
     </div>
