@@ -312,8 +312,12 @@ export function Home() {
           viewport (the common case) — top-anchored with a modest pt
           instead, any leftover space lands below the content, not split
           evenly above and below it. The section still keeps min-h-[100svh]
-          so it occupies the full screen either way. */}
-      <section className="landing-hero-bg relative flex min-h-[100svh] flex-col overflow-x-hidden px-4 pb-16 pt-10 text-center sm:px-6 sm:pt-14">
+          so it occupies the full screen either way. Desktop pt is bigger
+          than mobile's on purpose — a deliberate middle ground between an
+          earlier fully-centered version (too much empty space above the
+          title) and a first top-anchored pass that landed too high; mobile
+          wasn't touched. */}
+      <section className="landing-hero-bg relative flex min-h-[100svh] flex-col overflow-x-hidden px-4 pb-16 pt-10 text-center sm:px-6 sm:pt-28">
         {/* Subtle blue glow behind the title — two soft blobs drifting
             gently (mesh-blob-a/b, defined in index.css) rather than one
             static circle, for a touch of ambient life. Layered on top of
