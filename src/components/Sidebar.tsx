@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
-import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useAuth } from '../hooks/useAuth'
 import { useGuestMode } from '../hooks/useGuestMode'
 import { useLanguage } from '../hooks/useLanguage'
 import { useSubscription } from '../hooks/useSubscription'
-import { REWARD_TIERS, getUnlockedTiers } from '../lib/rewards'
+import { useClaimedBadges } from '../hooks/useClaimedBadges'
+import { BADGES, getUserStatus } from '../lib/badges'
 import { COMMON } from '../lib/i18n/common'
 import { TARIFS } from '../lib/i18n/tarifs'
 import { LogoMark } from './Logo'
@@ -110,17 +110,17 @@ function getInitials(email: string | null | undefined): string {
 }
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const goals = useSavingsGoals()
   const { user, signOut } = useAuth()
   const guest = useGuestMode()
   const { lang } = useLanguage()
   const subscription = useSubscription()
+  const claimedBadges = useClaimedBadges()
   const navigate = useNavigate()
   const t = COMMON[lang].nav
   const tFeedback = COMMON[lang].feedback
   const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const totalCurrentAmount = goals.goals.reduce((sum, g) => sum + g.currentAmount, 0)
-  const unlockedCount = goals.loading ? null : getUnlockedTiers(totalCurrentAmount, goals.goals).length
+  const claimedCount = claimedBadges.loading ? null : claimedBadges.claimedIds.size
+  const status = getUserStatus(claimedCount ?? 0)
   const planName = TARIFS[lang].plans[subscription.plan].name
 
   const links = [
@@ -133,10 +133,10 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
   ]
 
   function renderBadge(to: string) {
-    if (to !== '/statistiques' || unlockedCount === null) return null
+    if (to !== '/statistiques' || claimedCount === null) return null
     return (
       <span className="ml-auto rounded-full bg-overlay/10 px-1.5 py-0.5 text-[10px] font-semibold">
-        {unlockedCount}/{REWARD_TIERS.length}
+        {claimedCount}/{BADGES.length}
       </span>
     )
   }
@@ -214,8 +214,20 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
               {guest.active ? '?' : getInitials(user?.email)}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-ink">
-                {guest.active ? t.guestBadge : (user?.email ?? '')}
+              <span className="flex items-center gap-1.5">
+                <span className="block truncate text-sm font-medium text-ink">
+                  {guest.active ? t.guestBadge : (user?.email ?? '')}
+                </span>
+                {!guest.active && (
+                  <span
+                    className="flex shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs"
+                    style={{ width: 20, height: 20 }}
+                    title={status.name[lang]}
+                    aria-label={status.name[lang]}
+                  >
+                    {status.icon}
+                  </span>
+                )}
               </span>
               <span className="block truncate text-xs text-muted">
                 {guest.active ? t.guestCreateAccount : planName}

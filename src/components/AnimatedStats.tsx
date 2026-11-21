@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCountUp } from '../hooks/useCountUp'
-import { REWARD_TIERS } from '../lib/rewards'
+import { BADGES } from '../lib/badges'
 import { useLanguage } from '../hooks/useLanguage'
 import { COMMON } from '../lib/i18n/common'
 import type { Lang } from '../lib/i18n/language'
@@ -8,12 +8,12 @@ import type { Lang } from '../lib/i18n/language'
 // Every number here is a true fact about the product, not a made-up
 // adoption/social-proof metric — SaveUp is too new for those, and the
 // "Résultats" section already says so explicitly rather than inventing
-// stats. badges comes straight from REWARD_TIERS so it can't drift out of
+// stats. badges comes straight from BADGES so it can't drift out of
 // sync with the real app.
 function getStats(lang: Lang) {
   const t = COMMON[lang].stats
   return [
-    { target: REWARD_TIERS.length, suffix: '', label: t.badges },
+    { target: BADGES.length, suffix: '', label: t.badges },
     { target: 6, suffix: t.monthsSuffix, label: t.trends },
     { target: 3, suffix: '', label: t.steps },
     { target: 5, suffix: '', label: t.tools },

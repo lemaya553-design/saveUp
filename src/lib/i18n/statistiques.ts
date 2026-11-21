@@ -170,14 +170,16 @@ export interface StatistiquesContent {
   }
   recompenses: {
     loading: string
+    status: {
+      title: string
+      badgesCount: (count: number) => string
+      nextStatus: (name: string, remaining: number) => string
+      maxReached: string
+    }
     streak: {
       days: (count: number) => string
       keepGoing: string
       startOne: string
-    }
-    starterBadge: {
-      readyDefault: string
-      claim: string
     }
     noGoal: {
       text: string
@@ -190,29 +192,12 @@ export interface StatistiquesContent {
       totalSaved: string
       seeHealthScore: string
     }
-    goalSelector: {
-      label: string
-      allGoals: string
-    }
-    goalComplete: (goalName: string) => string
-    goalProgress: (goalName: string) => string
-    missingToComplete: (amount: string, goalName: string) => string
-    andUnlockGoalBadge: string
-    allUnlocked: string
-    nextTier: (tierName: string) => string
-    missingForTier: (amount: string, tierName: string) => string
-    onGoal: (goalName: string) => string
-    setGoalToSeeProgress: string
     yourBadges: string
     claimedCount: (claimed: number, total: number) => string
-    toClaimCount: (count: number) => string
-    badgeEarned: string
-    claim: string
-    goToStandard: string
-    missingAmount: (amount: string) => string
-    completeActiveGoal: string
+    obtainedOn: (date: string) => string
     locked: string
-    standard: string
+    standardOnly: string
+    goToStandard: string
     continueSaving: string
     continueSavingHint: string
   }
@@ -403,14 +388,16 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
     },
     recompenses: {
       loading: 'Chargement...',
+      status: {
+        title: 'Ton statut',
+        badgesCount: (count) => `${count} badge${count > 1 ? 's' : ''} obtenu${count > 1 ? 's' : ''}`,
+        nextStatus: (name, remaining) => `Encore ${remaining} badge${remaining > 1 ? 's' : ''} pour devenir ${name}`,
+        maxReached: 'Tu as atteint le rang le plus élevé !',
+      },
       streak: {
         days: (count) => `${count} jour${count > 1 ? 's' : ''} de suite`,
         keepGoing: 'Reviens demain pour garder ta série !',
         startOne: 'Reviens demain pour commencer une série.',
-      },
-      starterBadge: {
-        readyDefault: 'Ton premier badge est prêt.',
-        claim: 'Réclamer',
       },
       noGoal: {
         text: "Fixe un objectif d'épargne pour commencer à débloquer des badges.",
@@ -423,29 +410,12 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
         totalSaved: 'Total épargné',
         seeHealthScore: 'Voir ton score de santé →',
       },
-      goalSelector: {
-        label: 'Voir :',
-        allGoals: 'Tous les objectifs',
-      },
-      goalComplete: (goalName) => `🎉 « ${goalName} » est complété !`,
-      goalProgress: (goalName) => `Progression de « ${goalName} »`,
-      missingToComplete: (amount, goalName) => `Il te manque ${amount} pour compléter « ${goalName} »`,
-      andUnlockGoalBadge: ' et débloquer « Objectif atteint ».',
-      allUnlocked: '🎉 Tous les badges sont débloqués !',
-      nextTier: (tierName) => `Prochain palier : ${tierName}`,
-      missingForTier: (amount, tierName) => `Il te manque ${amount} pour débloquer « ${tierName} »`,
-      onGoal: (goalName) => ` (sur « ${goalName} »)`,
-      setGoalToSeeProgress: "Fixe un objectif d'épargne pour voir ta progression vers le prochain palier.",
       yourBadges: 'Tes badges',
-      claimedCount: (claimed, total) => `${claimed}/${total} réclamés`,
-      toClaimCount: (count) => `· ${count} à réclamer !`,
-      badgeEarned: 'Badge mérité !',
-      claim: 'Réclamer',
-      goToStandard: 'Passer à Standard →',
-      missingAmount: (amount) => `Il manque ${amount}`,
-      completeActiveGoal: 'Complète un objectif actif',
+      claimedCount: (claimed, total) => `${claimed}/${total} obtenus`,
+      obtainedOn: (date) => `Obtenu le ${date}`,
       locked: 'Verrouillé',
-      standard: 'Standard',
+      standardOnly: 'Standard',
+      goToStandard: 'Passer à Standard →',
       continueSaving: "Continuer d'épargner",
       continueSavingHint: 'Ajoute une contribution pour progresser vers ton prochain badge.',
     },
@@ -634,14 +604,16 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
     },
     recompenses: {
       loading: 'Loading...',
+      status: {
+        title: 'Your status',
+        badgesCount: (count) => `${count} badge${count > 1 ? 's' : ''} earned`,
+        nextStatus: (name, remaining) => `${remaining} more badge${remaining > 1 ? 's' : ''} to become ${name}`,
+        maxReached: "You've reached the highest rank!",
+      },
       streak: {
         days: (count) => `${count} day${count > 1 ? 's' : ''} in a row`,
         keepGoing: 'Come back tomorrow to keep your streak going!',
         startOne: 'Come back tomorrow to start a streak.',
-      },
-      starterBadge: {
-        readyDefault: 'Your first badge is ready.',
-        claim: 'Claim',
       },
       noGoal: {
         text: 'Set a savings goal to start unlocking badges.',
@@ -654,29 +626,12 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
         totalSaved: 'Total saved',
         seeHealthScore: 'See your health score →',
       },
-      goalSelector: {
-        label: 'View:',
-        allGoals: 'All goals',
-      },
-      goalComplete: (goalName) => `🎉 "${goalName}" is complete!`,
-      goalProgress: (goalName) => `Progress on "${goalName}"`,
-      missingToComplete: (amount, goalName) => `You need ${amount} more to complete "${goalName}"`,
-      andUnlockGoalBadge: ' and unlock "Goal reached".',
-      allUnlocked: '🎉 Every badge is unlocked!',
-      nextTier: (tierName) => `Next tier: ${tierName}`,
-      missingForTier: (amount, tierName) => `You need ${amount} more to unlock "${tierName}"`,
-      onGoal: (goalName) => ` (on "${goalName}")`,
-      setGoalToSeeProgress: 'Set a savings goal to see your progress toward the next tier.',
       yourBadges: 'Your badges',
-      claimedCount: (claimed, total) => `${claimed}/${total} claimed`,
-      toClaimCount: (count) => `· ${count} to claim!`,
-      badgeEarned: 'Badge earned!',
-      claim: 'Claim',
-      goToStandard: 'Upgrade to Standard →',
-      missingAmount: (amount) => `${amount} to go`,
-      completeActiveGoal: 'Complete an active goal',
+      claimedCount: (claimed, total) => `${claimed}/${total} earned`,
+      obtainedOn: (date) => `Earned on ${date}`,
       locked: 'Locked',
-      standard: 'Standard',
+      standardOnly: 'Standard',
+      goToStandard: 'Upgrade to Standard →',
       continueSaving: 'Keep saving',
       continueSavingHint: 'Add a contribution to progress toward your next badge.',
     },

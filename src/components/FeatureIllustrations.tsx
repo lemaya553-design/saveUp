@@ -81,8 +81,9 @@ export function SavingsIllustration({ variant = 'card' }: { variant?: 'card' | '
 }
 
 // Mirrors the real locked/unlocked visual language from the Récompenses
-// page (grey circle vs. colored circle) — 2 of 4 lit, matching
-// REWARD_TIERS.length exactly rather than an arbitrary illustrative count.
+// page (grey circle vs. colored circle) — a fixed, purely illustrative 2-of-4
+// here, independent of the real badge catalog's actual count/size
+// (lib/badges.ts) or medal artwork.
 export function BadgesIllustration({ variant = 'card' }: { variant?: 'card' | 'icon' }) {
   const STAR_PATH = 'M12 2.5l2.9 6 6.6.9-4.8 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5-4.8-4.6 6.6-.9L12 2.5z'
 

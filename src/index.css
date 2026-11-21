@@ -201,6 +201,114 @@ body {
   }
 }
 
+/* Gold-rarity medal shimmer (BadgeMedal.tsx) — a bright bar sweeping across
+   the disc, clipped to its circle. Disabled under reduced motion since it
+   loops forever (a one-off animation would be fine either way, but a
+   continuous one is exactly the kind of "gros mouvement" that setting asks
+   to drop). */
+@keyframes badge-shimmer-sweep {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(170px);
+  }
+}
+
+.badge-shimmer-sweep {
+  animation: badge-shimmer-sweep 2.2s ease-in-out infinite;
+}
+
+/* Full-screen badge-unlock celebration (BadgeUnlockOverlay.tsx). The medal's
+   3D pop/rotate and the glow pulse are the "gros mouvement" reduced-motion
+   drops; the overlay's own fade-in is a small enough transition to keep
+   either way so the screen doesn't just snap into existence. */
+@keyframes badge-overlay-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes badge-pop-3d {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotateY(180deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08) rotateY(-12deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotateY(0deg);
+  }
+}
+
+@keyframes badge-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(540deg);
+    opacity: 0.85;
+  }
+}
+
+.badge-unlock-overlay {
+  animation: badge-overlay-fade-in 0.25s ease-out;
+}
+
+.badge-unlock-medal {
+  animation: badge-pop-3d 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.1);
+  transform-style: preserve-3d;
+}
+
+.badge-unlock-glow {
+  /* Base value for when the pulse animation is off (reduced motion) —
+     the keyframes below only define opacity at 0/50/100%, so without this
+     the element would fall back to full opacity (1) instead of a calm,
+     static glow. */
+  opacity: 0.7;
+  animation: badge-glow-pulse 2.4s ease-in-out infinite;
+}
+
+.confetti-piece {
+  animation: confetti-fall linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-shimmer-sweep {
+    animation: none;
+  }
+  .badge-unlock-medal {
+    animation: none;
+    transform: none;
+  }
+  .badge-unlock-glow {
+    animation: none;
+  }
+  .confetti-piece {
+    animation: none;
+    display: none;
+  }
+}
+
 /* Scroll reveal (landing page) — Reveal.tsx toggles .is-visible via
    IntersectionObserver once an element enters the viewport, then stops
    observing it. transform+opacity only, so this never triggers layout. */

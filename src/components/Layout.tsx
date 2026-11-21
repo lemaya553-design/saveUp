@@ -5,6 +5,7 @@ import { TopBar } from './TopBar'
 import { QuickAddFab } from './QuickAddFab'
 import { PwaInstallBanner } from './PwaInstallBanner'
 import { GuestModeBanner } from './GuestModeBanner'
+import { BadgeUnlockWatcher } from './BadgeUnlockWatcher'
 import { useLoginStreak } from '../hooks/useLoginStreak'
 import { useAuth } from '../hooks/useAuth'
 import { useGuestMode } from '../hooks/useGuestMode'
@@ -72,6 +73,7 @@ export function Layout() {
       )}
       {!isMarketingPage && <QuickAddFab />}
       {!isMarketingPage && <PwaInstallBanner />}
+      {!isMarketingPage && <BadgeUnlockWatcher />}
     </div>
   )
 }

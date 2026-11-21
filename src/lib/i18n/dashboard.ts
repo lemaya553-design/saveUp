@@ -27,10 +27,6 @@ export interface DashboardContent {
     comeBackActive: string
     comeBackStart: string
   }
-  starterBadge: {
-    unlocked: (name: string) => string
-    claim: string
-  }
   score: {
     label: string
     caption: string
@@ -187,10 +183,6 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
       days: (count) => `${count} jour${count > 1 ? 's' : ''} de suite`,
       comeBackActive: 'Reviens demain pour garder ta série !',
       comeBackStart: 'Reviens demain pour commencer une série.',
-    },
-    starterBadge: {
-      unlocked: (name) => `Badge débloqué : ${name}`,
-      claim: 'Réclamer',
     },
     score: {
       label: 'Score de santé',
@@ -383,10 +375,6 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
       days: (count) => `${count} day${count > 1 ? 's' : ''} in a row`,
       comeBackActive: 'Come back tomorrow to keep your streak going!',
       comeBackStart: 'Come back tomorrow to start a streak.',
-    },
-    starterBadge: {
-      unlocked: (name) => `Badge unlocked: ${name}`,
-      claim: 'Claim',
     },
     score: {
       label: 'Health score',

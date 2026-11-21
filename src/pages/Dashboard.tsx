@@ -13,7 +13,6 @@ import { DashboardStatCards } from '../components/DashboardStatCards'
 import { DashboardScoreFactors } from '../components/DashboardScoreFactors'
 import { PersonalizedTips } from '../components/PersonalizedTips'
 import { PageSkeleton } from '../components/PageSkeleton'
-import { TIER_ICONS, TIER_UNLOCKED_CLASS } from '../components/rewardIcons'
 import { useFinancialHealth } from '../hooks/useFinancialHealth'
 import { useFixedExpenses } from '../hooks/useFixedExpenses'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
@@ -32,7 +31,7 @@ import { useWorkHours } from '../hooks/useWorkHours'
 import { getSpendableBudgetCaption, sumThisMonth } from '../lib/budgetInsights'
 import { getBudgetPaceAlert, getSavingsGoalLateAlert } from '../lib/alerts'
 import { generatePersonalizedTips } from '../lib/tips'
-import { STARTER_BADGE, isStarterBadgeUnlocked } from '../lib/rewards'
+import { BADGES } from '../lib/badges'
 import { hasViewedStats, markStatsViewed } from '../lib/gettingStarted'
 import { hasSeenWelcomeTutorial } from '../lib/welcomeTutorial'
 import { consumePendingGuestGoal } from '../lib/guestStore'
@@ -53,12 +52,6 @@ const DashboardScoreChart = lazy(() =>
 const ImportTransactionsModal = lazy(() =>
   import('../components/ImportTransactionsModal').then((m) => ({ default: m.ImportTransactionsModal })),
 )
-
-// A touch longer than the shared .badge-unlock keyframe (0.7s) so the
-// animation always finishes before the class is removed — same value as
-// RecompensesTab's own claim animation, kept local since it's the only
-// other place this exact interaction happens.
-const CLAIM_ANIMATION_MS = 900
 
 function WalletIcon({ className }: { className: string }) {
   return (
@@ -120,7 +113,6 @@ export function Dashboard() {
   const preferences = usePreferences()
   const streak = useLoginStreak()
   const claimedBadges = useClaimedBadges()
-  const [justClaimedStarter, setJustClaimedStarter] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   // Lazy initializer so this only ever reads localStorage once, not on
   // every render — same convention as useLanguage's initial-state read.
@@ -143,15 +135,8 @@ export function Dashboard() {
     fixed.error ||
     preferences.error
 
-  const starterEarned = isStarterBadgeUnlocked(health.hasIncomeRecord)
-  const starterClaimed = claimedBadges.claimedIds.has(STARTER_BADGE.id)
-
-  async function handleClaimStarter() {
-    const ok = await claimedBadges.claim(STARTER_BADGE.id)
-    if (!ok) return
-    setJustClaimedStarter(true)
-    setTimeout(() => setJustClaimedStarter(false), CLAIM_ANIMATION_MS)
-  }
+  const starterDef = BADGES.find((def) => def.id === 'starter')
+  const starterClaimed = claimedBadges.claimedIds.has('starter')
 
   function handleViewStatsClick() {
     if (!user) return
@@ -341,12 +326,14 @@ export function Dashboard() {
       <DashboardGoalCard goals={goals.goals} onAddContribution={goals.addContribution} />
 
       {/* Streak + starter badge — surfaced here (not just on Récompenses,
-          which nothing else points a new user toward) so day one has a
-          visible, claimable win even for an account with zero real data. */}
+          which nothing else points a new user toward) so day one shows a
+          visible win even for an account with zero real data. Claiming
+          itself now happens automatically the instant it's earned (see
+          BadgeUnlockWatcher, mounted in Layout, which also plays the
+          full-screen celebration) — this is just a quiet "you have this"
+          confirmation, no button. */}
       <div
-        className={`budget-card-in hover-lift mb-6 flex flex-wrap items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm ${
-          justClaimedStarter ? 'badge-unlock' : ''
-        }`}
+        className="budget-card-in hover-lift mb-6 flex flex-wrap items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm"
         style={{ borderColor: CARD_BORDER }}
       >
         <div
@@ -362,28 +349,12 @@ export function Dashboard() {
           </p>
         </div>
 
-        {starterEarned && (
+        {starterClaimed && starterDef && (
           <div className="flex items-center gap-3 border-t border-overlay/10 pt-4 sm:ml-auto sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
-            <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors duration-500 ${
-                starterClaimed || justClaimedStarter ? TIER_UNLOCKED_CLASS.starter : 'bg-overlay/5 text-muted'
-              }`}
-            >
-              {(() => {
-                const StarterIcon = TIER_ICONS.starter
-                return <StarterIcon className="h-5 w-5" />
-              })()}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
+              <starterDef.icon className="h-5 w-5" />
             </div>
-            {starterClaimed || justClaimedStarter ? (
-              <p className="text-sm text-ink">{STARTER_BADGE.name[lang]}</p>
-            ) : (
-              <>
-                <p className="text-sm text-ink">{t.starterBadge.unlocked(STARTER_BADGE.name[lang])}</p>
-                <button type="button" onClick={handleClaimStarter} className="budget-btn-primary whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition-all">
-                  {t.starterBadge.claim}
-                </button>
-              </>
-            )}
+            <p className="text-sm text-ink">{starterDef.name[lang]}</p>
           </div>
         )}
       </div>
