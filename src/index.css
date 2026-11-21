@@ -173,6 +173,182 @@ body {
     radial-gradient(ellipse 60% 50% at 100% 0%, rgba(74, 108, 247, 0.16), transparent 70%);
 }
 
+/* ===== Premium visual system (buttons, halos, accent cards, gradients) ===
+   One place for the "look like a designer touched this" primitives shared
+   app-wide — signed-in app only (the landing page already has its own
+   independent light/dark recolor, see .landing-classic above). Built on
+   the fixed brand blue (#4A6CF7) plus the deeper #1E3A8A navy for gradient
+   stops — no new hues, kept deliberately restrained (one strong color, not
+   a gradient on every surface) per the "ne mets pas de dégradés sur tout"
+   brief. */
+
+/* Primary CTA — already the one shared button class used app-wide
+   (budget-field/-action-link/-btn-primary predate the per-feature accent
+   split and never actually stayed Budget-only); upgraded in place so every
+   existing call site (29 of them) gets the new look for free. Vertical
+   gradient + inset top highlight + colored ambient shadow reads as a
+   physical, lightly embossed button rather than a flat fill; hover lifts
+   1px and brightens, active presses back down — all on top of the global
+   `button` tag rule below (scale/brightness), which a class selector's
+   higher specificity simply overrides rather than fights. */
+.budget-btn-primary {
+  background-image: linear-gradient(to bottom, #5b7cff, #3b5be0);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 4px 14px rgba(74, 108, 247, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.budget-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 6px 18px rgba(74, 108, 247, 0.45);
+  transform: translateY(-1px);
+}
+
+.budget-btn-primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 2px 8px rgba(74, 108, 247, 0.3);
+}
+
+/* Secondary — tinted outline, same motion recipe as primary minus the
+   gradient fill. Use for the "other" action next to a primary CTA (not
+   every plain text cancel link — those stay as they are). */
+.budget-btn-secondary {
+  background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.budget-btn-secondary:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 42%, transparent);
+  transform: translateY(-1px);
+}
+
+.budget-btn-secondary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Destructive — same physical button recipe as primary, red instead of
+   blue. Reserved for actual delete/remove confirmations only. */
+.budget-btn-destructive {
+  background-image: linear-gradient(to bottom, #f2655c, #dc3b30);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 4px 14px rgba(220, 38, 38, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.budget-btn-destructive:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 6px 18px rgba(220, 38, 38, 0.45);
+  transform: translateY(-1px);
+}
+
+.budget-btn-destructive:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .budget-btn-primary,
+  .budget-btn-secondary,
+  .budget-btn-destructive {
+    transition: none;
+  }
+  .budget-btn-primary:hover:not(:disabled),
+  .budget-btn-primary:active:not(:disabled),
+  .budget-btn-secondary:hover:not(:disabled),
+  .budget-btn-secondary:active:not(:disabled),
+  .budget-btn-destructive:hover:not(:disabled),
+  .budget-btn-destructive:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* Page halo — one or two soft, fixed, very-low-opacity blue blobs near the
+   top of a page (Dashboard, Épargne, Statistiques/Récompenses). Painted via
+   ::before so it sits above the page's own canvas color but below every
+   real child (pseudo-elements paint before an element's in-flow children),
+   with no extra DOM node and nothing to accidentally clip — the element
+   just needs `position: relative`, which this class provides. Static (no
+   animation), so it needs no reduced-motion handling. */
+.page-halo {
+  position: relative;
+}
+
+.page-halo::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 420px;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 60% 55% at 15% 0%, rgba(74, 108, 247, 0.12), transparent 70%),
+    radial-gradient(ellipse 50% 45% at 90% 0%, rgba(74, 108, 247, 0.08), transparent 70%);
+}
+
+:root[data-theme='light'] .page-halo::before {
+  background-image:
+    radial-gradient(ellipse 60% 55% at 15% 0%, rgba(74, 108, 247, 0.08), transparent 70%),
+    radial-gradient(ellipse 50% 45% at 90% 0%, rgba(74, 108, 247, 0.06), transparent 70%);
+}
+
+/* Accent card — a hairline blue-to-transparent gradient ring for the handful
+   of genuinely important cards (financial health, goals, score, reward
+   status), layered via a masked ::before ring rather than the usual
+   double-background border trick: that way it never has to know or fight
+   whatever background the host already paints (solid, tinted, translucent,
+   a photo...), it just overlays a 1px ring on top. `border-color:
+   transparent` only hides a same-element Tailwind `border` utility's color
+   if one is set — it doesn't require one. */
+.card-accent {
+  position: relative;
+  border-color: transparent;
+}
+
+.card-accent::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(74, 108, 247, 0.55), rgba(74, 108, 247, 0) 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Gradient text — reserved for a few hero numbers (total saved, score),
+   never body text. Falls back to the solid primary color if the browser
+   doesn't support background-clip: text (extremely rare today), since
+   `color` is still set as the base before the clip kicks in. */
+.text-gradient-primary {
+  color: var(--color-primary);
+  background-image: linear-gradient(135deg, #1e3a8a, var(--color-primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@supports not (background-clip: text) {
+  .text-gradient-primary {
+    -webkit-text-fill-color: unset;
+    background-image: none;
+  }
+}
+
 /* Plays once when a reward badge transitions from locked to unlocked. */
 @keyframes badge-unlock {
   0% {
@@ -743,17 +919,15 @@ body {
   color: var(--color-primary);
 }
 
-.budget-btn-primary {
-  background-color: var(--color-primary-strong);
-  color: #fff;
-}
+/* .budget-btn-primary itself now lives in the "Premium visual system"
+   section near the top of this file (the gradient/shine/shadow recipe),
+   alongside its -secondary/-destructive siblings — kept out of this block
+   since it's used app-wide now, not just on Budget-page-only fields. */
 
-.budget-btn-primary:hover:not(:disabled) {
-  filter: brightness(1.1);
-}
-
-/* Budget page redesign — stat cards fade/slide in staggered on load
-   (BudgetStatCards.tsx sets animation-delay per card index). */
+/* Card entrance — fade/slide in on load, staggered via each card's own
+   animation-delay (BudgetStatCards.tsx, DashboardStatCards.tsx...). Started
+   as a Budget-page-only animation, now the shared "cards appear softly on
+   load" recipe used across Dashboard/Statistiques/Épargne too. */
 @keyframes budget-card-in {
   from {
     opacity: 0;

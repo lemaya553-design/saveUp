@@ -63,7 +63,7 @@ export function RecompensesTab() {
         </div>
       )}
 
-      <div className="mb-6 glass rounded-2xl p-5 shadow-lg shadow-black/30">
+      <div className="budget-card-in card-accent glass mb-6 rounded-2xl p-5 shadow-lg shadow-black/30">
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/15 text-4xl">
             {status.icon}
@@ -81,7 +81,7 @@ export function RecompensesTab() {
                 ? ((claimedCount - status.min) / (nextStatus.min - status.min)) * 100
                 : 100
             }
-            colorClass="bg-primary"
+            gradient
           />
           <p className="mt-2 text-xs text-muted">
             {nextStatus ? t.status.nextStatus(nextStatus.name[lang], nextStatus.min - claimedCount) : t.status.maxReached}
@@ -89,7 +89,7 @@ export function RecompensesTab() {
         </div>
       </div>
 
-      <div className="mb-6 glass flex items-center gap-4 rounded-2xl p-5 shadow-lg shadow-black/30">
+      <div className="budget-card-in glass mb-6 flex items-center gap-4 rounded-2xl p-5 shadow-lg shadow-black/30">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/15 text-3xl">
           🔥
         </div>
@@ -112,12 +112,12 @@ export function RecompensesTab() {
       )}
 
       <div className="grid gap-6">
-        <Card title={t.savingsScore.title} hint={t.savingsScore.hint}>
+        <Card title={t.savingsScore.title} hint={t.savingsScore.hint} accent>
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-6">
             <div className="flex flex-col items-center">
               <ScoreGauge score={savingsBreakdown.score} label={t.savingsScore.title} />
               <p className="mt-1 text-xs uppercase tracking-wide text-muted">{t.savingsScore.totalSaved}</p>
-              <p className="text-2xl font-bold text-primary">{formatMoney(totalCurrentAmount)}</p>
+              <p className="text-gradient-primary text-2xl font-bold">{formatMoney(totalCurrentAmount)}</p>
               <p className="mt-2 max-w-[180px] text-center text-xs text-muted">
                 {t.savingsScore.caption}{' '}
                 <Link to="/dashboard" className="budget-action-link">
@@ -135,7 +135,7 @@ export function RecompensesTab() {
                       {item.value}/{item.max}
                     </span>
                   </div>
-                  <ProgressBar value={item.value} colorClass="bg-primary" />
+                  <ProgressBar value={item.value} gradient />
                   <p className="mt-1.5 text-xs text-muted">{item.detail}</p>
                 </li>
               ))}
@@ -157,7 +157,10 @@ export function RecompensesTab() {
               const claimedAt = claimedBadges.claimedAt.get(def.id)
 
               return (
-                <div key={def.id} className="glass flex flex-col items-center gap-2 rounded-2xl p-4 text-center shadow-lg shadow-black/30">
+                <div
+                  key={def.id}
+                  className="budget-card-in hover-lift glass flex flex-col items-center gap-2 rounded-2xl p-4 text-center shadow-lg shadow-black/30"
+                >
                   <div className="w-full max-w-[96px]">
                     <BadgeMedal
                       rarity={def.rarity}
@@ -182,7 +185,7 @@ export function RecompensesTab() {
                     <>
                       <p className="text-xs text-muted">{getBadgeRequirementText(def, lang, formatMoney)}</p>
                       <div className="w-full">
-                        <ProgressBar value={progress.pct} colorClass="bg-primary" />
+                        <ProgressBar value={progress.pct} gradient />
                       </div>
                     </>
                   )}

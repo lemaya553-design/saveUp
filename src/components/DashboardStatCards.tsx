@@ -9,15 +9,24 @@ import type { ScoreTrend } from '../hooks/useFinancialHealth'
 
 const TINT = 'color-mix(in srgb, var(--color-surface) 92%, #4A6CF7 8%)'
 
-function cardStyle(): React.CSSProperties {
-  return { background: TINT, borderColor: 'color-mix(in srgb, var(--color-overlay) 10%, transparent)' }
+function cardStyle(accent: boolean): React.CSSProperties {
+  return {
+    background: TINT,
+    // card-accent hides a same-element border-color via its own CSS, so a
+    // competing inline one would be redundant (and inline always wins over
+    // a class anyway) — only set it for the plain tiles.
+    ...(accent ? {} : { borderColor: 'color-mix(in srgb, var(--color-overlay) 10%, transparent)' }),
+  }
 }
 
+// wide: the health-score tile — the one "genuinely important" card in this
+// row, so it's the only one that gets the gradient-ring accent treatment
+// (see .card-accent in index.css).
 function StatShell({ index, wide, children }: { index: number; wide?: boolean; children: ReactNode }) {
   return (
     <div
-      className={`budget-card-in hover-lift rounded-2xl border p-5 shadow-sm ${wide ? 'sm:col-span-2' : ''}`}
-      style={{ ...cardStyle(), animationDelay: `${index * 80}ms` }}
+      className={`budget-card-in hover-lift rounded-2xl border p-5 shadow-sm ${wide ? 'card-accent sm:col-span-2' : ''}`}
+      style={{ ...cardStyle(!!wide), animationDelay: `${index * 80}ms` }}
     >
       {children}
     </div>

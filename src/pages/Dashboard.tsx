@@ -308,7 +308,7 @@ export function Dashboard() {
   )
 
   return (
-    <div className="mx-auto max-w-[1200px] px-4 pb-16 sm:px-6 lg:px-8">
+    <div className="page-halo mx-auto max-w-[1200px] px-4 pb-16 sm:px-6 lg:px-8">
       <div className="mb-6 pt-6">
         <div className="flex items-center gap-2">
           <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{t.pageHeader.title}</h1>

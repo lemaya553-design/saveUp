@@ -309,7 +309,7 @@ export function SavingsGoalCard({
       // min-w-0: this card is a `grid` item (Epargne.tsx's `grid gap-4
       // sm:grid-cols-2`) — without it, its default min-content width
       // forces the whole shared column wider, same bug as Card.tsx.
-      className={`relative flex min-w-0 flex-col overflow-hidden rounded-2xl shadow-lg shadow-black/30 ${
+      className={`budget-card-in hover-lift card-accent relative flex min-w-0 flex-col overflow-hidden rounded-2xl shadow-lg shadow-black/30 ${
         showPhoto ? '' : 'glass'
       } ${locked ? 'opacity-60' : ''}`}
     >
@@ -436,7 +436,7 @@ export function SavingsGoalCard({
         )}
 
         <div className="mt-3">
-          <ProgressBar value={progress} colorClass={progress >= 100 ? 'bg-primary' : 'bg-[#1E3A8A]'} />
+          <ProgressBar value={progress} gradient />
         </div>
         <p className={`mt-1.5 text-xs ${textSecondary}`}>
           {t.percentReached(Math.round(progress))}

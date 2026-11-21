@@ -118,7 +118,7 @@ export function Epargne() {
     totalTargetAmount > 0 ? Math.min(100, (totalCurrentAmount / totalTargetAmount) * 100) : 0
 
   return (
-    <div className="mx-auto max-w-[1200px] px-4 pb-16 sm:px-6 lg:px-8">
+    <div className="page-halo mx-auto max-w-[1200px] px-4 pb-16 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-center gap-2 pt-6">
         <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{t.pageHeader.title}</h1>
         <HelpButton title={HELP_BY_TAB[tab].title ?? t.pageHeader.title} purpose={HELP_BY_TAB[tab].purpose} actions={HELP_BY_TAB[tab].actions} />

@@ -70,7 +70,7 @@ export function DeleteAccountModal({ open, onClose }: { open: boolean; onClose: 
             type="button"
             onClick={handleClose}
             disabled={deleting}
-            className="flex-1 rounded-lg border border-overlay/10 px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-overlay/5 disabled:opacity-60"
+            className="flex-1 rounded-lg budget-btn-secondary px-4 py-2.5 text-sm font-medium disabled:opacity-60"
           >
             {COMMON[lang].app.cancel}
           </button>
@@ -78,7 +78,7 @@ export function DeleteAccountModal({ open, onClose }: { open: boolean; onClose: 
             type="button"
             onClick={handleConfirm}
             disabled={!canConfirm || deleting}
-            className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1 rounded-lg budget-btn-destructive px-4 py-2.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
           >
             {deleting ? t.deleting : t.confirmButton}
           </button>

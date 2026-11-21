@@ -189,7 +189,13 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
                     }`
                   }
                   style={({ isActive }) =>
-                    isActive ? { color: ACTIVE_COLOR, backgroundColor: `${ACTIVE_COLOR}1A` } : undefined
+                    isActive
+                      ? {
+                          color: ACTIVE_COLOR,
+                          backgroundImage: `linear-gradient(135deg, ${ACTIVE_COLOR}26, ${ACTIVE_COLOR}0D)`,
+                          boxShadow: `inset 3px 0 0 ${ACTIVE_COLOR}`,
+                        }
+                      : undefined
                   }
                 >
                   <link.Icon className="h-5 w-5 shrink-0" />

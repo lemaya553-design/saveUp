@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CARD_BORDER } from './DashboardCard'
 import { useCountUp } from '../hooks/useCountUp'
 import { useLanguage } from '../hooks/useLanguage'
 import { useMoneyFormatRounded } from '../hooks/useMoneyFormat'
@@ -145,7 +144,7 @@ function AnimatedGoalStats({
       {showConfetti && <ConfettiBurst />}
 
       <div className="flex flex-wrap items-baseline gap-3">
-        <p className="text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
+        <p className="text-gradient-primary text-4xl font-extrabold tracking-tight sm:text-5xl">
           {formatMoneyRounded(animatedAmount)}
         </p>
         <span
@@ -173,7 +172,7 @@ function AnimatedGoalStats({
           className="h-full rounded-full"
           style={{
             width: `${animatedPct}%`,
-            backgroundImage: 'linear-gradient(90deg, #8DA9FF, #4A6CF7)',
+            backgroundImage: 'linear-gradient(90deg, #1E3A8A, #4A6CF7)',
           }}
         />
       </div>
@@ -275,8 +274,8 @@ export function DashboardGoalCard({
   if (displayGoals.length === 0) {
     return (
       <div
-        className="hover-lift mb-6 min-w-0 rounded-2xl border p-5 text-center shadow-sm sm:p-6"
-        style={{ borderColor: CARD_BORDER, background: CARD_BACKGROUND }}
+        className="budget-card-in hover-lift card-accent mb-6 min-w-0 rounded-2xl border p-5 text-center shadow-sm sm:p-6"
+        style={{ background: CARD_BACKGROUND }}
       >
         <p className="text-xs font-medium uppercase tracking-wide text-muted">{t.eyebrow}</p>
         <div className="mx-auto mt-3 flex h-14 w-14 items-center justify-center rounded-full text-3xl" style={{ backgroundColor: 'rgba(74, 108, 247, 0.14)' }}>
@@ -287,16 +286,14 @@ export function DashboardGoalCard({
         <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
           <Link
             to="/epargne/objectifs"
-            className="inline-flex min-h-[44px] items-center justify-center rounded-lg px-6 py-2.5 font-medium text-white transition-all hover:brightness-110"
-            style={{ backgroundColor: '#4A6CF7' }}
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg budget-btn-primary px-6 py-2.5 font-medium"
           >
             {t.empty.actionLabel}
           </Link>
           <button
             type="button"
             onClick={enterDemoMode}
-            className="inline-flex min-h-[44px] items-center justify-center rounded-lg border px-6 py-2.5 font-medium text-ink transition-colors hover:bg-overlay/5"
-            style={{ borderColor: CARD_BORDER }}
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg budget-btn-secondary px-6 py-2.5 font-medium"
           >
             {t.empty.demoActionLabel}
           </button>
@@ -362,8 +359,8 @@ export function DashboardGoalCard({
 
   return (
     <div
-      className="hover-lift relative mb-6 min-w-0 overflow-hidden rounded-2xl border shadow-sm"
-      style={{ borderColor: CARD_BORDER, background: CARD_BACKGROUND }}
+      className="budget-card-in hover-lift card-accent relative mb-6 min-w-0 overflow-hidden rounded-2xl border shadow-sm"
+      style={{ background: CARD_BACKGROUND }}
     >
       {demoMode && (
         <div className="p-5 pb-0 sm:p-6 sm:pb-0">

@@ -7,11 +7,27 @@ import type { ReactNode } from 'react'
 // card style living in two places.
 export const CARD_BORDER = 'color-mix(in srgb, var(--color-overlay) 10%, transparent)'
 
-export function DashboardCard({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
+// accent: the hairline blue gradient ring reserved for a handful of
+// genuinely important cards — skips the inline borderColor (card-accent
+// hides it via border-color: transparent anyway, and an inline style would
+// still win over the class's own color).
+export function DashboardCard({
+  title,
+  hint,
+  children,
+  accent = false,
+}: {
+  title: string
+  hint: string
+  children: ReactNode
+  accent?: boolean
+}) {
   return (
     <section
-      className="hover-lift min-w-0 rounded-2xl border bg-surface p-5 shadow-sm sm:p-6"
-      style={{ borderColor: CARD_BORDER }}
+      className={`budget-card-in hover-lift min-w-0 rounded-2xl border bg-surface p-5 shadow-sm sm:p-6 ${
+        accent ? 'card-accent' : ''
+      }`}
+      style={accent ? undefined : { borderColor: CARD_BORDER }}
     >
       <h2 className="text-base font-semibold text-ink">{title}</h2>
       <p className="mb-4 mt-1 text-xs text-muted">{hint}</p>

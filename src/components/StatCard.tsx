@@ -67,7 +67,7 @@ export function StatCard({
 
   return (
     <section
-      className="hover-lift min-w-0 rounded-2xl border bg-surface p-5 shadow-sm sm:p-6"
+      className="budget-card-in hover-lift min-w-0 rounded-2xl border bg-surface p-5 shadow-sm sm:p-6"
       style={{ borderColor: CARD_BORDER }}
     >
       <h2 className="text-base font-semibold text-ink">{title}</h2>
