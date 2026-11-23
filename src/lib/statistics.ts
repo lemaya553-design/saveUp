@@ -118,58 +118,6 @@ export function computeCategoryMonthOverMonth(
 }
 
 // ---------------------------------------------------------------------------
-// Budget vs. actual, per category
-
-export interface CategoryBudgetStatus {
-  category: string
-  budget: number
-  actual: number
-  pctUsed: number
-  overBudget: boolean
-}
-
-// Actual = fixed expenses (recurring, counted in full, same as
-// computeCategoryBreakdown) + this month's ad-hoc expenses — the full
-// picture of what's committed/spent in a category, not just logged
-// transactions. Only categories with a budget set (Paramètres) show up here;
-// an unset category is excluded rather than shown as "$0 budget, over by
-// $everything".
-export function computeBudgetVsActual(
-  categories: { name: string; monthlyBudget: number | null }[],
-  fixedExpenses: { amount: number; category: string }[],
-  monthlyExpenseRecords: { amount: number; category: string; spent_at: string }[],
-  now = new Date(),
-): CategoryBudgetStatus[] {
-  const { start, end } = getMonthRange(now)
-  const thisMonthRecords = monthlyExpenseRecords.filter((r) => {
-    const d = new Date(r.spent_at)
-    return d >= start && d < end
-  })
-
-  const actualByCategory = new Map<string, number>()
-  for (const e of fixedExpenses) {
-    actualByCategory.set(e.category, (actualByCategory.get(e.category) ?? 0) + e.amount)
-  }
-  for (const e of thisMonthRecords) {
-    actualByCategory.set(e.category, (actualByCategory.get(e.category) ?? 0) + e.amount)
-  }
-
-  return categories
-    .filter((c): c is { name: string; monthlyBudget: number } => (c.monthlyBudget ?? 0) > 0)
-    .map((c) => {
-      const actual = actualByCategory.get(c.name) ?? 0
-      return {
-        category: c.name,
-        budget: c.monthlyBudget,
-        actual,
-        pctUsed: (actual / c.monthlyBudget) * 100,
-        overBudget: actual > c.monthlyBudget,
-      }
-    })
-    .sort((a, b) => b.pctUsed - a.pctUsed)
-}
-
-// ---------------------------------------------------------------------------
 // Weekly spending, last N weeks (Tendances' "Dépenses par semaine")
 
 export interface WeeklySpendingPoint {

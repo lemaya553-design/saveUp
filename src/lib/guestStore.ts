@@ -39,7 +39,6 @@ export interface GuestFixedExpense {
 export interface GuestCategory {
   id: string
   name: string
-  monthlyBudget: number | null
 }
 
 export interface GuestGoal {
@@ -95,7 +94,7 @@ function buildSeedData(): GuestData {
   return {
     monthlyIncome: DEMO_INCOME,
     hasIncomeRecord: true,
-    categories: DEMO_CATEGORY_NAMES.map((name) => ({ id: newId(), name, monthlyBudget: null })),
+    categories: DEMO_CATEGORY_NAMES.map((name) => ({ id: newId(), name })),
     fixedExpenses: DEMO_FIXED_EXPENSES.map((f) => ({ id: newId(), ...f })),
     expenses: buildDemoExpenseRows().map((e) => ({ id: newId(), ...e, account: null })),
     goals: [
@@ -247,7 +246,7 @@ export function setGuestIncome(value: number): void {
 
 export function addGuestCategory(name: string): GuestCategory {
   const d = read()
-  const category: GuestCategory = { id: newId(), name, monthlyBudget: null }
+  const category: GuestCategory = { id: newId(), name }
   write({ ...d, categories: [...d.categories, category] })
   emitCategoriesChanged()
   return category
@@ -266,12 +265,6 @@ export function renameGuestCategory(id: string, newName: string): void {
   })
   emitCategoriesChanged()
   emitExpensesChanged()
-}
-
-export function setGuestCategoryBudget(id: string, monthlyBudget: number | null): void {
-  const d = read()
-  write({ ...d, categories: d.categories.map((c) => (c.id === id ? { ...c, monthlyBudget } : c)) })
-  emitCategoriesChanged()
 }
 
 export function removeGuestCategory(id: string, reassignTo?: string): void {

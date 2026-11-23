@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { emitCategoriesChanged, emitExpensesChanged, onCategoriesChanged } from '../lib/events'
 import { FALLBACK_CATEGORY } from '../lib/categories'
+import { normalizeDescription } from '../lib/importParsing'
 import { useAuth } from './useAuth'
 import { useGuestMode } from './useGuestMode'
 import { useLanguage } from './useLanguage'
@@ -14,17 +15,15 @@ import {
   getGuestFixedExpenses,
   removeGuestCategory,
   renameGuestCategory,
-  setGuestCategoryBudget,
 } from '../lib/guestStore'
 
 export interface Category {
   id: string
   name: string
-  monthlyBudget: number | null
 }
 
-function fromRow(row: { id: string; name: string; monthly_budget: number | null }): Category {
-  return { id: row.id, name: row.name, monthlyBudget: row.monthly_budget }
+function fromRow(row: { id: string; name: string }): Category {
+  return { id: row.id, name: row.name }
 }
 
 // Alphabetical, but "Autre" (the catch-all fallback) always sorts last —
@@ -35,6 +34,23 @@ function sortCategories(categories: Category[]): Category[] {
     if (b.name === FALLBACK_CATEGORY) return -1
     return a.name.localeCompare(b.name, 'fr')
   })
+}
+
+// Case/accent/whitespace-insensitive match — "Epicerie", "Épicerie" and
+// "épicerie" are the same category. Reuses the same normalizer
+// lib/importParsing.ts already applies to merchant descriptions and
+// category names when matching an import row to a category, so "is this
+// name already taken" and "which category does this row belong to" never
+// disagree with each other. Exported so the UI (CategoryManager) can run
+// the identical check before even calling addCategory/renameCategory, to
+// show its own explicit "already exists" message.
+export function findDuplicateCategory(
+  categories: Category[],
+  name: string,
+  excludeId?: string,
+): Category | undefined {
+  const normalized = normalizeDescription(name)
+  return categories.find((c) => c.id !== excludeId && normalizeDescription(c.name) === normalized)
 }
 
 export function useCategories() {
@@ -75,14 +91,21 @@ export function useCategories() {
     return onCategoriesChanged(load)
   }, [load])
 
-  // Returns the created row (or the pre-existing one, see below) so a
-  // caller that needs it immediately — useCategorySuggestion's
-  // resolveCategoryForSubmit — doesn't have to wait for the next render's
-  // `categories` state to catch up.
+  // Returns the created row — OR the pre-existing one, silently, whenever
+  // `name` already matches a category (case/accent/space-insensitive): both
+  // the manual "new category" form AND the CSV-import auto-create path
+  // (useCategorySuggestion's resolveCategoryForSubmit) funnel through here,
+  // so this one guard is what makes "reuse the existing category instead of
+  // creating a near-duplicate" true everywhere, not just at the keyboard.
+  // Never errors on a duplicate — CategoryManager does its own
+  // findDuplicateCategory check first precisely so it can show the explicit
+  // "already exists" message instead of this quietly succeeding.
   const addCategory = useCallback(
     async (name: string): Promise<Category | null> => {
       const trimmed = name.trim()
       if (!trimmed) return null
+      const existing = findDuplicateCategory(categories, trimmed)
+      if (existing) return existing
       if (guest.active) {
         const created = addGuestCategory(trimmed)
         setCategories((prev) => sortCategories([...prev, created]))
@@ -103,24 +126,7 @@ export function useCategories() {
       emitCategoriesChanged()
       return created
     },
-    [userId, lang, guest.active],
-  )
-
-  const setCategoryBudget = useCallback(
-    async (id: string, monthlyBudget: number | null) => {
-      setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, monthlyBudget } : c)))
-      if (guest.active) {
-        setGuestCategoryBudget(id, monthlyBudget)
-        return
-      }
-      const { error: updateError } = await supabase
-        .from('categories')
-        .update({ monthly_budget: monthlyBudget })
-        .eq('id', id)
-      if (updateError) setError(updateError.message)
-      emitCategoriesChanged()
-    },
-    [guest.active],
+    [userId, lang, guest.active, categories],
   )
 
   // Renaming updates the category row AND every fixed_expenses/expenses
@@ -131,6 +137,9 @@ export function useCategories() {
       const category = categories.find((c) => c.id === id)
       const trimmed = newName.trim()
       if (!category || !trimmed || trimmed === category.name) return
+      // Silent no-op, same reasoning as addCategory above — CategoryManager
+      // checks first and shows the "already exists" message itself.
+      if (findDuplicateCategory(categories, trimmed, id)) return
 
       setCategories((prev) => sortCategories(prev.map((c) => (c.id === id ? { ...c, name: trimmed } : c))))
 
@@ -220,7 +229,6 @@ export function useCategories() {
     addCategory,
     renameCategory,
     removeCategory,
-    setCategoryBudget,
     getUsageCount,
   }
 }

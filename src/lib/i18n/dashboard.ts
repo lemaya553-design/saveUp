@@ -99,19 +99,6 @@ export interface DashboardContent {
       invalidError: string
     }
   }
-  needsLimit: {
-    title: string
-    hint: string
-    needsLabel: string
-    needsAriaLabel: string
-    savingsLabel: string
-    savingsAriaLabel: string
-    ofLimit: (amount: string) => string
-    barAriaLabel: string
-    pctUsed: (pct: number) => string
-    savingsTargetLine: (amount: string) => string
-    disclaimer: string
-  }
   subscriptionsFound: {
     title: string
     hint: (monthlyTotal: string) => string
@@ -287,19 +274,6 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
         emptyError: 'Entre un montant.',
         invalidError: 'Le montant doit être plus grand que 0 $.',
       },
-    },
-    needsLimit: {
-      title: 'Limite du mois',
-      hint: 'Repères généraux pour tes besoins et ton épargne, à partir de ton revenu.',
-      needsLabel: 'Besoins',
-      needsAriaLabel: 'Pourcentage du revenu réservé aux besoins',
-      savingsLabel: 'Épargne',
-      savingsAriaLabel: "Pourcentage du revenu réservé à l'épargne",
-      ofLimit: (amount) => `sur ${amount} alloués`,
-      barAriaLabel: 'Dépenses de besoins par rapport à la limite',
-      pctUsed: (pct) => `${pct}% de ta limite de besoins utilisée`,
-      savingsTargetLine: (amount) => `Objectif d'épargne suggéré ce mois-ci : ${amount}.`,
-      disclaimer: 'Repère général, pas un conseil financier.',
     },
     subscriptionsFound: {
       title: 'Abonnements trouvés',
@@ -479,19 +453,6 @@ export const DASHBOARD: Record<Lang, DashboardContent> = {
         emptyError: 'Enter an amount.',
         invalidError: 'The amount must be greater than $0.',
       },
-    },
-    needsLimit: {
-      title: 'Monthly limit',
-      hint: 'General reference points for your needs and savings, based on your income.',
-      needsLabel: 'Needs',
-      needsAriaLabel: 'Percentage of income set aside for needs',
-      savingsLabel: 'Savings',
-      savingsAriaLabel: 'Percentage of income set aside for savings',
-      ofLimit: (amount) => `of ${amount} allotted`,
-      barAriaLabel: 'Needs spending relative to the limit',
-      pctUsed: (pct) => `${pct}% of your needs limit used`,
-      savingsTargetLine: (amount) => `Suggested savings target this month: ${amount}.`,
-      disclaimer: 'General reference point, not financial advice.',
     },
     subscriptionsFound: {
       title: 'Subscriptions found',

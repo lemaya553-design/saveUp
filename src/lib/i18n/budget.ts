@@ -119,14 +119,14 @@ export interface BudgetContent {
     cardTitle: string
     cardHint: string
     loading: string
-    monthlyBudget: string
-    nonePlaceholder: string
     rename: string
     checking: string
-    confirmDelete: (name: string, count: number, fallbackLabel: string) => string
+    confirmDelete: (name: string, count: number) => string
+    moveTo: string
     reassignAndDelete: string
     newCategoryPlaceholder: string
     adding: string
+    duplicateName: string
     limitReached: (max: number) => string
     limitDescription: string
   }
@@ -413,17 +413,17 @@ export const BUDGET: Record<Lang, BudgetContent> = {
     },
     categoryManager: {
       cardTitle: 'Catégories',
-      cardHint: 'Crée, renomme ou supprime tes catégories de dépenses, et fixe un budget mensuel par catégorie (visible dans Statistiques).',
+      cardHint: 'Crée, renomme ou supprime les catégories qui servent à classer tes dépenses.',
       loading: 'Chargement des catégories...',
-      monthlyBudget: 'Budget mensuel',
-      nonePlaceholder: 'Aucun',
       rename: 'Renommer',
       checking: 'Vérification...',
-      confirmDelete: (name, count, fallbackLabel) =>
-        `« ${name} » est utilisée par ${count} dépense${count > 1 ? 's' : ''}. Les réassigner à « ${fallbackLabel} » et supprimer la catégorie ?`,
-      reassignAndDelete: 'Réassigner et supprimer',
+      confirmDelete: (name, count) =>
+        `« ${name} » est utilisée par ${count} dépense${count > 1 ? 's' : ''}.`,
+      moveTo: 'Déplacer ces dépenses vers :',
+      reassignAndDelete: 'Déplacer et supprimer',
       newCategoryPlaceholder: 'Nouvelle catégorie',
       adding: 'Ajout...',
+      duplicateName: 'Cette catégorie existe déjà',
       limitReached: (max) => `Limite de ${max} catégories atteinte`,
       limitDescription: 'Le plan Gratuit est limité à un petit nombre de catégories. Passe à Standard pour en créer autant que tu veux.',
     },
@@ -718,17 +718,16 @@ export const BUDGET: Record<Lang, BudgetContent> = {
     },
     categoryManager: {
       cardTitle: 'Categories',
-      cardHint: 'Create, rename, or delete your expense categories, and set a monthly budget per category (visible in Statistics).',
+      cardHint: 'Create, rename, or delete the categories used to classify your expenses.',
       loading: 'Loading categories...',
-      monthlyBudget: 'Monthly budget',
-      nonePlaceholder: 'None',
       rename: 'Rename',
       checking: 'Checking...',
-      confirmDelete: (name, count, fallbackLabel) =>
-        `"${name}" is used by ${count} expense${count > 1 ? 's' : ''}. Reassign them to "${fallbackLabel}" and delete the category?`,
-      reassignAndDelete: 'Reassign and delete',
+      confirmDelete: (name, count) => `"${name}" is used by ${count} expense${count > 1 ? 's' : ''}.`,
+      moveTo: 'Move these expenses to:',
+      reassignAndDelete: 'Move and delete',
       newCategoryPlaceholder: 'New category',
       adding: 'Adding...',
+      duplicateName: 'This category already exists',
       limitReached: (max) => `Limit of ${max} categories reached`,
       limitDescription: 'The Free plan is limited to a small number of categories. Upgrade to Standard to create as many as you want.',
     },

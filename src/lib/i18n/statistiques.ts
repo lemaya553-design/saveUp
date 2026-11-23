@@ -2,7 +2,7 @@ import type { Lang } from './language'
 
 // Covers Statistiques.tsx itself plus every component exclusively mounted
 // under it (SpendingBreakdownCard, CategoryDonutChart, CategorySpendingChart,
-// BudgetVsActualChart, DataExportCard, RecompensesTab, PersonalizedTips) —
+// DataExportCard, RecompensesTab, PersonalizedTips) —
 // centralized here since they're all one page's worth of UI and share a
 // handful of strings (month nav arrows, "empty" states, transaction
 // counts). The Tendances tab (MonthComparison/MonthOverlayChart/
@@ -25,7 +25,6 @@ export interface StatistiquesContent {
     spent: string
     income: string
     categories: string
-    onBudget: string
   }
   monthNav: {
     prev: string
@@ -42,10 +41,6 @@ export interface StatistiquesContent {
       title: string
       hint: string
       pctNote: string
-    }
-    budgetVsActualCard: {
-      title: string
-      hint: string
     }
     manageData: {
       heading: string
@@ -146,14 +141,6 @@ export interface StatistiquesContent {
     currentIncome: (amount: string) => string
     footnote: string
   }
-  budgetVsActualChart: {
-    empty: string
-    pctUsed: (pct: number) => string
-    spent: (amount: string) => string
-    budget: (amount: string) => string
-    overBudget: (amount: string) => string
-    ariaLabel: (category: string, actual: string, budget: string) => string
-  }
   categoryMomList: {
     empty: string
     new: string
@@ -228,7 +215,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
         purpose: 'Ta répartition de dépenses du mois, et tes outils pour importer ou exporter tes données.',
         actions: [
           'Consulte la répartition de tes dépenses par catégorie, mois par mois.',
-          'Compare ton budget par catégorie à ce que tu as réellement dépensé.',
           'Exporte tes données en CSV ou en rapport PDF/Excel.',
         ],
       },
@@ -246,7 +232,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
       spent: 'Dépensé',
       income: 'Revenu mensuel',
       categories: 'Catégories',
-      onBudget: 'Dans le budget',
     },
     monthNav: {
       prev: 'Mois précédent',
@@ -260,10 +245,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
         title: 'Dépenses par catégorie',
         hint: 'Tes dépenses ponctuelles du mois choisi, du plus gros poste au plus petit. Clique une colonne pour voir le détail.',
         pctNote: "Le % du revenu est basé sur ton revenu mensuel actuel, pas nécessairement celui de ce mois-là.",
-      },
-      budgetVsActualCard: {
-        title: 'Budget vs réel',
-        hint: 'Dépenses fixes et ponctuelles de ce mois-ci, comparées au budget fixé par catégorie (Budget → Catégories).',
       },
       manageData: {
         heading: 'Gérer mes données',
@@ -364,14 +345,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
       currentIncome: (amount) => `Revenu actuel : ${amount}`,
       footnote: "Basé sur ton revenu et tes dépenses fixes actuels appliqués rétroactivement — pas nécessairement ce qu'ils étaient chaque mois.",
     },
-    budgetVsActualChart: {
-      empty: 'Aucun budget défini pour l\'instant — ajoute un budget mensuel à tes catégories dans Paramètres pour voir cette comparaison.',
-      pctUsed: (pct) => `${pct.toFixed(0)}% de ton budget utilisé`,
-      spent: (amount) => `${amount} dépensé`,
-      budget: (amount) => `Budget : ${amount}`,
-      overBudget: (amount) => `Dépassement de ${amount}`,
-      ariaLabel: (category, actual, budget) => `${category} : ${actual} dépensé sur un budget de ${budget}`,
-    },
     categoryMomList: {
       empty: 'Pas encore assez de données pour comparer au mois dernier.',
       new: 'nouveau',
@@ -444,7 +417,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
         purpose: "This month's spending breakdown, plus your tools to import or export your data.",
         actions: [
           'Check your spending breakdown by category, month by month.',
-          'Compare your budget by category to what you actually spent.',
           'Export your data as CSV, or a PDF/Excel report.',
         ],
       },
@@ -462,7 +434,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
       spent: 'Spent',
       income: 'Monthly income',
       categories: 'Categories',
-      onBudget: 'On budget',
     },
     monthNav: {
       prev: 'Previous month',
@@ -476,10 +447,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
         title: 'Spending by category',
         hint: 'Your one-off expenses for the chosen month, biggest to smallest. Click a bar to see the detail.',
         pctNote: "The % of income is based on your current monthly income, not necessarily what it was that month.",
-      },
-      budgetVsActualCard: {
-        title: 'Budget vs. actual',
-        hint: 'Fixed and one-off expenses for this month, compared to the budget set per category (Budget → Categories).',
       },
       manageData: {
         heading: 'Manage my data',
@@ -579,14 +546,6 @@ export const STATISTIQUES: Record<Lang, StatistiquesContent> = {
       savingsRate: (pct) => `Savings rate: ${pct}`,
       currentIncome: (amount) => `Current income: ${amount}`,
       footnote: "Based on your current income and fixed expenses applied retroactively — not necessarily what they were each month.",
-    },
-    budgetVsActualChart: {
-      empty: 'No budget set yet — add a monthly budget to your categories in Settings to see this comparison.',
-      pctUsed: (pct) => `${pct.toFixed(0)}% of budget used`,
-      spent: (amount) => `${amount} spent`,
-      budget: (amount) => `Budget: ${amount}`,
-      overBudget: (amount) => `${amount} over budget`,
-      ariaLabel: (category, actual, budget) => `${category}: ${actual} spent out of a budget of ${budget}`,
     },
     categoryMomList: {
       empty: 'Not enough data yet to compare to last month.',

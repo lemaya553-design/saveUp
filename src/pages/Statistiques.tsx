@@ -7,7 +7,6 @@ import { PageSkeleton } from '../components/PageSkeleton'
 import { TabBar, type TabDef } from '../components/TabBar'
 import { CategorySpendingChart } from '../components/CategorySpendingChart'
 import { SpendingBreakdownCard } from '../components/SpendingBreakdownCard'
-import { BudgetVsActualChart } from '../components/BudgetVsActualChart'
 import { WeeklySpendingChart } from '../components/WeeklySpendingChart'
 import { GoalsProgressChart } from '../components/GoalsProgressChart'
 import { IncomeExpenseSavingsChart } from '../components/IncomeExpenseSavingsChart'
@@ -31,7 +30,6 @@ import { computeCategorySpending } from '../lib/categorySpending'
 import { getMonthRange } from '../lib/format'
 import { STATISTIQUES } from '../lib/i18n/statistiques'
 import {
-  computeBudgetVsActual,
   computeGoalsProgress,
   computeIncomeExpenseSavingsTrend,
   computePeriodDelta,
@@ -183,11 +181,6 @@ export function Statistiques() {
       delta: computePeriodDelta(iesLast?.savings ?? 0, iesPrev?.savings ?? null),
     },
   ]
-  const budgetVsActual = useMemo(
-    () => computeBudgetVsActual(categories.categories, fixed.fixedExpenses, history.records),
-    [categories.categories, fixed.fixedExpenses, history.records],
-  )
-
   // Contributions made during the selected month — same window the category
   // chart's own picker uses, so clicking prev/next moves both together.
   const goalNameById = useMemo(() => new Map(goals.goals.map((g) => [g.id, g.name])), [goals.goals])
@@ -214,8 +207,6 @@ export function Statistiques() {
     () => categorySpending.reduce((sum, e) => sum + e.total, 0),
     [categorySpending],
   )
-  const withinBudgetCount = useMemo(() => budgetVsActual.filter((s) => !s.overBudget).length, [budgetVsActual])
-
   if (!tabParam || !TABS.includes(tabParam as Tab)) {
     return <Navigate to="/statistiques/apercu" replace />
   }
@@ -254,8 +245,6 @@ export function Statistiques() {
             monthLabel={selectedMonthLabel}
             monthlyIncome={income.monthlyIncome}
             categoriesTracked={categorySpending.length}
-            withinBudgetCount={withinBudgetCount}
-            budgetTrackedCount={budgetVsActual.length}
             formatMoney={formatMoney}
           />
 
@@ -306,10 +295,6 @@ export function Statistiques() {
               />
             </Card>
           </div>
-
-          <Card title={t.apercu.budgetVsActualCard.title} hint={t.apercu.budgetVsActualCard.hint}>
-            <BudgetVsActualChart statuses={budgetVsActual} />
-          </Card>
 
           <StatCard
             title={t.newTrendCharts.weeklySpending.title}

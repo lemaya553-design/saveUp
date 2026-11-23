@@ -20,8 +20,8 @@ export type IncomeRange = (typeof INCOME_RANGES)[number]
 // Rough midpoint per bracket, in dollars — the only numeric income value
 // the new flow ever produces (Q3 is a clickable range, never a typed
 // amount). Saved to budget_settings via useIncome.setMonthlyIncome so the
-// rest of the app (Budget, NeedsLimitCard, health score) has a real number
-// to work with immediately, same as the old onboarding always did; the raw
+// rest of the app (Budget, health score) has a real number to work with
+// immediately, same as the old onboarding always did; the raw
 // bracket itself is kept too (user_preferences.income_range) for reference.
 export const INCOME_RANGE_MIDPOINT: Record<IncomeRange, number> = {
   moins_500: 400,

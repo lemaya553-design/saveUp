@@ -4,7 +4,6 @@ import { HelpButton } from '../components/HelpButton'
 import { AlertBanner } from '../components/AlertBanner'
 import { DashboardCard, CARD_BORDER } from '../components/DashboardCard'
 import { DashboardGoalCard } from '../components/DashboardGoalCard'
-import { NeedsLimitCard } from '../components/NeedsLimitCard'
 import { SubscriptionsFoundCard } from '../components/SubscriptionsFoundCard'
 import { DashboardFeedbackPrompt } from '../components/DashboardFeedbackPrompt'
 import { GettingStartedGuide } from '../components/GettingStartedGuide'
@@ -14,7 +13,6 @@ import { DashboardScoreFactors } from '../components/DashboardScoreFactors'
 import { PersonalizedTips } from '../components/PersonalizedTips'
 import { PageSkeleton } from '../components/PageSkeleton'
 import { useFinancialHealth } from '../hooks/useFinancialHealth'
-import { useFixedExpenses } from '../hooks/useFixedExpenses'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { useSavingsContributions } from '../hooks/useSavingsContributions'
 import { useInvestmentBalance } from '../hooks/useInvestmentBalance'
@@ -108,7 +106,6 @@ export function Dashboard() {
   const contributions = useSavingsContributions()
   const investmentBalance = useInvestmentBalance()
   const expenseHistory = useExpenseHistory()
-  const fixed = useFixedExpenses()
   const subscription = useSubscription()
   const preferences = usePreferences()
   const streak = useLoginStreak()
@@ -124,15 +121,13 @@ export function Dashboard() {
     contributions.loading ||
     investmentBalance.loading ||
     expenseHistory.loading ||
-    preferences.loading ||
-    fixed.loading
+    preferences.loading
   const error =
     health.error ||
     goals.error ||
     contributions.error ||
     investmentBalance.error ||
     expenseHistory.error ||
-    fixed.error ||
     preferences.error
 
   const starterDef = BADGES.find((def) => def.id === 'starter')
@@ -392,15 +387,7 @@ export function Dashboard() {
         formatMoney={formatMoney}
       />
 
-      <div className="mt-6 grid gap-6 sm:grid-cols-2">
-        <NeedsLimitCard
-          userId={user?.id ?? 'guest'}
-          monthlyIncome={health.monthlyIncome}
-          hasIncomeRecord={health.hasIncomeRecord}
-          onSetIncome={health.setMonthlyIncome}
-          fixedExpenses={fixed.fixedExpenses}
-          expenseRecords={expenseHistory.records}
-        />
+      <div className="mt-6">
         <SubscriptionsFoundCard records={expenseHistory.records} />
       </div>
 

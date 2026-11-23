@@ -64,29 +64,17 @@ function GridIcon({ className }: { className: string }) {
   )
 }
 
-function CheckIcon({ className }: { className: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="m5 13 4 4L19 7" />
-    </svg>
-  )
-}
-
 export function StatistiquesStatCards({
   spentThisMonth,
   monthLabel,
   monthlyIncome,
   categoriesTracked,
-  withinBudgetCount,
-  budgetTrackedCount,
   formatMoney,
 }: {
   spentThisMonth: number
   monthLabel: string
   monthlyIncome: number
   categoriesTracked: number
-  withinBudgetCount: number
-  budgetTrackedCount: number
   formatMoney: (amount: number) => string
 }) {
   const { lang } = useLanguage()
@@ -115,13 +103,6 @@ export function StatistiquesStatCards({
       <StatShell index={2}>
         <CardHeader icon={<GridIcon className="h-4 w-4" />} label={t.categories} />
         <p className="text-2xl font-bold text-ink sm:text-3xl">{categoriesTracked}</p>
-      </StatShell>
-
-      <StatShell index={3}>
-        <CardHeader icon={<CheckIcon className="h-4 w-4" />} label={t.onBudget} />
-        <p className="text-2xl font-bold text-ink sm:text-3xl">
-          {budgetTrackedCount > 0 ? `${withinBudgetCount}/${budgetTrackedCount}` : '—'}
-        </p>
       </StatShell>
     </div>
   )
